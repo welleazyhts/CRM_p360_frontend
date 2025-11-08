@@ -1,0 +1,54 @@
+{
+  "settings": {
+    "title": "సెట్టింగులు",
+    "language": "భాష",
+    "selectLanguage": "మీ ఇష్టమైన భాషను ఎంచుకోండి",
+    "systemLanguage": "సిస్టమ్ భాష",
+    "systemLanguageDescription": "అప్లికేషన్ కోసం డిఫాల్ట్ భాష",
+    "userLanguagePreference": "వినియోగదారు భాష ప్రాధాన్యత",
+    "defaultSurveyLanguage": "డిఫాల్ట్ సర్వే భాష",
+    "notifications": "నోటిఫికేషన్లు",
+    "emailNotifications": "ఇమెయిల్ నోటిఫికేషన్లు",
+    "smsNotifications": "SMS నోటిఫికేషన్లు",
+    "timezone": "సమయ మండలం",
+    "selectTimezone": "మీ సమయ మండలాన్ని ఎంచుకోండి"
+  },
+  "common": {
+    "save": "సేవ్ చేయండి",
+    "cancel": "రద్దు చేయండి",
+    "delete": "తొలగించండి",
+    "edit": "సవరించండి",
+    "create": "సృష్టించండి",
+    "update": "అప్‌డేట్ చేయండి",
+    "close": "మూసివేయండి",
+    "submit": "సమర్పించండి",
+    "loading": "లోడ్ అవుతోంది...",
+    "error": "లోపం",
+    "success": "విజయం",
+    "warning": "హెచ్చరిక",
+    "info": "సమాచారం"
+  },
+  "navigation": {
+    "dashboard": "డాష్‌బోర్డ్",
+    "campaigns": "ప్రచారాలు",
+    "email": "ఇమెయిల్",
+    "whatsapp": "వాట్సాప్",
+    "settings": "సెట్టింగులు",
+    "users": "వినియోగదారులు",
+    "profile": "ప్రొఫైల్",
+    "logout": "లాగ్ అవుట్"
+  },
+  "whatsapp": {
+    "flowBuilder": "ფ్లో బిల్డర్",
+    "templateManager": "టెంప్లేట్ మేనేజర్",
+    "createTemplate": "టెంప్లేట్ సృష్టించండి",
+    "templateName": "టెంప్లేట్ పేరు",
+    "language": "భాష",
+    "category": "వర్గం",
+    "description": "వివరణ",
+    "preview": "ప్రువ్యూ",
+    "publish": "ప్రచురించండి",
+    "draft": "డ్రాఫ్ట్",
+    "approved": "ఆమోదించబడింది"
+  }
+} 

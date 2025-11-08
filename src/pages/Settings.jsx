@@ -1,0 +1,8086 @@
+import React, { useState, useEffect, useMemo } from 'react';
+import {
+  Box, Typography, Card, CardContent, Switch,
+  List, ListItem, ListItemIcon, ListItemText,
+  ListItemSecondaryAction, Alert, Tabs, Tab,
+  FormControl, Select, MenuItem, InputLabel, FormHelperText,
+  Button, Divider, TextField, Slider,
+  useTheme, alpha, Fade, Grow, Zoom, Dialog, DialogTitle, DialogContent, DialogActions,
+  Table, TableBody, TableCell, TableContainer, TableHead, TableRow,
+  FormControlLabel, Checkbox,
+  Chip, IconButton, Grid, Avatar
+} from '@mui/material';
+import {
+  DarkMode as DarkModeIcon,
+  Notifications as NotificationsIcon,
+  Language as LanguageIcon,
+  Email as EmailIcon,
+  Sms as SmsIcon,
+  Save as SaveIcon,
+  Settings as SettingsIcon,
+  Palette as PaletteIcon,
+  Refresh as RefreshIcon,
+  Edit as EditIcon,
+  Security as SecurityIcon,
+  Receipt as ReceiptIcon,
+  ArrowForward as ArrowForwardIcon,
+  Help as HelpIcon,
+  School as SchoolIcon,
+  Autorenew as AutorenewIcon,
+  Campaign as CampaignIcon,
+  Gavel as GavelIcon,
+  Feedback as FeedbackIcon,
+  Storage as StorageIcon,
+  Person as PersonIcon,
+  Group as GroupIcon,
+  Shield as ShieldIcon,
+  AccessTime as AccessTimeIcon,
+  Cloud as CloudIcon,
+  DataUsage as DataUsageIcon,
+  Wifi as WifiIcon,
+  WifiOff as WifiOffIcon,
+  Schedule as ScheduleIcon,
+  Rule as RuleIcon,
+  Add as AddIcon,
+  Delete as DeleteIcon,
+  Restore as RestoreIcon,
+  AccountCircle as AccountCircleIcon,
+  CheckCircle as CheckCircleIcon,
+  Error as ErrorIcon,
+  Warning as WarningIcon,
+  Sync as SyncIcon,
+  Merge as MergeIcon,
+  Speed as SpeedIcon,
+  Description as DescriptionIcon,
+  Analytics as AnalyticsIcon,
+  Verified as VerifiedIcon,
+  Timeline as TrackingIcon,
+  WhatsApp as WhatsAppIcon,
+  SmartToy as SmartToyIcon,
+  ConnectedTv as ProvidersIcon,
+  PlayArrow as TestIcon,
+  Star as StarIcon,
+  StarBorder as StarBorderIcon,
+  Phone as PhoneIcon,
+  Block as BlockIcon,
+  Hub as IntegrationsIcon,
+  Facebook as FacebookIcon,
+  Twitter as TwitterIcon,
+  Instagram as InstagramIcon,
+  LinkedIn as LinkedInIcon,
+  Telegram as TelegramIcon,
+  Launch as LaunchIcon,
+  Link as LinkIcon,
+  OpenInNew as OpenInNewIcon,
+  AdminPanelSettings as AdminIcon,
+  Folder as FolderIcon,
+  CloudUpload as CloudUploadIcon,
+  InsertDriveFile as FileIcon,
+  PictureAsPdf as PdfIcon,
+  Image as ImageIcon,
+  Article as ArticleIcon,
+  Visibility as VisibilityIcon,
+  Download as DownloadIcon,
+  Upload as UploadIcon,
+  Timer as TimerIcon,
+  AssignmentInd as AssignmentIndIcon
+} from '@mui/icons-material';
+import { useThemeMode } from '../context/ThemeModeContext';
+import { useSettings } from '../context/SettingsContext';
+import { useProviders } from '../context/ProvidersContext';
+import { Link, useSearchParams } from 'react-router-dom';
+import WelcomeModal from '../components/common/WelcomeModal';
+import LanguageTest from '../components/common/LanguageTest';
+import DedupeSettings from '../components/settings/DedupeSettings';
+import AdminSettings from '../components/settings/AdminSettings';
+import AutoAssignmentSettings from '../components/settings/AutoAssignmentSettings';
+import SLASettings from '../components/settings/SLASettings';
+
+import { supportedLanguages } from '../i18n';
+
+// Tab Panel Component
+function TabPanel({ children, value, index, ...other }) {
+  return (
+    <div
+      role="tabpanel"
+      hidden={value !== index}
+      id={`settings-tabpanel-${index}`}
+      aria-labelledby={`settings-tab-${index}`}
+      {...other}
+    >
+      {value === index && (
+        <Box sx={{ pt: 3 }}>
+          {children}
+        </Box>
+      )}
+    </div>
+  );
+}
+
+const Settings = () => {
+  const { mode, toggleMode } = useThemeMode();
+  const { settings, updateSettings } = useSettings();
+  const [searchParams] = useSearchParams();
+  const [successMessage, setSuccessMessage] = useState('');
+  const [loaded, setLoaded] = useState(false);
+  const [tabValue, setTabValue] = useState(0);
+  const [welcomeModalOpen, setWelcomeModalOpen] = useState(false);
+  const theme = useTheme();
+  
+  // DNC Settings State
+  const [dncSettings, setDncSettings] = useState({
+    enabled: true,
+    autoCheck: true,
+    blockOnDNC: true,
+    allowOverrides: true,
+    overrideRequiresApproval: true,
+    governmentDNCSync: true,
+    governmentDNCUrl: 'https://www.nccptrai.gov.in/nccpregistry/search.misc',
+    syncFrequency: 'daily',
+    notifyOnBlock: true,
+    logAllAttempts: true,
+    complianceReporting: true,
+    overrideExpiryHours: 24,
+    bulkOperationsEnabled: true,
+    clientWiseRegistry: true
+  });
+
+  // Email settings state moved to main component level
+  const [emailSettings, setEmailSettings] = useState({
+    pollingInterval: 5,
+    autoTagging: true,
+    fallbackTagging: true,
+    imapConnected: true,
+    webhookEnabled: false,
+    webhookUrl: 'https://api.renewiq.com/webhooks/emails',
+    emailsPerPage: 25,
+    emailAutoRefresh: false,
+    markAsReadOnOpen: true,
+    aiIntentClassification: true,
+    sentimentAnalysis: true,
+    realTimeCollaboration: true
+  });
+
+  const [rules, setRules] = useState([
+    { id: 1, keyword: 'refund', category: 'refund', priority: 'high', enabled: true },
+    { id: 2, keyword: 'complaint', category: 'complaint', priority: 'high', enabled: true },
+    { id: 3, keyword: 'appointment', category: 'appointment', priority: 'medium', enabled: true },
+    { id: 4, keyword: 'feedback', category: 'feedback', priority: 'low', enabled: true }
+  ]);
+
+  const [ruleDialog, setRuleDialog] = useState({ open: false, rule: null, mode: 'add' });
+  const [newRule, setNewRule] = useState({
+    keyword: '', category: 'uncategorized', priority: 'medium', enabled: true
+  });
+
+  // Email accounts state
+  const [emailAccounts, setEmailAccounts] = useState([
+    {
+      id: 1,
+      name: 'Support Inbox',
+      email: 'support@company.com',
+      provider: 'gmail',
+      status: 'connected',
+      imapServer: 'imap.gmail.com',
+      imapPort: 993,
+      smtpServer: 'smtp.gmail.com',
+      smtpPort: 587,
+      useSSL: true,
+      autoSync: true,
+      syncInterval: 5,
+      lastSync: '2024-07-14T10:30:00Z'
+    },
+    {
+      id: 2,
+      name: 'Sales Inquiries',
+      email: 'sales@company.com',
+      provider: 'outlook',
+      status: 'error',
+      imapServer: 'outlook.office365.com',
+      imapPort: 993,
+      smtpServer: 'smtp.office365.com',
+      smtpPort: 587,
+      useSSL: true,
+      autoSync: false,
+      syncInterval: 10,
+      lastSync: '2024-07-13T15:45:00Z'
+    }
+  ]);
+
+  const [accountDialog, setAccountDialog] = useState({ open: false, account: null, mode: 'add' });
+  const [newAccount, setNewAccount] = useState({
+    name: '',
+    email: '',
+    provider: 'gmail',
+    imapServer: '',
+    imapPort: 993,
+    smtpServer: '',
+    smtpPort: 587,
+    useSSL: true,
+    autoSync: true,
+    syncInterval: 5
+  });
+
+  // WhatsApp Flow Settings State
+  const [whatsappSettings, setWhatsappSettings] = useState({
+    businessApiEnabled: true,
+    webhookUrl: 'https://api.renewiq.com/webhooks/whatsapp',
+    phoneNumberId: '',
+    accessToken: '',
+    verifyToken: 'whatsapp_verify_token_2024',
+    messageTemplatesEnabled: true,
+    flowBuilderEnabled: true,
+    analyticsEnabled: true,
+    autoResponseEnabled: true,
+    businessHours: {
+      enabled: true,
+      start: '09:00',
+      end: '18:00',
+      timezone: 'Asia/Kolkata'
+    },
+    fallbackMessage: 'Thank you for your message. We will get back to you soon.',
+    maxRetries: 3,
+    retryDelay: 300,
+    rateLimiting: {
+      enabled: true,
+      messagesPerMinute: 60,
+      messagesPerHour: 1000
+    }
+  });
+
+  // AI Settings State
+  const [aiSettings, setAiSettings] = useState({
+    enabled: true,
+    provider: 'openai',
+    apiKey: '',
+    model: 'gpt-4',
+    temperature: 0.7,
+    maxTokens: 1000,
+    responseTimeout: 30,
+    fallbackEnabled: true,
+    fallbackMessage: 'I apologize, but I am currently unable to process your request. Please try again later or contact support.',
+    contextWindow: 4000,
+    rateLimiting: {
+      enabled: true,
+      requestsPerMinute: 60,
+      requestsPerHour: 1000
+    },
+    // Ollama-specific settings
+    ollama: {
+      baseUrl: 'http://localhost:11434',
+      model: 'llama2',
+      keepAlive: '5m',
+      stream: true,
+      availableModels: [],
+      lastModelRefresh: null,
+      pullInProgress: false,
+      pullProgress: 0,
+      systemPrompt: 'You are a helpful AI assistant for insurance renewal management.',
+      options: {
+        temperature: 0.7,
+        top_p: 0.9,
+        top_k: 40,
+        repeat_penalty: 1.1,
+        num_ctx: 4096,
+        num_predict: 1000,
+        stop: []
+      }
+    },
+    features: {
+      renewalInsights: true,
+      processOptimization: true,
+      customerRetention: true,
+      communicationStrategies: true,
+      predictiveAnalytics: false
+    },
+    knowledgeBase: {
+      enabled: true,
+      autoUpdate: true,
+      sources: ['internal_docs', 'best_practices', 'industry_standards'],
+      lastUpdated: '2024-12-28T10:30:00Z'
+    }
+  });
+
+  // User Management State
+  const [users, setUsers] = useState([
+    {
+      id: 1,
+      name: 'Rajesh Kumar',
+      email: 'rajesh@client.com',
+      role: 'renewals_specialist',
+      status: 'active',
+      lastLogin: new Date().toISOString(),
+      portalLanguage: 'en', // English preference
+      permissions: [
+        // Renewals Module Only
+        'dashboard', 'upload', 'cases', 'closed-cases', 'policy-timeline', 'logs',
+        // Personal Pages
+        'profile'
+      ],
+      createdAt: '2024-01-15T08:00:00Z'
+    },
+    {
+      id: 2,
+              name: 'Arjun Sharma',
+      email: 'john.smith@company.com',
+      role: 'admin',
+      status: 'active',
+      lastLogin: '2024-07-14T10:30:00Z',
+      portalLanguage: 'en', // English preference
+      permissions: [
+        // Core Pages
+        'dashboard', 'upload', 'cases', 'closed-cases', 'policy-timeline', 'logs', 'claims',
+        'policy-servicing', 'new-business', 'medical-management',
+        // Email Pages  
+        'emails', 'email-dashboard', 'email-analytics', 'bulk-email',
+        // Marketing Pages
+        'campaigns', 'templates',
+        // Survey Pages
+        'feedback', 'survey-designer',
+        // WhatsApp Pages
+        'whatsapp-flow',
+        // Admin Pages
+        'settings', 'billing', 'users',
+        // Personal Pages
+        'profile'
+      ],
+      createdAt: '2024-01-15T08:00:00Z'
+    },
+    {
+      id: 3,
+      name: 'Sarah Johnson',
+      email: 'sarah.johnson@company.com',
+      role: 'manager',
+      status: 'active',
+      lastLogin: '2024-07-14T09:15:00Z',
+      portalLanguage: 'te', // Telugu preference
+      permissions: [
+        // Core Pages
+        'dashboard', 'upload', 'cases', 'closed-cases', 'policy-timeline', 'logs', 'claims',
+        // Email Pages
+        'emails', 'email-dashboard', 'email-analytics', 'bulk-email',
+        // Marketing Pages
+        'campaigns', 'templates',
+        // Survey Pages
+        'feedback', 'survey-designer',
+        // WhatsApp Pages
+        'whatsapp-flow',
+        // Personal Pages
+        'profile'
+      ],
+      createdAt: '2024-02-10T10:30:00Z'
+    },
+    {
+      id: 4,
+      name: 'Mike Wilson',
+      email: 'mike.wilson@company.com',
+      role: 'agent',
+      status: 'active',
+      lastLogin: '2024-07-13T16:45:00Z',
+      permissions: [
+        // Core Pages
+        'dashboard', 'cases', 'closed-cases', 'policy-timeline', 'logs',
+        // Email Pages
+        'emails', 'email-dashboard',
+        // WhatsApp Pages
+        'whatsapp-flow',
+        // Personal Pages
+        'profile'
+      ],
+      createdAt: '2024-03-05T14:20:00Z'
+    },
+    {
+      id: 5,
+      name: 'Lisa Brown',
+      email: 'lisa.brown@company.com',
+      role: 'viewer',
+      status: 'inactive',
+      lastLogin: '2024-07-10T11:20:00Z',
+      permissions: [
+        // Core Pages (read-only)
+        'dashboard', 'cases', 'closed-cases', 'policy-timeline',
+        // Personal Pages
+        'profile'
+      ],
+      createdAt: '2024-04-12T09:45:00Z'
+    },
+    {
+      id: 6,
+      name: 'Priya Sharma',
+      email: 'priya@client.com',
+      role: 'all_modules_manager',
+      status: 'active',
+      lastLogin: '2024-07-14T12:30:00Z',
+      portalLanguage: 'en', // English preference
+              permissions: [
+          // Core Pages (excluding Renewals module - no cases, closed-cases, policy-timeline, logs)
+          'dashboard', 'upload', 'claims',
+          'policy-servicing', 'new-business', 'medical-management',
+          // Email Pages
+          'emails', 'email-dashboard', 'email-analytics', 'bulk-email',
+          // Marketing Pages
+          'campaigns', 'templates',
+          // Survey Pages
+          'feedback', 'survey-designer',
+          // WhatsApp Pages
+          'whatsapp-flow',
+          // Admin Pages
+          'settings', 'billing', 'users',
+          // Personal Pages
+          'profile'
+          // Note: Excludes Renewals module (cases, closed-cases, policy-timeline, logs related to renewals)
+        ],
+      createdAt: '2024-05-20T11:15:00Z'
+    }
+  ]);
+
+  const [roles, setRoles] = useState([
+    {
+      id: 1,
+      name: 'admin',
+      displayName: 'Administrator',
+      description: 'Full access to all features and settings',
+      permissions: [
+        // Core Pages
+        'dashboard', 'upload', 'cases', 'closed-cases', 'policy-timeline', 'logs', 'claims',
+        'policy-servicing', 'new-business', 'medical-management',
+        // Email Pages  
+        'emails', 'email-dashboard', 'email-analytics', 'bulk-email',
+        // Marketing Pages
+        'campaigns', 'templates',
+        // Survey Pages
+        'feedback', 'survey-designer',
+        // WhatsApp Pages
+        'whatsapp-flow',
+        // Renewal Communication Pages
+        'renewal-email-manager', 'renewal-whatsapp-manager',
+        // Admin Pages
+        'settings', 'billing', 'users',
+        // Personal Pages
+        'profile'
+      ],
+      isSystem: true,
+      userCount: 1
+    },
+    {
+      id: 2,
+      name: 'manager',
+      displayName: 'Manager',
+      description: 'Access to most features except system administration',
+      permissions: [
+        // Core Pages
+        'dashboard', 'upload', 'cases', 'closed-cases', 'policy-timeline', 'logs', 'claims',
+        // Email Pages
+        'emails', 'email-dashboard', 'email-analytics', 'bulk-email',
+        // Marketing Pages
+        'campaigns', 'templates',
+        // Survey Pages
+        'feedback', 'survey-designer',
+        // WhatsApp Pages
+        'whatsapp-flow',
+        // Renewal Communication Pages
+        'renewal-email-manager', 'renewal-whatsapp-manager',
+        // Personal Pages
+        'profile'
+        // Note: Excludes admin pages (settings, billing, users)
+      ],
+      isSystem: true,
+      userCount: 1
+    },
+    {
+      id: 3,
+      name: 'agent',
+      displayName: 'Agent',
+      description: 'Access to case management and email features',
+      permissions: [
+        // Core Pages
+        'dashboard', 'cases', 'closed-cases', 'policy-timeline', 'logs',
+        // Email Pages
+        'emails', 'email-dashboard',
+        // Renewal Communication Pages
+        'renewal-email-manager', 'renewal-whatsapp-manager',
+        // Personal Pages
+        'profile'
+      ],
+      isSystem: true,
+      userCount: 1
+    },
+    {
+      id: 4,
+      name: 'viewer',
+      displayName: 'Viewer',
+      description: 'Read-only access to basic features',
+      permissions: [
+        // Core Pages (read-only)
+        'dashboard', 'cases', 'closed-cases', 'policy-timeline',
+        // Personal Pages
+        'profile'
+      ],
+      isSystem: true,
+      userCount: 1
+    },
+    {
+      id: 4,
+      name: 'renewals_specialist',
+      displayName: 'Renewals Specialist',
+      description: 'Access only to Renewals module and related features',
+      permissions: [
+        // Renewals Module Only
+        'dashboard', 'cases', 'closed-cases', 'policy-timeline', 'logs',
+        // Personal Pages
+        'profile'
+      ],
+      isSystem: false,
+      userCount: 1
+    },
+    {
+      id: 5,
+      name: 'all_modules_manager',
+      displayName: 'All Modules Manager',
+      description: 'Access to all modules except Renewals',
+      permissions: [
+        // Core Pages (excluding Renewals module)
+        'dashboard', 'upload', 'claims',
+        // Email Pages
+        'emails', 'email-dashboard', 'email-analytics', 'bulk-email',
+        // Marketing Pages
+        'campaigns', 'templates',
+        // Survey Pages
+        'feedback', 'survey-designer',
+        // WhatsApp Pages
+        'whatsapp-flow',
+        // Admin Pages
+        'settings', 'billing', 'users',
+        // Personal Pages
+        'profile'
+      ],
+      isSystem: false,
+      userCount: 1
+    }
+  ]);
+
+  const [availablePermissions] = useState([
+    // Core Insurance & Case Management Pages
+    { id: 'dashboard', name: 'Dashboard', description: 'View main dashboard with analytics and overview', category: 'Core Pages', route: '/' },
+    { id: 'upload', name: 'Upload Data', description: 'Upload policy and case data files', category: 'Core Pages', route: '/upload' },
+    { id: 'cases', name: 'Case Tracking', description: 'View and manage active cases', category: 'Core Pages', route: '/cases' },
+    { id: 'closed-cases', name: 'Closed Cases', description: 'View and manage closed cases', category: 'Core Pages', route: '/closed-cases' },
+    { id: 'policy-timeline', name: 'Policy Timeline', description: 'View policy timeline and history', category: 'Core Pages', route: '/policy-timeline' },
+    { id: 'logs', name: 'Case Logs', description: 'View system and case logs', category: 'Core Pages', route: '/logs' },
+    { id: 'claims', name: 'Claims Management', description: 'Manage insurance claims processing', category: 'Core Pages', route: '/claims' },
+    { id: 'policy-servicing', name: 'Policy Servicing', description: 'Manage policy servicing and maintenance', category: 'Core Pages', route: '/policy-servicing' },
+    { id: 'new-business', name: 'New Business', description: 'Handle new business applications and processing', category: 'Core Pages', route: '/new-business' },
+    { id: 'medical-management', name: 'Medical Management', description: 'Manage medical underwriting and assessments', category: 'Core Pages', route: '/medical-management' },
+    
+    // Email Management Pages
+    { id: 'emails', name: 'Email Inbox', description: 'Access email inbox and management', category: 'Email Pages', route: '/emails' },
+    { id: 'email-dashboard', name: 'Email Dashboard', description: 'View email analytics and dashboard', category: 'Email Pages', route: '/emails/dashboard' },
+    { id: 'email-analytics', name: 'Email Analytics', description: 'View detailed email analytics and reports', category: 'Email Pages', route: '/emails/analytics' },
+    { id: 'bulk-email', name: 'Bulk Email', description: 'Send bulk emails and campaigns', category: 'Email Pages', route: '/emails/bulk' },
+    
+    // Campaign & Marketing Pages
+    { id: 'campaigns', name: 'Campaigns', description: 'Manage marketing campaigns', category: 'Marketing Pages', route: '/campaigns' },
+    { id: 'templates', name: 'Template Manager', description: 'Manage email and document templates', category: 'Marketing Pages', route: '/templates' },
+    
+    // Feedback & Survey Pages
+    { id: 'feedback', name: 'Feedback & Surveys', description: 'Manage customer feedback and surveys', category: 'Survey Pages', route: '/feedback' },
+    { id: 'survey-designer', name: 'Survey Designer', description: 'Create and design custom surveys', category: 'Survey Pages', route: '/survey-designer' },
+    
+    // WhatsApp Pages
+    { id: 'whatsapp-flow', name: 'WhatsApp Flow', description: 'Manage automated WhatsApp messaging flows', category: 'Communication Pages', route: '/whatsapp-flow' },
+    
+    // Renewal Communication Pages
+          { id: 'renewal-email-manager', name: 'Email Manager', description: 'Manage email communications for policy renewals', category: 'Renewal Pages', route: '/renewals/email-manager' },
+          { id: 'renewal-whatsapp-manager', name: 'WhatsApp Manager', description: 'Manage WhatsApp communications for policy renewals', category: 'Renewal Pages', route: '/renewals/whatsapp-manager' },
+    
+    // Administration Pages
+    { id: 'settings', name: 'Settings', description: 'Access system settings and configuration', category: 'Admin Pages', route: '/settings' },
+    { id: 'billing', name: 'Billing', description: 'View billing information and invoices', category: 'Admin Pages', route: '/billing' },
+    { id: 'users', name: 'User Management', description: 'Manage users and permissions', category: 'Admin Pages', route: '/users' },
+    
+    // Personal Pages
+    { id: 'profile', name: 'Profile', description: 'Manage personal profile and account settings', category: 'Personal Pages', route: '/profile' }
+  ]);
+
+  // User Management Dialog States
+  const [userDialog, setUserDialog] = useState({ open: false, user: null, mode: 'add' });
+  const [roleDialog, setRoleDialog] = useState({ open: false, role: null, mode: 'add' });
+  const [permissionDialog, setPermissionDialog] = useState({ open: false, user: null });
+  const [resetRoleDialog, setResetRoleDialog] = useState({ open: false, role: null });
+  
+  const [newUser, setNewUser] = useState({
+    name: '',
+    email: '',
+    phone: '',
+    department: '',
+    jobTitle: '',
+    role: 'viewer',
+    status: 'active',
+    permissions: [],
+    sendWelcomeEmail: true,
+    requirePasswordChange: true
+  });
+
+  const [newRole, setNewRole] = useState({
+    name: '',
+    displayName: '',
+    description: '',
+    permissions: []
+  });
+
+  const [selectedUser, setSelectedUser] = useState(null);
+  const [userSearchTerm, setUserSearchTerm] = useState('');
+  const [roleFilter, setRoleFilter] = useState('all');
+  const [statusFilter, setStatusFilter] = useState('all');
+
+  // Default role permissions for reset functionality
+  const defaultRolePermissions = {
+    admin: [
+      // Core Pages
+      'dashboard', 'upload', 'cases', 'closed-cases', 'policy-timeline', 'logs', 'claims',
+      'policy-servicing', 'new-business', 'medical-management',
+      // Email Pages  
+      'emails', 'email-dashboard', 'email-analytics', 'bulk-email',
+      // Marketing Pages
+      'campaigns', 'templates',
+      // Survey Pages
+      'feedback', 'survey-designer',
+      // WhatsApp Pages
+      'whatsapp-flow',
+      // Renewal Communication Pages
+      'renewal-email-manager', 'renewal-whatsapp-manager',
+      // Admin Pages
+      'settings', 'billing', 'users',
+      // Personal Pages
+      'profile'
+    ],
+    manager: [
+      // Core Pages
+      'dashboard', 'upload', 'cases', 'closed-cases', 'policy-timeline', 'logs', 'claims',
+      // Email Pages
+      'emails', 'email-dashboard', 'email-analytics', 'bulk-email',
+      // Marketing Pages
+      'campaigns', 'templates',
+      // Survey Pages
+      'feedback', 'survey-designer',
+      // WhatsApp Pages
+      'whatsapp-flow',
+      // Renewal Communication Pages
+      'renewal-email-manager', 'renewal-whatsapp-manager',
+      // Personal Pages
+      'profile'
+    ],
+    agent: [
+      // Core Pages
+      'dashboard', 'cases', 'closed-cases', 'policy-timeline', 'logs',
+      // Email Pages
+      'emails', 'email-dashboard',
+      // WhatsApp Pages
+      'whatsapp-flow',
+      // Renewal Communication Pages
+      'renewal-email-manager', 'renewal-whatsapp-manager',
+      // Personal Pages
+      'profile'
+    ],
+    viewer: [
+      // Core Pages (read-only)
+      'dashboard', 'cases', 'closed-cases', 'policy-timeline',
+      // Personal Pages
+      'profile'
+    ]
+  };
+
+  const tabsConfig = useMemo(() => [
+    { label: 'General', icon: <SettingsIcon /> },
+    { label: 'Admin', icon: <AdminIcon /> },
+    { label: 'Renewals', icon: <AutorenewIcon /> },
+    { label: 'Email', icon: <EmailIcon /> },
+    { label: 'Providers', icon: <ProvidersIcon /> },
+    { label: 'Campaigns', icon: <CampaignIcon /> },
+    { label: 'WhatsApp Flow', icon: <WhatsAppIcon /> },
+    { label: 'DNC Management', icon: <BlockIcon /> },
+    { label: 'Integrations', icon: <IntegrationsIcon /> },
+    { label: 'Claims', icon: <GavelIcon /> },
+    { label: 'Feedback', icon: <FeedbackIcon /> },
+    { label: 'Deduplication', icon: <MergeIcon /> },
+    { label: 'User Management', icon: <GroupIcon /> },
+    { label: 'System', icon: <StorageIcon /> },
+
+    { label: 'Knowledge/Process Folder', icon: <FolderIcon /> },
+    { label: 'Auto-Assignment', icon: <AssignmentIndIcon /> },
+    { label: 'SLA Management', icon: <TimerIcon /> },
+    { label: 'Language Test', icon: <LanguageIcon /> },
+    { label: 'Scheduled Dialer', icon: <PhoneIcon /> }
+  ], []);
+
+  useEffect(() => {
+    setTimeout(() => {
+      setLoaded(true);
+    }, 100);
+    
+    // Set initial tab based on URL parameter
+    const tabParam = searchParams.get('tab');
+    if (tabParam) {
+      const tabIndex = tabsConfig.findIndex(tab => tab.label.toLowerCase() === tabParam.toLowerCase());
+      if (tabIndex !== -1) {
+        setTabValue(tabIndex);
+      }
+    }
+  }, [searchParams, tabsConfig]);
+
+  const handleTabChange = (event, newValue) => {
+    setTabValue(newValue);
+  };
+
+  const handleSettingChange = (setting, value) => {
+    updateSettings({
+      [setting]: value
+    });
+  };
+
+  const handleSaveSettings = () => {
+    setSuccessMessage('Settings saved successfully!');
+    setTimeout(() => {
+      setSuccessMessage('');
+    }, 3000);
+  };
+
+  const handleToggleMfa = () => {
+    handleSettingChange('mfaEnabled', !settings.mfaEnabled);
+    setSuccessMessage(`Multi-Factor Authentication ${!settings.mfaEnabled ? 'enabled' : 'disabled'} successfully`);
+  };
+
+  const handleOpenWelcomeGuide = () => {
+    setWelcomeModalOpen(true);
+  };
+
+  const handleCloseWelcomeGuide = () => {
+    setWelcomeModalOpen(false);
+  };
+
+  const handleEmailSettingChange = (key, value) => {
+    setEmailSettings(prev => ({ ...prev, [key]: value }));
+    // Also update the main settings context for backward compatibility
+    handleSettingChange(key, value);
+  };
+
+  const handleWhatsappSettingChange = (key, value) => {
+    if (key.includes('.')) {
+      const [parentKey, childKey] = key.split('.');
+      setWhatsappSettings(prev => ({
+        ...prev,
+        [parentKey]: {
+          ...prev[parentKey],
+          [childKey]: value
+        }
+      }));
+    } else {
+      setWhatsappSettings(prev => ({ ...prev, [key]: value }));
+    }
+  };
+
+  const handleAiSettingChange = (key, value) => {
+    if (key.includes('.')) {
+      const keys = key.split('.');
+      setAiSettings(prev => {
+        const newSettings = { ...prev };
+        let current = newSettings;
+        
+        // Navigate to the parent object
+        for (let i = 0; i < keys.length - 1; i++) {
+          if (!current[keys[i]]) {
+            current[keys[i]] = {};
+          }
+          current[keys[i]] = { ...current[keys[i]] };
+          current = current[keys[i]];
+        }
+        
+        // Set the final value
+        current[keys[keys.length - 1]] = value;
+        return newSettings;
+      });
+    } else {
+      setAiSettings(prev => ({ ...prev, [key]: value }));
+    }
+  };
+
+  const handleTestAiConnection = async () => {
+    try {
+      // Simulate API test based on provider
+      if (aiSettings.provider === 'ollama') {
+        // Mock Ollama connection test
+        const response = await fetch(`${aiSettings.ollama.baseUrl}/api/tags`);
+        if (response.ok) {
+          const data = await response.json();
+          setAiSettings(prev => ({
+            ...prev,
+            ollama: {
+              ...prev.ollama,
+              availableModels: data.models?.map(m => m.name) || ['llama2', 'codellama', 'mistral'],
+              lastModelRefresh: new Date().toISOString()
+            }
+          }));
+          setSuccessMessage('Ollama connection successful! Models refreshed.');
+        } else {
+          throw new Error('Failed to connect to Ollama server');
+        }
+      } else {
+        // Simulate other provider tests
+        setSuccessMessage(`${aiSettings.provider.toUpperCase()} connection test successful!`);
+      }
+      setTimeout(() => setSuccessMessage(''), 5000);
+    } catch (error) {
+      console.error('AI connection test failed:', error);
+      setSuccessMessage(`Connection failed: ${error.message || 'Unknown error'}`);
+      setTimeout(() => setSuccessMessage(''), 5000);
+    }
+  };
+
+  const handleAddRule = () => {
+    setRuleDialog({ open: true, rule: null, mode: 'add' });
+    setNewRule({ keyword: '', category: 'uncategorized', priority: 'medium', enabled: true });
+  };
+
+  const handleEditRule = (rule) => {
+    setRuleDialog({ open: true, rule, mode: 'edit' });
+    setNewRule({ ...rule });
+  };
+
+  const handleDeleteRule = (ruleId) => {
+    setRules(prev => prev.filter(rule => rule.id !== ruleId));
+  };
+
+  const handleSaveRule = () => {
+    if (ruleDialog.mode === 'add') {
+      const newRuleWithId = { ...newRule, id: Math.max(...rules.map(r => r.id), 0) + 1 };
+      setRules(prev => [...prev, newRuleWithId]);
+    } else {
+      setRules(prev => prev.map(rule => rule.id === ruleDialog.rule.id ? { ...newRule } : rule));
+    }
+    setRuleDialog({ open: false, rule: null, mode: 'add' });
+  };
+
+  const handleToggleRule = (ruleId) => {
+    setRules(prev => prev.map(rule => rule.id === ruleId ? { ...rule, enabled: !rule.enabled } : rule));
+  };
+
+  // Email account handlers
+  const handleAddAccount = () => {
+    setAccountDialog({ open: true, account: null, mode: 'add' });
+    setNewAccount({
+      name: '',
+      email: '',
+      provider: 'gmail',
+      imapServer: '',
+      imapPort: 993,
+      smtpServer: '',
+      smtpPort: 587,
+      useSSL: true,
+      autoSync: true,
+      syncInterval: 5
+    });
+  };
+
+  const handleEditAccount = (account) => {
+    setAccountDialog({ open: true, account, mode: 'edit' });
+    setNewAccount({ ...account });
+  };
+
+  const handleDeleteAccount = (accountId) => {
+    setEmailAccounts(prev => prev.filter(account => account.id !== accountId));
+  };
+
+  const handleSaveAccount = () => {
+    if (accountDialog.mode === 'add') {
+      const newAccountWithId = { 
+        ...newAccount, 
+        id: Math.max(...emailAccounts.map(a => a.id), 0) + 1,
+        status: 'connected',
+        lastSync: new Date().toISOString()
+      };
+      setEmailAccounts(prev => [...prev, newAccountWithId]);
+    } else {
+      setEmailAccounts(prev => prev.map(account => 
+        account.id === accountDialog.account.id ? { ...newAccount } : account
+      ));
+    }
+    setAccountDialog({ open: false, account: null, mode: 'add' });
+  };
+
+  const handleToggleAccountSync = (accountId) => {
+    setEmailAccounts(prev => prev.map(account => 
+      account.id === accountId ? { ...account, autoSync: !account.autoSync } : account
+    ));
+  };
+
+  const handleTestConnection = (accountId) => {
+    // In a real app, this would test the connection
+    setEmailAccounts(prev => prev.map(account => 
+      account.id === accountId ? { ...account, status: 'connected', lastSync: new Date().toISOString() } : account
+    ));
+    setSuccessMessage('Connection test successful!');
+    setTimeout(() => setSuccessMessage(''), 3000);
+  };
+
+  const getCategoryColor = (category) => {
+    switch (category) {
+      case 'complaint': return 'error';
+      case 'feedback': return 'info';
+      case 'refund': return 'warning';
+      case 'appointment': return 'success';
+      default: return 'default';
+    }
+  };
+
+  const getPriorityColor = (priority) => {
+    switch (priority) {
+      case 'high': return 'error';
+      case 'medium': return 'warning';
+      case 'low': return 'success';
+      default: return 'default';
+    }
+  };
+
+  // User Management Handlers
+  const handleAddUser = () => {
+    setUserDialog({ open: true, user: null, mode: 'add' });
+    setNewUser({
+      name: '',
+      email: '',
+      phone: '',
+      department: '',
+      jobTitle: '',
+      role: 'viewer',
+      status: 'active',
+      permissions: [],
+      sendWelcomeEmail: true,
+      requirePasswordChange: true,
+      portalLanguage: 'en' // Default to English
+    });
+  };
+
+  const handleEditUser = (user) => {
+    setUserDialog({ open: true, user, mode: 'edit' });
+    setNewUser({ 
+      ...user,
+      phone: user.phone || '',
+      department: user.department || '',
+      jobTitle: user.jobTitle || '',
+      sendWelcomeEmail: user.sendWelcomeEmail || false,
+      requirePasswordChange: user.requirePasswordChange || false,
+      portalLanguage: user.portalLanguage || 'en'
+    });
+  };
+
+  const handleDeleteUser = (userId) => {
+    setUsers(prev => prev.filter(user => user.id !== userId));
+    setSuccessMessage('User deleted successfully!');
+    setTimeout(() => setSuccessMessage(''), 3000);
+  };
+
+  const handleSaveUser = () => {
+    if (userDialog.mode === 'add') {
+      const newUserWithId = { 
+        ...newUser, 
+        id: Math.max(...users.map(u => u.id), 0) + 1,
+        createdAt: new Date().toISOString(),
+        lastLogin: null
+      };
+      setUsers(prev => [...prev, newUserWithId]);
+      setSuccessMessage('User created successfully!');
+    } else {
+      setUsers(prev => prev.map(user => 
+        user.id === userDialog.user.id ? { ...newUser } : user
+      ));
+      setSuccessMessage('User updated successfully!');
+    }
+    setUserDialog({ open: false, user: null, mode: 'add' });
+    setTimeout(() => setSuccessMessage(''), 3000);
+  };
+
+  const handleToggleUserStatus = (userId) => {
+    setUsers(prev => prev.map(user => 
+      user.id === userId ? { ...user, status: user.status === 'active' ? 'inactive' : 'active' } : user
+    ));
+  };
+
+  const handleAddRole = () => {
+    setRoleDialog({ open: true, role: null, mode: 'add' });
+    setNewRole({
+      name: '',
+      displayName: '',
+      description: '',
+      permissions: []
+    });
+  };
+
+  const handleEditRole = (role) => {
+    setRoleDialog({ open: true, role, mode: 'edit' });
+    setNewRole({ ...role });
+  };
+
+  const handleDeleteRole = (roleId) => {
+    const role = roles.find(r => r.id === roleId);
+    if (role.isSystem) {
+      setSuccessMessage('System roles cannot be deleted');
+      setTimeout(() => setSuccessMessage(''), 3000);
+      return;
+    }
+    if (role.userCount > 0) {
+      setSuccessMessage('Cannot delete role with assigned users');
+      setTimeout(() => setSuccessMessage(''), 3000);
+      return;
+    }
+    setRoles(prev => prev.filter(role => role.id !== roleId));
+    setSuccessMessage('Role deleted successfully!');
+    setTimeout(() => setSuccessMessage(''), 3000);
+  };
+
+  const handleSaveRole = () => {
+    if (roleDialog.mode === 'add') {
+      const newRoleWithId = { 
+        ...newRole, 
+        id: Math.max(...roles.map(r => r.id), 0) + 1,
+        isSystem: false,
+        userCount: 0
+      };
+      setRoles(prev => [...prev, newRoleWithId]);
+      setSuccessMessage('Role created successfully!');
+    } else {
+      // When editing, preserve system properties and update the role
+      const updatedRole = {
+        ...newRole,
+        id: roleDialog.role.id,
+        isSystem: roleDialog.role.isSystem,
+        userCount: roleDialog.role.userCount
+      };
+      
+      setRoles(prev => prev.map(role => 
+        role.id === roleDialog.role.id ? updatedRole : role
+      ));
+      
+      // Update all users with this role to have the new permissions
+      setUsers(prev => prev.map(user => 
+        user.role === newRole.name ? { ...user, permissions: newRole.permissions } : user
+      ));
+      
+      setSuccessMessage('Role updated successfully!');
+    }
+    setRoleDialog({ open: false, role: null, mode: 'add' });
+    setTimeout(() => setSuccessMessage(''), 3000);
+  };
+
+  const handleResetRole = (role) => {
+    setResetRoleDialog({ open: true, role });
+  };
+
+  const handleConfirmResetRole = () => {
+    const role = resetRoleDialog.role;
+    if (role && defaultRolePermissions[role.name]) {
+      const defaultPermissions = defaultRolePermissions[role.name];
+      
+      // Update the role with default permissions
+      setRoles(prev => prev.map(r => 
+        r.id === role.id ? { ...r, permissions: defaultPermissions } : r
+      ));
+      
+      // Update all users with this role to have the default permissions
+      setUsers(prev => prev.map(user => 
+        user.role === role.name ? { ...user, permissions: defaultPermissions } : user
+      ));
+      
+      setResetRoleDialog({ open: false, role: null });
+      setSuccessMessage(`${role.displayName} role has been reset to default permissions.`);
+      setTimeout(() => setSuccessMessage(''), 3000);
+    }
+  };
+
+  const handleOpenPermissionDialog = (user) => {
+    setSelectedUser(user);
+    setPermissionDialog({ open: true, user });
+  };
+
+  const handleUpdateUserPermissions = (userId, permissions) => {
+    setUsers(prev => prev.map(user => 
+      user.id === userId ? { ...user, permissions } : user
+    ));
+    setPermissionDialog({ open: false, user: null });
+    setSuccessMessage('User permissions updated successfully!');
+    setTimeout(() => setSuccessMessage(''), 3000);
+  };
+
+  const handleRoleChange = (userId, newRole) => {
+    const roleData = roles.find(r => r.name === newRole);
+    setUsers(prev => prev.map(user => 
+      user.id === userId ? { ...user, role: newRole, permissions: roleData?.permissions || [] } : user
+    ));
+    setSuccessMessage('User role updated successfully!');
+    setTimeout(() => setSuccessMessage(''), 3000);
+  };
+
+  const getFilteredUsers = () => {
+    return users.filter(user => {
+      const matchesSearch = user.name.toLowerCase().includes(userSearchTerm.toLowerCase()) ||
+                           user.email.toLowerCase().includes(userSearchTerm.toLowerCase());
+      const matchesRole = roleFilter === 'all' || user.role === roleFilter;
+      const matchesStatus = statusFilter === 'all' || user.status === statusFilter;
+      return matchesSearch && matchesRole && matchesStatus;
+    });
+  };
+
+  // const getRoleDisplayName = (roleName) => {
+  //   const role = roles.find(r => r.name === roleName);
+  //   return role ? role.displayName : roleName;
+  // };
+
+  const getPermissionsByCategory = () => {
+    const categories = {};
+    availablePermissions.forEach(permission => {
+      if (!categories[permission.category]) {
+        categories[permission.category] = [];
+      }
+      categories[permission.category].push(permission);
+    });
+    return categories;
+  };
+
+  // General Settings Tab Content
+  const GeneralSettingsTab = () => (
+    <Box>
+      <Typography variant="h5" fontWeight="600" gutterBottom>
+        General Settings
+      </Typography>
+      <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+        Configure your appearance, regional preferences, notifications, and security settings.
+      </Typography>
+
+      {/* Appearance Section */}
+      <Card sx={{ mb: 3, borderRadius: 3, boxShadow: '0 8px 24px rgba(0,0,0,0.05)' }}>
+        <CardContent sx={{ p: 3 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+            <PaletteIcon sx={{ mr: 1, color: theme.palette.primary.main }} />
+            <Typography variant="h6" fontWeight="600">Appearance</Typography>
+          </Box>
+          <Divider sx={{ mb: 2 }} />
+          <List disablePadding>
+            <ListItem sx={{ borderRadius: 2, '&:hover': { backgroundColor: alpha(theme.palette.primary.main, 0.04) } }}>
+              <ListItemIcon>
+                <DarkModeIcon color="primary" />
+              </ListItemIcon>
+              <ListItemText 
+                primary={<Typography fontWeight="500">Dark Mode</Typography>}
+                secondary="Toggle between light and dark theme"
+              />
+              <ListItemSecondaryAction>
+                <Switch
+                  edge="end"
+                  checked={mode === 'dark'}
+                  onChange={() => toggleMode(mode === 'dark' ? 'light' : 'dark')}
+                  color="primary"
+                />
+              </ListItemSecondaryAction>
+            </ListItem>
+          </List>
+        </CardContent>
+      </Card>
+
+      {/* Regional Settings Section */}
+      <Card sx={{ mb: 3, borderRadius: 3, boxShadow: '0 8px 24px rgba(0,0,0,0.05)' }}>
+        <CardContent sx={{ p: 3 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+            <LanguageIcon sx={{ mr: 1, color: theme.palette.primary.main }} />
+            <Typography variant="h6" fontWeight="600">Regional Settings</Typography>
+          </Box>
+          <Divider sx={{ mb: 2 }} />
+          <List disablePadding>
+            <ListItem sx={{ borderRadius: 2, mb: 1 }}>
+              <ListItemIcon>
+                <LanguageIcon color="primary" />
+              </ListItemIcon>
+              <ListItemText
+                primary={<Typography fontWeight="500">Language</Typography>}
+                secondary="Select your preferred language"
+              />
+              <ListItemSecondaryAction sx={{ width: '120px' }}>
+                <FormControl fullWidth size="small">
+                  <Select
+                    value={settings.language}
+                    onChange={(e) => handleSettingChange('language', e.target.value)}
+                    sx={{ borderRadius: 2 }}
+                  >
+                    <MenuItem value="en">English</MenuItem>
+                    <MenuItem value="hi">हिन्दी (Hindi)</MenuItem>
+                    <MenuItem value="bn">বাংলা (Bengali)</MenuItem>
+                    <MenuItem value="te">తెలుగు (Telugu)</MenuItem>
+                    <MenuItem value="mr">मराठी (Marathi)</MenuItem>
+                    <MenuItem value="ta">தமிழ் (Tamil)</MenuItem>
+                    <MenuItem value="gu">ગુજરાતી (Gujarati)</MenuItem>
+                    <MenuItem value="ml">മലയാളം (Malayalam)</MenuItem>
+                    <MenuItem value="kn">ಕನ್ನಡ (Kannada)</MenuItem>
+                    <MenuItem value="pa">ਪੰਜਾਬੀ (Punjabi)</MenuItem>
+                    <MenuItem value="as">অসমীয়া (Assamese)</MenuItem>
+                    <MenuItem value="or">ଓଡ଼ିଆ (Odia)</MenuItem>
+                    <MenuItem value="ur">اردو (Urdu)</MenuItem>
+                    <MenuItem value="es">Español</MenuItem>
+                    <MenuItem value="fr">Français</MenuItem>
+                  </Select>
+                </FormControl>
+              </ListItemSecondaryAction>
+            </ListItem>
+            <ListItem sx={{ borderRadius: 2 }}>
+              <ListItemIcon>
+                <AccessTimeIcon color="secondary" />
+              </ListItemIcon>
+              <ListItemText
+                primary={<Typography fontWeight="500">Time Zone</Typography>}
+                secondary="Select your time zone"
+              />
+              <ListItemSecondaryAction sx={{ width: '120px' }}>
+                <FormControl fullWidth size="small">
+                  <Select
+                    value={settings.timezone}
+                    onChange={(e) => handleSettingChange('timezone', e.target.value)}
+                    sx={{ borderRadius: 2 }}
+                  >
+                    <MenuItem value="UTC-8">UTC-8</MenuItem>
+                    <MenuItem value="UTC-5">UTC-5</MenuItem>
+                    <MenuItem value="UTC+0">UTC+0</MenuItem>
+                    <MenuItem value="UTC+1">UTC+1</MenuItem>
+                    <MenuItem value="UTC+8">UTC+8</MenuItem>
+                  </Select>
+                </FormControl>
+              </ListItemSecondaryAction>
+            </ListItem>
+          </List>
+        </CardContent>
+      </Card>
+
+      {/* Notifications Section */}
+      <Card sx={{ mb: 3, borderRadius: 3, boxShadow: '0 8px 24px rgba(0,0,0,0.05)' }}>
+        <CardContent sx={{ p: 3 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+            <NotificationsIcon sx={{ mr: 1, color: theme.palette.primary.main }} />
+            <Typography variant="h6" fontWeight="600">Notifications</Typography>
+          </Box>
+          <Divider sx={{ mb: 2 }} />
+          <List disablePadding>
+            <ListItem sx={{ borderRadius: 2, mb: 1 }}>
+              <ListItemIcon>
+                <EmailIcon color="info" />
+              </ListItemIcon>
+              <ListItemText
+                primary={<Typography fontWeight="500">Email Notifications</Typography>}
+                secondary="Receive updates via email"
+              />
+              <ListItemSecondaryAction>
+                <Switch
+                  edge="end"
+                  checked={settings.emailNotifications}
+                  onChange={(e) => handleSettingChange('emailNotifications', e.target.checked)}
+                  color="primary"
+                />
+              </ListItemSecondaryAction>
+            </ListItem>
+            <ListItem sx={{ borderRadius: 2 }}>
+              <ListItemIcon>
+                <SmsIcon color="success" />
+              </ListItemIcon>
+              <ListItemText
+                primary={<Typography fontWeight="500">SMS Notifications</Typography>}
+                secondary="Receive updates via SMS"
+              />
+              <ListItemSecondaryAction>
+                <Switch
+                  edge="end"
+                  checked={settings.smsNotifications}
+                  onChange={(e) => handleSettingChange('smsNotifications', e.target.checked)}
+                  color="primary"
+                />
+              </ListItemSecondaryAction>
+            </ListItem>
+          </List>
+        </CardContent>
+      </Card>
+
+      {/* Multi-Factor Authentication Section */}
+      <Card sx={{ borderRadius: 3, boxShadow: '0 8px 24px rgba(0,0,0,0.05)' }}>
+        <CardContent sx={{ p: 3 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+            <SecurityIcon sx={{ mr: 1, color: theme.palette.primary.main }} />
+            <Typography variant="h6" fontWeight="600">Multi-Factor Authentication</Typography>
+          </Box>
+          <Divider sx={{ mb: 2 }} />
+          <List disablePadding>
+            <ListItem sx={{ borderRadius: 2 }}>
+              <ListItemIcon>
+                <ShieldIcon color="error" />
+              </ListItemIcon>
+              <ListItemText
+                primary={<Typography fontWeight="500">Enable MFA</Typography>}
+                secondary={settings.mfaEnabled 
+                  ? "Enabled - OTP required at login" 
+                  : "Disabled - Enable for additional security"}
+              />
+              <ListItemSecondaryAction>
+                <Switch
+                  edge="end"
+                  checked={settings.mfaEnabled === true}
+                  onChange={handleToggleMfa}
+                  color="primary"
+                />
+              </ListItemSecondaryAction>
+            </ListItem>
+          </List>
+        </CardContent>
+      </Card>
+    </Box>
+  );
+
+  // Renewals Settings Tab Content
+  const RenewalsSettingsTab = () => (
+    <Box>
+      <Typography variant="h5" fontWeight="600" gutterBottom>
+        Renewals Module Settings
+      </Typography>
+      <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+        Configure settings for renewal management, case tracking, policy processing, calling, and messaging integrations.
+      </Typography>
+
+      <Card sx={{ mb: 3, borderRadius: 3, boxShadow: '0 8px 24px rgba(0,0,0,0.05)' }}>
+        <CardContent sx={{ p: 3 }}>
+          <Typography variant="h6" fontWeight="600" gutterBottom>Auto Refresh Settings</Typography>
+          <Divider sx={{ mb: 2 }} />
+          <List disablePadding>
+            <ListItem sx={{ borderRadius: 2, mb: 1 }}>
+              <ListItemIcon>
+                <RefreshIcon color="info" />
+              </ListItemIcon>
+              <ListItemText
+                primary={<Typography fontWeight="500">Auto Refresh</Typography>}
+                secondary="Automatically refresh case data every 5 minutes"
+              />
+              <ListItemSecondaryAction>
+                <Switch
+                  edge="end"
+                  checked={settings.autoRefresh}
+                  onChange={(e) => handleSettingChange('autoRefresh', e.target.checked)}
+                  color="primary"
+                />
+              </ListItemSecondaryAction>
+            </ListItem>
+            <ListItem sx={{ borderRadius: 2 }}>
+              <ListItemIcon>
+                <EditIcon color="secondary" />
+              </ListItemIcon>
+              <ListItemText
+                primary={<Typography fontWeight="500">Show Edit Case Button</Typography>}
+                secondary="Display the Edit Case button in case details view"
+              />
+              <ListItemSecondaryAction>
+                <Switch
+                  edge="end"
+                  checked={settings.showEditCaseButton !== false}
+                  onChange={(e) => handleSettingChange('showEditCaseButton', e.target.checked)}
+                  color="primary"
+                />
+              </ListItemSecondaryAction>
+            </ListItem>
+          </List>
+        </CardContent>
+      </Card>
+
+      <Card sx={{ mb: 3, borderRadius: 3, boxShadow: '0 8px 24px rgba(0,0,0,0.05)' }}>
+        <CardContent sx={{ p: 3 }}>
+          <Typography variant="h6" fontWeight="600" gutterBottom>Policy Processing</Typography>
+          <Divider sx={{ mb: 2 }} />
+          <Box sx={{ mb: 2 }}>
+            <Typography variant="body2" color="text.secondary" gutterBottom>
+              Default Renewal Period (Days)
+            </Typography>
+            <Slider
+              value={settings.renewalPeriod || 30}
+              onChange={(e, value) => handleSettingChange('renewalPeriod', value)}
+              min={15}
+              max={90}
+              step={5}
+              marks={[
+                { value: 15, label: '15' },
+                { value: 30, label: '30' },
+                { value: 60, label: '60' },
+                { value: 90, label: '90' }
+              ]}
+              valueLabelDisplay="auto"
+              sx={{ mt: 2 }}
+            />
+          </Box>
+          <FormControlLabel
+            control={
+              <Checkbox
+                checked={settings.autoAssignCases || false}
+                onChange={(e) => handleSettingChange('autoAssignCases', e.target.checked)}
+                color="primary"
+              />
+            }
+            label="Auto-assign cases to available agents"
+          />
+        </CardContent>
+      </Card>
+
+      {/* Calling Integration Settings */}
+      <Card sx={{ mb: 3, borderRadius: 3, boxShadow: '0 8px 24px rgba(0,0,0,0.05)' }}>
+        <CardContent sx={{ p: 3 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+            <SmartToyIcon sx={{ mr: 1, color: theme.palette.primary.main }} />
+            <Typography variant="h6" fontWeight="600">Calling Integration Settings</Typography>
+          </Box>
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+            Configure calling service providers for customer outreach and support calls
+          </Typography>
+          <Divider sx={{ mb: 3 }} />
+
+          {/* Enable Calling Integration */}
+          <FormControlLabel
+            control={
+              <Switch
+                checked={settings.callingEnabled || false}
+                onChange={(e) => handleSettingChange('callingEnabled', e.target.checked)}
+                color="primary"
+              />
+            }
+            label="Enable Calling Integration"
+            sx={{ mb: 3 }}
+          />
+
+          {settings.callingEnabled && (
+            <Box>
+              {/* Calling Provider Selection */}
+              <FormControl fullWidth sx={{ mb: 3 }}>
+                <InputLabel>Calling Provider</InputLabel>
+                <Select
+                  value={settings.callingProvider || 'ubona'}
+                  onChange={(e) => handleSettingChange('callingProvider', e.target.value)}
+                  label="Calling Provider"
+                >
+                  <MenuItem value="ubona">Ubona</MenuItem>
+                  <MenuItem value="twilio">Twilio Voice</MenuItem>
+                  <MenuItem value="nexmo">Vonage (Nexmo)</MenuItem>
+                  <MenuItem value="exotel">Exotel</MenuItem>
+                  <MenuItem value="kaleyra">Kaleyra</MenuItem>
+                  <MenuItem value="plivo">Plivo</MenuItem>
+                  <MenuItem value="custom">Custom Provider</MenuItem>
+                </Select>
+              </FormControl>
+
+              {/* Ubona Specific Settings */}
+              {settings.callingProvider === 'ubona' && (
+                <Box sx={{ p: 2, bgcolor: alpha(theme.palette.info.main, 0.1), borderRadius: 2, mb: 3 }}>
+                  <Typography variant="subtitle2" fontWeight="600" gutterBottom>
+                    Ubona Configuration
+                  </Typography>
+                  <Grid container spacing={2}>
+                    <Grid item xs={12} md={6}>
+                      <TextField
+                        fullWidth
+                        label="API Base URL"
+                        value={settings.ubonaApiUrl || 'https://api.ubona.com/v1'}
+                        onChange={(e) => handleSettingChange('ubonaApiUrl', e.target.value)}
+                        placeholder="https://api.ubona.com/v1"
+                        size="small"
+                      />
+                    </Grid>
+                    <Grid item xs={12} md={6}>
+                      <TextField
+                        fullWidth
+                        label="API Key"
+                        type="password"
+                        value={settings.ubonaApiKey || ''}
+                        onChange={(e) => handleSettingChange('ubonaApiKey', e.target.value)}
+                        placeholder="Enter your Ubona API key"
+                        size="small"
+                      />
+                    </Grid>
+                    <Grid item xs={12} md={6}>
+                      <TextField
+                        fullWidth
+                        label="Account SID"
+                        value={settings.ubonaAccountSid || ''}
+                        onChange={(e) => handleSettingChange('ubonaAccountSid', e.target.value)}
+                        placeholder="Enter your Ubona Account SID"
+                        size="small"
+                      />
+                    </Grid>
+                    <Grid item xs={12} md={6}>
+                      <TextField
+                        fullWidth
+                        label="From Number"
+                        value={settings.ubonaFromNumber || ''}
+                        onChange={(e) => handleSettingChange('ubonaFromNumber', e.target.value)}
+                        placeholder="+1234567890"
+                        size="small"
+                      />
+                    </Grid>
+                  </Grid>
+                </Box>
+              )}
+
+              {/* General Calling Settings */}
+              <Box>
+                <Typography variant="subtitle2" fontWeight="600" gutterBottom>
+                  Call Settings
+                </Typography>
+                <Grid container spacing={2}>
+                  <Grid item xs={12} md={6}>
+                    <TextField
+                      fullWidth
+                      label="Default Call Duration (minutes)"
+                      type="number"
+                      value={settings.defaultCallDuration || 30}
+                      onChange={(e) => handleSettingChange('defaultCallDuration', parseInt(e.target.value))}
+                      size="small"
+                      inputProps={{ min: 1, max: 120 }}
+                    />
+                  </Grid>
+                  <Grid item xs={12} md={6}>
+                    <TextField
+                      fullWidth
+                      label="Max Concurrent Calls"
+                      type="number"
+                      value={settings.maxConcurrentCalls || 10}
+                      onChange={(e) => handleSettingChange('maxConcurrentCalls', parseInt(e.target.value))}
+                      size="small"
+                      inputProps={{ min: 1, max: 100 }}
+                    />
+                  </Grid>
+                </Grid>
+
+                <Box sx={{ display: 'flex', gap: 3, mt: 2, flexWrap: 'wrap' }}>
+                  <FormControlLabel
+                    control={
+                      <Checkbox
+                        checked={settings.recordCalls || false}
+                        onChange={(e) => handleSettingChange('recordCalls', e.target.checked)}
+                        color="primary"
+                      />
+                    }
+                    label="Enable Call Recording"
+                  />
+
+                  <FormControlLabel
+                    control={
+                      <Checkbox
+                        checked={settings.callAnalytics || false}
+                        onChange={(e) => handleSettingChange('callAnalytics', e.target.checked)}
+                        color="primary"
+                      />
+                    }
+                    label="Enable Call Analytics"
+                  />
+                </Box>
+              </Box>
+            </Box>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Quick Message Integration Settings */}
+      <Card sx={{ mb: 3, borderRadius: 3, boxShadow: '0 8px 24px rgba(0,0,0,0.05)' }}>
+        <CardContent sx={{ p: 3 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+            <WhatsAppIcon sx={{ mr: 1, color: theme.palette.success.main }} />
+            <Typography variant="h6" fontWeight="600">Quick Message Integration Settings</Typography>
+          </Box>
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+            Configure messaging service providers for WhatsApp, SMS, and Email communications
+          </Typography>
+          <Divider sx={{ mb: 3 }} />
+
+          {/* Enable Quick Messaging */}
+          <FormControlLabel
+            control={
+              <Switch
+                checked={settings.quickMessagingEnabled || false}
+                onChange={(e) => handleSettingChange('quickMessagingEnabled', e.target.checked)}
+                color="primary"
+              />
+            }
+            label="Enable Quick Messaging Integration"
+            sx={{ mb: 3 }}
+          />
+
+          {settings.quickMessagingEnabled && (
+            <Box>
+              {/* WhatsApp Settings */}
+              <Box sx={{ mb: 4 }}>
+                <Typography variant="subtitle1" fontWeight="600" gutterBottom>
+                  WhatsApp Configuration
+                </Typography>
+                
+                <FormControl fullWidth sx={{ mb: 2 }}>
+                  <InputLabel>WhatsApp Provider</InputLabel>
+                  <Select
+                    value={settings.whatsappProvider || 'gupshup'}
+                    onChange={(e) => handleSettingChange('whatsappProvider', e.target.value)}
+                    label="WhatsApp Provider"
+                  >
+                    <MenuItem value="gupshup">Gupshup</MenuItem>
+                    <MenuItem value="360dialog">360Dialog</MenuItem>
+                    <MenuItem value="infobip">Infobip</MenuItem>
+                    <MenuItem value="kaleyra">Kaleyra</MenuItem>
+                    <MenuItem value="exotel">Exotel</MenuItem>
+                    <MenuItem value="msg91">MSG91</MenuItem>
+                    <MenuItem value="interakt">Interakt</MenuItem>
+                    <MenuItem value="custom">Custom Provider</MenuItem>
+                  </Select>
+                </FormControl>
+
+                <Grid container spacing={2}>
+                  <Grid item xs={12} md={6}>
+                    <TextField
+                      fullWidth
+                      label="WhatsApp API URL"
+                      value={settings.whatsappApiUrl || ''}
+                      onChange={(e) => handleSettingChange('whatsappApiUrl', e.target.value)}
+                      placeholder="https://api.gupshup.io/sm/api/v1"
+                      size="small"
+                    />
+                  </Grid>
+                  <Grid item xs={12} md={6}>
+                    <TextField
+                      fullWidth
+                      label="API Key / Auth Token"
+                      type="password"
+                      value={settings.whatsappApiKey || ''}
+                      onChange={(e) => handleSettingChange('whatsappApiKey', e.target.value)}
+                      placeholder="Enter your WhatsApp API key"
+                      size="small"
+                    />
+                  </Grid>
+                  <Grid item xs={12} md={6}>
+                    <TextField
+                      fullWidth
+                      label="Source Number"
+                      value={settings.whatsappSourceNumber || ''}
+                      onChange={(e) => handleSettingChange('whatsappSourceNumber', e.target.value)}
+                      placeholder="+1234567890"
+                      size="small"
+                    />
+                  </Grid>
+                  <Grid item xs={12} md={6}>
+                    <TextField
+                      fullWidth
+                      label="Business Account ID"
+                      value={settings.whatsappBusinessId || ''}
+                      onChange={(e) => handleSettingChange('whatsappBusinessId', e.target.value)}
+                      placeholder="Your WhatsApp Business Account ID"
+                      size="small"
+                    />
+                  </Grid>
+                </Grid>
+              </Box>
+
+              {/* SMS Settings */}
+              <Box sx={{ mb: 4 }}>
+                <Typography variant="subtitle1" fontWeight="600" gutterBottom>
+                  SMS Configuration
+                </Typography>
+                
+                <FormControl fullWidth sx={{ mb: 2 }}>
+                  <InputLabel>SMS Provider</InputLabel>
+                  <Select
+                    value={settings.smsProvider || 'twilio'}
+                    onChange={(e) => handleSettingChange('smsProvider', e.target.value)}
+                    label="SMS Provider"
+                  >
+                    <MenuItem value="twilio">Twilio</MenuItem>
+                    <MenuItem value="nexmo">Vonage (Nexmo)</MenuItem>
+                    <MenuItem value="msg91">MSG91</MenuItem>
+                    <MenuItem value="textlocal">TextLocal</MenuItem>
+                    <MenuItem value="kaleyra">Kaleyra</MenuItem>
+                    <MenuItem value="exotel">Exotel</MenuItem>
+                    <MenuItem value="custom">Custom Provider</MenuItem>
+                  </Select>
+                </FormControl>
+
+                <Grid container spacing={2}>
+                  <Grid item xs={12} md={6}>
+                    <TextField
+                      fullWidth
+                      label="SMS API URL"
+                      value={settings.smsApiUrl || ''}
+                      onChange={(e) => handleSettingChange('smsApiUrl', e.target.value)}
+                      placeholder="https://api.twilio.com/2010-04-01"
+                      size="small"
+                    />
+                  </Grid>
+                  <Grid item xs={12} md={6}>
+                    <TextField
+                      fullWidth
+                      label="API Key / SID"
+                      type="password"
+                      value={settings.smsApiKey || ''}
+                      onChange={(e) => handleSettingChange('smsApiKey', e.target.value)}
+                      placeholder="Enter your SMS API key"
+                      size="small"
+                    />
+                  </Grid>
+                  <Grid item xs={12} md={6}>
+                    <TextField
+                      fullWidth
+                      label="Auth Token"
+                      type="password"
+                      value={settings.smsAuthToken || ''}
+                      onChange={(e) => handleSettingChange('smsAuthToken', e.target.value)}
+                      placeholder="Enter your SMS auth token"
+                      size="small"
+                    />
+                  </Grid>
+                  <Grid item xs={12} md={6}>
+                    <TextField
+                      fullWidth
+                      label="From Number"
+                      value={settings.smsFromNumber || ''}
+                      onChange={(e) => handleSettingChange('smsFromNumber', e.target.value)}
+                      placeholder="+1234567890"
+                      size="small"
+                    />
+                  </Grid>
+                </Grid>
+              </Box>
+
+              {/* Message Templates */}
+              <Box sx={{ mb: 3 }}>
+                <Typography variant="subtitle1" fontWeight="600" gutterBottom>
+                  Default Message Templates
+                </Typography>
+                
+                <TextField
+                  fullWidth
+                  label="Policy Renewal Reminder"
+                  multiline
+                  rows={3}
+                  value={settings.renewalReminderTemplate || 'Hi {{customerName}}, your {{policyType}} policy {{policyNumber}} is due for renewal on {{renewalDate}}. Please contact us to renew.'}
+                  onChange={(e) => handleSettingChange('renewalReminderTemplate', e.target.value)}
+                  sx={{ mb: 2 }}
+                  size="small"
+                />
+
+                <TextField
+                  fullWidth
+                  label="Claim Status Update"
+                  multiline
+                  rows={3}
+                  value={settings.claimStatusTemplate || 'Hello {{customerName}}, your claim {{claimNumber}} status has been updated to {{status}}. For queries, call us.'}
+                  onChange={(e) => handleSettingChange('claimStatusTemplate', e.target.value)}
+                  sx={{ mb: 2 }}
+                  size="small"
+                />
+
+                <TextField
+                  fullWidth
+                  label="Payment Confirmation"
+                  multiline
+                  rows={3}
+                  value={settings.paymentConfirmationTemplate || 'Thank you {{customerName}}! We have received your payment of {{amount}} for policy {{policyNumber}}. Receipt: {{receiptNumber}}'}
+                  onChange={(e) => handleSettingChange('paymentConfirmationTemplate', e.target.value)}
+                  size="small"
+                />
+              </Box>
+
+              {/* Message Settings */}
+              <Box>
+                <Typography variant="subtitle1" fontWeight="600" gutterBottom>
+                  Message Settings
+                </Typography>
+                
+                <Grid container spacing={2}>
+                  <Grid item xs={12} md={6}>
+                    <TextField
+                      fullWidth
+                      label="Daily Message Limit"
+                      type="number"
+                      value={settings.dailyMessageLimit || 1000}
+                      onChange={(e) => handleSettingChange('dailyMessageLimit', parseInt(e.target.value))}
+                      size="small"
+                      inputProps={{ min: 1, max: 10000 }}
+                    />
+                  </Grid>
+                  <Grid item xs={12} md={6}>
+                    <TextField
+                      fullWidth
+                      label="Rate Limit (messages/minute)"
+                      type="number"
+                      value={settings.messageRateLimit || 60}
+                      onChange={(e) => handleSettingChange('messageRateLimit', parseInt(e.target.value))}
+                      size="small"
+                      inputProps={{ min: 1, max: 1000 }}
+                    />
+                  </Grid>
+                </Grid>
+
+                <FormControlLabel
+                  control={
+                    <Checkbox
+                      checked={settings.enableMessageDeliveryReports || false}
+                      onChange={(e) => handleSettingChange('enableMessageDeliveryReports', e.target.checked)}
+                      color="primary"
+                    />
+                  }
+                  label="Enable Delivery Reports"
+                  sx={{ mt: 2 }}
+                />
+
+                <FormControlLabel
+                  control={
+                    <Checkbox
+                      checked={settings.enableMessageAnalytics || false}
+                      onChange={(e) => handleSettingChange('enableMessageAnalytics', e.target.checked)}
+                      color="primary"
+                    />
+                  }
+                  label="Enable Message Analytics"
+                />
+              </Box>
+            </Box>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Integration Test */}
+      <Card sx={{ borderRadius: 3, boxShadow: '0 8px 24px rgba(0,0,0,0.05)' }}>
+        <CardContent sx={{ p: 3 }}>
+          <Typography variant="h6" fontWeight="600" gutterBottom>Integration Testing</Typography>
+          <Divider sx={{ mb: 2 }} />
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+            Test your calling and messaging integrations to ensure they're working correctly
+          </Typography>
+          
+          <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
+            <Button
+              variant="outlined"
+              startIcon={<SmartToyIcon />}
+              disabled={!settings.callingEnabled}
+              sx={{ borderRadius: 2 }}
+            >
+              Test Calling Integration
+            </Button>
+            
+            <Button
+              variant="outlined"
+              startIcon={<WhatsAppIcon />}
+              disabled={!settings.quickMessagingEnabled}
+              sx={{ borderRadius: 2 }}
+            >
+              Test WhatsApp Integration
+            </Button>
+            
+            <Button
+              variant="outlined"
+              startIcon={<SmsIcon />}
+              disabled={!settings.quickMessagingEnabled}
+              sx={{ borderRadius: 2 }}
+            >
+              Test SMS Integration
+            </Button>
+          </Box>
+        </CardContent>
+      </Card>
+    </Box>
+  );
+
+  // Email Settings Tab Content
+  const EmailSettingsTab = () => {
+
+    return (
+      <Box>
+        <Typography variant="h5" fontWeight="600" gutterBottom>
+          Email Module Settings
+        </Typography>
+        <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+          Configure email management, connection settings, processing rules, and AI features.
+        </Typography>
+
+        {/* Connection Settings */}
+        <Card sx={{ mb: 3, borderRadius: 3, boxShadow: '0 8px 24px rgba(0,0,0,0.05)' }}>
+          <CardContent sx={{ p: 3 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+              <SecurityIcon sx={{ mr: 1, color: theme.palette.primary.main }} />
+              <Typography variant="h6" fontWeight="600">Connection Settings</Typography>
+            </Box>
+            <Divider sx={{ mb: 3 }} />
+
+            {/* IMAP Connection Status */}
+            <Box sx={{ 
+              p: 2, 
+              bgcolor: alpha(emailSettings.imapConnected ? theme.palette.success.main : theme.palette.error.main, 0.1),
+              borderRadius: 2,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              mb: 3
+            }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                {emailSettings.imapConnected ? (
+                  <WifiIcon sx={{ color: theme.palette.success.main }} />
+                ) : (
+                  <WifiOffIcon sx={{ color: theme.palette.error.main }} />
+                )}
+                <Box>
+                  <Typography variant="subtitle2" fontWeight="600">
+                    IMAP Connection
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    {emailSettings.imapConnected ? 'Connected' : 'Disconnected'}
+                  </Typography>
+                </Box>
+              </Box>
+              <Button
+                variant="outlined"
+                size="small"
+                startIcon={<RefreshIcon />}
+                sx={{ borderRadius: 2 }}
+              >
+                Test Connection
+              </Button>
+            </Box>
+
+            {/* Webhook Settings */}
+            <Box>
+              <FormControlLabel
+                control={
+                  <Switch
+                    checked={emailSettings.webhookEnabled}
+                    onChange={(e) => handleEmailSettingChange('webhookEnabled', e.target.checked)}
+                  />
+                }
+                label="Enable Webhook Notifications"
+              />
+              
+              {emailSettings.webhookEnabled && (
+                <TextField
+                  fullWidth
+                  label="Webhook URL"
+                  value={emailSettings.webhookUrl}
+                  onChange={(e) => handleEmailSettingChange('webhookUrl', e.target.value)}
+                  sx={{ mt: 2 }}
+                  InputProps={{ sx: { borderRadius: 2 } }}
+                />
+              )}
+            </Box>
+          </CardContent>
+        </Card>
+
+        {/* Mail Merge Configuration */}
+        <Card sx={{ mb: 3, borderRadius: 3, boxShadow: '0 8px 24px rgba(0,0,0,0.05)' }}>
+          <CardContent sx={{ p: 3 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
+              <MergeIcon sx={{ mr: 1, color: theme.palette.primary.main }} />
+              <Typography variant="h6" fontWeight="600">
+                Mail Merge Configuration
+              </Typography>
+            </Box>
+            <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+              Configure mail merge templates for automated document generation in bulk emails
+            </Typography>
+            
+            <Grid container spacing={3}>
+              <Grid item xs={12} md={6}>
+                <List disablePadding>
+                  <ListItem sx={{ borderRadius: 2, mb: 1, px: 0 }}>
+                    <ListItemText
+                      primary={<Typography fontWeight="500">Enable Mail Merge</Typography>}
+                      secondary="Allow document generation with customer data"
+                    />
+                    <ListItemSecondaryAction>
+                      <Switch
+                        edge="end"
+                        checked={emailSettings.mailMergeEnabled || false}
+                        onChange={(e) => handleEmailSettingChange('mailMergeEnabled', e.target.checked)}
+                        color="primary"
+                      />
+                    </ListItemSecondaryAction>
+                  </ListItem>
+                  
+                  <ListItem sx={{ borderRadius: 2, mb: 1, px: 0 }}>
+                    <ListItemText
+                      primary={<Typography fontWeight="500">Auto-generate Documents</Typography>}
+                      secondary="Automatically create documents during bulk email campaigns"
+                    />
+                    <ListItemSecondaryAction>
+                      <Switch
+                        edge="end"
+                        checked={emailSettings.autoGenerateDocuments || false}
+                        onChange={(e) => handleEmailSettingChange('autoGenerateDocuments', e.target.checked)}
+                        color="primary"
+                        disabled={!emailSettings.mailMergeEnabled}
+                      />
+                    </ListItemSecondaryAction>
+                  </ListItem>
+                  
+                  <ListItem sx={{ borderRadius: 2, mb: 1, px: 0 }}>
+                    <ListItemText
+                      primary={<Typography fontWeight="500">Attach to Emails</Typography>}
+                      secondary="Automatically attach generated documents to emails"
+                    />
+                    <ListItemSecondaryAction>
+                      <Switch
+                        edge="end"
+                        checked={emailSettings.attachToEmail !== false}
+                        onChange={(e) => handleEmailSettingChange('attachToEmail', e.target.checked)}
+                        color="primary"
+                        disabled={!emailSettings.mailMergeEnabled}
+                      />
+                    </ListItemSecondaryAction>
+                  </ListItem>
+                </List>
+              </Grid>
+              
+              <Grid item xs={12} md={6}>
+                <Typography variant="subtitle2" gutterBottom>
+                  Available Merge Fields
+                </Typography>
+                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mb: 3 }}>
+                  {[
+                    'customerName', 'policyNumber', 'policyType', 'effectiveDate', 
+                    'expiryDate', 'premiumAmount', 'agentName', 'companyName',
+                    'renewalDate', 'currentPremium', 'paymentAmount', 'dueDate'
+                  ].map((field) => (
+                    <Chip key={field} label={`{{${field}}}`} size="small" variant="outlined" />
+                  ))}
+                </Box>
+                
+                <TextField
+                  fullWidth
+                  label="Document Storage Path"
+                  value={emailSettings.documentStoragePath || '/documents/templates'}
+                  onChange={(e) => handleEmailSettingChange('documentStoragePath', e.target.value)}
+                  sx={{ mb: 2 }}
+                  helperText="Path where mail merge templates are stored"
+                  disabled={!emailSettings.mailMergeEnabled}
+                />
+                
+                <TextField
+                  fullWidth
+                  label="Output Directory"
+                  value={emailSettings.outputDirectory || '/documents/generated'}
+                  onChange={(e) => handleEmailSettingChange('outputDirectory', e.target.value)}
+                  helperText="Directory for generated documents"
+                  disabled={!emailSettings.mailMergeEnabled}
+                />
+              </Grid>
+            </Grid>
+          </CardContent>
+        </Card>
+
+        {/* Email Accounts */}
+        <Card sx={{ mb: 3, borderRadius: 3, boxShadow: '0 8px 24px rgba(0,0,0,0.05)' }}>
+          <CardContent sx={{ p: 3 }}>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+              <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                <AccountCircleIcon sx={{ mr: 1, color: theme.palette.primary.main }} />
+                <Typography variant="h6" fontWeight="600">
+                  Email Accounts
+                </Typography>
+              </Box>
+              <Button
+                startIcon={<AddIcon />}
+                variant="contained"
+                onClick={handleAddAccount}
+                sx={{ borderRadius: 2 }}
+              >
+                Add Account
+              </Button>
+            </Box>
+
+            <List disablePadding>
+              {emailAccounts.map((account) => (
+                <ListItem
+                  key={account.id}
+                  sx={{ 
+                    border: `1px solid ${theme.palette.divider}`,
+                    borderRadius: 2,
+                    mb: 2,
+                    bgcolor: 'background.paper',
+                    flexDirection: 'column',
+                    alignItems: 'stretch',
+                    p: 2
+                  }}
+                >
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
+                    <Box sx={{ flex: 1 }}>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+                        <Typography variant="subtitle1" fontWeight="600">
+                          {account.name}
+                        </Typography>
+                        <Chip
+                          icon={account.status === 'connected' ? <CheckCircleIcon /> : <ErrorIcon />}
+                          label={account.status === 'connected' ? 'Connected' : 'Error'}
+                          color={account.status === 'connected' ? 'success' : 'error'}
+                          size="small"
+                        />
+                        {account.autoSync && (
+                          <Chip
+                            icon={<SyncIcon />}
+                            label="Auto-sync"
+                            color="info"
+                            size="small"
+                            variant="outlined"
+                          />
+                        )}
+                      </Box>
+                      <Typography variant="body2" color="text.secondary" gutterBottom>
+                        {account.email}
+                      </Typography>
+                      <Typography variant="caption" color="text.secondary">
+                        Provider: {account.provider.charAt(0).toUpperCase() + account.provider.slice(1)} • 
+                        Last sync: {new Date(account.lastSync).toLocaleString()}
+                      </Typography>
+                    </Box>
+                    <Box sx={{ display: 'flex', gap: 1, ml: 2 }}>
+                      <Button
+                        size="small"
+                        variant="outlined"
+                        startIcon={<RefreshIcon />}
+                        onClick={() => handleTestConnection(account.id)}
+                        sx={{ borderRadius: 2 }}
+                      >
+                        Test
+                      </Button>
+                      <IconButton 
+                        size="small"
+                        onClick={() => handleEditAccount(account)}
+                      >
+                        <EditIcon fontSize="small" />
+                      </IconButton>
+                      <IconButton 
+                        size="small"
+                        onClick={() => handleDeleteAccount(account.id)}
+                        color="error"
+                      >
+                        <DeleteIcon fontSize="small" />
+                      </IconButton>
+                    </Box>
+                  </Box>
+                  
+                  <Divider sx={{ mb: 2 }} />
+                  
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <Box sx={{ display: 'flex', gap: 3 }}>
+                      <Typography variant="caption" color="text.secondary">
+                        IMAP: {account.imapServer}:{account.imapPort}
+                      </Typography>
+                      <Typography variant="caption" color="text.secondary">
+                        SMTP: {account.smtpServer}:{account.smtpPort}
+                      </Typography>
+                      <Typography variant="caption" color="text.secondary">
+                        Sync: Every {account.syncInterval} min
+                      </Typography>
+                    </Box>
+                    <FormControlLabel
+                      control={
+                        <Switch
+                          checked={account.autoSync}
+                          onChange={() => handleToggleAccountSync(account.id)}
+                          size="small"
+                        />
+                      }
+                      label="Auto-sync"
+                      sx={{ m: 0 }}
+                    />
+                  </Box>
+                </ListItem>
+              ))}
+            </List>
+          </CardContent>
+        </Card>
+
+        {/* Processing Settings */}
+        <Card sx={{ mb: 3, borderRadius: 3, boxShadow: '0 8px 24px rgba(0,0,0,0.05)' }}>
+          <CardContent sx={{ p: 3 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+              <ScheduleIcon sx={{ mr: 1, color: theme.palette.primary.main }} />
+              <Typography variant="h6" fontWeight="600">Processing Settings</Typography>
+            </Box>
+            <Divider sx={{ mb: 2 }} />
+
+            <List disablePadding>
+              {/* Polling Interval */}
+              <ListItem sx={{ borderRadius: 2, mb: 1, px: 0 }}>
+                <ListItemText
+                  primary={<Typography fontWeight="500">Email Polling Interval</Typography>}
+                  secondary="How often to check for new emails"
+                />
+                <ListItemSecondaryAction sx={{ width: '140px' }}>
+                  <FormControl fullWidth size="small">
+                    <Select
+                      value={emailSettings.pollingInterval}
+                      onChange={(e) => handleEmailSettingChange('pollingInterval', e.target.value)}
+                      sx={{ borderRadius: 2 }}
+                    >
+                      <MenuItem value={1}>1 minute</MenuItem>
+                      <MenuItem value={5}>5 minutes</MenuItem>
+                      <MenuItem value={10}>10 minutes</MenuItem>
+                      <MenuItem value={15}>15 minutes</MenuItem>
+                      <MenuItem value={30}>30 minutes</MenuItem>
+                    </Select>
+                  </FormControl>
+                </ListItemSecondaryAction>
+              </ListItem>
+
+              {/* Auto-categorization */}
+              <ListItem sx={{ borderRadius: 2, mb: 1, px: 0 }}>
+                <ListItemText
+                  primary={<Typography fontWeight="500">Auto-categorization</Typography>}
+                  secondary="Automatically categorize emails based on classification rules"
+                />
+                <ListItemSecondaryAction>
+                  <Switch
+                    edge="end"
+                    checked={emailSettings.autoTagging}
+                    onChange={(e) => handleEmailSettingChange('autoTagging', e.target.checked)}
+                    color="primary"
+                  />
+                </ListItemSecondaryAction>
+              </ListItem>
+
+              {/* Fallback Tagging */}
+              <ListItem sx={{ borderRadius: 2, mb: 1, px: 0 }}>
+                <ListItemText
+                  primary={<Typography fontWeight="500">Fallback Tagging</Typography>}
+                  secondary="Tag emails as 'Uncategorized' when no rules match"
+                />
+                <ListItemSecondaryAction>
+                  <Switch
+                    edge="end"
+                    checked={emailSettings.fallbackTagging}
+                    onChange={(e) => handleEmailSettingChange('fallbackTagging', e.target.checked)}
+                    color="primary"
+                  />
+                </ListItemSecondaryAction>
+              </ListItem>
+            </List>
+          </CardContent>
+        </Card>
+
+        {/* Inbox Preferences */}
+        <Card sx={{ mb: 3, borderRadius: 3, boxShadow: '0 8px 24px rgba(0,0,0,0.05)' }}>
+          <CardContent sx={{ p: 3 }}>
+            <Typography variant="h6" fontWeight="600" gutterBottom>Inbox Preferences</Typography>
+            <Divider sx={{ mb: 2 }} />
+            <List disablePadding>
+              <ListItem sx={{ borderRadius: 2, mb: 1, px: 0 }}>
+                <ListItemText
+                  primary={<Typography fontWeight="500">Emails Per Page</Typography>}
+                  secondary="Number of emails displayed per page"
+                />
+                <ListItemSecondaryAction sx={{ width: '100px' }}>
+                  <FormControl fullWidth size="small">
+                    <Select
+                      value={emailSettings.emailsPerPage}
+                      onChange={(e) => handleEmailSettingChange('emailsPerPage', e.target.value)}
+                      sx={{ borderRadius: 2 }}
+                    >
+                      <MenuItem value={10}>10</MenuItem>
+                      <MenuItem value={25}>25</MenuItem>
+                      <MenuItem value={50}>50</MenuItem>
+                      <MenuItem value={100}>100</MenuItem>
+                    </Select>
+                  </FormControl>
+                </ListItemSecondaryAction>
+              </ListItem>
+              <ListItem sx={{ borderRadius: 2, mb: 1, px: 0 }}>
+                <ListItemText
+                  primary={<Typography fontWeight="500">Auto-refresh Inbox</Typography>}
+                  secondary="Automatically check for new emails"
+                />
+                <ListItemSecondaryAction>
+                  <Switch
+                    edge="end"
+                    checked={emailSettings.emailAutoRefresh}
+                    onChange={(e) => handleEmailSettingChange('emailAutoRefresh', e.target.checked)}
+                    color="primary"
+                  />
+                </ListItemSecondaryAction>
+              </ListItem>
+              <ListItem sx={{ borderRadius: 2, px: 0 }}>
+                <ListItemText
+                  primary={<Typography fontWeight="500">Mark as Read on Open</Typography>}
+                  secondary="Automatically mark emails as read when opened"
+                />
+                <ListItemSecondaryAction>
+                  <Switch
+                    edge="end"
+                    checked={emailSettings.markAsReadOnOpen}
+                    onChange={(e) => handleEmailSettingChange('markAsReadOnOpen', e.target.checked)}
+                    color="primary"
+                  />
+                </ListItemSecondaryAction>
+              </ListItem>
+            </List>
+          </CardContent>
+        </Card>
+
+        {/* AI Features */}
+        <Card sx={{ mb: 3, borderRadius: 3, boxShadow: '0 8px 24px rgba(0,0,0,0.05)' }}>
+          <CardContent sx={{ p: 3 }}>
+            <Typography variant="h6" fontWeight="600" gutterBottom>AI Features</Typography>
+            <Divider sx={{ mb: 2 }} />
+            <List disablePadding>
+              <ListItem sx={{ borderRadius: 2, mb: 1, px: 0 }}>
+                <ListItemText
+                  primary={<Typography fontWeight="500">AI Intent Classification</Typography>}
+                  secondary="Automatically classify email intent using AI"
+                />
+                <ListItemSecondaryAction>
+                  <Switch
+                    edge="end"
+                    checked={emailSettings.aiIntentClassification}
+                    onChange={(e) => handleEmailSettingChange('aiIntentClassification', e.target.checked)}
+                    color="primary"
+                  />
+                </ListItemSecondaryAction>
+              </ListItem>
+              <ListItem sx={{ borderRadius: 2, mb: 1, px: 0 }}>
+                <ListItemText
+                  primary={<Typography fontWeight="500">Sentiment Analysis</Typography>}
+                  secondary="Analyze email sentiment for emotionally charged content"
+                />
+                <ListItemSecondaryAction>
+                  <Switch
+                    edge="end"
+                    checked={emailSettings.sentimentAnalysis}
+                    onChange={(e) => handleEmailSettingChange('sentimentAnalysis', e.target.checked)}
+                    color="primary"
+                  />
+                </ListItemSecondaryAction>
+              </ListItem>
+              <ListItem sx={{ borderRadius: 2, px: 0 }}>
+                <ListItemText
+                  primary={<Typography fontWeight="500">Real-time Collaboration</Typography>}
+                  secondary="Show other agents viewing the same email"
+                />
+                <ListItemSecondaryAction>
+                  <Switch
+                    edge="end"
+                    checked={emailSettings.realTimeCollaboration}
+                    onChange={(e) => handleEmailSettingChange('realTimeCollaboration', e.target.checked)}
+                    color="primary"
+                  />
+                </ListItemSecondaryAction>
+              </ListItem>
+            </List>
+          </CardContent>
+        </Card>
+
+        {/* Classification Rules */}
+        <Card sx={{ borderRadius: 3, boxShadow: '0 8px 24px rgba(0,0,0,0.05)' }}>
+          <CardContent sx={{ p: 3 }}>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+              <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                <RuleIcon sx={{ mr: 1, color: theme.palette.primary.main }} />
+                <Typography variant="h6" fontWeight="600">
+                  Classification Rules
+                </Typography>
+              </Box>
+              <Button
+                startIcon={<AddIcon />}
+                variant="contained"
+                onClick={handleAddRule}
+                sx={{ borderRadius: 2 }}
+              >
+                Add Rule
+              </Button>
+            </Box>
+
+            <List disablePadding>
+              {rules.map((rule) => (
+                <ListItem
+                  key={rule.id}
+                  sx={{ 
+                    border: `1px solid ${theme.palette.divider}`,
+                    borderRadius: 2,
+                    mb: 1,
+                    bgcolor: rule.enabled ? 'transparent' : alpha(theme.palette.action.disabled, 0.08)
+                  }}
+                >
+                  <ListItemText
+                    primary={
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+                        <Typography variant="subtitle1" fontWeight="600">
+                          Keyword: "{rule.keyword}"
+                        </Typography>
+                        {!rule.enabled && (
+                          <Chip label="Disabled" size="small" color="default" />
+                        )}
+                      </Box>
+                    }
+                    secondary={
+                      <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+                        <Chip 
+                          label={`Category: ${rule.category}`}
+                          color={getCategoryColor(rule.category)}
+                          size="small"
+                        />
+                        <Chip 
+                          label={`Priority: ${rule.priority}`}
+                          color={getPriorityColor(rule.priority)}
+                          size="small"
+                          variant="outlined"
+                        />
+                      </Box>
+                    }
+                  />
+                  <ListItemSecondaryAction>
+                    <Box sx={{ display: 'flex', gap: 1 }}>
+                      <Switch
+                        checked={rule.enabled}
+                        onChange={() => handleToggleRule(rule.id)}
+                        size="small"
+                      />
+                      <IconButton 
+                        size="small"
+                        onClick={() => handleEditRule(rule)}
+                      >
+                        <EditIcon fontSize="small" />
+                      </IconButton>
+                      <IconButton 
+                        size="small"
+                        onClick={() => handleDeleteRule(rule.id)}
+                        color="error"
+                      >
+                        <DeleteIcon fontSize="small" />
+                      </IconButton>
+                    </Box>
+                  </ListItemSecondaryAction>
+                </ListItem>
+              ))}
+            </List>
+          </CardContent>
+        </Card>
+
+        {/* Rule Dialog */}
+        <Dialog 
+          open={ruleDialog.open} 
+          onClose={() => setRuleDialog({ open: false, rule: null, mode: 'add' })}
+          maxWidth="sm"
+          fullWidth
+          PaperProps={{
+            sx: { borderRadius: 3 }
+          }}
+        >
+          <DialogTitle>
+            {ruleDialog.mode === 'add' ? 'Add Classification Rule' : 'Edit Classification Rule'}
+          </DialogTitle>
+          <DialogContent>
+            <Box sx={{ pt: 2, display: 'flex', flexDirection: 'column', gap: 2 }}>
+              <TextField
+                fullWidth
+                label="Keyword"
+                value={newRule.keyword}
+                onChange={(e) => setNewRule(prev => ({ ...prev, keyword: e.target.value }))}
+                InputProps={{ sx: { borderRadius: 2 } }}
+                helperText="Enter keyword to match in email subject or content"
+              />
+              
+              <FormControl fullWidth>
+                <InputLabel>Category</InputLabel>
+                <Select
+                  value={newRule.category}
+                  label="Category"
+                  onChange={(e) => setNewRule(prev => ({ ...prev, category: e.target.value }))}
+                  sx={{ borderRadius: 2 }}
+                >
+                  <MenuItem value="complaint">Complaint</MenuItem>
+                  <MenuItem value="feedback">Feedback</MenuItem>
+                  <MenuItem value="refund">Refund</MenuItem>
+                  <MenuItem value="appointment">Appointment</MenuItem>
+                  <MenuItem value="uncategorized">Uncategorized</MenuItem>
+                </Select>
+              </FormControl>
+
+              <FormControl fullWidth>
+                <InputLabel>Priority</InputLabel>
+                <Select
+                  value={newRule.priority}
+                  label="Priority"
+                  onChange={(e) => setNewRule(prev => ({ ...prev, priority: e.target.value }))}
+                  sx={{ borderRadius: 2 }}
+                >
+                  <MenuItem value="high">High</MenuItem>
+                  <MenuItem value="medium">Medium</MenuItem>
+                  <MenuItem value="low">Low</MenuItem>
+                </Select>
+              </FormControl>
+
+              <FormControlLabel
+                control={
+                  <Switch
+                    checked={newRule.enabled}
+                    onChange={(e) => setNewRule(prev => ({ ...prev, enabled: e.target.checked }))}
+                  />
+                }
+                label="Enable this rule"
+              />
+            </Box>
+          </DialogContent>
+          <DialogActions sx={{ p: 2.5 }}>
+            <Button 
+              onClick={() => setRuleDialog({ open: false, rule: null, mode: 'add' })}
+              sx={{ borderRadius: 2 }}
+            >
+              Cancel
+            </Button>
+            <Button 
+              variant="contained"
+              onClick={handleSaveRule}
+              disabled={!newRule.keyword.trim()}
+              sx={{ borderRadius: 2 }}
+            >
+              {ruleDialog.mode === 'add' ? 'Add Rule' : 'Save Changes'}
+            </Button>
+          </DialogActions>
+        </Dialog>
+
+        {/* Account Dialog */}
+        <Dialog 
+          open={accountDialog.open} 
+          onClose={() => setAccountDialog({ open: false, account: null, mode: 'add' })}
+          maxWidth="md"
+          fullWidth
+          PaperProps={{
+            sx: { borderRadius: 3 }
+          }}
+        >
+          <DialogTitle>
+            {accountDialog.mode === 'add' ? 'Add Email Account' : 'Edit Email Account'}
+          </DialogTitle>
+          <DialogContent>
+            <Box sx={{ pt: 2, display: 'flex', flexDirection: 'column', gap: 3 }}>
+              {/* Basic Information */}
+              <Box>
+                <Typography variant="subtitle1" fontWeight="600" gutterBottom>
+                  Basic Information
+                </Typography>
+                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                  <TextField
+                    fullWidth
+                    label="Account Name"
+                    value={newAccount.name}
+                    onChange={(e) => setNewAccount(prev => ({ ...prev, name: e.target.value }))}
+                    InputProps={{ sx: { borderRadius: 2 } }}
+                    helperText="A friendly name for this email account"
+                  />
+                  
+                  <TextField
+                    fullWidth
+                    label="Email Address"
+                    type="email"
+                    value={newAccount.email}
+                    onChange={(e) => setNewAccount(prev => ({ ...prev, email: e.target.value }))}
+                    InputProps={{ sx: { borderRadius: 2 } }}
+                  />
+
+                  <FormControl fullWidth>
+                    <InputLabel>Email Provider</InputLabel>
+                    <Select
+                      value={newAccount.provider}
+                      label="Email Provider"
+                      onChange={(e) => setNewAccount(prev => ({ ...prev, provider: e.target.value }))}
+                      sx={{ borderRadius: 2 }}
+                    >
+                      <MenuItem value="gmail">Gmail</MenuItem>
+                      <MenuItem value="outlook">Outlook/Office 365</MenuItem>
+                      <MenuItem value="yahoo">Yahoo Mail</MenuItem>
+                      <MenuItem value="custom">Custom IMAP/SMTP</MenuItem>
+                    </Select>
+                  </FormControl>
+                </Box>
+              </Box>
+
+              {/* IMAP Settings */}
+              <Box>
+                <Typography variant="subtitle1" fontWeight="600" gutterBottom>
+                  IMAP Settings (Incoming Mail)
+                </Typography>
+                <Box sx={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: 2 }}>
+                  <TextField
+                    label="IMAP Server"
+                    value={newAccount.imapServer}
+                    onChange={(e) => setNewAccount(prev => ({ ...prev, imapServer: e.target.value }))}
+                    InputProps={{ sx: { borderRadius: 2 } }}
+                    placeholder="imap.gmail.com"
+                  />
+                  <TextField
+                    label="Port"
+                    type="number"
+                    value={newAccount.imapPort}
+                    onChange={(e) => setNewAccount(prev => ({ ...prev, imapPort: parseInt(e.target.value) }))}
+                    InputProps={{ sx: { borderRadius: 2 } }}
+                  />
+                </Box>
+              </Box>
+
+              {/* SMTP Settings */}
+              <Box>
+                <Typography variant="subtitle1" fontWeight="600" gutterBottom>
+                  SMTP Settings (Outgoing Mail)
+                </Typography>
+                <Box sx={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: 2 }}>
+                  <TextField
+                    label="SMTP Server"
+                    value={newAccount.smtpServer}
+                    onChange={(e) => setNewAccount(prev => ({ ...prev, smtpServer: e.target.value }))}
+                    InputProps={{ sx: { borderRadius: 2 } }}
+                    placeholder="smtp.gmail.com"
+                  />
+                  <TextField
+                    label="Port"
+                    type="number"
+                    value={newAccount.smtpPort}
+                    onChange={(e) => setNewAccount(prev => ({ ...prev, smtpPort: parseInt(e.target.value) }))}
+                    InputProps={{ sx: { borderRadius: 2 } }}
+                  />
+                </Box>
+              </Box>
+
+              {/* Sync Settings */}
+              <Box>
+                <Typography variant="subtitle1" fontWeight="600" gutterBottom>
+                  Sync Settings
+                </Typography>
+                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                  <FormControlLabel
+                    control={
+                      <Switch
+                        checked={newAccount.useSSL}
+                        onChange={(e) => setNewAccount(prev => ({ ...prev, useSSL: e.target.checked }))}
+                      />
+                    }
+                    label="Use SSL/TLS encryption"
+                  />
+                  
+                  <FormControlLabel
+                    control={
+                      <Switch
+                        checked={newAccount.autoSync}
+                        onChange={(e) => setNewAccount(prev => ({ ...prev, autoSync: e.target.checked }))}
+                      />
+                    }
+                    label="Enable automatic synchronization"
+                  />
+
+                  {newAccount.autoSync && (
+                    <Box>
+                      <Typography variant="body2" color="text.secondary" gutterBottom>
+                        Sync Interval: {newAccount.syncInterval} minutes
+                      </Typography>
+                      <Slider
+                        value={newAccount.syncInterval}
+                        onChange={(e, value) => setNewAccount(prev => ({ ...prev, syncInterval: value }))}
+                        min={1}
+                        max={60}
+                        step={1}
+                        marks={[
+                          { value: 1, label: '1m' },
+                          { value: 5, label: '5m' },
+                          { value: 15, label: '15m' },
+                          { value: 30, label: '30m' },
+                          { value: 60, label: '1h' }
+                        ]}
+                        sx={{ mt: 1 }}
+                      />
+                    </Box>
+                  )}
+                </Box>
+              </Box>
+            </Box>
+          </DialogContent>
+          <DialogActions sx={{ p: 2.5 }}>
+            <Button 
+              onClick={() => setAccountDialog({ open: false, account: null, mode: 'add' })}
+              sx={{ borderRadius: 2 }}
+            >
+              Cancel
+            </Button>
+            <Button 
+              variant="contained"
+              onClick={handleSaveAccount}
+              disabled={!newAccount.name.trim() || !newAccount.email.trim()}
+              sx={{ borderRadius: 2 }}
+            >
+              {accountDialog.mode === 'add' ? 'Add Account' : 'Save Changes'}
+            </Button>
+          </DialogActions>
+        </Dialog>
+      </Box>
+    );
+  };
+
+  // System Settings Tab Content
+  const CampaignsSettingsTab = () => {
+    const [campaignSettings, setCampaignSettings] = useState({
+      // Integration Settings
+      emailProvider: 'sendgrid',
+      emailApiKey: '',
+      whatsappProvider: 'meta',
+      whatsappApiKey: '',
+      whatsappPhoneId: '',
+      smsProvider: 'msg91',
+      smsApiKey: '',
+      smsSenderId: '',
+      
+      // Compliance Settings
+      consentRequired: true,
+      dndCompliance: true,
+      optInRequired: true,
+      dataRetentionDays: 365,
+      
+      // Throttling & Limits
+      emailRateLimit: 1000,
+      smsRateLimit: 100,
+      whatsappRateLimit: 80,
+      batchSize: 50,
+      retryAttempts: 3,
+      
+      // Template Settings
+      templateApprovalRequired: false,
+      dltTemplateRequired: true,
+      autoSaveTemplates: true,
+      
+      // Analytics & Reporting
+      trackingEnabled: true,
+      webhookUrl: '',
+      reportingInterval: 'daily',
+      exportFormat: 'csv'
+    });
+
+    const handleCampaignSettingChange = (key, value) => {
+      setCampaignSettings(prev => ({ ...prev, [key]: value }));
+    };
+
+    return (
+      <Box>
+        <Typography variant="h5" fontWeight="600" gutterBottom>
+          Campaign Management Settings
+        </Typography>
+        <Typography variant="body2" color="text.secondary" sx={{ mb: 4 }}>
+          Configure multi-channel campaign settings, integrations, and compliance options
+        </Typography>
+
+        {/* Integration Settings */}
+        <Card sx={{ mb: 3, borderRadius: 3 }}>
+          <CardContent sx={{ p: 3 }}>
+            <Typography variant="h6" fontWeight="600" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <EmailIcon color="primary" />
+              Channel Integrations
+            </Typography>
+            
+            <Grid container spacing={3}>
+              {/* Email Provider */}
+              <Grid item xs={12} md={6}>
+                <FormControl fullWidth sx={{ mb: 2 }}>
+                  <InputLabel>Email Provider</InputLabel>
+                  <Select
+                    value={campaignSettings.emailProvider}
+                    onChange={(e) => handleCampaignSettingChange('emailProvider', e.target.value)}
+                  >
+                    <MenuItem value="sendgrid">SendGrid</MenuItem>
+                    <MenuItem value="ses">Amazon SES</MenuItem>
+                    <MenuItem value="mailgun">Mailgun</MenuItem>
+                    <MenuItem value="smtp">Custom SMTP</MenuItem>
+                  </Select>
+                </FormControl>
+                <TextField
+                  fullWidth
+                  label="Email API Key"
+                  type="password"
+                  value={campaignSettings.emailApiKey}
+                  onChange={(e) => handleCampaignSettingChange('emailApiKey', e.target.value)}
+                  placeholder="Enter your email provider API key"
+                />
+              </Grid>
+
+              {/* WhatsApp Provider */}
+              <Grid item xs={12} md={6}>
+                <FormControl fullWidth sx={{ mb: 2 }}>
+                  <InputLabel>WhatsApp Provider</InputLabel>
+                  <Select
+                    value={campaignSettings.whatsappProvider}
+                    onChange={(e) => handleCampaignSettingChange('whatsappProvider', e.target.value)}
+                  >
+                    <MenuItem value="meta">Meta WhatsApp Business API</MenuItem>
+                    <MenuItem value="twilio">Twilio WhatsApp</MenuItem>
+                    <MenuItem value="gupshup">Gupshup</MenuItem>
+                  </Select>
+                </FormControl>
+                <TextField
+                  fullWidth
+                  label="WhatsApp API Key"
+                  type="password"
+                  value={campaignSettings.whatsappApiKey}
+                  onChange={(e) => handleCampaignSettingChange('whatsappApiKey', e.target.value)}
+                  placeholder="Enter WhatsApp API key"
+                  sx={{ mb: 2 }}
+                />
+                <TextField
+                  fullWidth
+                  label="WhatsApp Phone Number ID"
+                  value={campaignSettings.whatsappPhoneId}
+                  onChange={(e) => handleCampaignSettingChange('whatsappPhoneId', e.target.value)}
+                  placeholder="Enter phone number ID"
+                />
+              </Grid>
+
+              {/* SMS Provider */}
+              <Grid item xs={12} md={6}>
+                <FormControl fullWidth sx={{ mb: 2 }}>
+                  <InputLabel>SMS Provider</InputLabel>
+                  <Select
+                    value={campaignSettings.smsProvider}
+                    onChange={(e) => handleCampaignSettingChange('smsProvider', e.target.value)}
+                  >
+                    <MenuItem value="msg91">MSG91</MenuItem>
+                    <MenuItem value="airtel">Airtel IQ</MenuItem>
+                    <MenuItem value="aws-sns">AWS SNS</MenuItem>
+                    <MenuItem value="twilio">Twilio SMS</MenuItem>
+                  </Select>
+                </FormControl>
+                <TextField
+                  fullWidth
+                  label="SMS API Key"
+                  type="password"
+                  value={campaignSettings.smsApiKey}
+                  onChange={(e) => handleCampaignSettingChange('smsApiKey', e.target.value)}
+                  placeholder="Enter SMS provider API key"
+                  sx={{ mb: 2 }}
+                />
+                <TextField
+                  fullWidth
+                  label="SMS Sender ID"
+                  value={campaignSettings.smsSenderId}
+                  onChange={(e) => handleCampaignSettingChange('smsSenderId', e.target.value)}
+                  placeholder="Enter sender ID (e.g., INTPRO)"
+                />
+              </Grid>
+            </Grid>
+          </CardContent>
+        </Card>
+
+        {/* Compliance Settings */}
+        <Card sx={{ mb: 3, borderRadius: 3 }}>
+          <CardContent sx={{ p: 3 }}>
+            <Typography variant="h6" fontWeight="600" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <ShieldIcon color="primary" />
+              Compliance & Consent
+            </Typography>
+            
+            <List>
+              <ListItem>
+                <ListItemIcon>
+                  <CheckCircleIcon color="success" />
+                </ListItemIcon>
+                <ListItemText
+                  primary="Consent Required"
+                  secondary="Require explicit consent before sending campaigns"
+                />
+                <ListItemSecondaryAction>
+                  <Switch
+                    checked={campaignSettings.consentRequired}
+                    onChange={(e) => handleCampaignSettingChange('consentRequired', e.target.checked)}
+                  />
+                </ListItemSecondaryAction>
+              </ListItem>
+              
+              <ListItem>
+                <ListItemIcon>
+                  <ShieldIcon color="warning" />
+                </ListItemIcon>
+                <ListItemText
+                  primary="DND Compliance"
+                  secondary="Check Do Not Disturb registry before sending SMS"
+                />
+                <ListItemSecondaryAction>
+                  <Switch
+                    checked={campaignSettings.dndCompliance}
+                    onChange={(e) => handleCampaignSettingChange('dndCompliance', e.target.checked)}
+                  />
+                </ListItemSecondaryAction>
+              </ListItem>
+              
+              <ListItem>
+                <ListItemIcon>
+                  <PersonIcon color="info" />
+                </ListItemIcon>
+                <ListItemText
+                  primary="Opt-in Required"
+                  secondary="Require users to opt-in for marketing communications"
+                />
+                <ListItemSecondaryAction>
+                  <Switch
+                    checked={campaignSettings.optInRequired}
+                    onChange={(e) => handleCampaignSettingChange('optInRequired', e.target.checked)}
+                  />
+                </ListItemSecondaryAction>
+              </ListItem>
+            </List>
+            
+            <Grid container spacing={2} sx={{ mt: 2 }}>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  fullWidth
+                  label="Data Retention (Days)"
+                  type="number"
+                  value={campaignSettings.dataRetentionDays}
+                  onChange={(e) => handleCampaignSettingChange('dataRetentionDays', parseInt(e.target.value))}
+                  inputProps={{ min: 30, max: 2555 }}
+                  helperText="How long to retain campaign data (30-2555 days)"
+                />
+              </Grid>
+            </Grid>
+          </CardContent>
+        </Card>
+
+        {/* Rate Limiting & Performance */}
+        <Card sx={{ mb: 3, borderRadius: 3 }}>
+          <CardContent sx={{ p: 3 }}>
+            <Typography variant="h6" fontWeight="600" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <SpeedIcon color="primary" />
+              Rate Limiting & Performance
+            </Typography>
+            
+            <Grid container spacing={3}>
+              <Grid item xs={12} sm={6} md={4}>
+                <TextField
+                  fullWidth
+                  label="Email Rate Limit (per hour)"
+                  type="number"
+                  value={campaignSettings.emailRateLimit}
+                  onChange={(e) => handleCampaignSettingChange('emailRateLimit', parseInt(e.target.value))}
+                  inputProps={{ min: 100, max: 10000 }}
+                  helperText="Maximum emails per hour"
+                />
+              </Grid>
+              <Grid item xs={12} sm={6} md={4}>
+                <TextField
+                  fullWidth
+                  label="SMS Rate Limit (per hour)"
+                  type="number"
+                  value={campaignSettings.smsRateLimit}
+                  onChange={(e) => handleCampaignSettingChange('smsRateLimit', parseInt(e.target.value))}
+                  inputProps={{ min: 50, max: 1000 }}
+                  helperText="Maximum SMS per hour"
+                />
+              </Grid>
+              <Grid item xs={12} sm={6} md={4}>
+                <TextField
+                  fullWidth
+                  label="WhatsApp Rate Limit (per hour)"
+                  type="number"
+                  value={campaignSettings.whatsappRateLimit}
+                  onChange={(e) => handleCampaignSettingChange('whatsappRateLimit', parseInt(e.target.value))}
+                  inputProps={{ min: 20, max: 500 }}
+                  helperText="Maximum WhatsApp messages per hour"
+                />
+              </Grid>
+              <Grid item xs={12} sm={6} md={4}>
+                <TextField
+                  fullWidth
+                  label="Batch Size"
+                  type="number"
+                  value={campaignSettings.batchSize}
+                  onChange={(e) => handleCampaignSettingChange('batchSize', parseInt(e.target.value))}
+                  inputProps={{ min: 10, max: 1000 }}
+                  helperText="Messages per batch"
+                />
+              </Grid>
+              <Grid item xs={12} sm={6} md={4}>
+                <TextField
+                  fullWidth
+                  label="Retry Attempts"
+                  type="number"
+                  value={campaignSettings.retryAttempts}
+                  onChange={(e) => handleCampaignSettingChange('retryAttempts', parseInt(e.target.value))}
+                  inputProps={{ min: 1, max: 5 }}
+                  helperText="Failed message retry attempts"
+                />
+              </Grid>
+            </Grid>
+          </CardContent>
+        </Card>
+
+        {/* Template & Content Settings */}
+        <Card sx={{ mb: 3, borderRadius: 3 }}>
+          <CardContent sx={{ p: 3 }}>
+            <Typography variant="h6" fontWeight="600" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <DescriptionIcon color="primary" />
+              Template & Content Management
+            </Typography>
+            
+            <List>
+              <ListItem>
+                <ListItemIcon>
+                  <CheckCircleIcon color="warning" />
+                </ListItemIcon>
+                <ListItemText
+                  primary="Template Approval Required"
+                  secondary="Require admin approval before using new templates"
+                />
+                <ListItemSecondaryAction>
+                  <Switch
+                    checked={campaignSettings.templateApprovalRequired}
+                    onChange={(e) => handleCampaignSettingChange('templateApprovalRequired', e.target.checked)}
+                  />
+                </ListItemSecondaryAction>
+              </ListItem>
+              
+              <ListItem>
+                <ListItemIcon>
+                  <VerifiedIcon color="success" />
+                </ListItemIcon>
+                <ListItemText
+                  primary="DLT Template Required"
+                  secondary="Require DLT template ID for SMS/WhatsApp campaigns"
+                />
+                <ListItemSecondaryAction>
+                  <Switch
+                    checked={campaignSettings.dltTemplateRequired}
+                    onChange={(e) => handleCampaignSettingChange('dltTemplateRequired', e.target.checked)}
+                  />
+                </ListItemSecondaryAction>
+              </ListItem>
+              
+              <ListItem>
+                <ListItemIcon>
+                  <SaveIcon color="info" />
+                </ListItemIcon>
+                <ListItemText
+                  primary="Auto-save Templates"
+                  secondary="Automatically save template drafts while editing"
+                />
+                <ListItemSecondaryAction>
+                  <Switch
+                    checked={campaignSettings.autoSaveTemplates}
+                    onChange={(e) => handleCampaignSettingChange('autoSaveTemplates', e.target.checked)}
+                  />
+                </ListItemSecondaryAction>
+              </ListItem>
+            </List>
+          </CardContent>
+        </Card>
+
+        {/* Analytics & Reporting */}
+        <Card sx={{ mb: 3, borderRadius: 3 }}>
+          <CardContent sx={{ p: 3 }}>
+            <Typography variant="h6" fontWeight="600" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <AnalyticsIcon color="primary" />
+              Analytics & Reporting
+            </Typography>
+            
+            <List>
+              <ListItem>
+                <ListItemIcon>
+                  <TrackingIcon color="success" />
+                </ListItemIcon>
+                <ListItemText
+                  primary="Tracking Enabled"
+                  secondary="Enable open, click, and delivery tracking"
+                />
+                <ListItemSecondaryAction>
+                  <Switch
+                    checked={campaignSettings.trackingEnabled}
+                    onChange={(e) => handleCampaignSettingChange('trackingEnabled', e.target.checked)}
+                  />
+                </ListItemSecondaryAction>
+              </ListItem>
+            </List>
+            
+            <Grid container spacing={3} sx={{ mt: 1 }}>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  fullWidth
+                  label="Webhook URL"
+                  value={campaignSettings.webhookUrl}
+                  onChange={(e) => handleCampaignSettingChange('webhookUrl', e.target.value)}
+                  placeholder="https://your-domain.com/webhook"
+                  helperText="URL to receive campaign event notifications"
+                />
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <FormControl fullWidth>
+                  <InputLabel>Reporting Interval</InputLabel>
+                  <Select
+                    value={campaignSettings.reportingInterval}
+                    onChange={(e) => handleCampaignSettingChange('reportingInterval', e.target.value)}
+                  >
+                    <MenuItem value="realtime">Real-time</MenuItem>
+                    <MenuItem value="hourly">Hourly</MenuItem>
+                    <MenuItem value="daily">Daily</MenuItem>
+                    <MenuItem value="weekly">Weekly</MenuItem>
+                  </Select>
+                </FormControl>
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <FormControl fullWidth>
+                  <InputLabel>Export Format</InputLabel>
+                  <Select
+                    value={campaignSettings.exportFormat}
+                    onChange={(e) => handleCampaignSettingChange('exportFormat', e.target.value)}
+                  >
+                    <MenuItem value="csv">CSV</MenuItem>
+                    <MenuItem value="xlsx">Excel (XLSX)</MenuItem>
+                    <MenuItem value="pdf">PDF Report</MenuItem>
+                    <MenuItem value="json">JSON</MenuItem>
+                  </Select>
+                </FormControl>
+              </Grid>
+            </Grid>
+          </CardContent>
+        </Card>
+
+        {/* Save Button */}
+        <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 2 }}>
+          <Button
+            variant="outlined"
+            onClick={() => setCampaignSettings({})}
+            sx={{ borderRadius: 2 }}
+          >
+            Reset to Defaults
+          </Button>
+          <Button
+            variant="contained"
+            onClick={() => {
+              handleSaveSettings();
+              // Show success message
+            }}
+            startIcon={<SaveIcon />}
+            sx={{ borderRadius: 2 }}
+          >
+            Save Campaign Settings
+          </Button>
+        </Box>
+      </Box>
+    );
+  };
+
+  // WhatsApp Flow Settings Tab
+  const WhatsAppFlowSettingsTab = () => (
+    <Box>
+      <Typography variant="h5" fontWeight="600" gutterBottom>
+        WhatsApp Flow Settings
+      </Typography>
+      <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+        Configure WhatsApp Business API, flow builder, templates, and automation settings
+      </Typography>
+
+      <Grid container spacing={3}>
+        {/* API Configuration */}
+        <Grid item xs={12}>
+          <Card sx={{ borderRadius: 3, boxShadow: '0 8px 24px rgba(0,0,0,0.05)' }}>
+            <CardContent sx={{ p: 3 }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                <WhatsAppIcon sx={{ mr: 1, color: theme.palette.success.main }} />
+                <Typography variant="h6" fontWeight="600">WhatsApp Business API</Typography>
+              </Box>
+              <Divider sx={{ mb: 3 }} />
+              
+              <Grid container spacing={3}>
+                <Grid item xs={12} sm={6}>
+                  <TextField
+                    fullWidth
+                    label="Phone Number ID"
+                    value={whatsappSettings.phoneNumberId}
+                    onChange={(e) => handleWhatsappSettingChange('phoneNumberId', e.target.value)}
+                    placeholder="Enter your WhatsApp Business Phone Number ID"
+                    sx={{ mb: 2 }}
+                  />
+                </Grid>
+                <Grid item xs={12} sm={6}>
+                  <TextField
+                    fullWidth
+                    label="Access Token"
+                    type="password"
+                    value={whatsappSettings.accessToken}
+                    onChange={(e) => handleWhatsappSettingChange('accessToken', e.target.value)}
+                    placeholder="Enter your WhatsApp Business API Access Token"
+                    sx={{ mb: 2 }}
+                  />
+                </Grid>
+                <Grid item xs={12} sm={6}>
+                  <TextField
+                    fullWidth
+                    label="Webhook URL"
+                    value={whatsappSettings.webhookUrl}
+                    onChange={(e) => handleWhatsappSettingChange('webhookUrl', e.target.value)}
+                    placeholder="https://your-domain.com/webhook"
+                    sx={{ mb: 2 }}
+                  />
+                </Grid>
+                <Grid item xs={12} sm={6}>
+                  <TextField
+                    fullWidth
+                    label="Verify Token"
+                    value={whatsappSettings.verifyToken}
+                    onChange={(e) => handleWhatsappSettingChange('verifyToken', e.target.value)}
+                    placeholder="Enter webhook verify token"
+                    sx={{ mb: 2 }}
+                  />
+                </Grid>
+              </Grid>
+
+              <Box sx={{ mt: 2 }}>
+                <FormControlLabel
+                  control={
+                    <Switch
+                      checked={whatsappSettings.businessApiEnabled}
+                      onChange={(e) => handleWhatsappSettingChange('businessApiEnabled', e.target.checked)}
+                      color="success"
+                    />
+                  }
+                  label="Enable WhatsApp Business API"
+                />
+              </Box>
+            </CardContent>
+          </Card>
+        </Grid>
+
+        {/* Flow Builder Settings */}
+        <Grid item xs={12} md={6}>
+          <Card sx={{ borderRadius: 3, boxShadow: '0 8px 24px rgba(0,0,0,0.05)' }}>
+            <CardContent sx={{ p: 3 }}>
+              <Typography variant="h6" gutterBottom>Flow Builder</Typography>
+              <Divider sx={{ mb: 2 }} />
+              
+              <List disablePadding>
+                <ListItem sx={{ borderRadius: 2, mb: 1 }}>
+                  <ListItemText 
+                    primary={<Typography fontWeight="500">Visual Flow Builder</Typography>}
+                    secondary="Enable drag-and-drop flow creation"
+                  />
+                  <ListItemSecondaryAction>
+                    <Switch
+                      checked={whatsappSettings.flowBuilderEnabled}
+                      onChange={(e) => handleWhatsappSettingChange('flowBuilderEnabled', e.target.checked)}
+                      color="primary"
+                    />
+                  </ListItemSecondaryAction>
+                </ListItem>
+                
+                <ListItem sx={{ borderRadius: 2, mb: 1 }}>
+                  <ListItemText 
+                    primary={<Typography fontWeight="500">Message Templates</Typography>}
+                    secondary="Enable WhatsApp message templates"
+                  />
+                  <ListItemSecondaryAction>
+                    <Switch
+                      checked={whatsappSettings.messageTemplatesEnabled}
+                      onChange={(e) => handleWhatsappSettingChange('messageTemplatesEnabled', e.target.checked)}
+                      color="primary"
+                    />
+                  </ListItemSecondaryAction>
+                </ListItem>
+
+                <ListItem sx={{ borderRadius: 2, mb: 1 }}>
+                  <ListItemText 
+                    primary={<Typography fontWeight="500">Auto Response</Typography>}
+                    secondary="Enable automatic responses"
+                  />
+                  <ListItemSecondaryAction>
+                    <Switch
+                      checked={whatsappSettings.autoResponseEnabled}
+                      onChange={(e) => handleWhatsappSettingChange('autoResponseEnabled', e.target.checked)}
+                      color="primary"
+                    />
+                  </ListItemSecondaryAction>
+                </ListItem>
+
+                <ListItem sx={{ borderRadius: 2 }}>
+                  <ListItemText 
+                    primary={<Typography fontWeight="500">Analytics & Reporting</Typography>}
+                    secondary="Track flow performance and metrics"
+                  />
+                  <ListItemSecondaryAction>
+                    <Switch
+                      checked={whatsappSettings.analyticsEnabled}
+                      onChange={(e) => handleWhatsappSettingChange('analyticsEnabled', e.target.checked)}
+                      color="primary"
+                    />
+                  </ListItemSecondaryAction>
+                </ListItem>
+              </List>
+            </CardContent>
+          </Card>
+        </Grid>
+
+        {/* Business Hours */}
+        <Grid item xs={12} md={6}>
+          <Card sx={{ borderRadius: 3, boxShadow: '0 8px 24px rgba(0,0,0,0.05)' }}>
+            <CardContent sx={{ p: 3 }}>
+              <Typography variant="h6" gutterBottom>Business Hours</Typography>
+              <Divider sx={{ mb: 2 }} />
+              
+              <FormControlLabel
+                control={
+                  <Switch
+                    checked={whatsappSettings.businessHours.enabled}
+                    onChange={(e) => handleWhatsappSettingChange('businessHours.enabled', e.target.checked)}
+                    color="primary"
+                  />
+                }
+                label="Enable Business Hours"
+                sx={{ mb: 2 }}
+              />
+
+              {whatsappSettings.businessHours.enabled && (
+                <Grid container spacing={2}>
+                  <Grid item xs={6}>
+                    <TextField
+                      fullWidth
+                      label="Start Time"
+                      type="time"
+                      value={whatsappSettings.businessHours.start}
+                      onChange={(e) => handleWhatsappSettingChange('businessHours.start', e.target.value)}
+                      InputLabelProps={{ shrink: true }}
+                    />
+                  </Grid>
+                  <Grid item xs={6}>
+                    <TextField
+                      fullWidth
+                      label="End Time"
+                      type="time"
+                      value={whatsappSettings.businessHours.end}
+                      onChange={(e) => handleWhatsappSettingChange('businessHours.end', e.target.value)}
+                      InputLabelProps={{ shrink: true }}
+                    />
+                  </Grid>
+                  <Grid item xs={12}>
+                    <FormControl fullWidth>
+                      <InputLabel>Timezone</InputLabel>
+                      <Select
+                        value={whatsappSettings.businessHours.timezone}
+                        label="Timezone"
+                        onChange={(e) => handleWhatsappSettingChange('businessHours.timezone', e.target.value)}
+                      >
+                        <MenuItem value="Asia/Kolkata">Asia/Kolkata (IST)</MenuItem>
+                        <MenuItem value="America/New_York">America/New_York (EST)</MenuItem>
+                        <MenuItem value="Europe/London">Europe/London (GMT)</MenuItem>
+                        <MenuItem value="Asia/Dubai">Asia/Dubai (GST)</MenuItem>
+                        <MenuItem value="Asia/Singapore">Asia/Singapore (SGT)</MenuItem>
+                      </Select>
+                    </FormControl>
+                  </Grid>
+                </Grid>
+              )}
+            </CardContent>
+          </Card>
+        </Grid>
+
+        {/* Message Settings */}
+        <Grid item xs={12}>
+          <Card sx={{ borderRadius: 3, boxShadow: '0 8px 24px rgba(0,0,0,0.05)' }}>
+            <CardContent sx={{ p: 3 }}>
+              <Typography variant="h6" gutterBottom>Message Settings</Typography>
+              <Divider sx={{ mb: 3 }} />
+              
+              <Grid container spacing={3}>
+                <Grid item xs={12}>
+                  <TextField
+                    fullWidth
+                    multiline
+                    rows={3}
+                    label="Fallback Message"
+                    value={whatsappSettings.fallbackMessage}
+                    onChange={(e) => handleWhatsappSettingChange('fallbackMessage', e.target.value)}
+                    placeholder="Message to send when flow fails or user input is invalid"
+                    helperText="This message will be sent when automated flows encounter errors"
+                  />
+                </Grid>
+                
+                <Grid item xs={12} sm={4}>
+                  <TextField
+                    fullWidth
+                    type="number"
+                    label="Max Retries"
+                    value={whatsappSettings.maxRetries}
+                    onChange={(e) => handleWhatsappSettingChange('maxRetries', parseInt(e.target.value))}
+                    inputProps={{ min: 1, max: 10 }}
+                    helperText="Maximum retry attempts for failed messages"
+                  />
+                </Grid>
+                
+                <Grid item xs={12} sm={4}>
+                  <TextField
+                    fullWidth
+                    type="number"
+                    label="Retry Delay (seconds)"
+                    value={whatsappSettings.retryDelay}
+                    onChange={(e) => handleWhatsappSettingChange('retryDelay', parseInt(e.target.value))}
+                    inputProps={{ min: 30, max: 3600 }}
+                    helperText="Delay between retry attempts"
+                  />
+                </Grid>
+              </Grid>
+            </CardContent>
+          </Card>
+        </Grid>
+
+        {/* Rate Limiting */}
+        <Grid item xs={12} md={6}>
+          <Card sx={{ borderRadius: 3, boxShadow: '0 8px 24px rgba(0,0,0,0.05)' }}>
+            <CardContent sx={{ p: 3 }}>
+              <Typography variant="h6" gutterBottom>Rate Limiting</Typography>
+              <Divider sx={{ mb: 2 }} />
+              
+              <FormControlLabel
+                control={
+                  <Switch
+                    checked={whatsappSettings.rateLimiting.enabled}
+                    onChange={(e) => handleWhatsappSettingChange('rateLimiting.enabled', e.target.checked)}
+                    color="primary"
+                  />
+                }
+                label="Enable Rate Limiting"
+                sx={{ mb: 2 }}
+              />
+
+              {whatsappSettings.rateLimiting.enabled && (
+                <Grid container spacing={2}>
+                  <Grid item xs={12}>
+                    <TextField
+                      fullWidth
+                      type="number"
+                      label="Messages per Minute"
+                      value={whatsappSettings.rateLimiting.messagesPerMinute}
+                      onChange={(e) => handleWhatsappSettingChange('rateLimiting.messagesPerMinute', parseInt(e.target.value))}
+                      inputProps={{ min: 1, max: 100 }}
+                    />
+                  </Grid>
+                  <Grid item xs={12}>
+                    <TextField
+                      fullWidth
+                      type="number"
+                      label="Messages per Hour"
+                      value={whatsappSettings.rateLimiting.messagesPerHour}
+                      onChange={(e) => handleWhatsappSettingChange('rateLimiting.messagesPerHour', parseInt(e.target.value))}
+                      inputProps={{ min: 10, max: 10000 }}
+                    />
+                  </Grid>
+                </Grid>
+              )}
+            </CardContent>
+          </Card>
+        </Grid>
+
+        {/* Integration Status */}
+        <Grid item xs={12} md={6}>
+          <Card sx={{ borderRadius: 3, boxShadow: '0 8px 24px rgba(0,0,0,0.05)' }}>
+            <CardContent sx={{ p: 3 }}>
+              <Typography variant="h6" gutterBottom>Integration Status</Typography>
+              <Divider sx={{ mb: 2 }} />
+              
+              <List disablePadding>
+                <ListItem sx={{ borderRadius: 2, mb: 1 }}>
+                  <ListItemIcon>
+                    <CheckCircleIcon color="success" />
+                  </ListItemIcon>
+                  <ListItemText 
+                    primary={<Typography fontWeight="500">WhatsApp Business API</Typography>}
+                    secondary="Connected and verified"
+                  />
+                </ListItem>
+                
+                <ListItem sx={{ borderRadius: 2, mb: 1 }}>
+                  <ListItemIcon>
+                    <CheckCircleIcon color="success" />
+                  </ListItemIcon>
+                  <ListItemText 
+                    primary={<Typography fontWeight="500">Webhook Configuration</Typography>}
+                    secondary="Active and receiving messages"
+                  />
+                </ListItem>
+
+                <ListItem sx={{ borderRadius: 2, mb: 1 }}>
+                  <ListItemIcon>
+                    <WarningIcon color="warning" />
+                  </ListItemIcon>
+                  <ListItemText 
+                    primary={<Typography fontWeight="500">Message Templates</Typography>}
+                    secondary="2 templates pending approval"
+                  />
+                </ListItem>
+
+                <ListItem sx={{ borderRadius: 2 }}>
+                  <ListItemIcon>
+                    <CheckCircleIcon color="success" />
+                  </ListItemIcon>
+                  <ListItemText 
+                    primary={<Typography fontWeight="500">Flow Builder</Typography>}
+                    secondary="Ready to create flows"
+                  />
+                </ListItem>
+              </List>
+            </CardContent>
+          </Card>
+        </Grid>
+
+        {/* Flow Permissions */}
+        <Grid item xs={12}>
+          <Card sx={{ borderRadius: 3, boxShadow: '0 8px 24px rgba(0,0,0,0.05)' }}>
+            <CardContent sx={{ p: 3 }}>
+              <Typography variant="h6" gutterBottom>Flow Access Permissions</Typography>
+              <Divider sx={{ mb: 3 }} />
+              
+              <List disablePadding>
+                <ListItem sx={{ borderRadius: 2, mb: 1, bgcolor: alpha(theme.palette.primary.main, 0.05) }}>
+                  <ListItemIcon>
+                    <Avatar sx={{ bgcolor: 'primary.main' }}>RK</Avatar>
+                  </ListItemIcon>
+                  <ListItemText
+                    primary={<Typography fontWeight="500">Rajesh Kumar</Typography>}
+                    secondary="Admin - Full access to edit, view, and publish flows"
+                  />
+                  <ListItemSecondaryAction>
+                    <FormControl size="small" sx={{ minWidth: 120 }}>
+                      <Select value="admin" displayEmpty>
+                        <MenuItem value="admin">Admin</MenuItem>
+                        <MenuItem value="editor">Editor</MenuItem>
+                        <MenuItem value="viewer">Viewer</MenuItem>
+                      </Select>
+                    </FormControl>
+                  </ListItemSecondaryAction>
+                </ListItem>
+                
+                <ListItem sx={{ borderRadius: 2, mb: 1, bgcolor: alpha(theme.palette.secondary.main, 0.05) }}>
+                  <ListItemIcon>
+                    <Avatar sx={{ bgcolor: 'secondary.main' }}>SM</Avatar>
+                  </ListItemIcon>
+                  <ListItemText
+                    primary={<Typography fontWeight="500">Sarah Manager</Typography>}
+                    secondary="Editor - Can edit and view flows"
+                  />
+                  <ListItemSecondaryAction>
+                    <FormControl size="small" sx={{ minWidth: 120 }}>
+                      <Select value="editor" displayEmpty>
+                        <MenuItem value="admin">Admin</MenuItem>
+                        <MenuItem value="editor">Editor</MenuItem>
+                        <MenuItem value="viewer">Viewer</MenuItem>
+                      </Select>
+                    </FormControl>
+                  </ListItemSecondaryAction>
+                </ListItem>
+
+                <ListItem sx={{ borderRadius: 2, mb: 1, bgcolor: alpha(theme.palette.info.main, 0.05) }}>
+                  <ListItemIcon>
+                    <Avatar sx={{ bgcolor: 'info.main' }}>JD</Avatar>
+                  </ListItemIcon>
+                  <ListItemText
+                    primary={<Typography fontWeight="500">John Developer</Typography>}
+                    secondary="Viewer - Can only view flows and analytics"
+                  />
+                  <ListItemSecondaryAction>
+                    <FormControl size="small" sx={{ minWidth: 120 }}>
+                      <Select value="viewer" displayEmpty>
+                        <MenuItem value="admin">Admin</MenuItem>
+                        <MenuItem value="editor">Editor</MenuItem>
+                        <MenuItem value="viewer">Viewer</MenuItem>
+                      </Select>
+                    </FormControl>
+                  </ListItemSecondaryAction>
+                </ListItem>
+              </List>
+              
+              <Box sx={{ mt: 2 }}>
+                <Button variant="outlined" startIcon={<AddIcon />} sx={{ borderRadius: 2 }}>
+                  Add User Permission
+                </Button>
+              </Box>
+            </CardContent>
+          </Card>
+        </Grid>
+
+        {/* Audit Logs */}
+        <Grid item xs={12}>
+          <Card sx={{ borderRadius: 3, boxShadow: '0 8px 24px rgba(0,0,0,0.05)' }}>
+            <CardContent sx={{ p: 3 }}>
+              <Typography variant="h6" gutterBottom>Flow Activity & Audit Logs</Typography>
+              <Divider sx={{ mb: 3 }} />
+              
+              <List disablePadding>
+                <ListItem sx={{ borderRadius: 2, mb: 1, bgcolor: alpha(theme.palette.primary.main, 0.05) }}>
+                  <ListItemIcon>
+                    <EditIcon color="primary" />
+                  </ListItemIcon>
+                  <ListItemText
+                    primary={<Typography fontWeight="500">Flow 'Welcome Series' modified</Typography>}
+                    secondary="Rajesh Kumar • 2 hours ago • Added new message block and updated conditions"
+                  />
+                </ListItem>
+                
+                <ListItem sx={{ borderRadius: 2, mb: 1, bgcolor: alpha(theme.palette.success.main, 0.05) }}>
+                  <ListItemIcon>
+                    <CheckCircleIcon color="success" />
+                  </ListItemIcon>
+                  <ListItemText
+                    primary={<Typography fontWeight="500">Flow 'Policy Renewal' published</Typography>}
+                    secondary="Sarah Manager • 1 day ago • Published to production environment"
+                  />
+                </ListItem>
+                
+                <ListItem sx={{ borderRadius: 2, mb: 1, bgcolor: alpha(theme.palette.warning.main, 0.05) }}>
+                  <ListItemIcon>
+                    <ScheduleIcon color="warning" />
+                  </ListItemIcon>
+                  <ListItemText
+                    primary={<Typography fontWeight="500">Template approval pending</Typography>}
+                    secondary="System • 2 days ago • Waiting for WhatsApp Business API approval"
+                  />
+                </ListItem>
+
+                <ListItem sx={{ borderRadius: 2, mb: 1, bgcolor: alpha(theme.palette.info.main, 0.05) }}>
+                  <ListItemIcon>
+                    <AnalyticsIcon color="info" />
+                  </ListItemIcon>
+                  <ListItemText
+                    primary={<Typography fontWeight="500">Analytics report generated</Typography>}
+                    secondary="John Developer • 3 days ago • Monthly flow performance report exported"
+                  />
+                </ListItem>
+
+                <ListItem sx={{ borderRadius: 2, bgcolor: alpha(theme.palette.error.main, 0.05) }}>
+                  <ListItemIcon>
+                    <ErrorIcon color="error" />
+                  </ListItemIcon>
+                  <ListItemText
+                    primary={<Typography fontWeight="500">Flow 'Customer Support' failed</Typography>}
+                    secondary="System • 5 days ago • API rate limit exceeded, flow automatically paused"
+                  />
+                </ListItem>
+              </List>
+              
+              <Box sx={{ mt: 2 }}>
+                <Button variant="outlined" sx={{ borderRadius: 2 }}>
+                  View All Activity Logs
+                </Button>
+              </Box>
+            </CardContent>
+          </Card>
+        </Grid>
+      </Grid>
+
+      {/* Save Button */}
+      <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 2, mt: 3 }}>
+        <Button
+          variant="outlined"
+          onClick={() => setWhatsappSettings({
+            businessApiEnabled: true,
+            webhookUrl: 'https://api.renewiq.com/webhooks/whatsapp',
+            phoneNumberId: '',
+            accessToken: '',
+            verifyToken: 'whatsapp_verify_token_2024',
+            messageTemplatesEnabled: true,
+            flowBuilderEnabled: true,
+            analyticsEnabled: true,
+            autoResponseEnabled: true,
+            businessHours: {
+              enabled: true,
+              start: '09:00',
+              end: '18:00',
+              timezone: 'Asia/Kolkata'
+            },
+            fallbackMessage: 'Thank you for your message. We will get back to you soon.',
+            maxRetries: 3,
+            retryDelay: 300,
+            rateLimiting: {
+              enabled: true,
+              messagesPerMinute: 60,
+              messagesPerHour: 1000
+            }
+          })}
+          sx={{ borderRadius: 2 }}
+        >
+          Reset to Defaults
+        </Button>
+        <Button
+          variant="contained"
+          onClick={() => {
+            handleSaveSettings();
+            setSuccessMessage('WhatsApp Flow settings saved successfully!');
+          }}
+          startIcon={<SaveIcon />}
+          sx={{ borderRadius: 2 }}
+        >
+          Save WhatsApp Settings
+        </Button>
+      </Box>
+    </Box>
+  );
+
+  // DNC Management Settings Tab
+  const DNCManagementSettingsTab = () => (
+    <Box>
+      <Typography variant="h5" fontWeight="600" gutterBottom>
+        DNC Management Settings
+      </Typography>
+      <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+        Configure Do Not Call (DNC) registry settings, compliance rules, and override permissions
+      </Typography>
+
+      <Grid container spacing={3}>
+        {/* DNC Configuration */}
+        <Grid item xs={12}>
+          <Card sx={{ borderRadius: 3, boxShadow: '0 8px 24px rgba(0,0,0,0.05)' }}>
+            <CardContent sx={{ p: 3 }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                <BlockIcon sx={{ mr: 1, color: theme.palette.error.main }} />
+                <Typography variant="h6" fontWeight="600">
+                  DNC Registry Configuration
+                </Typography>
+              </Box>
+              <Divider sx={{ mb: 3 }} />
+              
+              <Grid container spacing={3}>
+                <Grid item xs={12} md={6}>
+                  <FormControlLabel
+                    control={
+                      <Switch
+                        checked={dncSettings.enabled}
+                        onChange={(e) => setDncSettings({...dncSettings, enabled: e.target.checked})}
+                        color="primary"
+                      />
+                    }
+                    label={
+                      <Box>
+                        <Typography variant="body2" fontWeight="500">
+                          Enable DNC Checking
+                        </Typography>
+                        <Typography variant="caption" color="text.secondary">
+                          Automatically check contacts against DNC registry
+                        </Typography>
+                      </Box>
+                    }
+                  />
+                </Grid>
+                
+                <Grid item xs={12} md={6}>
+                  <FormControlLabel
+                    control={
+                      <Switch
+                        checked={dncSettings.autoCheck}
+                        onChange={(e) => setDncSettings({...dncSettings, autoCheck: e.target.checked})}
+                        color="primary"
+                      />
+                    }
+                    label={
+                      <Box>
+                        <Typography variant="body2" fontWeight="500">
+                          Auto-check Before Sending
+                        </Typography>
+                        <Typography variant="caption" color="text.secondary">
+                          Check DNC status before every message send
+                        </Typography>
+                      </Box>
+                    }
+                  />
+                </Grid>
+                
+                <Grid item xs={12} md={6}>
+                  <FormControlLabel
+                    control={
+                      <Switch
+                        checked={dncSettings.blockOnDNC}
+                        onChange={(e) => setDncSettings({...dncSettings, blockOnDNC: e.target.checked})}
+                        color="primary"
+                      />
+                    }
+                    label={
+                      <Box>
+                        <Typography variant="body2" fontWeight="500">
+                          Block DNC Contacts
+                        </Typography>
+                        <Typography variant="caption" color="text.secondary">
+                          Automatically block messages to DNC contacts
+                        </Typography>
+                      </Box>
+                    }
+                  />
+                </Grid>
+                
+                <Grid item xs={12} md={6}>
+                  <FormControlLabel
+                    control={
+                      <Switch
+                        checked={dncSettings.allowOverrides}
+                        onChange={(e) => setDncSettings({...dncSettings, allowOverrides: e.target.checked})}
+                        color="primary"
+                      />
+                    }
+                    label={
+                      <Box>
+                        <Typography variant="body2" fontWeight="500">
+                          Allow DNC Overrides
+                        </Typography>
+                        <Typography variant="caption" color="text.secondary">
+                          Allow authorized users to override DNC blocks
+                        </Typography>
+                      </Box>
+                    }
+                  />
+                </Grid>
+              </Grid>
+            </CardContent>
+          </Card>
+        </Grid>
+
+        {/* Action Buttons */}
+        <Grid item xs={12}>
+          <Box sx={{ display: 'flex', gap: 2, justifyContent: 'flex-end' }}>
+            <Button
+              variant="outlined"
+              onClick={() => window.open('/dnc-management', '_blank')}
+              sx={{ borderRadius: 2 }}
+            >
+              Open DNC Management
+            </Button>
+            <Button
+              variant="contained"
+              onClick={() => {
+                setSuccessMessage('DNC settings saved successfully!');
+                setTimeout(() => setSuccessMessage(''), 3000);
+              }}
+              sx={{ borderRadius: 2 }}
+            >
+              Save DNC Settings
+            </Button>
+          </Box>
+        </Grid>
+      </Grid>
+    </Box>
+  );
+
+  const SystemSettingsTab = () => (
+    <Box>
+      <Typography variant="h5" fontWeight="600" gutterBottom>
+        System Settings
+      </Typography>
+      <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+        Advanced system configurations, billing information, and user management.
+      </Typography>
+
+      <Card sx={{ mb: 3, borderRadius: 3, boxShadow: '0 8px 24px rgba(0,0,0,0.05)' }}>
+        <CardContent sx={{ p: 3 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', mb: 2, justifyContent: 'space-between' }}>
+            <Box sx={{ display: 'flex', alignItems: 'center' }}>
+              <ReceiptIcon sx={{ mr: 1, color: theme.palette.primary.main }} />
+              <Typography variant="h6" fontWeight="600">Billing Information</Typography>
+            </Box>
+            <Button 
+              component={Link} 
+              to="/billing"
+              variant="outlined" 
+              color="primary"
+              endIcon={<ArrowForwardIcon />}
+              sx={{ borderRadius: 2, fontWeight: 500 }}
+            >
+              View Billing Details
+            </Button>
+          </Box>
+          <Divider sx={{ mb: 2 }} />
+          <Typography variant="body1" color="text.secondary">
+            View your complete billing information, including utilization charges, platform charges, and payment history.
+          </Typography>
+        </CardContent>
+      </Card>
+
+      <Card sx={{ mb: 3, borderRadius: 3, boxShadow: '0 8px 24px rgba(0,0,0,0.05)' }}>
+        <CardContent sx={{ p: 3 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+            <HelpIcon sx={{ mr: 1, color: theme.palette.primary.main }} />
+            <Typography variant="h6" fontWeight="600">Help & Resources</Typography>
+          </Box>
+          <Divider sx={{ mb: 2 }} />
+          <List disablePadding>
+            <ListItem 
+              button
+              onClick={handleOpenWelcomeGuide}
+              sx={{ borderRadius: 2, mb: 1 }}
+            >
+              <ListItemIcon>
+                <SchoolIcon color="primary" />
+              </ListItemIcon>
+              <ListItemText
+                primary={<Typography fontWeight="500">Portal Welcome Guide</Typography>}
+                secondary="View the introduction guide to the portal features"
+              />
+            </ListItem>
+          </List>
+        </CardContent>
+      </Card>
+
+      <Card sx={{ mb: 3, borderRadius: 3, boxShadow: '0 8px 24px rgba(0,0,0,0.05)' }}>
+        <CardContent sx={{ p: 3 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', mb: 2, justifyContent: 'space-between' }}>
+            <Box sx={{ display: 'flex', alignItems: 'center' }}>
+              <SmartToyIcon sx={{ mr: 1, color: theme.palette.primary.main }} />
+              <Typography variant="h6" fontWeight="600">AI Assistant Configuration</Typography>
+            </Box>
+            <Button 
+              variant="outlined" 
+              color="primary"
+              onClick={handleTestAiConnection}
+              sx={{ borderRadius: 2, fontWeight: 500 }}
+            >
+              Test Connection
+            </Button>
+          </Box>
+          <Divider sx={{ mb: 2 }} />
+          
+          <Grid container spacing={3}>
+            {/* Basic Configuration */}
+            <Grid item xs={12} md={6}>
+              <Typography variant="subtitle1" fontWeight="600" gutterBottom>
+                Basic Configuration
+              </Typography>
+              <List disablePadding>
+                <ListItem sx={{ borderRadius: 2, mb: 1 }}>
+                  <ListItemText
+                    primary={<Typography fontWeight="500">Enable AI Assistant</Typography>}
+                    secondary="Enable AI-powered assistance across renewal pages"
+                  />
+                  <ListItemSecondaryAction>
+                    <Switch
+                      edge="end"
+                      checked={aiSettings.enabled}
+                      onChange={(e) => handleAiSettingChange('enabled', e.target.checked)}
+                      color="primary"
+                    />
+                  </ListItemSecondaryAction>
+                </ListItem>
+                
+                <ListItem sx={{ borderRadius: 2, mb: 1 }}>
+                  <ListItemText
+                    primary={<Typography fontWeight="500">AI Provider</Typography>}
+                    secondary="Select the AI service provider"
+                  />
+                  <ListItemSecondaryAction sx={{ width: '120px' }}>
+                    <FormControl fullWidth size="small">
+                      <Select
+                        value={aiSettings.provider}
+                        onChange={(e) => handleAiSettingChange('provider', e.target.value)}
+                        sx={{ borderRadius: 2 }}
+                      >
+                        <MenuItem value="openai">OpenAI</MenuItem>
+                        <MenuItem value="azure">Azure OpenAI</MenuItem>
+                        <MenuItem value="anthropic">Anthropic</MenuItem>
+                        <MenuItem value="google">Google AI</MenuItem>
+                        <MenuItem value="ollama">Ollama (Local)</MenuItem>
+                      </Select>
+                    </FormControl>
+                  </ListItemSecondaryAction>
+                </ListItem>
+
+                <ListItem sx={{ borderRadius: 2, mb: 1 }}>
+                  <ListItemText
+                    primary={<Typography fontWeight="500">AI Model</Typography>}
+                    secondary={aiSettings.provider === 'ollama' ? "Select or enter Ollama model" : "Select the AI model to use"}
+                  />
+                  <ListItemSecondaryAction sx={{ width: '120px' }}>
+                    <FormControl fullWidth size="small">
+                      {aiSettings.provider === 'ollama' ? (
+                        <TextField
+                          size="small"
+                          value={aiSettings.ollama.model}
+                          onChange={(e) => handleAiSettingChange('ollama.model', e.target.value)}
+                          placeholder="llama2, codellama, etc."
+                          sx={{ borderRadius: 2 }}
+                        />
+                      ) : (
+                        <Select
+                          value={aiSettings.model}
+                          onChange={(e) => handleAiSettingChange('model', e.target.value)}
+                          sx={{ borderRadius: 2 }}
+                        >
+                          <MenuItem value="gpt-4">GPT-4</MenuItem>
+                          <MenuItem value="gpt-3.5-turbo">GPT-3.5 Turbo</MenuItem>
+                          <MenuItem value="claude-3">Claude 3</MenuItem>
+                          <MenuItem value="gemini-pro">Gemini Pro</MenuItem>
+                        </Select>
+                      )}
+                    </FormControl>
+                  </ListItemSecondaryAction>
+                </ListItem>
+
+                <ListItem sx={{ borderRadius: 2 }}>
+                  <ListItemText
+                    primary={<Typography fontWeight="500">{aiSettings.provider === 'ollama' ? 'Base URL' : 'API Key'}</Typography>}
+                    secondary={aiSettings.provider === 'ollama' ? 'Ollama server URL (e.g., http://localhost:11434)' : 'Enter your AI provider API key'}
+                  />
+                  <ListItemSecondaryAction sx={{ width: '200px' }}>
+                    <TextField
+                      size="small"
+                      type={aiSettings.provider === 'ollama' ? 'url' : 'password'}
+                      value={aiSettings.provider === 'ollama' ? aiSettings.ollama.baseUrl : aiSettings.apiKey}
+                      onChange={(e) => handleAiSettingChange(aiSettings.provider === 'ollama' ? 'ollama.baseUrl' : 'apiKey', e.target.value)}
+                      placeholder={aiSettings.provider === 'ollama' ? 'http://localhost:11434' : 'sk-...'}
+                      sx={{ borderRadius: 2 }}
+                    />
+                  </ListItemSecondaryAction>
+                </ListItem>
+              </List>
+            </Grid>
+
+            {/* Advanced Configuration */}
+            <Grid item xs={12} md={6}>
+              <Typography variant="subtitle1" fontWeight="600" gutterBottom>
+                Advanced Configuration
+              </Typography>
+              <List disablePadding>
+                <ListItem sx={{ borderRadius: 2, mb: 1 }}>
+                  <ListItemText
+                    primary={<Typography fontWeight="500">Temperature</Typography>}
+                    secondary="Controls response creativity (0.0 - 1.0)"
+                  />
+                  <ListItemSecondaryAction sx={{ width: '100px' }}>
+                    <Slider
+                      value={aiSettings.temperature}
+                      onChange={(e, value) => handleAiSettingChange('temperature', value)}
+                      min={0}
+                      max={1}
+                      step={0.1}
+                      size="small"
+                    />
+                  </ListItemSecondaryAction>
+                </ListItem>
+
+                <ListItem sx={{ borderRadius: 2, mb: 1 }}>
+                  <ListItemText
+                    primary={<Typography fontWeight="500">Max Tokens</Typography>}
+                    secondary="Maximum response length"
+                  />
+                  <ListItemSecondaryAction sx={{ width: '100px' }}>
+                    <TextField
+                      size="small"
+                      type="number"
+                      value={aiSettings.maxTokens}
+                      onChange={(e) => handleAiSettingChange('maxTokens', parseInt(e.target.value))}
+                      sx={{ borderRadius: 2 }}
+                    />
+                  </ListItemSecondaryAction>
+                </ListItem>
+
+                <ListItem sx={{ borderRadius: 2, mb: 1 }}>
+                  <ListItemText
+                    primary={<Typography fontWeight="500">Response Timeout</Typography>}
+                    secondary="Request timeout in seconds"
+                  />
+                  <ListItemSecondaryAction sx={{ width: '100px' }}>
+                    <TextField
+                      size="small"
+                      type="number"
+                      value={aiSettings.responseTimeout}
+                      onChange={(e) => handleAiSettingChange('responseTimeout', parseInt(e.target.value))}
+                      sx={{ borderRadius: 2 }}
+                    />
+                  </ListItemSecondaryAction>
+                </ListItem>
+
+                <ListItem sx={{ borderRadius: 2 }}>
+                  <ListItemText
+                    primary={<Typography fontWeight="500">Enable Fallback</Typography>}
+                    secondary="Show fallback message when AI is unavailable"
+                  />
+                  <ListItemSecondaryAction>
+                    <Switch
+                      edge="end"
+                      checked={aiSettings.fallbackEnabled}
+                      onChange={(e) => handleAiSettingChange('fallbackEnabled', e.target.checked)}
+                      color="primary"
+                    />
+                  </ListItemSecondaryAction>
+                </ListItem>
+              </List>
+            </Grid>
+
+            {/* Feature Toggles */}
+            <Grid item xs={12}>
+              <Typography variant="subtitle1" fontWeight="600" gutterBottom>
+                AI Features
+              </Typography>
+              <Grid container spacing={2}>
+                <Grid item xs={12} sm={6} md={3}>
+                  <FormControlLabel
+                    control={
+                      <Switch
+                        checked={aiSettings.features.renewalInsights}
+                        onChange={(e) => handleAiSettingChange('features.renewalInsights', e.target.checked)}
+                        color="primary"
+                      />
+                    }
+                    label="Renewal Insights"
+                  />
+                </Grid>
+                <Grid item xs={12} sm={6} md={3}>
+                  <FormControlLabel
+                    control={
+                      <Switch
+                        checked={aiSettings.features.processOptimization}
+                        onChange={(e) => handleAiSettingChange('features.processOptimization', e.target.checked)}
+                        color="primary"
+                      />
+                    }
+                    label="Process Optimization"
+                  />
+                </Grid>
+                <Grid item xs={12} sm={6} md={3}>
+                  <FormControlLabel
+                    control={
+                      <Switch
+                        checked={aiSettings.features.customerRetention}
+                        onChange={(e) => handleAiSettingChange('features.customerRetention', e.target.checked)}
+                        color="primary"
+                      />
+                    }
+                    label="Customer Retention"
+                  />
+                </Grid>
+                <Grid item xs={12} sm={6} md={3}>
+                  <FormControlLabel
+                    control={
+                      <Switch
+                        checked={aiSettings.features.communicationStrategies}
+                        onChange={(e) => handleAiSettingChange('features.communicationStrategies', e.target.checked)}
+                        color="primary"
+                      />
+                    }
+                    label="Communication Strategies"
+                  />
+                </Grid>
+              </Grid>
+            </Grid>
+
+            {/* Rate Limiting */}
+            <Grid item xs={12} md={6}>
+              <Typography variant="subtitle1" fontWeight="600" gutterBottom>
+                Rate Limiting
+              </Typography>
+              <List disablePadding>
+                <ListItem sx={{ borderRadius: 2, mb: 1 }}>
+                  <ListItemText
+                    primary={<Typography fontWeight="500">Enable Rate Limiting</Typography>}
+                    secondary="Prevent API quota exhaustion"
+                  />
+                  <ListItemSecondaryAction>
+                    <Switch
+                      edge="end"
+                      checked={aiSettings.rateLimiting.enabled}
+                      onChange={(e) => handleAiSettingChange('rateLimiting.enabled', e.target.checked)}
+                      color="primary"
+                    />
+                  </ListItemSecondaryAction>
+                </ListItem>
+                
+                <ListItem sx={{ borderRadius: 2, mb: 1 }}>
+                  <ListItemText
+                    primary={<Typography fontWeight="500">Requests per Minute</Typography>}
+                    secondary="Maximum requests per minute"
+                  />
+                  <ListItemSecondaryAction sx={{ width: '100px' }}>
+                    <TextField
+                      size="small"
+                      type="number"
+                      value={aiSettings.rateLimiting.requestsPerMinute}
+                      onChange={(e) => handleAiSettingChange('rateLimiting.requestsPerMinute', parseInt(e.target.value))}
+                      sx={{ borderRadius: 2 }}
+                    />
+                  </ListItemSecondaryAction>
+                </ListItem>
+
+                <ListItem sx={{ borderRadius: 2 }}>
+                  <ListItemText
+                    primary={<Typography fontWeight="500">Requests per Hour</Typography>}
+                    secondary="Maximum requests per hour"
+                  />
+                  <ListItemSecondaryAction sx={{ width: '100px' }}>
+                    <TextField
+                      size="small"
+                      type="number"
+                      value={aiSettings.rateLimiting.requestsPerHour}
+                      onChange={(e) => handleAiSettingChange('rateLimiting.requestsPerHour', parseInt(e.target.value))}
+                      sx={{ borderRadius: 2 }}
+                    />
+                  </ListItemSecondaryAction>
+                </ListItem>
+              </List>
+            </Grid>
+
+            {/* Knowledge Base */}
+            <Grid item xs={12} md={6}>
+              <Typography variant="subtitle1" fontWeight="600" gutterBottom>
+                Knowledge Base
+              </Typography>
+              <List disablePadding>
+                <ListItem sx={{ borderRadius: 2, mb: 1 }}>
+                  <ListItemText
+                    primary={<Typography fontWeight="500">Enable Knowledge Base</Typography>}
+                    secondary="Use internal knowledge for better responses"
+                  />
+                  <ListItemSecondaryAction>
+                    <Switch
+                      edge="end"
+                      checked={aiSettings.knowledgeBase.enabled}
+                      onChange={(e) => handleAiSettingChange('knowledgeBase.enabled', e.target.checked)}
+                      color="primary"
+                    />
+                  </ListItemSecondaryAction>
+                </ListItem>
+                
+                <ListItem sx={{ borderRadius: 2, mb: 1 }}>
+                  <ListItemText
+                    primary={<Typography fontWeight="500">Auto Update</Typography>}
+                    secondary="Automatically update knowledge base"
+                  />
+                  <ListItemSecondaryAction>
+                    <Switch
+                      edge="end"
+                      checked={aiSettings.knowledgeBase.autoUpdate}
+                      onChange={(e) => handleAiSettingChange('knowledgeBase.autoUpdate', e.target.checked)}
+                      color="primary"
+                    />
+                  </ListItemSecondaryAction>
+                </ListItem>
+
+                <ListItem sx={{ borderRadius: 2 }}>
+                  <ListItemText
+                    primary={<Typography fontWeight="500">Last Updated</Typography>}
+                    secondary={new Date(aiSettings.knowledgeBase.lastUpdated).toLocaleDateString()}
+                  />
+                  <ListItemSecondaryAction>
+                    <Button
+                      size="small"
+                      variant="outlined"
+                      sx={{ borderRadius: 2 }}
+                    >
+                      Update Now
+                    </Button>
+                  </ListItemSecondaryAction>
+                </ListItem>
+              </List>
+            </Grid>
+          </Grid>
+        </CardContent>
+      </Card>
+
+      {/* Ollama-Specific Configuration */}
+      {aiSettings.provider === 'ollama' && (
+        <Card sx={{ mb: 3, borderRadius: 3, boxShadow: '0 8px 24px rgba(0,0,0,0.05)' }}>
+          <CardContent sx={{ p: 3 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', mb: 2, justifyContent: 'space-between' }}>
+              <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                <SmartToyIcon sx={{ mr: 1, color: theme.palette.secondary.main }} />
+                <Typography variant="h6" fontWeight="600">Ollama Configuration</Typography>
+              </Box>
+              <Box sx={{ display: 'flex', gap: 1 }}>
+                <Button 
+                  variant="outlined" 
+                  size="small"
+                  color="secondary"
+                  onClick={() => {
+                    // Mock function to refresh available models
+                    setAiSettings(prev => ({
+                      ...prev,
+                      ollama: {
+                        ...prev.ollama,
+                        lastModelRefresh: new Date().toISOString(),
+                        availableModels: ['llama2', 'codellama', 'mistral', 'neural-chat', 'starcode']
+                      }
+                    }));
+                  }}
+                  sx={{ borderRadius: 2, fontWeight: 500 }}
+                >
+                  <RefreshIcon sx={{ mr: 0.5, fontSize: 16 }} />
+                  Refresh Models
+                </Button>
+                <Button 
+                  variant="outlined" 
+                  size="small"
+                  color="primary"
+                  onClick={handleTestAiConnection}
+                  sx={{ borderRadius: 2, fontWeight: 500 }}
+                >
+                  Test Connection
+                </Button>
+              </Box>
+            </Box>
+            <Divider sx={{ mb: 2 }} />
+            
+            <Grid container spacing={3}>
+              {/* Connection Settings */}
+              <Grid item xs={12} md={6}>
+                <Typography variant="subtitle1" fontWeight="600" gutterBottom>
+                  Connection Settings
+                </Typography>
+                <List disablePadding>
+                  <ListItem sx={{ borderRadius: 2, mb: 1 }}>
+                    <ListItemText
+                      primary={<Typography fontWeight="500">Server URL</Typography>}
+                      secondary="Ollama server endpoint"
+                    />
+                    <ListItemSecondaryAction sx={{ width: '200px' }}>
+                      <TextField
+                        size="small"
+                        value={aiSettings.ollama.baseUrl}
+                        onChange={(e) => handleAiSettingChange('ollama.baseUrl', e.target.value)}
+                        placeholder="http://localhost:11434"
+                        sx={{ borderRadius: 2 }}
+                      />
+                    </ListItemSecondaryAction>
+                  </ListItem>
+
+                  <ListItem sx={{ borderRadius: 2, mb: 1 }}>
+                    <ListItemText
+                      primary={<Typography fontWeight="500">Keep Alive</Typography>}
+                      secondary="How long to keep model loaded in memory"
+                    />
+                    <ListItemSecondaryAction sx={{ width: '120px' }}>
+                      <FormControl fullWidth size="small">
+                        <Select
+                          value={aiSettings.ollama.keepAlive}
+                          onChange={(e) => handleAiSettingChange('ollama.keepAlive', e.target.value)}
+                          sx={{ borderRadius: 2 }}
+                        >
+                          <MenuItem value="1m">1 minute</MenuItem>
+                          <MenuItem value="5m">5 minutes</MenuItem>
+                          <MenuItem value="15m">15 minutes</MenuItem>
+                          <MenuItem value="30m">30 minutes</MenuItem>
+                          <MenuItem value="1h">1 hour</MenuItem>
+                          <MenuItem value="-1">Always</MenuItem>
+                        </Select>
+                      </FormControl>
+                    </ListItemSecondaryAction>
+                  </ListItem>
+
+                  <ListItem sx={{ borderRadius: 2, mb: 1 }}>
+                    <ListItemText
+                      primary={<Typography fontWeight="500">Stream Responses</Typography>}
+                      secondary="Enable streaming for real-time responses"
+                    />
+                    <ListItemSecondaryAction>
+                      <Switch
+                        edge="end"
+                        checked={aiSettings.ollama.stream}
+                        onChange={(e) => handleAiSettingChange('ollama.stream', e.target.checked)}
+                        color="primary"
+                      />
+                    </ListItemSecondaryAction>
+                  </ListItem>
+
+                  <ListItem sx={{ borderRadius: 2 }}>
+                    <ListItemText
+                      primary={<Typography fontWeight="500">System Prompt</Typography>}
+                      secondary="Default system prompt for the model"
+                    />
+                  </ListItem>
+                  <Box sx={{ px: 2, pb: 1 }}>
+                    <TextField
+                      fullWidth
+                      multiline
+                      rows={3}
+                      value={aiSettings.ollama.systemPrompt}
+                      onChange={(e) => handleAiSettingChange('ollama.systemPrompt', e.target.value)}
+                      placeholder="You are a helpful AI assistant..."
+                      sx={{ borderRadius: 2 }}
+                    />
+                  </Box>
+                </List>
+              </Grid>
+
+              {/* Model Parameters */}
+              <Grid item xs={12} md={6}>
+                <Typography variant="subtitle1" fontWeight="600" gutterBottom>
+                  Model Parameters
+                </Typography>
+                <List disablePadding>
+                  <ListItem sx={{ borderRadius: 2, mb: 1 }}>
+                    <ListItemText
+                      primary={<Typography fontWeight="500">Temperature</Typography>}
+                      secondary="Controls randomness (0.0 - 2.0)"
+                    />
+                    <ListItemSecondaryAction sx={{ width: '120px' }}>
+                      <Slider
+                        value={aiSettings.ollama.options.temperature}
+                        onChange={(e, value) => handleAiSettingChange('ollama.options.temperature', value)}
+                        min={0}
+                        max={2}
+                        step={0.1}
+                        size="small"
+                        valueLabelDisplay="auto"
+                      />
+                    </ListItemSecondaryAction>
+                  </ListItem>
+
+                  <ListItem sx={{ borderRadius: 2, mb: 1 }}>
+                    <ListItemText
+                      primary={<Typography fontWeight="500">Top P</Typography>}
+                      secondary="Nucleus sampling (0.0 - 1.0)"
+                    />
+                    <ListItemSecondaryAction sx={{ width: '120px' }}>
+                      <Slider
+                        value={aiSettings.ollama.options.top_p}
+                        onChange={(e, value) => handleAiSettingChange('ollama.options.top_p', value)}
+                        min={0}
+                        max={1}
+                        step={0.05}
+                        size="small"
+                        valueLabelDisplay="auto"
+                      />
+                    </ListItemSecondaryAction>
+                  </ListItem>
+
+                  <ListItem sx={{ borderRadius: 2, mb: 1 }}>
+                    <ListItemText
+                      primary={<Typography fontWeight="500">Top K</Typography>}
+                      secondary="Limits token selection (1-100)"
+                    />
+                    <ListItemSecondaryAction sx={{ width: '100px' }}>
+                      <TextField
+                        size="small"
+                        type="number"
+                        value={aiSettings.ollama.options.top_k}
+                        onChange={(e) => handleAiSettingChange('ollama.options.top_k', parseInt(e.target.value))}
+                        inputProps={{ min: 1, max: 100 }}
+                        sx={{ borderRadius: 2 }}
+                      />
+                    </ListItemSecondaryAction>
+                  </ListItem>
+
+                  <ListItem sx={{ borderRadius: 2, mb: 1 }}>
+                    <ListItemText
+                      primary={<Typography fontWeight="500">Repeat Penalty</Typography>}
+                      secondary="Penalizes repetition (0.0 - 2.0)"
+                    />
+                    <ListItemSecondaryAction sx={{ width: '120px' }}>
+                      <Slider
+                        value={aiSettings.ollama.options.repeat_penalty}
+                        onChange={(e, value) => handleAiSettingChange('ollama.options.repeat_penalty', value)}
+                        min={0}
+                        max={2}
+                        step={0.1}
+                        size="small"
+                        valueLabelDisplay="auto"
+                      />
+                    </ListItemSecondaryAction>
+                  </ListItem>
+
+                  <ListItem sx={{ borderRadius: 2, mb: 1 }}>
+                    <ListItemText
+                      primary={<Typography fontWeight="500">Context Length</Typography>}
+                      secondary="Maximum context window size"
+                    />
+                    <ListItemSecondaryAction sx={{ width: '100px' }}>
+                      <TextField
+                        size="small"
+                        type="number"
+                        value={aiSettings.ollama.options.num_ctx}
+                        onChange={(e) => handleAiSettingChange('ollama.options.num_ctx', parseInt(e.target.value))}
+                        sx={{ borderRadius: 2 }}
+                      />
+                    </ListItemSecondaryAction>
+                  </ListItem>
+
+                  <ListItem sx={{ borderRadius: 2 }}>
+                    <ListItemText
+                      primary={<Typography fontWeight="500">Max Tokens</Typography>}
+                      secondary="Maximum tokens to generate"
+                    />
+                    <ListItemSecondaryAction sx={{ width: '100px' }}>
+                      <TextField
+                        size="small"
+                        type="number"
+                        value={aiSettings.ollama.options.num_predict}
+                        onChange={(e) => handleAiSettingChange('ollama.options.num_predict', parseInt(e.target.value))}
+                        sx={{ borderRadius: 2 }}
+                      />
+                    </ListItemSecondaryAction>
+                  </ListItem>
+                </List>
+              </Grid>
+
+              {/* Available Models */}
+              <Grid item xs={12}>
+                <Typography variant="subtitle1" fontWeight="600" gutterBottom>
+                  Available Models
+                </Typography>
+                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mb: 2 }}>
+                  {aiSettings.ollama.availableModels.length > 0 ? (
+                    aiSettings.ollama.availableModels.map((model) => (
+                      <Chip
+                        key={model}
+                        label={model}
+                        variant={aiSettings.ollama.model === model ? "filled" : "outlined"}
+                        color={aiSettings.ollama.model === model ? "primary" : "default"}
+                        onClick={() => handleAiSettingChange('ollama.model', model)}
+                        sx={{ cursor: 'pointer' }}
+                      />
+                    ))
+                  ) : (
+                    <Typography variant="body2" color="text.secondary">
+                      No models found. Click "Refresh Models" to scan for available models.
+                    </Typography>
+                  )}
+                </Box>
+                
+                <Alert severity="info" sx={{ mt: 2 }}>
+                  <Typography variant="body2">
+                    <strong>Tip:</strong> You can install new models using the Ollama CLI: 
+                    <code style={{ marginLeft: 8, padding: '2px 6px', backgroundColor: 'rgba(0,0,0,0.1)', borderRadius: 4 }}>
+                      ollama pull &lt;model-name&gt;
+                    </code>
+                  </Typography>
+                </Alert>
+              </Grid>
+            </Grid>
+          </CardContent>
+        </Card>
+      )}
+
+      <Card sx={{ borderRadius: 3, boxShadow: '0 8px 24px rgba(0,0,0,0.05)' }}>
+        <CardContent sx={{ p: 3 }}>
+          <Typography variant="h6" fontWeight="600" gutterBottom>System Performance</Typography>
+          <Divider sx={{ mb: 2 }} />
+          <List disablePadding>
+            <ListItem sx={{ borderRadius: 2, mb: 1 }}>
+              <ListItemIcon>
+                <DataUsageIcon color="info" />
+              </ListItemIcon>
+              <ListItemText
+                primary={<Typography fontWeight="500">Data Retention Period</Typography>}
+                secondary="How long to keep archived data (months)"
+              />
+              <ListItemSecondaryAction sx={{ width: '100px' }}>
+                <FormControl fullWidth size="small">
+                  <Select
+                    value={settings.dataRetentionPeriod || 12}
+                    onChange={(e) => handleSettingChange('dataRetentionPeriod', e.target.value)}
+                    sx={{ borderRadius: 2 }}
+                  >
+                    <MenuItem value={6}>6 months</MenuItem>
+                    <MenuItem value={12}>12 months</MenuItem>
+                    <MenuItem value={24}>24 months</MenuItem>
+                    <MenuItem value={36}>36 months</MenuItem>
+                  </Select>
+                </FormControl>
+              </ListItemSecondaryAction>
+            </ListItem>
+            <ListItem sx={{ borderRadius: 2 }}>
+              <ListItemIcon>
+                <CloudIcon color="secondary" />
+              </ListItemIcon>
+              <ListItemText
+                primary={<Typography fontWeight="500">Auto Backup</Typography>}
+                secondary="Automatically backup data to cloud storage"
+              />
+              <ListItemSecondaryAction>
+                <Switch
+                  edge="end"
+                  checked={settings.autoBackup !== false}
+                  onChange={(e) => handleSettingChange('autoBackup', e.target.checked)}
+                  color="primary"
+                />
+              </ListItemSecondaryAction>
+            </ListItem>
+          </List>
+        </CardContent>
+      </Card>
+    </Box>
+  );
+
+
+
+  // Scheduled Dialer Settings Tab
+  const ScheduledDialerSettingsTab = () => {
+    const [dialerStatus, setDialerStatus] = useState(true);
+    
+    const scheduledCalls = [
+      {
+        id: 1,
+        leadName: 'Rajesh Kumar',
+        phoneNumber: '+91 98765 43210',
+        scheduledDateTime: '2024-01-15 10:30 AM',
+        status: 'Pending'
+      },
+      {
+        id: 2,
+        leadName: 'Priya Sharma',
+        phoneNumber: '+91 87654 32109',
+        scheduledDateTime: '2024-01-15 11:00 AM',
+        status: 'Completed'
+      },
+      {
+        id: 3,
+        leadName: 'Amit Patel',
+        phoneNumber: '+91 76543 21098',
+        scheduledDateTime: '2024-01-15 11:30 AM',
+        status: 'Skipped'
+      },
+      {
+        id: 4,
+        leadName: 'Sunita Reddy',
+        phoneNumber: '+91 65432 10987',
+        scheduledDateTime: '2024-01-15 12:00 PM',
+        status: 'Pending'
+      },
+      {
+        id: 5,
+        leadName: 'Vikram Singh',
+        phoneNumber: '+91 54321 09876',
+        scheduledDateTime: '2024-01-15 12:30 PM',
+        status: 'Completed'
+      }
+    ];
+
+    const getStatusColor = (status) => {
+      switch (status) {
+        case 'Pending': return 'warning';
+        case 'Completed': return 'success';
+        case 'Skipped': return 'error';
+        default: return 'default';
+      }
+    };
+
+    const getCurrentTime = () => {
+      return new Date().toLocaleTimeString('en-US', {
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: true
+      });
+    };
+
+    const isWithinOfficeHours = () => {
+      const now = new Date();
+      const currentHour = now.getHours();
+      return currentHour >= 9 && currentHour < 18;
+    };
+
+    return (
+      <Box>
+        <Typography variant="h5" fontWeight="600" gutterBottom>
+          Scheduled Dialer
+        </Typography>
+        <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+          Monitor dialer status, office hours, and manage scheduled calls
+        </Typography>
+
+        <Grid container spacing={3}>
+          {/* Dialer Status */}
+          <Grid item xs={12} md={6}>
+            <Card sx={{ borderRadius: 3, boxShadow: '0 8px 24px rgba(0,0,0,0.05)' }}>
+              <CardContent sx={{ p: 3 }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
+                  <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                    <PhoneIcon sx={{ mr: 1, color: theme.palette.primary.main }} />
+                    <Typography variant="h6" fontWeight="600">Dialer Status</Typography>
+                  </Box>
+                  <Chip
+                    label={dialerStatus ? 'Active' : 'Paused'}
+                    color={dialerStatus ? 'success' : 'error'}
+                    icon={dialerStatus ? <CheckCircleIcon /> : <ErrorIcon />}
+                  />
+                </Box>
+                <Divider sx={{ mb: 2 }} />
+                
+                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <Typography variant="body2" color="text.secondary">
+                    Toggle dialer operation
+                  </Typography>
+                  <Button
+                    variant={dialerStatus ? 'outlined' : 'contained'}
+                    color={dialerStatus ? 'error' : 'success'}
+                    onClick={() => setDialerStatus(!dialerStatus)}
+                    sx={{ borderRadius: 2 }}
+                  >
+                    {dialerStatus ? 'Pause Dialer' : 'Start Dialer'}
+                  </Button>
+                </Box>
+              </CardContent>
+            </Card>
+          </Grid>
+
+          {/* Office Hours */}
+          <Grid item xs={12} md={6}>
+            <Card sx={{ borderRadius: 3, boxShadow: '0 8px 24px rgba(0,0,0,0.05)' }}>
+              <CardContent sx={{ p: 3 }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                  <AccessTimeIcon sx={{ mr: 1, color: theme.palette.primary.main }} />
+                  <Typography variant="h6" fontWeight="600">Office Hours</Typography>
+                </Box>
+                <Divider sx={{ mb: 2 }} />
+                
+                <Box sx={{ mb: 2 }}>
+                  <Typography variant="body1" fontWeight="500" gutterBottom>
+                    9 AM - 6 PM, Monday - Friday
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary" gutterBottom>
+                    Current Time: {getCurrentTime()}
+                  </Typography>
+                  <Chip
+                    label={isWithinOfficeHours() ? 'Within Office Hours' : 'Outside Office Hours'}
+                    color={isWithinOfficeHours() ? 'success' : 'warning'}
+                    size="small"
+                  />
+                </Box>
+              </CardContent>
+            </Card>
+          </Grid>
+
+          {/* Scheduled Calls Table */}
+          <Grid item xs={12}>
+            <Card sx={{ borderRadius: 3, boxShadow: '0 8px 24px rgba(0,0,0,0.05)' }}>
+              <CardContent sx={{ p: 3 }}>
+                <Typography variant="h6" fontWeight="600" gutterBottom>
+                  Scheduled Calls
+                </Typography>
+                <Divider sx={{ mb: 2 }} />
+                
+                <TableContainer>
+                  <Table>
+                    <TableHead>
+                      <TableRow>
+                        <TableCell><Typography fontWeight="600">Lead Name</Typography></TableCell>
+                        <TableCell><Typography fontWeight="600">Phone Number</Typography></TableCell>
+                        <TableCell><Typography fontWeight="600">Scheduled Date & Time</Typography></TableCell>
+                        <TableCell><Typography fontWeight="600">Call Status</Typography></TableCell>
+                      </TableRow>
+                    </TableHead>
+                    <TableBody>
+                      {scheduledCalls.map((call) => (
+                        <TableRow key={call.id} hover>
+                          <TableCell>
+                            <Typography variant="body2" fontWeight="500">
+                              {call.leadName}
+                            </Typography>
+                          </TableCell>
+                          <TableCell>
+                            <Typography variant="body2">
+                              {call.phoneNumber}
+                            </Typography>
+                          </TableCell>
+                          <TableCell>
+                            <Typography variant="body2">
+                              {call.scheduledDateTime}
+                            </Typography>
+                          </TableCell>
+                          <TableCell>
+                            <Chip
+                              label={call.status}
+                              color={getStatusColor(call.status)}
+                              size="small"
+                            />
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </TableContainer>
+              </CardContent>
+            </Card>
+          </Grid>
+        </Grid>
+      </Box>
+    );
+  };
+
+  // Feedback Settings Tab
+  const FeedbackSettingsTab = () => (
+    <Box>
+      <Typography variant="h5" fontWeight="600" gutterBottom>
+        Feedback & Surveys Settings
+      </Typography>
+      <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+        Configure feedback collection, survey preferences, and integrations
+      </Typography>
+
+      <Grid container spacing={3}>
+        <Grid item xs={12} md={6}>
+          <Card sx={{ borderRadius: 3, boxShadow: '0 8px 24px rgba(0,0,0,0.05)' }}>
+            <CardContent sx={{ p: 3 }}>
+              <Typography variant="h6" gutterBottom>General Settings</Typography>
+              <Divider sx={{ mb: 2 }} />
+              <List disablePadding>
+                <ListItem sx={{ borderRadius: 2, mb: 1 }}>
+                  <ListItemText 
+                    primary={<Typography fontWeight="500">Default Survey Language</Typography>}
+                    secondary="Language for new surveys and feedback forms"
+                  />
+                  <ListItemSecondaryAction>
+                    <FormControl size="small" sx={{ minWidth: 120 }}>
+                      <Select
+                        value={settings.feedbackLanguage || 'en-US'}
+                        onChange={(e) => handleSettingChange('feedbackLanguage', e.target.value)}
+                        sx={{ borderRadius: 2 }}
+                      >
+                        <MenuItem value="en-US">English (US)</MenuItem>
+                        <MenuItem value="en-GB">English (UK)</MenuItem>
+                        <MenuItem value="hi">हिन्दी (Hindi)</MenuItem>
+                        <MenuItem value="bn">বাংলা (Bengali)</MenuItem>
+                        <MenuItem value="te">తెలుగు (Telugu)</MenuItem>
+                        <MenuItem value="mr">मराठी (Marathi)</MenuItem>
+                        <MenuItem value="ta">தமிழ் (Tamil)</MenuItem>
+                        <MenuItem value="gu">ગુજરાતી (Gujarati)</MenuItem>
+                        <MenuItem value="ml">മലയാളം (Malayalam)</MenuItem>
+                        <MenuItem value="kn">ಕನ್ನಡ (Kannada)</MenuItem>
+                        <MenuItem value="pa">ਪੰਜਾਬੀ (Punjabi)</MenuItem>
+                        <MenuItem value="as">অসমীয়া (Assamese)</MenuItem>
+                        <MenuItem value="or">ଓଡ଼ିଆ (Odia)</MenuItem>
+                        <MenuItem value="ur">اردو (Urdu)</MenuItem>
+                        <MenuItem value="es">Spanish</MenuItem>
+                        <MenuItem value="fr">French</MenuItem>
+                        <MenuItem value="de">German</MenuItem>
+                      </Select>
+                    </FormControl>
+                  </ListItemSecondaryAction>
+                </ListItem>
+                <ListItem sx={{ borderRadius: 2, mb: 1 }}>
+                  <ListItemText 
+                    primary={<Typography fontWeight="500">Data Retention Period</Typography>}
+                    secondary="How long to keep feedback and survey responses"
+                  />
+                  <ListItemSecondaryAction>
+                    <FormControl size="small" sx={{ minWidth: 120 }}>
+                      <Select
+                        value={settings.feedbackRetention || 24}
+                        onChange={(e) => handleSettingChange('feedbackRetention', e.target.value)}
+                        sx={{ borderRadius: 2 }}
+                      >
+                        <MenuItem value={12}>12 months</MenuItem>
+                        <MenuItem value={24}>24 months</MenuItem>
+                        <MenuItem value={36}>36 months</MenuItem>
+                        <MenuItem value={60}>5 years</MenuItem>
+                      </Select>
+                    </FormControl>
+                  </ListItemSecondaryAction>
+                </ListItem>
+                <ListItem sx={{ borderRadius: 2 }}>
+                  <ListItemText 
+                    primary={<Typography fontWeight="500">Auto-Archive Responses</Typography>}
+                    secondary="Automatically archive old survey responses"
+                  />
+                  <ListItemSecondaryAction>
+                    <Switch
+                      edge="end"
+                      checked={settings.autoArchiveFeedback !== false}
+                      onChange={(e) => handleSettingChange('autoArchiveFeedback', e.target.checked)}
+                      color="primary"
+                    />
+                  </ListItemSecondaryAction>
+                </ListItem>
+              </List>
+            </CardContent>
+          </Card>
+        </Grid>
+        
+        <Grid item xs={12} md={6}>
+          <Card sx={{ borderRadius: 3, boxShadow: '0 8px 24px rgba(0,0,0,0.05)' }}>
+            <CardContent sx={{ p: 3 }}>
+              <Typography variant="h6" gutterBottom>Notifications</Typography>
+              <Divider sx={{ mb: 2 }} />
+              <List disablePadding>
+                <ListItem sx={{ borderRadius: 2, mb: 1 }}>
+                  <ListItemText 
+                    primary={<Typography fontWeight="500">Email Notifications</Typography>}
+                    secondary="Receive alerts for new feedback submissions"
+                  />
+                  <ListItemSecondaryAction>
+                    <Switch
+                      edge="end"
+                      checked={settings.feedbackEmailNotifications !== false}
+                      onChange={(e) => handleSettingChange('feedbackEmailNotifications', e.target.checked)}
+                      color="primary"
+                    />
+                  </ListItemSecondaryAction>
+                </ListItem>
+                <ListItem sx={{ borderRadius: 2, mb: 1 }}>
+                  <ListItemText 
+                    primary={<Typography fontWeight="500">SMS Alerts</Typography>}
+                    secondary="Critical feedback notifications via SMS"
+                  />
+                  <ListItemSecondaryAction>
+                    <Switch
+                      edge="end"
+                      checked={settings.feedbackSmsAlerts === true}
+                      onChange={(e) => handleSettingChange('feedbackSmsAlerts', e.target.checked)}
+                      color="primary"
+                    />
+                  </ListItemSecondaryAction>
+                </ListItem>
+                <ListItem sx={{ borderRadius: 2, mb: 1 }}>
+                  <ListItemText 
+                    primary={<Typography fontWeight="500">Weekly Reports</Typography>}
+                    secondary="Automated feedback summary emails"
+                  />
+                  <ListItemSecondaryAction>
+                    <Switch
+                      edge="end"
+                      checked={settings.feedbackWeeklyReports !== false}
+                      onChange={(e) => handleSettingChange('feedbackWeeklyReports', e.target.checked)}
+                      color="primary"
+                    />
+                  </ListItemSecondaryAction>
+                </ListItem>
+                <ListItem sx={{ borderRadius: 2 }}>
+                  <ListItemText 
+                    primary={<Typography fontWeight="500">Real-time Alerts</Typography>}
+                    secondary="Instant notifications for negative feedback"
+                  />
+                  <ListItemSecondaryAction>
+                    <Switch
+                      edge="end"
+                      checked={settings.feedbackRealTimeAlerts === true}
+                      onChange={(e) => handleSettingChange('feedbackRealTimeAlerts', e.target.checked)}
+                      color="primary"
+                    />
+                  </ListItemSecondaryAction>
+                </ListItem>
+              </List>
+            </CardContent>
+          </Card>
+        </Grid>
+        
+        <Grid item xs={12}>
+          <Card sx={{ borderRadius: 3, boxShadow: '0 8px 24px rgba(0,0,0,0.05)' }}>
+            <CardContent sx={{ p: 3 }}>
+              <Typography variant="h6" gutterBottom>Integrations</Typography>
+              <Divider sx={{ mb: 2 }} />
+              <Grid container spacing={2}>
+                <Grid item xs={12} sm={6} md={3}>
+                  <Card sx={{ textAlign: 'center', p: 2, border: '1px solid', borderColor: 'divider' }}>
+                    <Box sx={{ mb: 2 }}>
+                      <Avatar sx={{ bgcolor: '#4A154B', mx: 'auto', mb: 1 }}>
+                        <Typography variant="h6" color="white">S</Typography>
+                      </Avatar>
+                    </Box>
+                    <Typography variant="h6" gutterBottom>Slack</Typography>
+                    <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                      Send feedback notifications to Slack channels
+                    </Typography>
+                    <Button 
+                      variant={settings.slackIntegration ? "contained" : "outlined"} 
+                      fullWidth
+                      onClick={() => handleSettingChange('slackIntegration', !settings.slackIntegration)}
+                    >
+                      {settings.slackIntegration ? "Connected" : "Connect"}
+                    </Button>
+                  </Card>
+                </Grid>
+                <Grid item xs={12} sm={6} md={3}>
+                  <Card sx={{ textAlign: 'center', p: 2, border: '1px solid', borderColor: 'divider' }}>
+                    <Box sx={{ mb: 2 }}>
+                      <Avatar sx={{ bgcolor: '#00A1C9', mx: 'auto', mb: 1 }}>
+                        <Typography variant="h6" color="white">SF</Typography>
+                      </Avatar>
+                    </Box>
+                    <Typography variant="h6" gutterBottom>Salesforce</Typography>
+                    <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                      Sync customer feedback with CRM records
+                    </Typography>
+                    <Button 
+                      variant={settings.salesforceIntegration ? "contained" : "outlined"} 
+                      fullWidth
+                      onClick={() => handleSettingChange('salesforceIntegration', !settings.salesforceIntegration)}
+                    >
+                      {settings.salesforceIntegration ? "Connected" : "Connect"}
+                    </Button>
+                  </Card>
+                </Grid>
+                <Grid item xs={12} sm={6} md={3}>
+                  <Card sx={{ textAlign: 'center', p: 2, border: '1px solid', borderColor: 'divider' }}>
+                    <Box sx={{ mb: 2 }}>
+                      <Avatar sx={{ bgcolor: '#FF7A59', mx: 'auto', mb: 1 }}>
+                        <Typography variant="h6" color="white">H</Typography>
+                      </Avatar>
+                    </Box>
+                    <Typography variant="h6" gutterBottom>HubSpot</Typography>
+                    <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                      Integrate with marketing automation workflows
+                    </Typography>
+                    <Button 
+                      variant={settings.hubspotIntegration ? "contained" : "outlined"} 
+                      fullWidth
+                      onClick={() => handleSettingChange('hubspotIntegration', !settings.hubspotIntegration)}
+                    >
+                      {settings.hubspotIntegration ? "Connected" : "Connect"}
+                    </Button>
+                  </Card>
+                </Grid>
+                <Grid item xs={12} sm={6} md={3}>
+                  <Card sx={{ textAlign: 'center', p: 2, border: '1px solid', borderColor: 'divider' }}>
+                    <Box sx={{ mb: 2 }}>
+                      <Avatar sx={{ bgcolor: '#FF4A00', mx: 'auto', mb: 1 }}>
+                        <Typography variant="h6" color="white">Z</Typography>
+                      </Avatar>
+                    </Box>
+                    <Typography variant="h6" gutterBottom>Zapier</Typography>
+                    <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                      Connect feedback to 1000+ apps and services
+                    </Typography>
+                    <Button 
+                      variant={settings.zapierIntegration ? "contained" : "outlined"} 
+                      fullWidth
+                      onClick={() => handleSettingChange('zapierIntegration', !settings.zapierIntegration)}
+                    >
+                      {settings.zapierIntegration ? "Connected" : "Connect"}
+                    </Button>
+                  </Card>
+                </Grid>
+              </Grid>
+            </CardContent>
+          </Card>
+        </Grid>
+
+        <Grid item xs={12}>
+          <Card sx={{ borderRadius: 3, boxShadow: '0 8px 24px rgba(0,0,0,0.05)' }}>
+            <CardContent sx={{ p: 3 }}>
+              <Typography variant="h6" gutterBottom>Survey Automation</Typography>
+              <Divider sx={{ mb: 2 }} />
+              <List disablePadding>
+                <ListItem sx={{ borderRadius: 2, mb: 1 }}>
+                  <ListItemText 
+                    primary={<Typography fontWeight="500">Auto-send Post-Purchase Surveys</Typography>}
+                    secondary="Automatically send satisfaction surveys after policy purchases"
+                  />
+                  <ListItemSecondaryAction>
+                    <Switch
+                      edge="end"
+                      checked={settings.autoPostPurchaseSurvey === true}
+                      onChange={(e) => handleSettingChange('autoPostPurchaseSurvey', e.target.checked)}
+                      color="primary"
+                    />
+                  </ListItemSecondaryAction>
+                </ListItem>
+                <ListItem sx={{ borderRadius: 2, mb: 1 }}>
+                  <ListItemText 
+                    primary={<Typography fontWeight="500">Follow-up Reminders</Typography>}
+                    secondary="Send reminders for incomplete survey responses"
+                  />
+                  <ListItemSecondaryAction>
+                    <Switch
+                      edge="end"
+                      checked={settings.surveyReminders !== false}
+                      onChange={(e) => handleSettingChange('surveyReminders', e.target.checked)}
+                      color="primary"
+                    />
+                  </ListItemSecondaryAction>
+                </ListItem>
+                <ListItem sx={{ borderRadius: 2 }}>
+                  <ListItemText 
+                    primary={<Typography fontWeight="500">Smart Response Routing</Typography>}
+                    secondary="Automatically route negative feedback to support team"
+                  />
+                  <ListItemSecondaryAction>
+                    <Switch
+                      edge="end"
+                      checked={settings.smartRouting === true}
+                      onChange={(e) => handleSettingChange('smartRouting', e.target.checked)}
+                      color="primary"
+                    />
+                  </ListItemSecondaryAction>
+                </ListItem>
+              </List>
+            </CardContent>
+          </Card>
+        </Grid>
+      </Grid>
+    </Box>
+  );
+
+  // Knowledge/Process Folder Tab
+  const KnowledgeProcessFolderTab = () => {
+    const [documents, setDocuments] = useState([
+      {
+        id: 1,
+        name: 'Insurance Policy Guidelines 2024',
+        type: 'PDF',
+        size: '2.5 MB',
+        uploadedBy: 'Admin User',
+        uploadedAt: '2024-01-15',
+        expiryDate: '2025-12-31',
+        status: 'approved',
+        approvedBy: 'John Doe',
+        approvedAt: '2024-01-15',
+        ocrStatus: 'completed',
+        ocrAccuracy: 98.5,
+        modules: ['Lead Management', 'Case Tracking'],
+        icon: <PdfIcon sx={{ color: '#d32f2f' }} />
+      },
+      {
+        id: 2,
+        name: 'Customer Service Process',
+        type: 'DOCX',
+        size: '1.8 MB',
+        uploadedBy: 'Sarah Johnson',
+        uploadedAt: '2024-01-10',
+        expiryDate: '2025-06-30',
+        status: 'pending',
+        approvedBy: null,
+        approvedAt: null,
+        ocrStatus: 'processing',
+        ocrAccuracy: null,
+        modules: ['Contact Database'],
+        icon: <ArticleIcon sx={{ color: '#1976d2' }} />
+      }
+    ]);
+
+    const [websites, setWebsites] = useState([
+      {
+        id: 1,
+        url: 'https://www.irdai.gov.in',
+        name: 'IRDAI Official Website',
+        type: 'static',
+        frequency: 'daily',
+        lastScraped: '2024-01-15',
+        status: 'active',
+        addedBy: 'Admin User',
+        addedAt: '2024-01-05'
+      },
+      {
+        id: 2,
+        url: 'https://www.ibaindia.org',
+        name: 'IBA India',
+        type: 'dynamic',
+        frequency: 'weekly',
+        lastScraped: '2024-01-12',
+        status: 'active',
+        addedBy: 'Admin User',
+        addedAt: '2024-01-03'
+      }
+    ]);
+
+    const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
+    const [websiteDialogOpen, setWebsiteDialogOpen] = useState(false);
+    const [approvalDialogOpen, setApprovalDialogOpen] = useState(false);
+    const [selectedDocument, setSelectedDocument] = useState(null);
+    const [uploadProgress, setUploadProgress] = useState(0);
+    const [isUploading, setIsUploading] = useState(false);
+
+    const [newDocument, setNewDocument] = useState({
+      name: '',
+      file: null,
+      modules: [],
+      description: '',
+      expiryDate: ''
+    });
+
+    const [newWebsite, setNewWebsite] = useState({
+      url: '',
+      name: '',
+      type: 'static',
+      frequency: 'daily',
+      description: ''
+    });
+
+    const moduleOptions = [
+      'Lead Management',
+      'Contact Database',
+      'Customer Database',
+      'Case Tracking'
+    ];
+
+    const handleFileUpload = (event) => {
+      const file = event.target.files[0];
+      if (file) {
+        setNewDocument({
+          ...newDocument,
+          file: file,
+          name: newDocument.name || file.name
+        });
+      }
+    };
+
+    const handleUploadSubmit = () => {
+      if (!newDocument.file || !newDocument.name || newDocument.modules.length === 0) {
+        alert('Please fill all required fields');
+        return;
+      }
+
+      setIsUploading(true);
+      let progress = 0;
+      const interval = setInterval(() => {
+        progress += 20;
+        setUploadProgress(progress);
+        if (progress === 100) {
+          clearInterval(interval);
+
+          // Add document to list
+          const newDoc = {
+            id: documents.length + 1,
+            name: newDocument.name,
+            type: newDocument.file.name.split('.').pop().toUpperCase(),
+            size: `${(newDocument.file.size / (1024 * 1024)).toFixed(2)} MB`,
+            uploadedBy: 'Current User',
+            uploadedAt: new Date().toISOString().split('T')[0],
+            expiryDate: newDocument.expiryDate || null,
+            status: 'pending',
+            approvedBy: null,
+            approvedAt: null,
+            ocrStatus: 'processing',
+            ocrAccuracy: null,
+            modules: newDocument.modules,
+            icon: getFileIcon(newDocument.file.name)
+          };
+
+          setDocuments([...documents, newDoc]);
+          setIsUploading(false);
+          setUploadProgress(0);
+          setUploadDialogOpen(false);
+          setNewDocument({ name: '', file: null, modules: [], description: '', expiryDate: '' });
+        }
+      }, 500);
+    };
+
+    const handleWebsiteSubmit = () => {
+      if (!newWebsite.url || !newWebsite.name) {
+        alert('Please fill all required fields');
+        return;
+      }
+
+      const website = {
+        id: websites.length + 1,
+        url: newWebsite.url,
+        name: newWebsite.name,
+        type: newWebsite.type,
+        frequency: newWebsite.frequency,
+        lastScraped: null,
+        status: 'active',
+        addedBy: 'Current User',
+        addedAt: new Date().toISOString().split('T')[0]
+      };
+
+      setWebsites([...websites, website]);
+      setWebsiteDialogOpen(false);
+      setNewWebsite({ url: '', name: '', type: 'static', frequency: 'daily', description: '' });
+    };
+
+    const handleApproveDocument = () => {
+      if (!selectedDocument) return;
+
+      const updatedDocs = documents.map(doc =>
+        doc.id === selectedDocument.id
+          ? {
+              ...doc,
+              status: 'approved',
+              approvedBy: 'Current User',
+              approvedAt: new Date().toISOString().split('T')[0],
+              ocrStatus: 'completed',
+              ocrAccuracy: 95 + Math.random() * 4 // Simulated accuracy
+            }
+          : doc
+      );
+
+      setDocuments(updatedDocs);
+      setApprovalDialogOpen(false);
+      setSelectedDocument(null);
+    };
+
+    const handleRejectDocument = () => {
+      if (!selectedDocument) return;
+
+      const updatedDocs = documents.filter(doc => doc.id !== selectedDocument.id);
+      setDocuments(updatedDocs);
+      setApprovalDialogOpen(false);
+      setSelectedDocument(null);
+    };
+
+    const getFileIcon = (filename) => {
+      const extension = filename.split('.').pop().toLowerCase();
+      switch (extension) {
+        case 'pdf':
+          return <PdfIcon sx={{ color: '#d32f2f' }} />;
+        case 'doc':
+        case 'docx':
+          return <ArticleIcon sx={{ color: '#1976d2' }} />;
+        case 'jpg':
+        case 'jpeg':
+        case 'png':
+          return <ImageIcon sx={{ color: '#43a047' }} />;
+        default:
+          return <FileIcon sx={{ color: '#757575' }} />;
+      }
+    };
+
+    const getStatusColor = (status) => {
+      switch (status) {
+        case 'approved':
+          return 'success';
+        case 'pending':
+          return 'warning';
+        case 'rejected':
+          return 'error';
+        default:
+          return 'default';
+      }
+    };
+
+    const getOCRStatusColor = (status) => {
+      switch (status) {
+        case 'completed':
+          return 'success';
+        case 'processing':
+          return 'info';
+        case 'failed':
+          return 'error';
+        default:
+          return 'default';
+      }
+    };
+
+    return (
+      <Box>
+        <Typography variant="h5" fontWeight="600" gutterBottom>
+          Knowledge/Process Folder
+        </Typography>
+        <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+          Upload and manage documents and websites for AI-powered responses. Documents are processed with OCR and require approval before being available to the AI.
+        </Typography>
+
+        {/* Documents Section */}
+        <Card sx={{ mb: 3, borderRadius: 3, boxShadow: '0 8px 24px rgba(0,0,0,0.05)' }}>
+          <CardContent sx={{ p: 3 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', mb: 2, justifyContent: 'space-between' }}>
+              <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                <DescriptionIcon sx={{ mr: 1, color: theme.palette.primary.main }} />
+                <Typography variant="h6" fontWeight="600">Documents</Typography>
+              </Box>
+              <Button
+                variant="contained"
+                startIcon={<CloudUploadIcon />}
+                onClick={() => setUploadDialogOpen(true)}
+                sx={{ borderRadius: 2 }}
+              >
+                Upload Document
+              </Button>
+            </Box>
+            <Divider sx={{ mb: 2 }} />
+
+            {documents.length === 0 ? (
+              <Alert severity="info" sx={{ borderRadius: 2 }}>
+                No documents uploaded yet. Click "Upload Document" to add your first document.
+              </Alert>
+            ) : (
+              <TableContainer>
+                <Table>
+                  <TableHead>
+                    <TableRow>
+                      <TableCell>Document</TableCell>
+                      <TableCell>Type</TableCell>
+                      <TableCell>Size</TableCell>
+                      <TableCell>Modules</TableCell>
+                      <TableCell>Expiry Date</TableCell>
+                      <TableCell>Status</TableCell>
+                      <TableCell>OCR Status</TableCell>
+                      <TableCell>Uploaded By</TableCell>
+                      <TableCell align="right">Actions</TableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {documents.map((doc) => (
+                      <TableRow key={doc.id} hover>
+                        <TableCell>
+                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                            {doc.icon}
+                            <Box>
+                              <Typography variant="subtitle2" fontWeight="600">
+                                {doc.name}
+                              </Typography>
+                              <Typography variant="caption" color="text.secondary">
+                                Uploaded: {doc.uploadedAt}
+                              </Typography>
+                            </Box>
+                          </Box>
+                        </TableCell>
+                        <TableCell>{doc.type}</TableCell>
+                        <TableCell>{doc.size}</TableCell>
+                        <TableCell>
+                          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                            {doc.modules.map((module, index) => (
+                              <Chip
+                                key={index}
+                                label={module}
+                                size="small"
+                                sx={{ fontSize: '0.7rem' }}
+                              />
+                            ))}
+                          </Box>
+                        </TableCell>
+                        <TableCell>
+                          {doc.expiryDate ? (
+                            <Box>
+                              <Typography variant="body2">
+                                {new Date(doc.expiryDate).toLocaleDateString()}
+                              </Typography>
+                              {new Date(doc.expiryDate) < new Date() && (
+                                <Chip
+                                  label="Expired"
+                                  size="small"
+                                  color="error"
+                                  sx={{ mt: 0.5 }}
+                                />
+                              )}
+                              {new Date(doc.expiryDate) > new Date() &&
+                               new Date(doc.expiryDate) <= new Date(Date.now() + 30*24*60*60*1000) && (
+                                <Chip
+                                  label="Expiring Soon"
+                                  size="small"
+                                  color="warning"
+                                  sx={{ mt: 0.5 }}
+                                />
+                              )}
+                            </Box>
+                          ) : (
+                            <Typography variant="body2" color="text.secondary">
+                              N/A
+                            </Typography>
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          <Chip
+                            label={doc.status}
+                            size="small"
+                            color={getStatusColor(doc.status)}
+                          />
+                          {doc.status === 'approved' && doc.approvedBy && (
+                            <Typography variant="caption" display="block" color="text.secondary">
+                              By: {doc.approvedBy}
+                            </Typography>
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          <Chip
+                            label={doc.ocrStatus}
+                            size="small"
+                            color={getOCRStatusColor(doc.ocrStatus)}
+                          />
+                          {doc.ocrAccuracy && (
+                            <Typography variant="caption" display="block" color="text.secondary">
+                              Accuracy: {doc.ocrAccuracy.toFixed(1)}%
+                            </Typography>
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          <Typography variant="body2">
+                            {doc.uploadedBy}
+                          </Typography>
+                        </TableCell>
+                        <TableCell align="right">
+                          <Box sx={{ display: 'flex', gap: 1, justifyContent: 'flex-end' }}>
+                            <IconButton
+                              size="small"
+                              color="primary"
+                              title="View"
+                            >
+                              <VisibilityIcon />
+                            </IconButton>
+                            {doc.status === 'pending' && (
+                              <IconButton
+                                size="small"
+                                color="success"
+                                title="Approve"
+                                onClick={() => {
+                                  setSelectedDocument(doc);
+                                  setApprovalDialogOpen(true);
+                                }}
+                              >
+                                <CheckCircleIcon />
+                              </IconButton>
+                            )}
+                            <IconButton
+                              size="small"
+                              color="error"
+                              title="Delete"
+                              onClick={() => {
+                                if (window.confirm('Are you sure you want to delete this document?')) {
+                                  setDocuments(documents.filter(d => d.id !== doc.id));
+                                }
+                              }}
+                            >
+                              <DeleteIcon />
+                            </IconButton>
+                          </Box>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Websites Section */}
+        <Card sx={{ mb: 3, borderRadius: 3, boxShadow: '0 8px 24px rgba(0,0,0,0.05)' }}>
+          <CardContent sx={{ p: 3 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', mb: 2, justifyContent: 'space-between' }}>
+              <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                <LinkIcon sx={{ mr: 1, color: theme.palette.primary.main }} />
+                <Typography variant="h6" fontWeight="600">Website URLs</Typography>
+              </Box>
+              <Button
+                variant="contained"
+                startIcon={<AddIcon />}
+                onClick={() => setWebsiteDialogOpen(true)}
+                sx={{ borderRadius: 2 }}
+              >
+                Add Website
+              </Button>
+            </Box>
+            <Divider sx={{ mb: 2 }} />
+
+            {websites.length === 0 ? (
+              <Alert severity="info" sx={{ borderRadius: 2 }}>
+                No websites added yet. Click "Add Website" to add your first website for scraping.
+              </Alert>
+            ) : (
+              <TableContainer>
+                <Table>
+                  <TableHead>
+                    <TableRow>
+                      <TableCell>Website</TableCell>
+                      <TableCell>Type</TableCell>
+                      <TableCell>Scraping Frequency</TableCell>
+                      <TableCell>Last Scraped</TableCell>
+                      <TableCell>Status</TableCell>
+                      <TableCell>Added By</TableCell>
+                      <TableCell align="right">Actions</TableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {websites.map((website) => (
+                      <TableRow key={website.id} hover>
+                        <TableCell>
+                          <Box>
+                            <Typography variant="subtitle2" fontWeight="600">
+                              {website.name}
+                            </Typography>
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                              <Typography variant="caption" color="primary">
+                                {website.url}
+                              </Typography>
+                              <IconButton
+                                size="small"
+                                href={website.url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                              >
+                                <OpenInNewIcon fontSize="small" />
+                              </IconButton>
+                            </Box>
+                          </Box>
+                        </TableCell>
+                        <TableCell>
+                          <Chip
+                            label={website.type}
+                            size="small"
+                            color={website.type === 'dynamic' ? 'primary' : 'default'}
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <Typography variant="body2" sx={{ textTransform: 'capitalize' }}>
+                            {website.frequency}
+                          </Typography>
+                        </TableCell>
+                        <TableCell>
+                          <Typography variant="body2" color="text.secondary">
+                            {website.lastScraped || 'Never'}
+                          </Typography>
+                        </TableCell>
+                        <TableCell>
+                          <Chip
+                            label={website.status}
+                            size="small"
+                            color={website.status === 'active' ? 'success' : 'default'}
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <Typography variant="body2">
+                            {website.addedBy}
+                          </Typography>
+                          <Typography variant="caption" color="text.secondary">
+                            {website.addedAt}
+                          </Typography>
+                        </TableCell>
+                        <TableCell align="right">
+                          <Box sx={{ display: 'flex', gap: 1, justifyContent: 'flex-end' }}>
+                            <IconButton
+                              size="small"
+                              color="primary"
+                              title="Scrape Now"
+                              onClick={() => {
+                                alert('Scraping initiated for: ' + website.name);
+                              }}
+                            >
+                              <RefreshIcon />
+                            </IconButton>
+                            <IconButton
+                              size="small"
+                              color="error"
+                              title="Delete"
+                              onClick={() => {
+                                if (window.confirm('Are you sure you want to delete this website?')) {
+                                  setWebsites(websites.filter(w => w.id !== website.id));
+                                }
+                              }}
+                            >
+                              <DeleteIcon />
+                            </IconButton>
+                          </Box>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Upload Document Dialog */}
+        <Dialog
+          open={uploadDialogOpen}
+          onClose={() => setUploadDialogOpen(false)}
+          maxWidth="md"
+          fullWidth
+        >
+          <DialogTitle>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <CloudUploadIcon color="primary" />
+              <Typography variant="h6" fontWeight="600">Upload Document</Typography>
+            </Box>
+          </DialogTitle>
+          <DialogContent>
+            <Grid container spacing={2} sx={{ mt: 1 }}>
+              <Grid item xs={12}>
+                <TextField
+                  fullWidth
+                  label="Document Name"
+                  value={newDocument.name}
+                  onChange={(e) => setNewDocument({ ...newDocument, name: e.target.value })}
+                  required
+                />
+              </Grid>
+              <Grid item xs={12}>
+                <Button
+                  variant="outlined"
+                  component="label"
+                  fullWidth
+                  startIcon={<UploadIcon />}
+                  sx={{ height: 56 }}
+                >
+                  {newDocument.file ? newDocument.file.name : 'Choose File'}
+                  <input
+                    type="file"
+                    hidden
+                    onChange={handleFileUpload}
+                    accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
+                  />
+                </Button>
+              </Grid>
+              <Grid item xs={12}>
+                <FormControl fullWidth>
+                  <InputLabel>Select Modules *</InputLabel>
+                  <Select
+                    multiple
+                    value={newDocument.modules}
+                    onChange={(e) => setNewDocument({ ...newDocument, modules: e.target.value })}
+                    label="Select Modules *"
+                    renderValue={(selected) => (
+                      <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                        {selected.map((value) => (
+                          <Chip key={value} label={value} size="small" />
+                        ))}
+                      </Box>
+                    )}
+                  >
+                    {moduleOptions.map((module) => (
+                      <MenuItem key={module} value={module}>
+                        <Checkbox checked={newDocument.modules.indexOf(module) > -1} />
+                        <ListItemText primary={module} />
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+              </Grid>
+              <Grid item xs={12}>
+                <TextField
+                  fullWidth
+                  label="Description (Optional)"
+                  multiline
+                  rows={3}
+                  value={newDocument.description}
+                  onChange={(e) => setNewDocument({ ...newDocument, description: e.target.value })}
+                />
+              </Grid>
+              <Grid item xs={12}>
+                <TextField
+                  fullWidth
+                  type="date"
+                  label="Expiry Date (Optional)"
+                  value={newDocument.expiryDate}
+                  onChange={(e) => setNewDocument({ ...newDocument, expiryDate: e.target.value })}
+                  InputLabelProps={{ shrink: true }}
+                  helperText="Set an expiry date for this document"
+                />
+              </Grid>
+              {isUploading && (
+                <Grid item xs={12}>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                    <Box sx={{ width: '100%' }}>
+                      <Typography variant="caption" color="text.secondary" gutterBottom>
+                        Uploading and processing with OCR...
+                      </Typography>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        <Box sx={{ width: '100%' }}>
+                          <Box
+                            sx={{
+                              width: '100%',
+                              height: 8,
+                              bgcolor: alpha(theme.palette.primary.main, 0.1),
+                              borderRadius: 1,
+                              overflow: 'hidden'
+                            }}
+                          >
+                            <Box
+                              sx={{
+                                width: `${uploadProgress}%`,
+                                height: '100%',
+                                bgcolor: theme.palette.primary.main,
+                                transition: 'width 0.3s'
+                              }}
+                            />
+                          </Box>
+                        </Box>
+                        <Typography variant="caption" color="primary" fontWeight="600">
+                          {uploadProgress}%
+                        </Typography>
+                      </Box>
+                    </Box>
+                  </Box>
+                </Grid>
+              )}
+            </Grid>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => setUploadDialogOpen(false)}>Cancel</Button>
+            <Button
+              onClick={handleUploadSubmit}
+              variant="contained"
+              disabled={isUploading}
+            >
+              Upload
+            </Button>
+          </DialogActions>
+        </Dialog>
+
+        {/* Add Website Dialog */}
+        <Dialog
+          open={websiteDialogOpen}
+          onClose={() => setWebsiteDialogOpen(false)}
+          maxWidth="md"
+          fullWidth
+        >
+          <DialogTitle>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <LinkIcon color="primary" />
+              <Typography variant="h6" fontWeight="600">Add Website URL</Typography>
+            </Box>
+          </DialogTitle>
+          <DialogContent>
+            <Grid container spacing={2} sx={{ mt: 1 }}>
+              <Grid item xs={12}>
+                <TextField
+                  fullWidth
+                  label="Website Name"
+                  value={newWebsite.name}
+                  onChange={(e) => setNewWebsite({ ...newWebsite, name: e.target.value })}
+                  required
+                />
+              </Grid>
+              <Grid item xs={12}>
+                <TextField
+                  fullWidth
+                  label="Website URL"
+                  value={newWebsite.url}
+                  onChange={(e) => setNewWebsite({ ...newWebsite, url: e.target.value })}
+                  placeholder="https://example.com"
+                  required
+                />
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <FormControl fullWidth>
+                  <InputLabel>Scraping Type</InputLabel>
+                  <Select
+                    value={newWebsite.type}
+                    onChange={(e) => setNewWebsite({ ...newWebsite, type: e.target.value })}
+                    label="Scraping Type"
+                  >
+                    <MenuItem value="static">Static</MenuItem>
+                    <MenuItem value="dynamic">Dynamic</MenuItem>
+                  </Select>
+                </FormControl>
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <FormControl fullWidth>
+                  <InputLabel>Scraping Frequency</InputLabel>
+                  <Select
+                    value={newWebsite.frequency}
+                    onChange={(e) => setNewWebsite({ ...newWebsite, frequency: e.target.value })}
+                    label="Scraping Frequency"
+                  >
+                    <MenuItem value="hourly">Hourly</MenuItem>
+                    <MenuItem value="daily">Daily</MenuItem>
+                    <MenuItem value="weekly">Weekly</MenuItem>
+                    <MenuItem value="monthly">Monthly</MenuItem>
+                  </Select>
+                </FormControl>
+              </Grid>
+              <Grid item xs={12}>
+                <TextField
+                  fullWidth
+                  label="Description (Optional)"
+                  multiline
+                  rows={2}
+                  value={newWebsite.description}
+                  onChange={(e) => setNewWebsite({ ...newWebsite, description: e.target.value })}
+                />
+              </Grid>
+            </Grid>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => setWebsiteDialogOpen(false)}>Cancel</Button>
+            <Button
+              onClick={handleWebsiteSubmit}
+              variant="contained"
+            >
+              Add Website
+            </Button>
+          </DialogActions>
+        </Dialog>
+
+        {/* Approval Dialog */}
+        <Dialog
+          open={approvalDialogOpen}
+          onClose={() => setApprovalDialogOpen(false)}
+          maxWidth="sm"
+          fullWidth
+        >
+          <DialogTitle>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <CheckCircleIcon color="success" />
+              <Typography variant="h6" fontWeight="600">Approve Document</Typography>
+            </Box>
+          </DialogTitle>
+          <DialogContent>
+            <Typography variant="body1" gutterBottom>
+              Are you sure you want to approve this document for AI usage?
+            </Typography>
+            {selectedDocument && (
+              <Box sx={{ mt: 2, p: 2, bgcolor: alpha(theme.palette.primary.main, 0.05), borderRadius: 2 }}>
+                <Typography variant="subtitle2" fontWeight="600" gutterBottom>
+                  {selectedDocument.name}
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  Type: {selectedDocument.type} • Size: {selectedDocument.size}
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  Modules: {selectedDocument.modules.join(', ')}
+                </Typography>
+                <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+                  OCR Status: {selectedDocument.ocrStatus}
+                </Typography>
+              </Box>
+            )}
+            <Alert severity="info" sx={{ mt: 2 }}>
+              Once approved, this document will be available for AI to reference when generating responses.
+            </Alert>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={handleRejectDocument} color="error">
+              Reject
+            </Button>
+            <Button onClick={() => setApprovalDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button
+              onClick={handleApproveDocument}
+              variant="contained"
+              color="success"
+            >
+              Approve
+            </Button>
+          </DialogActions>
+        </Dialog>
+      </Box>
+    );
+  };
+
+  // User Management Tab
+  const UserManagementTab = () => {
+    const filteredUsers = getFilteredUsers();
+    // const permissionCategories = getPermissionsByCategory();
+
+    return (
+      <Box>
+        <Typography variant="h5" fontWeight="600" gutterBottom>
+          User Management
+        </Typography>
+        <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+          Manage users, roles, and permissions for your organization.
+        </Typography>
+
+        {/* Users Section */}
+        <Card sx={{ borderRadius: 3, boxShadow: '0 8px 24px rgba(0,0,0,0.05)', mb: 4 }}>
+          <CardContent sx={{ p: 3 }}>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+              <Typography variant="h6" fontWeight="600">
+                Users ({filteredUsers.length})
+              </Typography>
+              <Button
+                variant="contained"
+                startIcon={<AddIcon />}
+                onClick={handleAddUser}
+                sx={{ borderRadius: 2 }}
+              >
+                Add User
+              </Button>
+            </Box>
+
+            {/* Filters */}
+            <Grid container spacing={2} sx={{ mb: 3 }}>
+              <Grid item xs={12} md={4}>
+                <TextField
+                  fullWidth
+                  size="small"
+                  placeholder="Search users..."
+                  value={userSearchTerm}
+                  onChange={(e) => setUserSearchTerm(e.target.value)}
+                  InputProps={{
+                    startAdornment: <PersonIcon sx={{ mr: 1, color: 'text.secondary' }} />
+                  }}
+                />
+              </Grid>
+              <Grid item xs={12} md={3}>
+                <FormControl fullWidth size="small">
+                  <InputLabel>Role</InputLabel>
+                  <Select
+                    value={roleFilter}
+                    onChange={(e) => setRoleFilter(e.target.value)}
+                    label="Role"
+                  >
+                    <MenuItem value="all">All Roles</MenuItem>
+                    {roles.map(role => (
+                      <MenuItem key={role.id} value={role.name}>{role.displayName}</MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+              </Grid>
+              <Grid item xs={12} md={3}>
+                <FormControl fullWidth size="small">
+                  <InputLabel>Status</InputLabel>
+                  <Select
+                    value={statusFilter}
+                    onChange={(e) => setStatusFilter(e.target.value)}
+                    label="Status"
+                  >
+                    <MenuItem value="all">All Status</MenuItem>
+                    <MenuItem value="active">Active</MenuItem>
+                    <MenuItem value="inactive">Inactive</MenuItem>
+                  </Select>
+                </FormControl>
+              </Grid>
+            </Grid>
+
+            {/* Users Table */}
+            <TableContainer>
+              <Table>
+                <TableHead>
+                  <TableRow>
+                    <TableCell>User</TableCell>
+                    <TableCell>Department</TableCell>
+                    <TableCell>Role</TableCell>
+                    <TableCell>Status</TableCell>
+                    <TableCell>Permissions</TableCell>
+                    <TableCell align="right">Actions</TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {filteredUsers.map((user) => (
+                    <TableRow key={user.id} hover>
+                      <TableCell>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                          <Avatar sx={{ bgcolor: theme.palette.primary.main }}>
+                            {user.name.charAt(0)}
+                          </Avatar>
+                          <Box>
+                            <Typography variant="body2" fontWeight="500">
+                              {user.name}
+                            </Typography>
+                            <Typography variant="caption" color="text.secondary">
+                              {user.email}
+                            </Typography>
+                            {user.jobTitle && (
+                              <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
+                                {user.jobTitle}
+                              </Typography>
+                            )}
+                          </Box>
+                        </Box>
+                      </TableCell>
+                      <TableCell>
+                        <Typography variant="body2">
+                          {user.department ? user.department.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase()) : 'Not specified'}
+                        </Typography>
+                      </TableCell>
+                      <TableCell>
+                        <FormControl size="small" sx={{ minWidth: 120 }}>
+                          <Select
+                            value={user.role}
+                            onChange={(e) => handleRoleChange(user.id, e.target.value)}
+                            variant="outlined"
+                          >
+                            {roles.map(role => (
+                              <MenuItem key={role.id} value={role.name}>
+                                {role.displayName}
+                              </MenuItem>
+                            ))}
+                          </Select>
+                        </FormControl>
+                      </TableCell>
+                      <TableCell>
+                        <Chip
+                          label={user.status}
+                          color={user.status === 'active' ? 'success' : 'default'}
+                          size="small"
+                          onClick={() => handleToggleUserStatus(user.id)}
+                          sx={{ cursor: 'pointer' }}
+                        />
+                      </TableCell>
+                      <TableCell>
+                        <Button
+                          size="small"
+                          variant="outlined"
+                          onClick={() => handleOpenPermissionDialog(user)}
+                          sx={{ borderRadius: 2 }}
+                        >
+                          {user.permissions.length} permissions
+                        </Button>
+                      </TableCell>
+                      <TableCell align="right">
+                        <IconButton
+                          size="small"
+                          onClick={() => handleEditUser(user)}
+                          sx={{ mr: 1 }}
+                        >
+                          <EditIcon />
+                        </IconButton>
+                        <IconButton
+                          size="small"
+                          onClick={() => handleDeleteUser(user.id)}
+                          color="error"
+                        >
+                          <DeleteIcon />
+                        </IconButton>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </TableContainer>
+          </CardContent>
+        </Card>
+
+        {/* Roles Section */}
+        <Card sx={{ borderRadius: 3, boxShadow: '0 8px 24px rgba(0,0,0,0.05)' }}>
+          <CardContent sx={{ p: 3 }}>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+              <Typography variant="h6" fontWeight="600">
+                Roles & Permissions
+              </Typography>
+              <Button
+                variant="outlined"
+                startIcon={<AddIcon />}
+                onClick={handleAddRole}
+                sx={{ borderRadius: 2 }}
+              >
+                Create Role
+              </Button>
+            </Box>
+
+            <Grid container spacing={3}>
+              {roles.map((role) => (
+                <Grid item xs={12} md={6} key={role.id}>
+                  <Card 
+                    variant="outlined" 
+                    sx={{ 
+                      borderRadius: 2,
+                      transition: 'transform 0.2s, box-shadow 0.2s',
+                      '&:hover': {
+                        transform: 'translateY(-2px)',
+                        boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
+                      }
+                    }}
+                  >
+                    <CardContent>
+                      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', mb: 2 }}>
+                        <Box>
+                          <Typography variant="h6" fontWeight="600">
+                            {role.displayName}
+                            {role.isSystem && (
+                              <Chip 
+                                label="System" 
+                                size="small" 
+                                color="primary" 
+                                sx={{ ml: 1 }} 
+                              />
+                            )}
+                          </Typography>
+                          <Typography variant="body2" color="text.secondary">
+                            {role.description}
+                          </Typography>
+                        </Box>
+                        <Box>
+                          <IconButton
+                            size="small"
+                            onClick={() => handleEditRole(role)}
+                            sx={{ mr: 1 }}
+                            title={role.isSystem ? "Edit system role" : "Edit role"}
+                          >
+                            <EditIcon />
+                          </IconButton>
+                          {!role.isSystem && (
+                            <IconButton
+                              size="small"
+                              onClick={() => handleDeleteRole(role.id)}
+                              color="error"
+                              title="Delete role"
+                            >
+                              <DeleteIcon />
+                            </IconButton>
+                          )}
+                          {role.isSystem && (
+                            <IconButton
+                              size="small"
+                              onClick={() => handleResetRole(role)}
+                              color="warning"
+                              title="Reset to default permissions"
+                            >
+                              <RestoreIcon />
+                            </IconButton>
+                          )}
+                        </Box>
+                      </Box>
+                      
+                      <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+                        {role.userCount} user(s) • {role.permissions.length} permissions
+                      </Typography>
+                      
+                      <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                        {role.permissions.slice(0, 5).map((permission) => {
+                          const permData = availablePermissions.find(p => p.id === permission);
+                          return (
+                            <Chip
+                              key={permission}
+                              label={permData?.name || permission}
+                              size="small"
+                              variant="outlined"
+                            />
+                          );
+                        })}
+                        {role.permissions.length > 5 && (
+                          <Chip
+                            label={`+${role.permissions.length - 5} more`}
+                            size="small"
+                            variant="outlined"
+                            color="primary"
+                          />
+                        )}
+                      </Box>
+                    </CardContent>
+                  </Card>
+                </Grid>
+              ))}
+            </Grid>
+          </CardContent>
+        </Card>
+
+        {/* User Dialog */}
+        <Dialog open={userDialog.open} onClose={() => setUserDialog({ open: false, user: null, mode: 'add' })} maxWidth="md" fullWidth>
+          <DialogTitle sx={{ pb: 1 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <PersonIcon color="primary" />
+              <Typography variant="h6" fontWeight="600">
+                {userDialog.mode === 'add' ? 'Add New User' : 'Edit User'}
+              </Typography>
+            </Box>
+            <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+              {userDialog.mode === 'add' 
+                ? 'Create a new user account with appropriate permissions and access levels.'
+                : 'Update user information and access permissions.'
+              }
+            </Typography>
+          </DialogTitle>
+          <DialogContent>
+            <Grid container spacing={3} sx={{ mt: 1 }}>
+              {/* Personal Information Section */}
+              <Grid item xs={12}>
+                <Typography variant="subtitle1" fontWeight="600" color="primary" sx={{ mb: 2 }}>
+                  Personal Information
+                </Typography>
+              </Grid>
+              
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  fullWidth
+                  label="Full Name"
+                  value={newUser.name}
+                  onChange={(e) => setNewUser({ ...newUser, name: e.target.value })}
+                  required
+                  helperText="Enter the user's full name"
+                />
+              </Grid>
+              
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  fullWidth
+                  label="Email Address"
+                  type="email"
+                  value={newUser.email}
+                  onChange={(e) => setNewUser({ ...newUser, email: e.target.value })}
+                  required
+                  helperText="Primary email for login and notifications"
+                />
+              </Grid>
+              
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  fullWidth
+                  label="Phone Number"
+                  value={newUser.phone}
+                  onChange={(e) => setNewUser({ ...newUser, phone: e.target.value })}
+                  helperText="Contact phone number (optional)"
+                />
+              </Grid>
+              
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  fullWidth
+                  label="Job Title"
+                  value={newUser.jobTitle}
+                  onChange={(e) => setNewUser({ ...newUser, jobTitle: e.target.value })}
+                  helperText="User's position or role title"
+                />
+              </Grid>
+              
+              <Grid item xs={12} sm={6}>
+                <FormControl fullWidth>
+                  <InputLabel>Department</InputLabel>
+                  <Select
+                    value={newUser.department}
+                    onChange={(e) => setNewUser({ ...newUser, department: e.target.value })}
+                    label="Department"
+                  >
+                    <MenuItem value="">Select Department</MenuItem>
+                    <MenuItem value="claims">Claims Processing</MenuItem>
+                    <MenuItem value="underwriting">Underwriting</MenuItem>
+                    <MenuItem value="customer_service">Customer Service</MenuItem>
+                    <MenuItem value="sales">Sales & Marketing</MenuItem>
+                    <MenuItem value="it">Information Technology</MenuItem>
+                    <MenuItem value="finance">Finance & Accounting</MenuItem>
+                    <MenuItem value="legal">Legal & Compliance</MenuItem>
+                    <MenuItem value="management">Management</MenuItem>
+                    <MenuItem value="other">Other</MenuItem>
+                  </Select>
+                </FormControl>
+              </Grid>
+
+              <Grid item xs={12} sm={6}>
+                <FormControl fullWidth>
+                  <InputLabel>Portal Language</InputLabel>
+                  <Select
+                    value={newUser.portalLanguage}
+                    onChange={(e) => setNewUser({ ...newUser, portalLanguage: e.target.value })}
+                    label="Portal Language"
+                  >
+                    {supportedLanguages.map((lang) => (
+                      <MenuItem key={lang.code} value={lang.code}>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                          <span>{lang.flag}</span>
+                          <Box>
+                            <Typography variant="body2" fontWeight="500">
+                              {lang.nativeName}
+                            </Typography>
+                            <Typography variant="caption" color="text.secondary">
+                              {lang.name}
+                            </Typography>
+                          </Box>
+                        </Box>
+                      </MenuItem>
+                    ))}
+                  </Select>
+                  <FormHelperText>
+                    Language the user will see when they log into the portal
+                  </FormHelperText>
+                </FormControl>
+              </Grid>
+
+              {/* Access & Permissions Section */}
+              <Grid item xs={12}>
+                <Typography variant="subtitle1" fontWeight="600" color="primary" sx={{ mb: 2, mt: 2 }}>
+                  Access & Permissions
+                </Typography>
+              </Grid>
+              
+              <Grid item xs={12} sm={6}>
+                <FormControl fullWidth>
+                  <InputLabel>Role</InputLabel>
+                  <Select
+                    value={newUser.role}
+                    onChange={(e) => {
+                      const selectedRole = roles.find(r => r.name === e.target.value);
+                      setNewUser({ 
+                        ...newUser, 
+                        role: e.target.value,
+                        permissions: selectedRole?.permissions || []
+                      });
+                    }}
+                    label="Role"
+                  >
+                    {roles.map(role => (
+                      <MenuItem key={role.id} value={role.name}>
+                        <Box>
+                          <Typography variant="body2" fontWeight="500">
+                            {role.displayName}
+                          </Typography>
+                          <Typography variant="caption" color="text.secondary">
+                            {role.description}
+                          </Typography>
+                        </Box>
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+              </Grid>
+              
+              <Grid item xs={12} sm={6}>
+                <FormControl fullWidth>
+                  <InputLabel>Account Status</InputLabel>
+                  <Select
+                    value={newUser.status}
+                    onChange={(e) => setNewUser({ ...newUser, status: e.target.value })}
+                    label="Account Status"
+                  >
+                    <MenuItem value="active">
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        <Box sx={{ width: 8, height: 8, borderRadius: '50%', bgcolor: 'success.main' }} />
+                        Active
+                      </Box>
+                    </MenuItem>
+                    <MenuItem value="inactive">
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        <Box sx={{ width: 8, height: 8, borderRadius: '50%', bgcolor: 'grey.400' }} />
+                        Inactive
+                      </Box>
+                    </MenuItem>
+                    <MenuItem value="pending">
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        <Box sx={{ width: 8, height: 8, borderRadius: '50%', bgcolor: 'warning.main' }} />
+                        Pending Activation
+                      </Box>
+                    </MenuItem>
+                  </Select>
+                </FormControl>
+              </Grid>
+
+              {/* Security Options Section */}
+              {userDialog.mode === 'add' && (
+                <>
+                  <Grid item xs={12}>
+                    <Typography variant="subtitle1" fontWeight="600" color="primary" sx={{ mb: 2, mt: 2 }}>
+                      Security Options
+                    </Typography>
+                  </Grid>
+                  
+                  <Grid item xs={12}>
+                    <FormControlLabel
+                      control={
+                        <Checkbox
+                          checked={newUser.sendWelcomeEmail}
+                          onChange={(e) => setNewUser({ ...newUser, sendWelcomeEmail: e.target.checked })}
+                          color="primary"
+                        />
+                      }
+                      label={
+                        <Box>
+                          <Typography variant="body2" fontWeight="500">
+                            Send Welcome Email
+                          </Typography>
+                          <Typography variant="caption" color="text.secondary">
+                            Send login credentials and welcome information to the user's email
+                          </Typography>
+                        </Box>
+                      }
+                    />
+                  </Grid>
+                  
+                  <Grid item xs={12}>
+                    <FormControlLabel
+                      control={
+                        <Checkbox
+                          checked={newUser.requirePasswordChange}
+                          onChange={(e) => setNewUser({ ...newUser, requirePasswordChange: e.target.checked })}
+                          color="primary"
+                        />
+                      }
+                      label={
+                        <Box>
+                          <Typography variant="body2" fontWeight="500">
+                            Require Password Change on First Login
+                          </Typography>
+                          <Typography variant="caption" color="text.secondary">
+                            Force user to change their password when they first log in
+                          </Typography>
+                        </Box>
+                      }
+                    />
+                  </Grid>
+                </>
+              )}
+
+              {/* Permission Preview */}
+              {newUser.permissions.length > 0 && (
+                <>
+                  <Grid item xs={12}>
+                    <Typography variant="subtitle1" fontWeight="600" color="primary" sx={{ mb: 2, mt: 2 }}>
+                      Permission Preview ({newUser.permissions.length} permissions)
+                    </Typography>
+                    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+                      {newUser.permissions.slice(0, 8).map((permission) => {
+                        const permData = availablePermissions.find(p => p.id === permission);
+                        return (
+                          <Chip
+                            key={permission}
+                            label={permData?.name || permission}
+                            size="small"
+                            variant="outlined"
+                            color="primary"
+                          />
+                        );
+                      })}
+                      {newUser.permissions.length > 8 && (
+                        <Chip
+                          label={`+${newUser.permissions.length - 8} more`}
+                          size="small"
+                          variant="outlined"
+                          color="secondary"
+                        />
+                      )}
+                    </Box>
+                  </Grid>
+                </>
+              )}
+            </Grid>
+          </DialogContent>
+          <DialogActions sx={{ px: 3, py: 2, gap: 1 }}>
+            <Button 
+              onClick={() => setUserDialog({ open: false, user: null, mode: 'add' })}
+              variant="outlined"
+              sx={{ borderRadius: 2 }}
+            >
+              Cancel
+            </Button>
+            <Button 
+              variant="contained" 
+              onClick={handleSaveUser}
+              disabled={!newUser.name || !newUser.email}
+              startIcon={userDialog.mode === 'add' ? <AddIcon /> : <EditIcon />}
+              sx={{ borderRadius: 2, minWidth: 140 }}
+            >
+              {userDialog.mode === 'add' ? 'Create User' : 'Update User'}
+            </Button>
+          </DialogActions>
+        </Dialog>
+
+        {/* Role Dialog */}
+        <Dialog open={roleDialog.open} onClose={() => setRoleDialog({ open: false, role: null, mode: 'add' })} maxWidth="md" fullWidth>
+          <DialogTitle>
+            {roleDialog.mode === 'add' ? 'Create New Role' : 'Edit Role'}
+          </DialogTitle>
+          <DialogContent>
+            {roleDialog.mode === 'edit' && roleDialog.role?.isSystem && (
+              <Alert severity="info" sx={{ mb: 2 }}>
+                <Typography variant="body2">
+                  <strong>System Role:</strong> You are editing a predefined system role. 
+                  Changes will affect all users assigned to this role. You can use the "Reset" button 
+                  to restore default permissions if needed.
+                </Typography>
+              </Alert>
+            )}
+            <Grid container spacing={2} sx={{ mt: 1 }}>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  fullWidth
+                  label="Role Name"
+                  value={newRole.displayName}
+                  onChange={(e) => setNewRole({ 
+                    ...newRole, 
+                    displayName: e.target.value,
+                    name: e.target.value.toLowerCase().replace(/\s+/g, '_')
+                  })}
+                />
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  fullWidth
+                  label="Role ID"
+                  value={newRole.name}
+                  onChange={(e) => setNewRole({ ...newRole, name: e.target.value })}
+                  disabled={roleDialog.mode === 'edit'}
+                />
+              </Grid>
+              <Grid item xs={12}>
+                <TextField
+                  fullWidth
+                  label="Description"
+                  multiline
+                  rows={2}
+                  value={newRole.description}
+                  onChange={(e) => setNewRole({ ...newRole, description: e.target.value })}
+                />
+              </Grid>
+              <Grid item xs={12}>
+                <Typography variant="subtitle1" fontWeight="600" sx={{ mb: 2 }}>
+                  Permissions
+                </Typography>
+                {Object.entries(getPermissionsByCategory()).map(([category, permissions]) => (
+                  <Box key={category} sx={{ mb: 3 }}>
+                    <Typography variant="subtitle2" color="primary" sx={{ mb: 1 }}>
+                      {category}
+                    </Typography>
+                    <Grid container spacing={1}>
+                      {permissions.map((permission) => (
+                        <Grid item xs={12} sm={6} md={4} key={permission.id}>
+                          <FormControlLabel
+                            control={
+                              <Checkbox
+                                checked={newRole.permissions.includes(permission.id)}
+                                onChange={(e) => {
+                                  if (e.target.checked) {
+                                    setNewRole({
+                                      ...newRole,
+                                      permissions: [...newRole.permissions, permission.id]
+                                    });
+                                  } else {
+                                    setNewRole({
+                                      ...newRole,
+                                      permissions: newRole.permissions.filter(p => p !== permission.id)
+                                    });
+                                  }
+                                }}
+                              />
+                            }
+                            label={
+                              <Box>
+                                <Typography variant="body2" fontWeight="500">
+                                  {permission.name}
+                                </Typography>
+                                <Typography variant="caption" color="text.secondary">
+                                  {permission.description}
+                                </Typography>
+                              </Box>
+                            }
+                          />
+                        </Grid>
+                      ))}
+                    </Grid>
+                  </Box>
+                ))}
+              </Grid>
+            </Grid>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => setRoleDialog({ open: false, role: null, mode: 'add' })}>
+              Cancel
+            </Button>
+            <Button 
+              variant="contained" 
+              onClick={handleSaveRole}
+              disabled={!newRole.displayName || !newRole.name}
+            >
+              {roleDialog.mode === 'add' ? 'Create Role' : 'Update Role'}
+            </Button>
+          </DialogActions>
+        </Dialog>
+
+        {/* Permission Dialog */}
+        <Dialog open={permissionDialog.open} onClose={() => setPermissionDialog({ open: false, user: null })} maxWidth="md" fullWidth>
+          <DialogTitle>
+            Manage Permissions - {selectedUser?.name}
+          </DialogTitle>
+          <DialogContent>
+            <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+              Select the specific permissions for this user. These will override the default role permissions.
+            </Typography>
+            {Object.entries(getPermissionsByCategory()).map(([category, permissions]) => (
+              <Box key={category} sx={{ mb: 3 }}>
+                <Typography variant="subtitle2" color="primary" sx={{ mb: 1 }}>
+                  {category}
+                </Typography>
+                <Grid container spacing={1}>
+                  {permissions.map((permission) => (
+                    <Grid item xs={12} sm={6} md={4} key={permission.id}>
+                      <FormControlLabel
+                        control={
+                          <Checkbox
+                            checked={selectedUser?.permissions.includes(permission.id) || false}
+                            onChange={(e) => {
+                              if (!selectedUser) return;
+                              const newPermissions = e.target.checked
+                                ? [...selectedUser.permissions, permission.id]
+                                : selectedUser.permissions.filter(p => p !== permission.id);
+                              setSelectedUser({ ...selectedUser, permissions: newPermissions });
+                            }}
+                          />
+                        }
+                        label={
+                          <Box>
+                            <Typography variant="body2" fontWeight="500">
+                              {permission.name}
+                            </Typography>
+                            <Typography variant="caption" color="text.secondary">
+                              {permission.description}
+                            </Typography>
+                          </Box>
+                        }
+                      />
+                    </Grid>
+                  ))}
+                </Grid>
+              </Box>
+            ))}
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => setPermissionDialog({ open: false, user: null })}>
+              Cancel
+            </Button>
+            <Button 
+              variant="contained" 
+              onClick={() => handleUpdateUserPermissions(selectedUser?.id, selectedUser?.permissions)}
+            >
+              Update Permissions
+            </Button>
+          </DialogActions>
+        </Dialog>
+
+        {/* Reset Role Confirmation Dialog */}
+        <Dialog 
+          open={resetRoleDialog.open} 
+          onClose={() => setResetRoleDialog({ open: false, role: null })}
+          maxWidth="sm" 
+          fullWidth
+        >
+          <DialogTitle sx={{ pb: 1 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <WarningIcon color="warning" />
+              <Typography variant="h6" fontWeight="600">
+                Reset Role to Default
+              </Typography>
+            </Box>
+          </DialogTitle>
+          <DialogContent>
+            <Typography variant="body1" sx={{ mb: 2 }}>
+              Are you sure you want to reset the <strong>{resetRoleDialog.role?.displayName}</strong> role to its default permissions?
+            </Typography>
+            <Alert severity="warning" sx={{ mb: 2 }}>
+              <Typography variant="body2">
+                This action will:
+              </Typography>
+              <Box component="ul" sx={{ mt: 1, mb: 0, pl: 2 }}>
+                <li>Reset all permissions for this role to system defaults</li>
+                <li>Update permissions for all users assigned to this role</li>
+                <li>Cannot be undone</li>
+              </Box>
+            </Alert>
+            {resetRoleDialog.role && defaultRolePermissions[resetRoleDialog.role.name] && (
+              <Box>
+                <Typography variant="subtitle2" fontWeight="600" sx={{ mb: 1 }}>
+                  Default permissions ({defaultRolePermissions[resetRoleDialog.role.name].length}):
+                </Typography>
+                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                  {defaultRolePermissions[resetRoleDialog.role.name].slice(0, 6).map((permission) => {
+                    const permData = availablePermissions.find(p => p.id === permission);
+                    return (
+                      <Chip
+                        key={permission}
+                        label={permData?.name || permission}
+                        size="small"
+                        variant="outlined"
+                        color="primary"
+                      />
+                    );
+                  })}
+                  {defaultRolePermissions[resetRoleDialog.role.name].length > 6 && (
+                    <Chip
+                      label={`+${defaultRolePermissions[resetRoleDialog.role.name].length - 6} more`}
+                      size="small"
+                      variant="outlined"
+                      color="secondary"
+                    />
+                  )}
+                </Box>
+              </Box>
+            )}
+          </DialogContent>
+          <DialogActions sx={{ px: 3, py: 2, gap: 1 }}>
+            <Button 
+              onClick={() => setResetRoleDialog({ open: false, role: null })}
+              variant="outlined"
+              sx={{ borderRadius: 2 }}
+            >
+              Cancel
+            </Button>
+            <Button 
+              variant="contained" 
+              color="warning"
+              onClick={handleConfirmResetRole}
+              startIcon={<RestoreIcon />}
+              sx={{ borderRadius: 2, minWidth: 140 }}
+            >
+              Reset Role
+            </Button>
+          </DialogActions>
+        </Dialog>
+      </Box>
+    );
+  };
+
+  // Module Settings Placeholder (for other modules)
+  const ModuleSettingsTab = ({ moduleName, icon }) => (
+    <Box>
+      <Typography variant="h5" fontWeight="600" gutterBottom>
+        {moduleName} Module Settings
+      </Typography>
+      <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+        Configure settings specific to the {moduleName.toLowerCase()} module.
+      </Typography>
+
+      <Card sx={{ borderRadius: 3, boxShadow: '0 8px 24px rgba(0,0,0,0.05)' }}>
+        <CardContent sx={{ p: 3 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+            {icon}
+            <Typography variant="h6" fontWeight="600" sx={{ ml: 1 }}>
+              {moduleName} Preferences
+            </Typography>
+          </Box>
+          <Divider sx={{ mb: 2 }} />
+          <Typography variant="body1" color="text.secondary">
+            {moduleName} specific settings will be available here. Configure notifications, automation rules, 
+            and module-specific preferences for optimal workflow management.
+          </Typography>
+          <Box sx={{ mt: 3, p: 2, bgcolor: alpha(theme.palette.info.main, 0.1), borderRadius: 2 }}>
+            <Typography variant="body2" color="info.main">
+              💡 More {moduleName.toLowerCase()} settings will be added based on your usage patterns and feedback.
+            </Typography>
+          </Box>
+        </CardContent>
+      </Card>
+    </Box>
+  );
+
+  // Integrations Settings Tab Content
+  const IntegrationsSettingsTab = () => {
+    const [integrations, setIntegrations] = useState({
+      socialMedia: {
+        facebook: { connected: false, apiKey: '', appSecret: '', pageId: '', accessToken: '' },
+        twitter: { connected: false, apiKey: '', apiSecret: '', accessToken: '', accessTokenSecret: '' },
+        instagram: { connected: false, businessAccountId: '', accessToken: '', appId: '', appSecret: '' },
+        linkedin: { connected: false, clientId: '', clientSecret: '', accessToken: '', companyId: '' },
+        wechat: { connected: false, appId: '', appSecret: '', mchId: '', apiKey: '' },
+        line: { connected: false, channelId: '', channelSecret: '', channelAccessToken: '' },
+        telegram: { connected: false, botToken: '', chatId: '', webhookUrl: '' }
+      },
+      customerVerification: {
+        enableSocialVerification: true,
+        verificationMethods: ['phone', 'email', 'social'],
+        autoConnectOnVerification: false,
+        saveCustomerSocialData: true,
+        dataRetentionDays: 365
+      }
+    });
+
+    const [connectionDialog, setConnectionDialog] = useState({
+      open: false,
+      platform: null,
+      mode: 'connect'
+    });
+
+    const [customerVerificationDialog, setCustomerVerificationDialog] = useState({
+      open: false,
+      customerData: null
+    });
+
+    const [testConnectionLoading, setTestConnectionLoading] = useState(null);
+
+    const socialPlatforms = [
+      {
+        id: 'facebook',
+        name: 'Facebook',
+        icon: <FacebookIcon />,
+        color: '#1877F2',
+        description: 'Connect to Facebook Business API for customer engagement',
+        fields: [
+          { key: 'apiKey', label: 'API Key', type: 'password', required: true },
+          { key: 'appSecret', label: 'App Secret', type: 'password', required: true },
+          { key: 'pageId', label: 'Page ID', type: 'text', required: true },
+          { key: 'accessToken', label: 'Access Token', type: 'password', required: true }
+        ]
+      },
+      {
+        id: 'twitter',
+        name: 'Twitter',
+        icon: <TwitterIcon />,
+        color: '#1DA1F2',
+        description: 'Integrate with Twitter API for social media outreach',
+        fields: [
+          { key: 'apiKey', label: 'API Key', type: 'password', required: true },
+          { key: 'apiSecret', label: 'API Secret', type: 'password', required: true },
+          { key: 'accessToken', label: 'Access Token', type: 'password', required: true },
+          { key: 'accessTokenSecret', label: 'Access Token Secret', type: 'password', required: true }
+        ]
+      },
+      {
+        id: 'instagram',
+        name: 'Instagram',
+        icon: <InstagramIcon />,
+        color: '#E4405F',
+        description: 'Connect to Instagram Business API for visual engagement',
+        fields: [
+          { key: 'businessAccountId', label: 'Business Account ID', type: 'text', required: true },
+          { key: 'accessToken', label: 'Access Token', type: 'password', required: true },
+          { key: 'appId', label: 'App ID', type: 'text', required: true },
+          { key: 'appSecret', label: 'App Secret', type: 'password', required: true }
+        ]
+      },
+      {
+        id: 'linkedin',
+        name: 'LinkedIn',
+        icon: <LinkedInIcon />,
+        color: '#0A66C2',
+        description: 'Integrate with LinkedIn API for professional networking',
+        fields: [
+          { key: 'clientId', label: 'Client ID', type: 'text', required: true },
+          { key: 'clientSecret', label: 'Client Secret', type: 'password', required: true },
+          { key: 'accessToken', label: 'Access Token', type: 'password', required: true },
+          { key: 'companyId', label: 'Company ID', type: 'text', required: false }
+        ]
+      },
+      {
+        id: 'wechat',
+        name: 'WeChat',
+        icon: <Box sx={{ width: 24, height: 24, display: 'flex', alignItems: 'center', justifyContent: 'center', bgcolor: '#07C160', borderRadius: '50%', color: 'white', fontSize: '12px', fontWeight: 'bold' }}>微</Box>,
+        color: '#07C160',
+        description: 'Connect to WeChat API for Chinese market engagement',
+        fields: [
+          { key: 'appId', label: 'App ID', type: 'text', required: true },
+          { key: 'appSecret', label: 'App Secret', type: 'password', required: true },
+          { key: 'mchId', label: 'Merchant ID', type: 'text', required: false },
+          { key: 'apiKey', label: 'API Key', type: 'password', required: true }
+        ]
+      },
+      {
+        id: 'line',
+        name: 'LINE',
+        icon: <Box sx={{ width: 24, height: 24, display: 'flex', alignItems: 'center', justifyContent: 'center', bgcolor: '#00B900', borderRadius: '4px', color: 'white', fontSize: '12px', fontWeight: 'bold' }}>L</Box>,
+        color: '#00B900',
+        description: 'Integrate with LINE Messaging API for Asian markets',
+        fields: [
+          { key: 'channelId', label: 'Channel ID', type: 'text', required: true },
+          { key: 'channelSecret', label: 'Channel Secret', type: 'password', required: true },
+          { key: 'channelAccessToken', label: 'Channel Access Token', type: 'password', required: true }
+        ]
+      },
+      {
+        id: 'telegram',
+        name: 'Telegram',
+        icon: <TelegramIcon />,
+        color: '#0088CC',
+        description: 'Connect to Telegram Bot API for messaging',
+        fields: [
+          { key: 'botToken', label: 'Bot Token', type: 'password', required: true },
+          { key: 'chatId', label: 'Chat ID', type: 'text', required: false },
+          { key: 'webhookUrl', label: 'Webhook URL', type: 'url', required: false }
+        ]
+      }
+    ];
+
+    const handleConnectPlatform = (platform) => {
+      setConnectionDialog({
+        open: true,
+        platform: platform,
+        mode: integrations.socialMedia[platform.id].connected ? 'edit' : 'connect'
+      });
+    };
+
+    const handleSaveConnection = () => {
+      const { platform } = connectionDialog;
+      if (!platform) return;
+
+      setIntegrations(prev => ({
+        ...prev,
+        socialMedia: {
+          ...prev.socialMedia,
+          [platform.id]: {
+            ...prev.socialMedia[platform.id],
+            connected: true
+          }
+        }
+      }));
+
+      setConnectionDialog({ open: false, platform: null, mode: 'connect' });
+      setSuccessMessage(`${platform.name} connected successfully!`);
+      setTimeout(() => setSuccessMessage(''), 3000);
+    };
+
+    const handleDisconnectPlatform = (platformId) => {
+      setIntegrations(prev => ({
+        ...prev,
+        socialMedia: {
+          ...prev.socialMedia,
+          [platformId]: {
+            ...prev.socialMedia[platformId],
+            connected: false,
+            // Clear sensitive data
+            ...Object.fromEntries(
+              socialPlatforms.find(p => p.id === platformId)?.fields.map(f => [f.key, '']) || []
+            )
+          }
+        }
+      }));
+
+      const platformName = socialPlatforms.find(p => p.id === platformId)?.name;
+      setSuccessMessage(`${platformName} disconnected successfully!`);
+      setTimeout(() => setSuccessMessage(''), 3000);
+    };
+
+    const handleTestConnection = async (platform) => {
+      setTestConnectionLoading(platform.id);
+      
+      // Simulate API test
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
+      setTestConnectionLoading(null);
+      setSuccessMessage(`${platform.name} connection test successful!`);
+      setTimeout(() => setSuccessMessage(''), 3000);
+    };
+
+    const handleOpenCustomerVerification = () => {
+      // Mock customer data for demonstration
+      const mockCustomerData = {
+        name: 'John Doe',
+        phone: '+1234567890',
+        email: 'john.doe@example.com',
+        policyNumber: 'POL123456789',
+        socialPresence: {
+          facebook: { found: true, profileUrl: 'https://facebook.com/johndoe', verified: true },
+          twitter: { found: true, profileUrl: 'https://twitter.com/johndoe', verified: false },
+          instagram: { found: false, profileUrl: null, verified: false },
+          linkedin: { found: true, profileUrl: 'https://linkedin.com/in/johndoe', verified: true }
+        },
+        verificationTimestamp: new Date().toISOString()
+      };
+
+      setCustomerVerificationDialog({
+        open: true,
+        customerData: mockCustomerData
+      });
+    };
+
+    const handleUpdateIntegrationSetting = (key, value) => {
+      if (key.includes('.')) {
+        const [section, setting] = key.split('.');
+        setIntegrations(prev => ({
+          ...prev,
+          [section]: {
+            ...prev[section],
+            [setting]: value
+          }
+        }));
+      } else {
+        setIntegrations(prev => ({
+          ...prev,
+          [key]: value
+        }));
+      }
+    };
+
+    return (
+      <Box>
+        <Typography variant="h5" fontWeight="600" gutterBottom>
+          Social Media & Messaging Integrations
+        </Typography>
+        <Typography variant="body2" color="text.secondary" sx={{ mb: 4 }}>
+          Connect with social media platforms and messaging services to engage with customers across multiple channels.
+        </Typography>
+
+        {/* Social Media Platforms */}
+        <Card sx={{ mb: 4, borderRadius: 3, boxShadow: '0 8px 24px rgba(0,0,0,0.05)' }}>
+          <CardContent sx={{ p: 3 }}>
+            <Typography variant="h6" fontWeight="600" gutterBottom>
+              Social Media Platforms
+            </Typography>
+            <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+              Connect your social media accounts to engage with customers and validate their social presence.
+            </Typography>
+
+            <Grid container spacing={3}>
+              {socialPlatforms.map((platform) => {
+                const isConnected = integrations.socialMedia[platform.id].connected;
+                return (
+                  <Grid item xs={12} sm={6} md={4} key={platform.id}>
+                    <Card 
+                      variant="outlined" 
+                      sx={{ 
+                        height: '100%',
+                        borderRadius: 2,
+                        transition: 'all 0.3s ease',
+                        border: isConnected ? `2px solid ${platform.color}` : '1px solid',
+                        borderColor: isConnected ? platform.color : 'divider',
+                        '&:hover': {
+                          transform: 'translateY(-4px)',
+                          boxShadow: `0 8px 25px ${alpha(platform.color, 0.15)}`
+                        }
+                      }}
+                    >
+                      <CardContent sx={{ p: 3, height: '100%', display: 'flex', flexDirection: 'column' }}>
+                        <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                          <Avatar 
+                            sx={{ 
+                              bgcolor: platform.color, 
+                              width: 40, 
+                              height: 40, 
+                              mr: 2 
+                            }}
+                          >
+                            {platform.icon}
+                          </Avatar>
+                          <Box sx={{ flex: 1 }}>
+                            <Typography variant="h6" fontWeight="600">
+                              {platform.name}
+                            </Typography>
+                            <Chip
+                              label={isConnected ? 'Connected' : 'Not Connected'}
+                              color={isConnected ? 'success' : 'default'}
+                              size="small"
+                              icon={isConnected ? <CheckCircleIcon /> : <ErrorIcon />}
+                            />
+                          </Box>
+                        </Box>
+
+                        <Typography variant="body2" color="text.secondary" sx={{ mb: 3, flex: 1 }}>
+                          {platform.description}
+                        </Typography>
+
+                        <Box sx={{ display: 'flex', gap: 1, flexDirection: 'column' }}>
+                          {isConnected ? (
+                            <>
+                              <Button
+                                variant="outlined"
+                                fullWidth
+                                onClick={() => handleConnectPlatform(platform)}
+                                startIcon={<EditIcon />}
+                                sx={{ borderRadius: 2 }}
+                              >
+                                Configure
+                              </Button>
+                              <Button
+                                variant="outlined"
+                                fullWidth
+                                onClick={() => handleTestConnection(platform)}
+                                disabled={testConnectionLoading === platform.id}
+                                startIcon={testConnectionLoading === platform.id ? <SyncIcon /> : <TestIcon />}
+                                sx={{ borderRadius: 2 }}
+                              >
+                                {testConnectionLoading === platform.id ? 'Testing...' : 'Test Connection'}
+                              </Button>
+                              <Button
+                                variant="text"
+                                fullWidth
+                                color="error"
+                                onClick={() => handleDisconnectPlatform(platform.id)}
+                                startIcon={<LinkIcon />}
+                                sx={{ borderRadius: 2 }}
+                              >
+                                Disconnect
+                              </Button>
+                            </>
+                          ) : (
+                            <Button
+                              variant="contained"
+                              fullWidth
+                              onClick={() => handleConnectPlatform(platform)}
+                              startIcon={<LinkIcon />}
+                              sx={{ 
+                                borderRadius: 2,
+                                bgcolor: platform.color,
+                                '&:hover': {
+                                  bgcolor: platform.color,
+                                  filter: 'brightness(0.9)'
+                                }
+                              }}
+                            >
+                              Connect
+                            </Button>
+                          )}
+                        </Box>
+                      </CardContent>
+                    </Card>
+                  </Grid>
+                );
+              })}
+            </Grid>
+          </CardContent>
+        </Card>
+
+        {/* Customer Verification Settings */}
+        <Card sx={{ mb: 4, borderRadius: 3, boxShadow: '0 8px 24px rgba(0,0,0,0.05)' }}>
+          <CardContent sx={{ p: 3 }}>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+              <Box>
+                <Typography variant="h6" fontWeight="600">
+                  Customer Social Verification
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  Validate customer social media presence using phone number and email address.
+                </Typography>
+              </Box>
+              <Button
+                variant="contained"
+                onClick={handleOpenCustomerVerification}
+                startIcon={<OpenInNewIcon />}
+                sx={{ borderRadius: 2 }}
+              >
+                Test Verification
+              </Button>
+            </Box>
+
+            <List disablePadding>
+              <ListItem sx={{ borderRadius: 2, mb: 1, px: 0 }}>
+                <ListItemText
+                  primary={<Typography fontWeight="500">Enable Social Verification</Typography>}
+                  secondary="Allow verification of customer social media presence"
+                />
+                <ListItemSecondaryAction>
+                  <Switch
+                    checked={integrations.customerVerification.enableSocialVerification}
+                    onChange={(e) => handleUpdateIntegrationSetting('customerVerification.enableSocialVerification', e.target.checked)}
+                    color="primary"
+                  />
+                </ListItemSecondaryAction>
+              </ListItem>
+
+              <ListItem sx={{ borderRadius: 2, mb: 1, px: 0 }}>
+                <ListItemText
+                  primary={<Typography fontWeight="500">Auto-Connect on Verification</Typography>}
+                  secondary="Automatically establish connection when social presence is verified"
+                />
+                <ListItemSecondaryAction>
+                  <Switch
+                    checked={integrations.customerVerification.autoConnectOnVerification}
+                    onChange={(e) => handleUpdateIntegrationSetting('customerVerification.autoConnectOnVerification', e.target.checked)}
+                    color="primary"
+                    disabled={!integrations.customerVerification.enableSocialVerification}
+                  />
+                </ListItemSecondaryAction>
+              </ListItem>
+
+              <ListItem sx={{ borderRadius: 2, mb: 1, px: 0 }}>
+                <ListItemText
+                  primary={<Typography fontWeight="500">Save Customer Social Data</Typography>}
+                  secondary="Store verified social media information for future reference"
+                />
+                <ListItemSecondaryAction>
+                  <Switch
+                    checked={integrations.customerVerification.saveCustomerSocialData}
+                    onChange={(e) => handleUpdateIntegrationSetting('customerVerification.saveCustomerSocialData', e.target.checked)}
+                    color="primary"
+                    disabled={!integrations.customerVerification.enableSocialVerification}
+                  />
+                </ListItemSecondaryAction>
+              </ListItem>
+
+              <ListItem sx={{ borderRadius: 2, px: 0 }}>
+                <ListItemText
+                  primary={<Typography fontWeight="500">Data Retention Period</Typography>}
+                  secondary="How long to keep customer social verification data"
+                />
+                <ListItemSecondaryAction sx={{ width: '120px' }}>
+                  <FormControl fullWidth size="small">
+                    <Select
+                      value={integrations.customerVerification.dataRetentionDays}
+                      onChange={(e) => handleUpdateIntegrationSetting('customerVerification.dataRetentionDays', e.target.value)}
+                      disabled={!integrations.customerVerification.saveCustomerSocialData}
+                    >
+                      <MenuItem value={90}>90 days</MenuItem>
+                      <MenuItem value={180}>6 months</MenuItem>
+                      <MenuItem value={365}>1 year</MenuItem>
+                      <MenuItem value={730}>2 years</MenuItem>
+                      <MenuItem value={1095}>3 years</MenuItem>
+                    </Select>
+                  </FormControl>
+                </ListItemSecondaryAction>
+              </ListItem>
+            </List>
+          </CardContent>
+        </Card>
+
+        {/* Integration Statistics */}
+        <Card sx={{ borderRadius: 3, boxShadow: '0 8px 24px rgba(0,0,0,0.05)' }}>
+          <CardContent sx={{ p: 3 }}>
+            <Typography variant="h6" fontWeight="600" gutterBottom>
+              Integration Statistics
+            </Typography>
+            <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+              Overview of your social media integration usage and performance.
+            </Typography>
+
+            <Grid container spacing={3}>
+              <Grid item xs={12} sm={6} md={3}>
+                <Box sx={{ textAlign: 'center', p: 2 }}>
+                  <Typography variant="h4" fontWeight="600" color="primary.main">
+                    {socialPlatforms.filter(p => integrations.socialMedia[p.id].connected).length}
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    Connected Platforms
+                  </Typography>
+                </Box>
+              </Grid>
+              <Grid item xs={12} sm={6} md={3}>
+                <Box sx={{ textAlign: 'center', p: 2 }}>
+                  <Typography variant="h4" fontWeight="600" color="success.main">
+                    1,247
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    Customers Verified
+                  </Typography>
+                </Box>
+              </Grid>
+              <Grid item xs={12} sm={6} md={3}>
+                <Box sx={{ textAlign: 'center', p: 2 }}>
+                  <Typography variant="h4" fontWeight="600" color="info.main">
+                    892
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    Social Connections
+                  </Typography>
+                </Box>
+              </Grid>
+              <Grid item xs={12} sm={6} md={3}>
+                <Box sx={{ textAlign: 'center', p: 2 }}>
+                  <Typography variant="h4" fontWeight="600" color="warning.main">
+                    95.2%
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    Verification Rate
+                  </Typography>
+                </Box>
+              </Grid>
+            </Grid>
+          </CardContent>
+        </Card>
+
+        {/* Connection Configuration Dialog */}
+        <Dialog
+          open={connectionDialog.open}
+          onClose={() => setConnectionDialog({ open: false, platform: null, mode: 'connect' })}
+          maxWidth="md"
+          fullWidth
+          PaperProps={{ sx: { borderRadius: 3 } }}
+        >
+          <DialogTitle sx={{ pb: 1 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+              {connectionDialog.platform && (
+                <Avatar sx={{ bgcolor: connectionDialog.platform.color }}>
+                  {connectionDialog.platform.icon}
+                </Avatar>
+              )}
+              <Box>
+                <Typography variant="h6" fontWeight="600">
+                  {connectionDialog.mode === 'connect' ? 'Connect to' : 'Configure'} {connectionDialog.platform?.name}
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  {connectionDialog.platform?.description}
+                </Typography>
+              </Box>
+            </Box>
+          </DialogTitle>
+          <DialogContent dividers>
+            <Grid container spacing={3}>
+              {connectionDialog.platform?.fields.map((field) => (
+                <Grid item xs={12} sm={6} key={field.key}>
+                  <TextField
+                    fullWidth
+                    label={field.label}
+                    type={field.type}
+                    required={field.required}
+                    value={integrations.socialMedia[connectionDialog.platform.id]?.[field.key] || ''}
+                    onChange={(e) => {
+                      const platformId = connectionDialog.platform.id;
+                      setIntegrations(prev => ({
+                        ...prev,
+                        socialMedia: {
+                          ...prev.socialMedia,
+                          [platformId]: {
+                            ...prev.socialMedia[platformId],
+                            [field.key]: e.target.value
+                          }
+                        }
+                      }));
+                    }}
+                    placeholder={`Enter your ${field.label.toLowerCase()}`}
+                    InputProps={{
+                      sx: { borderRadius: 2 }
+                    }}
+                  />
+                </Grid>
+              ))}
+            </Grid>
+            
+            <Alert severity="info" sx={{ mt: 3 }}>
+              <Typography variant="body2">
+                <strong>Security Note:</strong> Your API credentials are encrypted and stored securely. 
+                We recommend using environment-specific keys and enabling API rate limiting.
+              </Typography>
+            </Alert>
+          </DialogContent>
+          <DialogActions sx={{ p: 3, gap: 1 }}>
+            <Button
+              onClick={() => setConnectionDialog({ open: false, platform: null, mode: 'connect' })}
+              variant="outlined"
+              sx={{ borderRadius: 2 }}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleSaveConnection}
+              variant="contained"
+              sx={{ borderRadius: 2, minWidth: 120 }}
+            >
+              {connectionDialog.mode === 'connect' ? 'Connect' : 'Save Changes'}
+            </Button>
+          </DialogActions>
+        </Dialog>
+
+        {/* Customer Verification Dialog */}
+        <Dialog
+          open={customerVerificationDialog.open}
+          onClose={() => setCustomerVerificationDialog({ open: false, customerData: null })}
+          maxWidth="md"
+          fullWidth
+          PaperProps={{ sx: { borderRadius: 3 } }}
+        >
+          <DialogTitle>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+              <Avatar sx={{ bgcolor: 'primary.main' }}>
+                <PersonIcon />
+              </Avatar>
+              <Box>
+                <Typography variant="h6" fontWeight="600">
+                  Customer Social Media Verification
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  Verification completed at {new Date().toLocaleString()}
+                </Typography>
+              </Box>
+            </Box>
+          </DialogTitle>
+          <DialogContent dividers>
+            {customerVerificationDialog.customerData && (
+              <Box>
+                {/* Customer Info */}
+                <Card variant="outlined" sx={{ mb: 3, borderRadius: 2 }}>
+                  <CardContent sx={{ p: 2 }}>
+                    <Typography variant="subtitle1" fontWeight="600" gutterBottom>
+                      Customer Information
+                    </Typography>
+                    <Grid container spacing={2}>
+                      <Grid item xs={12} sm={6}>
+                        <Typography variant="body2" color="text.secondary">Name</Typography>
+                        <Typography variant="body1" fontWeight="500">
+                          {customerVerificationDialog.customerData.name}
+                        </Typography>
+                      </Grid>
+                      <Grid item xs={12} sm={6}>
+                        <Typography variant="body2" color="text.secondary">Policy Number</Typography>
+                        <Typography variant="body1" fontWeight="500">
+                          {customerVerificationDialog.customerData.policyNumber}
+                        </Typography>
+                      </Grid>
+                      <Grid item xs={12} sm={6}>
+                        <Typography variant="body2" color="text.secondary">Phone</Typography>
+                        <Typography variant="body1" fontWeight="500">
+                          {customerVerificationDialog.customerData.phone}
+                        </Typography>
+                      </Grid>
+                      <Grid item xs={12} sm={6}>
+                        <Typography variant="body2" color="text.secondary">Email</Typography>
+                        <Typography variant="body1" fontWeight="500">
+                          {customerVerificationDialog.customerData.email}
+                        </Typography>
+                      </Grid>
+                    </Grid>
+                  </CardContent>
+                </Card>
+
+                {/* Social Media Presence */}
+                <Typography variant="subtitle1" fontWeight="600" gutterBottom>
+                  Social Media Presence Verification
+                </Typography>
+                <List disablePadding>
+                  {Object.entries(customerVerificationDialog.customerData.socialPresence).map(([platform, data]) => {
+                    const platformInfo = socialPlatforms.find(p => p.id === platform);
+                    if (!platformInfo) return null;
+
+                    return (
+                      <ListItem key={platform} sx={{ borderRadius: 2, mb: 1, bgcolor: 'background.paper', border: '1px solid', borderColor: 'divider' }}>
+                        <ListItemIcon>
+                          <Avatar sx={{ bgcolor: platformInfo.color, width: 32, height: 32 }}>
+                            {platformInfo.icon}
+                          </Avatar>
+                        </ListItemIcon>
+                        <ListItemText
+                          primary={
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                              <Typography variant="body1" fontWeight="500">
+                                {platformInfo.name}
+                              </Typography>
+                              <Chip
+                                label={data.found ? 'Found' : 'Not Found'}
+                                color={data.found ? 'success' : 'default'}
+                                size="small"
+                              />
+                              {data.verified && (
+                                <Chip
+                                  label="Verified"
+                                  color="primary"
+                                  size="small"
+                                  icon={<VerifiedIcon />}
+                                />
+                              )}
+                            </Box>
+                          }
+                          secondary={data.profileUrl || 'No profile found with provided contact information'}
+                        />
+                        <ListItemSecondaryAction>
+                          {data.found && data.profileUrl && (
+                            <IconButton
+                              size="small"
+                              onClick={() => window.open(data.profileUrl, '_blank')}
+                            >
+                              <LaunchIcon />
+                            </IconButton>
+                          )}
+                        </ListItemSecondaryAction>
+                      </ListItem>
+                    );
+                  })}
+                </List>
+
+                <Alert severity="success" sx={{ mt: 3 }}>
+                  <Typography variant="body2">
+                    <strong>Verification Complete:</strong> Customer social media presence has been validated. 
+                    You can now connect with them through their verified social media channels.
+                  </Typography>
+                </Alert>
+              </Box>
+            )}
+          </DialogContent>
+          <DialogActions sx={{ p: 3, gap: 1 }}>
+            <Button
+              onClick={() => setCustomerVerificationDialog({ open: false, customerData: null })}
+              variant="outlined"
+              sx={{ borderRadius: 2 }}
+            >
+              Close
+            </Button>
+            <Button
+              variant="contained"
+              startIcon={<LinkIcon />}
+              sx={{ borderRadius: 2, minWidth: 140 }}
+              onClick={() => {
+                setSuccessMessage('Customer social media connections established!');
+                setCustomerVerificationDialog({ open: false, customerData: null });
+                setTimeout(() => setSuccessMessage(''), 3000);
+              }}
+            >
+              Connect All
+            </Button>
+          </DialogActions>
+        </Dialog>
+      </Box>
+    );
+  };
+
+  // Providers Settings Tab Content
+  const ProvidersSettingsTab = () => {
+    const { providers, providerTemplates, addProvider, updateProvider, deleteProvider, setDefaultProvider, testProvider } = useProviders();
+    const [selectedChannel, setSelectedChannel] = useState('email');
+    const [providerDialog, setProviderDialog] = useState({ open: false, provider: null, mode: 'add', channel: 'email' });
+    const [testingProvider, setTestingProvider] = useState(null);
+    const [newProvider, setNewProvider] = useState({
+      name: '',
+      type: '',
+      isActive: false,
+      isDefault: false,
+      config: {},
+      limits: {
+        dailyLimit: 1000,
+        monthlyLimit: 10000,
+        rateLimit: 10
+      }
+    });
+
+    const channelTabs = [
+      { id: 'email', label: 'Email', icon: <EmailIcon />, color: '#1976d2' },
+      { id: 'sms', label: 'SMS', icon: <SmsIcon />, color: '#388e3c' },
+      { id: 'whatsapp', label: 'WhatsApp', icon: <WhatsAppIcon />, color: '#25d366' },
+      { id: 'call', label: 'Call', icon: <PhoneIcon />, color: '#ff9800' }
+    ];
+
+    const getStatusColor = (status) => {
+      switch (status) {
+        case 'connected': return 'success';
+        case 'testing': return 'info';
+        case 'error': return 'error';
+        case 'disconnected': return 'default';
+        default: return 'default';
+      }
+    };
+
+    const getStatusIcon = (status) => {
+      switch (status) {
+        case 'connected': return <CheckCircleIcon />;
+        case 'testing': return <SyncIcon />;
+        case 'error': return <ErrorIcon />;
+        case 'disconnected': return <WifiOffIcon />;
+        default: return <WifiOffIcon />;
+      }
+    };
+
+    const handleAddProvider = (channel) => {
+      setProviderDialog({ open: true, provider: null, mode: 'add', channel });
+      setNewProvider({
+        name: '',
+        type: '',
+        isActive: false,
+        isDefault: false,
+        config: {},
+        limits: {
+          dailyLimit: 1000,
+          monthlyLimit: 10000,
+          rateLimit: 10
+        }
+      });
+    };
+
+    const handleEditProvider = (provider, channel) => {
+      setProviderDialog({ open: true, provider, mode: 'edit', channel });
+      setNewProvider({ ...provider });
+    };
+
+    const handleDeleteProvider = (providerId, channel) => {
+      deleteProvider(channel, providerId);
+    };
+
+    const handleSaveProvider = () => {
+      if (providerDialog.mode === 'add') {
+        addProvider(providerDialog.channel, newProvider);
+      } else {
+        updateProvider(providerDialog.channel, providerDialog.provider.id, newProvider);
+      }
+      setProviderDialog({ open: false, provider: null, mode: 'add', channel: 'email' });
+    };
+
+    const handleTestProvider = async (provider, channel) => {
+      setTestingProvider(provider.id);
+      const success = await testProvider(channel, provider.id);
+      setTestingProvider(null);
+      
+      // Show result notification
+      if (success) {
+        setSuccessMessage(`${provider.name} connection test successful!`);
+      } else {
+        setSuccessMessage(`${provider.name} connection test failed. Please check your configuration.`);
+      }
+    };
+
+    const handleToggleActive = (provider, channel) => {
+      updateProvider(channel, provider.id, { isActive: !provider.isActive });
+    };
+
+    const handleSetDefault = (provider, channel) => {
+      setDefaultProvider(channel, provider.id);
+    };
+
+    const renderProviderCard = (provider, channel) => (
+      <Card key={provider.id} sx={{ mb: 2, borderRadius: 2 }}>
+        <CardContent sx={{ p: 2 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+              <Avatar sx={{ bgcolor: channelTabs.find(t => t.id === channel)?.color }}>
+                {channelTabs.find(t => t.id === channel)?.icon}
+              </Avatar>
+              <Box>
+                <Typography variant="h6" fontWeight="600">
+                  {provider.name}
+                  {provider.isDefault && (
+                    <Chip label="Default" size="small" color="primary" sx={{ ml: 1 }} />
+                  )}
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  {providerTemplates[channel][provider.type]?.name || provider.type}
+                </Typography>
+              </Box>
+            </Box>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <Chip
+                label={provider.status}
+                color={getStatusColor(provider.status)}
+                size="small"
+                icon={getStatusIcon(provider.status)}
+              />
+              <Switch
+                checked={provider.isActive}
+                onChange={() => handleToggleActive(provider, channel)}
+                size="small"
+              />
+            </Box>
+          </Box>
+
+          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <Box sx={{ display: 'flex', gap: 1 }}>
+              <Typography variant="body2" color="text.secondary">
+                Daily: {provider.limits.dailyLimit} | Monthly: {provider.limits.monthlyLimit}
+              </Typography>
+            </Box>
+            <Box sx={{ display: 'flex', gap: 1 }}>
+              <IconButton
+                size="small"
+                onClick={() => handleTestProvider(provider, channel)}
+                disabled={testingProvider === provider.id}
+              >
+                {testingProvider === provider.id ? <SyncIcon /> : <TestIcon />}
+              </IconButton>
+              <IconButton
+                size="small"
+                onClick={() => handleSetDefault(provider, channel)}
+                disabled={provider.isDefault}
+              >
+                {provider.isDefault ? <StarIcon color="primary" /> : <StarBorderIcon />}
+              </IconButton>
+              <IconButton
+                size="small"
+                onClick={() => handleEditProvider(provider, channel)}
+              >
+                <EditIcon />
+              </IconButton>
+              <IconButton
+                size="small"
+                onClick={() => handleDeleteProvider(provider.id, channel)}
+                color="error"
+              >
+                <DeleteIcon />
+              </IconButton>
+            </Box>
+          </Box>
+        </CardContent>
+      </Card>
+    );
+
+    const renderProviderTypeFields = () => {
+      if (!newProvider.type || !providerTemplates[providerDialog.channel][newProvider.type]) {
+        return null;
+      }
+
+      const template = providerTemplates[providerDialog.channel][newProvider.type];
+      return template.fields.map((field) => (
+        <Grid item xs={12} md={6} key={field.key}>
+          <TextField
+            fullWidth
+            label={field.label}
+            type={field.type}
+            required={field.required}
+            value={newProvider.config[field.key] || ''}
+            onChange={(e) => setNewProvider(prev => ({
+              ...prev,
+              config: { ...prev.config, [field.key]: e.target.value }
+            }))}
+            placeholder={field.placeholder}
+            size="small"
+          />
+        </Grid>
+      ));
+    };
+
+    return (
+      <Box>
+        <Typography variant="h5" fontWeight="600" gutterBottom>
+          Communication Providers
+        </Typography>
+        <Typography variant="body2" color="text.secondary" sx={{ mb: 4 }}>
+          Configure multiple providers for each communication channel. You can add, test, and manage providers for Email, SMS, WhatsApp, and Call campaigns.
+        </Typography>
+
+        {/* Channel Tabs */}
+        <Box sx={{ mb: 3 }}>
+          <Tabs
+            value={selectedChannel}
+            onChange={(e, value) => setSelectedChannel(value)}
+            variant="scrollable"
+            scrollButtons="auto"
+          >
+            {channelTabs.map((tab) => (
+              <Tab
+                key={tab.id}
+                value={tab.id}
+                label={tab.label}
+                icon={tab.icon}
+                iconPosition="start"
+                sx={{ minHeight: 48 }}
+              />
+            ))}
+          </Tabs>
+        </Box>
+
+        {/* Provider Management */}
+        <Card sx={{ borderRadius: 3 }}>
+          <CardContent sx={{ p: 3 }}>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+              <Typography variant="h6" fontWeight="600">
+                {channelTabs.find(t => t.id === selectedChannel)?.label} Providers
+              </Typography>
+              <Button
+                variant="contained"
+                startIcon={<AddIcon />}
+                onClick={() => handleAddProvider(selectedChannel)}
+              >
+                Add Provider
+              </Button>
+            </Box>
+
+            {/* Provider List */}
+            <Box>
+              {providers[selectedChannel]?.length > 0 ? (
+                providers[selectedChannel].map((provider) => 
+                  renderProviderCard(provider, selectedChannel)
+                )
+              ) : (
+                <Box sx={{ textAlign: 'center', py: 4 }}>
+                  <ProvidersIcon sx={{ fontSize: 64, color: 'text.secondary', mb: 2 }} />
+                  <Typography variant="h6" color="text.secondary" gutterBottom>
+                    No {selectedChannel} providers configured
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+                    Add your first {selectedChannel} provider to start sending campaigns
+                  </Typography>
+                  <Button
+                    variant="contained"
+                    startIcon={<AddIcon />}
+                    onClick={() => handleAddProvider(selectedChannel)}
+                  >
+                    Add {selectedChannel.charAt(0).toUpperCase() + selectedChannel.slice(1)} Provider
+                  </Button>
+                </Box>
+              )}
+            </Box>
+          </CardContent>
+        </Card>
+
+        {/* Provider Dialog */}
+        <Dialog
+          open={providerDialog.open}
+          onClose={() => setProviderDialog({ open: false, provider: null, mode: 'add', channel: 'email' })}
+          maxWidth="md"
+          fullWidth
+        >
+          <DialogTitle>
+            {providerDialog.mode === 'add' ? 'Add' : 'Edit'} {providerDialog.channel.charAt(0).toUpperCase() + providerDialog.channel.slice(1)} Provider
+          </DialogTitle>
+          <DialogContent dividers>
+            <Grid container spacing={2}>
+              <Grid item xs={12} md={6}>
+                <TextField
+                  fullWidth
+                  label="Provider Name"
+                  value={newProvider.name}
+                  onChange={(e) => setNewProvider(prev => ({ ...prev, name: e.target.value }))}
+                  placeholder="e.g., SendGrid Primary"
+                  size="small"
+                />
+              </Grid>
+              <Grid item xs={12} md={6}>
+                <FormControl fullWidth size="small">
+                  <InputLabel>Provider Type</InputLabel>
+                  <Select
+                    value={newProvider.type}
+                    label="Provider Type"
+                    onChange={(e) => setNewProvider(prev => ({ 
+                      ...prev, 
+                      type: e.target.value,
+                      config: {}
+                    }))}
+                  >
+                    {Object.entries(providerTemplates[providerDialog.channel] || {}).map(([key, template]) => (
+                      <MenuItem key={key} value={key}>
+                        {template.name}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+              </Grid>
+
+              {/* Provider Configuration Fields */}
+              {renderProviderTypeFields()}
+
+              {/* Limits Configuration */}
+              <Grid item xs={12}>
+                <Typography variant="subtitle1" fontWeight="600" gutterBottom sx={{ mt: 2 }}>
+                  Rate Limits
+                </Typography>
+              </Grid>
+              <Grid item xs={12} md={4}>
+                <TextField
+                  fullWidth
+                  label="Daily Limit"
+                  type="number"
+                  value={newProvider.limits.dailyLimit}
+                  onChange={(e) => setNewProvider(prev => ({
+                    ...prev,
+                    limits: { ...prev.limits, dailyLimit: parseInt(e.target.value) }
+                  }))}
+                  size="small"
+                />
+              </Grid>
+              <Grid item xs={12} md={4}>
+                <TextField
+                  fullWidth
+                  label="Monthly Limit"
+                  type="number"
+                  value={newProvider.limits.monthlyLimit}
+                  onChange={(e) => setNewProvider(prev => ({
+                    ...prev,
+                    limits: { ...prev.limits, monthlyLimit: parseInt(e.target.value) }
+                  }))}
+                  size="small"
+                />
+              </Grid>
+              <Grid item xs={12} md={4}>
+                <TextField
+                  fullWidth
+                  label="Rate Limit (per minute)"
+                  type="number"
+                  value={newProvider.limits.rateLimit}
+                  onChange={(e) => setNewProvider(prev => ({
+                    ...prev,
+                    limits: { ...prev.limits, rateLimit: parseInt(e.target.value) }
+                  }))}
+                  size="small"
+                />
+              </Grid>
+
+              {/* Provider Options */}
+              <Grid item xs={12}>
+                <FormControlLabel
+                  control={
+                    <Switch
+                      checked={newProvider.isActive}
+                      onChange={(e) => setNewProvider(prev => ({ ...prev, isActive: e.target.checked }))}
+                    />
+                  }
+                  label="Activate this provider"
+                />
+              </Grid>
+              <Grid item xs={12}>
+                <FormControlLabel
+                  control={
+                    <Switch
+                      checked={newProvider.isDefault}
+                      onChange={(e) => setNewProvider(prev => ({ ...prev, isDefault: e.target.checked }))}
+                    />
+                  }
+                  label="Set as default provider"
+                />
+              </Grid>
+            </Grid>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => setProviderDialog({ open: false, provider: null, mode: 'add', channel: 'email' })}>
+              Cancel
+            </Button>
+            <Button
+              variant="contained"
+              onClick={handleSaveProvider}
+              disabled={!newProvider.name.trim() || !newProvider.type}
+            >
+              {providerDialog.mode === 'add' ? 'Add Provider' : 'Save Changes'}
+            </Button>
+          </DialogActions>
+        </Dialog>
+      </Box>
+    );
+  };
+
+  return (
+    <Fade in={true} timeout={800}>
+      <Box sx={{ px: 1 }}>
+        <Box sx={{ 
+          display: 'flex', 
+          justifyContent: 'space-between', 
+          alignItems: 'center', 
+          mb: 4
+        }}>
+          <Typography variant="h4" fontWeight="600">
+            Settings
+          </Typography>
+        </Box>
+
+        {successMessage && (
+          <Grow in={Boolean(successMessage)}>
+            <Alert 
+              severity="success" 
+              sx={{ 
+                mb: 3, 
+                borderRadius: 2,
+                boxShadow: '0 4px 12px rgba(0,0,0,0.05)'
+              }}
+            >
+              {successMessage}
+            </Alert>
+          </Grow>
+        )}
+
+        <Card sx={{ borderRadius: 3, boxShadow: '0 8px 24px rgba(0,0,0,0.05)' }}>
+          <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
+            <Tabs
+              value={tabValue}
+              onChange={handleTabChange}
+              variant="scrollable"
+              scrollButtons="auto"
+              sx={{
+                '& .MuiTab-root': {
+                  minHeight: 72,
+                  textTransform: 'none',
+                  fontWeight: 500,
+                  fontSize: '0.95rem',
+                  '&.Mui-selected': {
+                    fontWeight: 600,
+                  }
+                }
+              }}
+            >
+              {tabsConfig.map((tab, index) => (
+                <Tab
+                  key={index}
+                  icon={tab.icon}
+                  label={tab.label}
+                  iconPosition="start"
+                  sx={{ gap: 1 }}
+                />
+              ))}
+            </Tabs>
+          </Box>
+
+          <Box sx={{ p: 3 }}>
+            <TabPanel value={tabValue} index={0}>
+              <GeneralSettingsTab />
+            </TabPanel>
+            <TabPanel value={tabValue} index={1}>
+              <AdminSettings />
+            </TabPanel>
+            <TabPanel value={tabValue} index={2}>
+              <RenewalsSettingsTab />
+            </TabPanel>
+            <TabPanel value={tabValue} index={3}>
+              <EmailSettingsTab />
+            </TabPanel>
+            <TabPanel value={tabValue} index={4}>
+              <ProvidersSettingsTab />
+            </TabPanel>
+            <TabPanel value={tabValue} index={5}>
+              <CampaignsSettingsTab />
+            </TabPanel>
+            <TabPanel value={tabValue} index={6}>
+              <WhatsAppFlowSettingsTab />
+            </TabPanel>
+            <TabPanel value={tabValue} index={7}>
+              <DNCManagementSettingsTab />
+            </TabPanel>
+            <TabPanel value={tabValue} index={8}>
+              <IntegrationsSettingsTab />
+            </TabPanel>
+            <TabPanel value={tabValue} index={9}>
+              <ModuleSettingsTab moduleName="Claims" icon={<GavelIcon sx={{ color: theme.palette.primary.main }} />} />
+            </TabPanel>
+            <TabPanel value={tabValue} index={10}>
+              <FeedbackSettingsTab />
+            </TabPanel>
+            <TabPanel value={tabValue} index={11}>
+              <DedupeSettings />
+            </TabPanel>
+            <TabPanel value={tabValue} index={12}>
+              <UserManagementTab />
+            </TabPanel>
+            <TabPanel value={tabValue} index={13}>
+              <SystemSettingsTab />
+            </TabPanel>
+            <TabPanel value={tabValue} index={14}>
+              <KnowledgeProcessFolderTab />
+            </TabPanel>
+            <TabPanel value={tabValue} index={15}>
+              <AutoAssignmentSettings />
+            </TabPanel>
+            <TabPanel value={tabValue} index={16}>
+              <SLASettings />
+            </TabPanel>
+            <TabPanel value={tabValue} index={17}>
+              <LanguageTest />
+            </TabPanel>
+            <TabPanel value={tabValue} index={18}>
+              <ScheduledDialerSettingsTab />
+            </TabPanel>
+          </Box>
+        </Card>
+
+        <Box sx={{ mt: 4, display: 'flex', justifyContent: 'flex-end' }}>
+          <Zoom in={loaded} style={{ transitionDelay: '400ms' }}>
+            <Button
+              variant="contained"
+              color="primary"
+              startIcon={<SaveIcon />}
+              onClick={handleSaveSettings}
+              sx={{
+                borderRadius: 2,
+                px: 3,
+                py: 1,
+                fontWeight: 600,
+                boxShadow: '0 4px 14px rgba(0,118,255,0.25)',
+                transition: 'transform 0.2s, box-shadow 0.2s',
+                '&:hover': {
+                  transform: 'translateY(-2px)',
+                  boxShadow: '0 6px 20px rgba(0,118,255,0.35)',
+                }
+              }}
+            >
+              Save Settings
+            </Button>
+          </Zoom>
+        </Box>
+        
+        <WelcomeModal open={welcomeModalOpen} onClose={handleCloseWelcomeGuide} />
+      </Box>
+    </Fade>
+  );
+};
+
+export default Settings;

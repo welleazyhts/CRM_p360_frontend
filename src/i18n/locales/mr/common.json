@@ -1,0 +1,54 @@
+{
+  "settings": {
+    "title": "सेटिंग्ज",
+    "language": "भाषा",
+    "selectLanguage": "आपली पसंतीची भाषा निवडा",
+    "systemLanguage": "सिस्टम भाषा",
+    "systemLanguageDescription": "अॅप्लिकेशनसाठी डीफॉल्ट भाषा",
+    "userLanguagePreference": "वापरकर्ता भाषा प्राधान्य",
+    "defaultSurveyLanguage": "डीफॉल्ट सर्वेक्षण भाषा",
+    "notifications": "सूचना",
+    "emailNotifications": "ईमेल सूचना",
+    "smsNotifications": "SMS सूचना",
+    "timezone": "वेळ क्षेत्र",
+    "selectTimezone": "आपला वेळ क्षेत्र निवडा"
+  },
+  "common": {
+    "save": "जतन करा",
+    "cancel": "रद्द करा",
+    "delete": "हटवा",
+    "edit": "संपादित करा",
+    "create": "तयार करा",
+    "update": "अद्यतन करा",
+    "close": "बंद करा",
+    "submit": "सबमिट करा",
+    "loading": "लोड होत आहे...",
+    "error": "त्रुटी",
+    "success": "यश",
+    "warning": "चेतावणी",
+    "info": "माहिती"
+  },
+  "navigation": {
+    "dashboard": "डॅशबोर्ड",
+    "campaigns": "मोहिमा",
+    "email": "ईमेल",
+    "whatsapp": "व्हाट्सअॅप",
+    "settings": "सेटिंग्ज",
+    "users": "वापरकर्ते",
+    "profile": "प्रोफाइल",
+    "logout": "लॉग आउट"
+  },
+  "whatsapp": {
+    "flowBuilder": "फ्लो बिल्डर",
+    "templateManager": "टेम्प्लेट मॅनेजर",
+    "createTemplate": "टेम्प्लेट तयार करा",
+    "templateName": "टेम्प्लेटचे नाव",
+    "language": "भाषा",
+    "category": "श्रेणी",
+    "description": "वर्णन",
+    "preview": "पूर्वावलोकन",
+    "publish": "प्रकाशित करा",
+    "draft": "मसुदा",
+    "approved": "मंजूर"
+  }
+} 

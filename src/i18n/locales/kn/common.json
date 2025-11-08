@@ -1,0 +1,54 @@
+{
+  "settings": {
+    "title": "ಸೆಟ್ಟಿಂಗ್‌ಗಳು",
+    "language": "ಭಾಷೆ",
+    "selectLanguage": "ನಿಮ್ಮ ಆದ್ಯತೆಯ ಭಾಷೆಯನ್ನು ಆಯ್ಕೆಮಾಡಿ",
+    "systemLanguage": "ಸಿಸ್ಟಮ್ ಭಾಷೆ",
+    "systemLanguageDescription": "ಅಪ್ಲಿಕೇಶನ್‌ಗಾಗಿ ಡೀಫಾಲ್ಟ್ ಭಾಷೆ",
+    "userLanguagePreference": "ಬಳಕೆದಾರರ ಭಾಷಾ ಆದ್ಯತೆ",
+    "defaultSurveyLanguage": "ಡೀಫಾಲ್ಟ್ ಸರ್ವೆ ಭಾಷೆ",
+    "notifications": "ಅಧಿಸೂಚನೆಗಳು",
+    "emailNotifications": "ಇಮೇಲ್ ಅಧಿಸೂಚನೆಗಳು",
+    "smsNotifications": "SMS ಅಧಿಸೂಚನೆಗಳು",
+    "timezone": "ಸಮಯ ವಲಯ",
+    "selectTimezone": "ನಿಮ್ಮ ಸಮಯ ವಲಯವನ್ನು ಆಯ್ಕೆಮಾಡಿ"
+  },
+  "common": {
+    "save": "ಉಳಿಸಿ",
+    "cancel": "ರದ್ದುಮಾಡಿ",
+    "delete": "ಅಳಿಸಿ",
+    "edit": "ಸಂಪಾದಿಸಿ",
+    "create": "ರಚಿಸಿ",
+    "update": "ನವೀಕರಿಸಿ",
+    "close": "ಮುಚ್ಚಿ",
+    "submit": "ಸಲ್ಲಿಸಿ",
+    "loading": "ಲೋಡ್ ಆಗುತ್ತಿದೆ...",
+    "error": "ದೋಷ",
+    "success": "ಯಶಸ್ಸು",
+    "warning": "ಎಚ್ಚರಿಕೆ",
+    "info": "ಮಾಹಿತಿ"
+  },
+  "navigation": {
+    "dashboard": "ಡ್ಯಾಶ್‌ಬೋರ್ಡ್",
+    "campaigns": "ಪ್ರಚಾರಗಳು",
+    "email": "ಇಮೇಲ್",
+    "whatsapp": "ವಾಟ್ಸ್‌ಆಪ್",
+    "settings": "ಸೆಟ್ಟಿಂಗ್‌ಗಳು",
+    "users": "ಬಳಕೆದಾರರು",
+    "profile": "ಪ್ರೊಫೈಲ್",
+    "logout": "ಲಾಗ್ ಔಟ್"
+  },
+  "whatsapp": {
+    "flowBuilder": "ಫ್ಲೋ ಬಿಲ್ಡರ್",
+    "templateManager": "ಟೆಂಪ್ಲೇಟ್ ಮ್ಯಾನೇಜರ್",
+    "createTemplate": "ಟೆಂಪ್ಲೇಟ್ ರಚಿಸಿ",
+    "templateName": "ಟೆಂಪ್ಲೇಟ್ ಹೆಸರು",
+    "language": "ಭಾಷೆ",
+    "category": "ವರ್ಗ",
+    "description": "ವಿವರಣೆ",
+    "preview": "ಪೂರ್ವವೀಕ್ಷಣೆ",
+    "publish": "ಪ್ರಕಟಿಸಿ",
+    "draft": "ಕರಡು",
+    "approved": "ಅನುಮೋದಿತ"
+  }
+} 

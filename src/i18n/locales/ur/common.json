@@ -1,0 +1,54 @@
+{
+  "settings": {
+    "title": "ترتیبات",
+    "language": "زبان",
+    "selectLanguage": "اپنی پسندیدہ زبان منتخب کریں",
+    "systemLanguage": "سسٹم کی زبان",
+    "systemLanguageDescription": "ایپلیکیشن کے لیے ڈیفالٹ زبان",
+    "userLanguagePreference": "صارف کی زبان کی ترجیح",
+    "defaultSurveyLanguage": "ڈیفالٹ سروے کی زبان",
+    "notifications": "اطلاعات",
+    "emailNotifications": "ای میل کی اطلاعات",
+    "smsNotifications": "SMS کی اطلاعات",
+    "timezone": "وقت کا علاقہ",
+    "selectTimezone": "اپنا وقت کا علاقہ منتخب کریں"
+  },
+  "common": {
+    "save": "محفوظ کریں",
+    "cancel": "منسوخ کریں",
+    "delete": "حذف کریں",
+    "edit": "ترمیم کریں",
+    "create": "بنائیں",
+    "update": "اپ ڈیٹ کریں",
+    "close": "بند کریں",
+    "submit": "جمع کریں",
+    "loading": "لوڈ ہو رہا ہے...",
+    "error": "خرابی",
+    "success": "کامیابی",
+    "warning": "انتباہ",
+    "info": "معلومات"
+  },
+  "navigation": {
+    "dashboard": "ڈیش بورڈ",
+    "campaigns": "مہمات",
+    "email": "ای میل",
+    "whatsapp": "واٹسایپ",
+    "settings": "ترتیبات",
+    "users": "صارفین",
+    "profile": "پروفائل",
+    "logout": "لاگ آؤٹ"
+  },
+  "whatsapp": {
+    "flowBuilder": "فلو بلڈر",
+    "templateManager": "ٹیمپلیٹ منیجر",
+    "createTemplate": "ٹیمپلیٹ بنائیں",
+    "templateName": "ٹیمپلیٹ کا نام",
+    "language": "زبان",
+    "category": "قسم",
+    "description": "تفصیل",
+    "preview": "پیش نظارہ",
+    "publish": "شائع کریں",
+    "draft": "مسودہ",
+    "approved": "منظور شدہ"
+  }
+} 

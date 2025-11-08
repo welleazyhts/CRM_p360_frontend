@@ -1,0 +1,129 @@
+/* Previous Policy Documents Component Styles */
+
+.policy-documents-container {
+  margin-bottom: 16px;
+}
+
+.policy-documents-header {
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  border-radius: 8px;
+  padding: 8px;
+}
+
+.policy-documents-header:hover {
+  background-color: rgba(0, 0, 0, 0.04);
+}
+
+.document-card {
+  transition: all 0.2s ease;
+  border: 1px solid #e0e0e0;
+}
+
+.document-card:hover {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  transform: translateY(-1px);
+}
+
+.document-actions {
+  opacity: 0.7;
+  transition: opacity 0.2s ease;
+}
+
+.document-card:hover .document-actions {
+  opacity: 1;
+}
+
+.document-type-icon {
+  margin-right: 8px;
+}
+
+.document-grid {
+  gap: 16px;
+}
+
+.document-section {
+  margin-bottom: 24px;
+}
+
+.document-section-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 16px;
+  font-weight: 600;
+}
+
+.document-item {
+  padding: 16px;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  margin-bottom: 8px;
+  transition: all 0.2s ease;
+}
+
+.document-item:hover {
+  border-color: #1976d2;
+  box-shadow: 0 2px 4px rgba(25, 118, 210, 0.1);
+}
+
+.document-meta {
+  font-size: 0.75rem;
+  color: #666;
+  margin-top: 4px;
+}
+
+.document-status-chip {
+  margin-top: 8px;
+}
+
+.no-documents-placeholder {
+  text-align: center;
+  padding: 32px;
+  color: #999;
+}
+
+.no-documents-placeholder .icon {
+  font-size: 48px;
+  margin-bottom: 16px;
+  opacity: 0.5;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .document-grid {
+    gap: 12px;
+  }
+  
+  .document-item {
+    padding: 12px;
+  }
+  
+  .document-section-title {
+    font-size: 1rem;
+  }
+}
+
+/* Animation for expand/collapse */
+.policy-documents-collapse {
+  transition: all 0.3s ease-in-out;
+}
+
+/* Custom scrollbar for document lists */
+.document-list::-webkit-scrollbar {
+  width: 6px;
+}
+
+.document-list::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 3px;
+}
+
+.document-list::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 3px;
+}
+
+.document-list::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}

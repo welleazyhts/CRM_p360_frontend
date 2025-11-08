@@ -1,0 +1,54 @@
+{
+  "settings": {
+    "title": "সেটিংস",
+    "language": "ভাষা",
+    "selectLanguage": "আপনার পছন্দের ভাষা নির্বাচন করুন",
+    "systemLanguage": "সিস্টেম ভাষা",
+    "systemLanguageDescription": "অ্যাপ্লিকেশনের জন্য ডিফল্ট ভাষা",
+    "userLanguagePreference": "ব্যবহারকারীর ভাষার পছন্দ",
+    "defaultSurveyLanguage": "ডিফল্ট সার্ভে ভাষা",
+    "notifications": "বিজ্ঞপ্তি",
+    "emailNotifications": "ইমেইল বিজ্ঞপ্তি",
+    "smsNotifications": "SMS বিজ্ঞপ্তি",
+    "timezone": "সময় অঞ্চল",
+    "selectTimezone": "আপনার সময় অঞ্চল নির্বাচন করুন"
+  },
+  "common": {
+    "save": "সংরক্ষণ করুন",
+    "cancel": "বাতিল করুন",
+    "delete": "মুছে ফেলুন",
+    "edit": "সম্পাদনা করুন",
+    "create": "তৈরি করুন",
+    "update": "আপডেট করুন",
+    "close": "বন্ধ করুন",
+    "submit": "জমা দিন",
+    "loading": "লোড হচ্ছে...",
+    "error": "ত্রুটি",
+    "success": "সফল",
+    "warning": "সতর্কতা",
+    "info": "তথ্য"
+  },
+  "navigation": {
+    "dashboard": "ড্যাশবোর্ড",
+    "campaigns": "প্রচারণা",
+    "email": "ইমেইল",
+    "whatsapp": "হোয়াটসঅ্যাপ",
+    "settings": "সেটিংস",
+    "users": "ব্যবহারকারী",
+    "profile": "প্রোফাইল",
+    "logout": "লগ আউট"
+  },
+  "whatsapp": {
+    "flowBuilder": "ফ্লো বিল্ডার",
+    "templateManager": "টেমপ্লেট ম্যানেজার",
+    "createTemplate": "টেমপ্লেট তৈরি করুন",
+    "templateName": "টেমপ্লেটের নাম",
+    "language": "ভাষা",
+    "category": "বিভাগ",
+    "description": "বিবরণ",
+    "preview": "পূর্বরূপ",
+    "publish": "প্রকাশ করুন",
+    "draft": "খসড়া",
+    "approved": "অনুমোদিত"
+  }
+} 

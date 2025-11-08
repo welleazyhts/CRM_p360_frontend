@@ -1,0 +1,54 @@
+{
+  "settings": {
+    "title": "ସେଟିଂସ",
+    "language": "ଭାଷା",
+    "selectLanguage": "ଆପଣଙ୍କର ପସନ୍ଦର ଭାଷା ବାଛନ୍ତୁ",
+    "systemLanguage": "ସିଷ୍ଟମ ଭାଷା",
+    "systemLanguageDescription": "ଆପ୍ଲିକେସନ ପାଇଁ ଡିଫଲ୍ଟ ଭାଷା",
+    "userLanguagePreference": "ବ୍ୟବହାରକାରୀ ଭାଷା ପସନ୍ଦ",
+    "defaultSurveyLanguage": "ଡିଫଲ୍ଟ ସର୍ଭେ ଭାଷା",
+    "notifications": "ବିଜ୍ଞପ୍ତି",
+    "emailNotifications": "ଇମେଲ ବିଜ୍ଞପ୍ତି",
+    "smsNotifications": "SMS ବିଜ୍ଞପ୍ତି",
+    "timezone": "ସମୟ ଅଞ୍ଚଳ",
+    "selectTimezone": "ଆପଣଙ୍କର ସମୟ ଅଞ୍ଚଳ ବାଛନ୍ତୁ"
+  },
+  "common": {
+    "save": "ସେଭ କରନ୍ତୁ",
+    "cancel": "ବାତିଲ କରନ୍ତୁ",
+    "delete": "ଡିଲିଟ କରନ୍ତୁ",
+    "edit": "ଏଡିଟ କରନ୍ତୁ",
+    "create": "ସୃଷ୍ଟି କରନ୍ତୁ",
+    "update": "ଅପଡେଟ କରନ୍ତୁ",
+    "close": "ବନ୍ଦ କରନ୍ତୁ",
+    "submit": "ଦାଖଲ କରନ୍ତୁ",
+    "loading": "ଲୋଡ ହେଉଛି...",
+    "error": "ତ୍ରୁଟି",
+    "success": "ସଫଳତା",
+    "warning": "ଚେତାବନୀ",
+    "info": "ସୂଚନା"
+  },
+  "navigation": {
+    "dashboard": "ଡ୍ୟାସବୋର୍ଡ",
+    "campaigns": "ଅଭିଯାନ",
+    "email": "ଇମେଲ",
+    "whatsapp": "ହ୍ୱାଟସଆପ",
+    "settings": "ସେଟିଂସ",
+    "users": "ବ୍ୟବହାରକାରୀ",
+    "profile": "ପ୍ରୋଫାଇଲ",
+    "logout": "ଲଗ ଆଉଟ"
+  },
+  "whatsapp": {
+    "flowBuilder": "ଫ୍ଲୋ ବିଲ୍ଡର",
+    "templateManager": "ଟେମ୍ପଲେଟ ମ୍ୟାନେଜର",
+    "createTemplate": "ଟେମ୍ପଲେଟ ସୃଷ୍ଟି କରନ୍ତୁ",
+    "templateName": "ଟେମ୍ପଲେଟ ନାମ",
+    "language": "ଭାଷା",
+    "category": "ବର୍ଗ",
+    "description": "ବର୍ଣ୍ଣନା",
+    "preview": "ପ୍ରିଭିଉ",
+    "publish": "ପ୍ରକାଶ କରନ୍ତୁ",
+    "draft": "ଡ୍ରାଫ୍ଟ",
+    "approved": "ଅନୁମୋଦିତ"
+  }
+} 

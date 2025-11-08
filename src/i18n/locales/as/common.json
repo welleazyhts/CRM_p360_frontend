@@ -1,0 +1,54 @@
+{
+  "settings": {
+    "title": "ছেটিংছ",
+    "language": "ভাষা",
+    "selectLanguage": "আপোনাৰ পচন্দৰ ভাষা বাছনি কৰক",
+    "systemLanguage": "ছিষ্টেম ভাষা",
+    "systemLanguageDescription": "এপ্লিকেচনৰ বাবে ডিফল্ট ভাষা",
+    "userLanguagePreference": "ব্যৱহাৰকাৰীৰ ভাষাৰ পচন্দ",
+    "defaultSurveyLanguage": "ডিফল্ট জৰীপ ভাষা",
+    "notifications": "জাননী",
+    "emailNotifications": "ইমেইল জাননী",
+    "smsNotifications": "SMS জাননী",
+    "timezone": "সময় অঞ্চল",
+    "selectTimezone": "আপোনাৰ সময় অঞ্চল বাছনি কৰক"
+  },
+  "common": {
+    "save": "সংৰক্ষণ কৰক",
+    "cancel": "বাতিল কৰক",
+    "delete": "মচি পেলাওক",
+    "edit": "সম্পাদনা কৰক",
+    "create": "সৃষ্টি কৰক",
+    "update": "আপডেট কৰক",
+    "close": "বন্ধ কৰক",
+    "submit": "দাখিল কৰক",
+    "loading": "লোড হৈ আছে...",
+    "error": "ত্ৰুটি",
+    "success": "সফলতা",
+    "warning": "সতৰ্কতা",
+    "info": "তথ্য"
+  },
+  "navigation": {
+    "dashboard": "ডেচবৰ্ড",
+    "campaigns": "প্ৰচাৰ",
+    "email": "ইমেইল",
+    "whatsapp": "হোৱাটছএপ",
+    "settings": "ছেটিংছ",
+    "users": "ব্যৱহাৰকাৰী",
+    "profile": "প্ৰফাইল",
+    "logout": "লগ আউট"
+  },
+  "whatsapp": {
+    "flowBuilder": "ফ্লো বিল্ডাৰ",
+    "templateManager": "টেম্পলেট মেনেজাৰ",
+    "createTemplate": "টেম্পলেট সৃষ্টি কৰক",
+    "templateName": "টেম্পলেটৰ নাম",
+    "language": "ভাষা",
+    "category": "বিভাগ",
+    "description": "বিৱৰণ",
+    "preview": "পূৰ্বদৰ্শন",
+    "publish": "প্ৰকাশ কৰক",
+    "draft": "খচৰা",
+    "approved": "অনুমোদিত"
+  }
+} 

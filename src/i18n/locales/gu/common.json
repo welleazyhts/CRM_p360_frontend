@@ -1,0 +1,54 @@
+{
+  "settings": {
+    "title": "સેટિંગ્સ",
+    "language": "ભાષા",
+    "selectLanguage": "તમારી પસંદગીની ભાષા પસંદ કરો",
+    "systemLanguage": "સિસ્ટમ ભાષા",
+    "systemLanguageDescription": "એપ્લિકેશન માટે ડિફોલ્ટ ભાષા",
+    "userLanguagePreference": "વપરાશકર્તા ભાષા પસંદગી",
+    "defaultSurveyLanguage": "ડિફોલ્ટ સર્વે ભાષા",
+    "notifications": "નોટિફિકેશન્સ",
+    "emailNotifications": "ઇમેઇલ નોટિફિકેશન્સ",
+    "smsNotifications": "SMS નોટિફિકેશન્સ",
+    "timezone": "ટાઇમ ઝોન",
+    "selectTimezone": "તમારો ટાઇમ ઝોન પસંદ કરો"
+  },
+  "common": {
+    "save": "સેવ કરો",
+    "cancel": "રદ કરો",
+    "delete": "ડિલીટ કરો",
+    "edit": "એડિટ કરો",
+    "create": "બનાવો",
+    "update": "અપડેટ કરો",
+    "close": "બંધ કરો",
+    "submit": "સબમિટ કરો",
+    "loading": "લોડ થઈ રહ્યું છે...",
+    "error": "ભૂલ",
+    "success": "સફળતા",
+    "warning": "ચેતવણી",
+    "info": "માહિતી"
+  },
+  "navigation": {
+    "dashboard": "ડેશબોર્ડ",
+    "campaigns": "ઝુંબેશો",
+    "email": "ઇમેઇલ",
+    "whatsapp": "વોટ્સએપ",
+    "settings": "સેટિંગ્સ",
+    "users": "વપરાશકર્તાઓ",
+    "profile": "પ્રોફાઇલ",
+    "logout": "લોગ આઉટ"
+  },
+  "whatsapp": {
+    "flowBuilder": "ફ્લો બિલ્ડર",
+    "templateManager": "ટેમ્પલેટ મેનેજર",
+    "createTemplate": "ટેમ્પલેટ બનાવો",
+    "templateName": "ટેમ્પલેટનું નામ",
+    "language": "ભાષા",
+    "category": "કેટેગરી",
+    "description": "વર્ણન",
+    "preview": "પ્રીવ્યૂ",
+    "publish": "પ્રકાશિત કરો",
+    "draft": "ડ્રાફ્ટ",
+    "approved": "મંજૂર"
+  }
+} 

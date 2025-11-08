@@ -1,0 +1,54 @@
+{
+  "settings": {
+    "title": "सेटिंग्स",
+    "language": "भाषा",
+    "selectLanguage": "अपनी पसंदीदा भाषा चुनें",
+    "systemLanguage": "सिस्टम भाषा",
+    "systemLanguageDescription": "एप्लिकेशन के लिए डिफ़ॉल्ट भाषा",
+    "userLanguagePreference": "उपयोगकर्ता भाषा प्राथमिकता",
+    "defaultSurveyLanguage": "डिफ़ॉल्ट सर्वेक्षण भाषा",
+    "notifications": "सूचनाएं",
+    "emailNotifications": "ईमेल सूचनाएं",
+    "smsNotifications": "SMS सूचनाएं",
+    "timezone": "समय क्षेत्र",
+    "selectTimezone": "अपना समय क्षेत्र चुनें"
+  },
+  "common": {
+    "save": "सहेजें",
+    "cancel": "रद्द करें",
+    "delete": "हटाएं",
+    "edit": "संपादित करें",
+    "create": "बनाएं",
+    "update": "अपडेट करें",
+    "close": "बंद करें",
+    "submit": "जमा करें",
+    "loading": "लोड हो रहा है...",
+    "error": "त्रुटि",
+    "success": "सफलता",
+    "warning": "चेतावनी",
+    "info": "जानकारी"
+  },
+  "navigation": {
+    "dashboard": "डैशबोर्ड",
+    "campaigns": "अभियान",
+    "email": "ईमेल",
+    "whatsapp": "व्हाट्सऐप",
+    "settings": "सेटिंग्स",
+    "users": "उपयोगकर्ता",
+    "profile": "प्रोफ़ाइल",
+    "logout": "लॉग आउट"
+  },
+  "whatsapp": {
+    "flowBuilder": "फ्लो बिल्डर",
+    "templateManager": "टेम्पलेट मैनेजर",
+    "createTemplate": "टेम्पलेट बनाएं",
+    "templateName": "टेम्पलेट नाम",
+    "language": "भाषा",
+    "category": "श्रेणी",
+    "description": "विवरण",
+    "preview": "पूर्वावलोकन",
+    "publish": "प्रकाशित करें",
+    "draft": "मसौदा",
+    "approved": "अनुमोदित"
+  }
+} 

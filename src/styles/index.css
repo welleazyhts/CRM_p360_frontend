@@ -1,0 +1,190 @@
+/* Healthcare Theme CSS Variables */
+:root {
+  --healthcare-primary: #A4D7E1;
+  --healthcare-secondary: #B3EBD5;
+  --healthcare-accent: #F2C94C;
+  --healthcare-background: #E0F7FA;
+  --healthcare-accent-dark: #6B8E23;
+  --healthcare-text-primary: #2C3E50;
+  --healthcare-text-secondary: #5D6D7E;
+  --healthcare-border: rgba(164, 215, 225, 0.3);
+  --healthcare-shadow: rgba(164, 215, 225, 0.2);
+}
+
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background-color: var(--healthcare-background);
+  color: var(--healthcare-text-primary);
+}
+
+code {
+  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
+    monospace;
+}
+
+/* Custom scrollbar - Healthcare Theme */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #E0F7FA;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #A4D7E1;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #6B8E23;
+}
+
+/* Prevent unwanted text cursor on UI elements */
+.MuiTypography-root:not(.selectable-text),
+.MuiListItemText-root,
+.MuiChip-root,
+.MuiCard-root,
+.MuiCardContent-root,
+.MuiButton-root,
+.MuiIconButton-root,
+.MuiTab-root,
+.MuiMenuItem-root,
+.MuiTableCell-root:not(.editable-cell),
+.MuiAccordionSummary-root,
+.MuiStepLabel-root,
+.MuiTimelineContent-root .MuiTypography-root:not(.selectable-text) {
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  cursor: default;
+}
+
+/* Specific fixes for heading elements */
+.MuiTypography-h1,
+.MuiTypography-h2,
+.MuiTypography-h3,
+.MuiTypography-h4,
+.MuiTypography-h5,
+.MuiTypography-h6,
+.MuiTypography-subtitle1,
+.MuiTypography-subtitle2 {
+  user-select: none;
+  cursor: default;
+}
+
+/* Allow text selection for content areas */
+.selectable-text,
+.MuiTextField-root input,
+.MuiTextField-root textarea,
+.MuiInputBase-input,
+.content-area,
+.email-content,
+.message-content,
+.description-text {
+  user-select: text !important;
+  cursor: text !important;
+}
+
+/* Fix for clickable cards */
+.MuiCard-root[role="button"],
+.MuiCard-root.clickable,
+.MuiListItem-root.MuiListItem-button,
+.MuiListItemButton-root {
+  cursor: pointer !important;
+}
+
+/* Fix for interactive chips */
+.MuiChip-root.MuiChip-clickable {
+  cursor: pointer !important;
+}
+
+/* Prevent text selection on metric displays */
+.metric-display,
+.stat-number,
+.dashboard-metric,
+.chart-label {
+  user-select: none;
+  cursor: default;
+}
+
+/* Fix for navigation elements */
+.MuiDrawer-root .MuiTypography-root,
+.MuiAppBar-root .MuiTypography-root,
+.navigation-item {
+  user-select: none;
+  cursor: default;
+}
+
+/* Allow selection for specific content types */
+.policy-details,
+.case-description,
+.email-body,
+.note-content,
+.comment-text {
+  user-select: text;
+  cursor: text;
+}
+
+/* Healthcare Theme Utility Classes */
+.healthcare-card {
+  background: linear-gradient(135deg, #ffffff 0%, #f8fffe 100%);
+  border: 1px solid var(--healthcare-border);
+  border-radius: 16px;
+  box-shadow: 0 4px 20px var(--healthcare-shadow);
+  transition: all 0.3s ease;
+}
+
+.healthcare-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 30px var(--healthcare-shadow);
+}
+
+.healthcare-button {
+  background: linear-gradient(135deg, var(--healthcare-primary) 0%, var(--healthcare-secondary) 100%);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 12px 24px;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px var(--healthcare-shadow);
+}
+
+.healthcare-button:hover {
+  background: linear-gradient(135deg, var(--healthcare-secondary) 0%, var(--healthcare-primary) 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px var(--healthcare-shadow);
+}
+
+.healthcare-accent {
+  color: var(--healthcare-accent-dark);
+  font-weight: 600;
+}
+
+.healthcare-primary-text {
+  color: var(--healthcare-primary);
+}
+
+.healthcare-secondary-text {
+  color: var(--healthcare-secondary);
+}
+
+.healthcare-background-gradient {
+  background: linear-gradient(135deg, var(--healthcare-background) 0%, #f0f9ff 100%);
+}
+
+.healthcare-border {
+  border: 1px solid var(--healthcare-border);
+}
+
+.healthcare-shadow {
+  box-shadow: 0 4px 20px var(--healthcare-shadow);
+}
