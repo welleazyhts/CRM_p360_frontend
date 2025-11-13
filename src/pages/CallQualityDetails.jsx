@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
-  Box, Typography, Paper, Button, Grid, Rating, TextField, Divider
+  Box, Typography, Paper, Button, Grid, Divider, Alert, Container
 } from '@mui/material';
 import { ArrowBack as ArrowBackIcon, Save as SaveIcon } from '@mui/icons-material';
+import QualityAssessmentForm from '../components/common/QualityAssessmentForm';
 
 const CallQualityDetails = () => {
   const { callId } = useParams();
@@ -18,129 +19,145 @@ const CallQualityDetails = () => {
     recordedAudio: 'call_recording_001.mp3'
   });
 
-  const [rating, setRating] = useState(0);
-  const [feedback, setFeedback] = useState('');
+  const [assessment, setAssessment] = useState({
+    scores: {},
+    assessmentData: {},
+    criticalObservations: '',
+    recommendations: ''
+  });
+
+  const handleAssessmentChange = (newAssessment) => {
+    setAssessment(newAssessment);
+  };
 
   const handleSave = () => {
-    // Save rating and feedback
-    console.log('Saving QA review:', { callId, rating, feedback });
+    // Save complete assessment data
+    console.log('Saving QA review:', {
+      callId,
+      assessment
+    });
     navigate('/call-quality-monitoring');
   };
 
   return (
-    <Box sx={{ p: 3 }}>
-      <Button
-        startIcon={<ArrowBackIcon />}
-        onClick={() => navigate('/call-quality-monitoring')}
-        sx={{ mb: 2 }}
-      >
-        Back to QA Dashboard
-      </Button>
+    <Container maxWidth="lg">
+      <Box sx={{ py: 3 }}>
+        <Button
+          startIcon={<ArrowBackIcon />}
+          onClick={() => navigate('/call-quality-monitoring')}
+          sx={{ mb: 2 }}
+        >
+          Back to QA Dashboard
+        </Button>
 
-      <Typography variant="h4" fontWeight="600" gutterBottom>
-        Call Quality Review
-      </Typography>
+        <Typography variant="h4" fontWeight="600" gutterBottom>
+          Call Quality Review
+        </Typography>
 
-      <Grid container spacing={3}>
-        {/* Call Information */}
-        <Grid item xs={12} md={6}>
-          <Paper sx={{ p: 3 }}>
-            <Typography variant="h6" fontWeight="600" gutterBottom>
-              Call Information
-            </Typography>
-            <Divider sx={{ mb: 2 }} />
-            
-            <Box sx={{ mb: 2 }}>
-              <Typography variant="caption" color="text.secondary">
-                Customer Name
-              </Typography>
-              <Typography variant="body1" fontWeight="600">
-                {callData.customerName}
-              </Typography>
-            </Box>
-            
-            <Box sx={{ mb: 2 }}>
-              <Typography variant="caption" color="text.secondary">
-                Agent
-              </Typography>
-              <Typography variant="body1" fontWeight="600">
-                {callData.agent}
-              </Typography>
-            </Box>
-            
-            <Box sx={{ mb: 2 }}>
-              <Typography variant="caption" color="text.secondary">
-                Date & Duration
-              </Typography>
-              <Typography variant="body1" fontWeight="600">
-                {callData.date} - {callData.duration}
-              </Typography>
-            </Box>
-
-            <Box sx={{ mb: 2 }}>
-              <Typography variant="caption" color="text.secondary">
-                Recorded Audio
-              </Typography>
-              <Box sx={{ mt: 1 }}>
-                <audio controls style={{ width: '100%' }}>
-                  <source src={`/recordings/${callData.recordedAudio}`} type="audio/mpeg" />
-                  Your browser does not support the audio element.
-                </audio>
+        {/* Call Information - Static Section at Top */}
+        <Paper sx={{ p: 3, mb: 3 }}>
+          <Typography variant="h6" fontWeight="600" gutterBottom>
+            Call Information
+          </Typography>
+          <Divider sx={{ mb: 2 }} />
+          
+          <Grid container spacing={3}>
+            <Grid item xs={12} md={3}>
+              <Box>
+                <Typography variant="caption" color="text.secondary">
+                  Customer Name
+                </Typography>
+                <Typography variant="body1" fontWeight="600">
+                  {callData.customerName}
+                </Typography>
               </Box>
-            </Box>
-          </Paper>
-        </Grid>
-
-        {/* QA Review Form */}
-        <Grid item xs={12} md={6}>
-          <Paper sx={{ p: 3 }}>
-            <Typography variant="h6" fontWeight="600" gutterBottom>
-              Quality Assessment
-            </Typography>
-            <Divider sx={{ mb: 3 }} />
+            </Grid>
             
-            <Box sx={{ mb: 3 }}>
-              <Typography variant="subtitle1" gutterBottom>
-                Overall Rating
-              </Typography>
-              <Rating
-                value={rating}
-                onChange={(event, newValue) => setRating(newValue)}
-                size="large"
-              />
-              <Typography variant="caption" color="text.secondary" display="block" sx={{ mt: 1 }}>
-                Rate from 1 (Poor) to 5 (Excellent)
-              </Typography>
-            </Box>
+            <Grid item xs={12} md={3}>
+              <Box>
+                <Typography variant="caption" color="text.secondary">
+                  Agent
+                </Typography>
+                <Typography variant="body1" fontWeight="600">
+                  {callData.agent}
+                </Typography>
+              </Box>
+            </Grid>
+            
+            <Grid item xs={12} md={3}>
+              <Box>
+                <Typography variant="caption" color="text.secondary">
+                  Date & Time
+                </Typography>
+                <Typography variant="body1" fontWeight="600">
+                  {callData.date}
+                </Typography>
+              </Box>
+            </Grid>
 
-            <Box sx={{ mb: 3 }}>
-              <Typography variant="subtitle1" gutterBottom>
-                Feedback & Comments
-              </Typography>
-              <TextField
-                fullWidth
-                multiline
-                rows={6}
-                value={feedback}
-                onChange={(e) => setFeedback(e.target.value)}
-                placeholder="Enter detailed feedback about call quality, agent performance, customer satisfaction, etc."
-                variant="outlined"
-              />
-            </Box>
+            <Grid item xs={12} md={3}>
+              <Box>
+                <Typography variant="caption" color="text.secondary">
+                  Duration
+                </Typography>
+                <Typography variant="body1" fontWeight="600">
+                  {callData.duration}
+                </Typography>
+              </Box>
+            </Grid>
 
-            <Button
-              variant="contained"
-              startIcon={<SaveIcon />}
-              onClick={handleSave}
-              fullWidth
-              size="large"
-            >
-              Save QA Review
-            </Button>
-          </Paper>
-        </Grid>
-      </Grid>
-    </Box>
+            <Grid item xs={12}>
+              <Box sx={{ mt: 2 }}>
+                <Typography variant="caption" color="text.secondary">
+                  Recorded Audio
+                </Typography>
+                <Box sx={{ mt: 1 }}>
+                  <audio controls style={{ width: '100%' }}>
+                    <source src={`/recordings/${callData.recordedAudio}`} type="audio/mpeg" />
+                    Your browser does not support the audio element.
+                  </audio>
+                </Box>
+              </Box>
+            </Grid>
+          </Grid>
+        </Paper>
+
+        {/* Quality Assessment Form */}
+        <Paper sx={{ p: 3 }}>
+          <Typography variant="h6" fontWeight="600" gutterBottom>
+            Quality Assessment
+          </Typography>
+          <Divider sx={{ mb: 3 }} />
+          
+          <QualityAssessmentForm onAssessmentChange={handleAssessmentChange} />
+
+          {assessment.scores.overall && (
+            <Box sx={{ mt: 3, mb: 3 }}>
+              <Alert severity={
+                assessment.scores.overall.percentage >= 80 ? 'success' :
+                assessment.scores.overall.percentage >= 60 ? 'warning' : 'error'
+              }>
+                <Typography variant="subtitle1" gutterBottom>
+                  Overall Score: {assessment.scores.overall.score} / {assessment.scores.overall.maxScore}
+                  ({assessment.scores.overall.percentage.toFixed(1)}%)
+                </Typography>
+              </Alert>
+            </Box>
+          )}
+
+          <Button
+            variant="contained"
+            startIcon={<SaveIcon />}
+            onClick={handleSave}
+            fullWidth
+            size="large"
+            disabled={!assessment.scores.overall}
+          >
+            Save QA Review
+          </Button>
+        </Paper>
+      </Box>
+    </Container>
   );
 };
 

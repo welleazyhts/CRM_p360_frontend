@@ -28,8 +28,29 @@ import {
   Tab,
   Alert,
   Menu,
-  Badge
+  Badge,
+  useTheme,
+  alpha,
+  Stack,
+  Divider,
+  Avatar,
+  Tooltip,
+  LinearProgress,
+  ListItemIcon,
+  ListItemText,
+  Collapse,
+  CardHeader,
+  CardActions
 } from '@mui/material';
+import {
+  Timeline,
+  TimelineItem,
+  TimelineSeparator,
+  TimelineConnector,
+  TimelineContent,
+  TimelineDot,
+  TimelineOppositeContent,
+} from '@mui/lab';
 import {
   Add as AddIcon,
   PlayArrow as RunIcon,
@@ -38,11 +59,32 @@ import {
   Edit as EditIcon,
   MoreVert as MoreIcon,
   CheckCircle as ActiveIcon,
-  PlaylistAdd as TemplateIcon
+  PlaylistAdd as TemplateIcon,
+  Schedule as ScheduleIcon,
+  Email as EmailIcon,
+  Webhook as WebhookIcon,
+  Code as CodeIcon,
+  FilterAlt as FilterIcon,
+  TrendingUp as TrendingUpIcon,
+  AccessTime as TimeIcon,
+  Speed as SpeedIcon,
+  AccountTree as NodeIcon,
+  Error as ErrorIcon,
+  Info as InfoIcon,
+  ContentCopy as CopyIcon,
+  Visibility as ViewIcon,
+  FlashOn as TriggerIcon,
+  Extension as ActionIcon,
+  Loop as LoopIcon,
+  ExpandMore as ExpandMoreIcon,
+  ExpandLess as ExpandLessIcon,
+  QueryBuilder as TimelineIcon,
+  CheckCircle
 } from '@mui/icons-material';
 import { useWorkflow } from '../context/WorkflowContext';
 
 const WorkflowBuilder = () => {
+  const theme = useTheme();
   const {
     workflows,
     executions,
@@ -63,8 +105,12 @@ const WorkflowBuilder = () => {
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [templateDialogOpen, setTemplateDialogOpen] = useState(false);
   const [runDialogOpen, setRunDialogOpen] = useState(false);
+  const [detailsDialogOpen, setDetailsDialogOpen] = useState(false);
+  const [executionDetailsOpen, setExecutionDetailsOpen] = useState(false);
   const [selectedWorkflow, setSelectedWorkflow] = useState(null);
+  const [selectedExecution, setSelectedExecution] = useState(null);
   const [menuAnchor, setMenuAnchor] = useState(null);
+  const [expandedWorkflows, setExpandedWorkflows] = useState({});
   const [formData, setFormData] = useState({
     name: '',
     description: '',
@@ -162,132 +208,363 @@ const WorkflowBuilder = () => {
     return colors[status] || 'default';
   };
 
+  // Get trigger icon
+  const getTriggerIcon = (trigger) => {
+    const icons = {
+      manual: <TriggerIcon />,
+      schedule: <ScheduleIcon />,
+      webhook: <WebhookIcon />,
+      lead_created: <AddIcon />,
+      lead_updated: <EditIcon />,
+      email_received: <EmailIcon />,
+    };
+    return icons[trigger] || <CodeIcon />;
+  };
+
+  // Toggle workflow expansion
+  const toggleExpand = (workflowId) => {
+    setExpandedWorkflows(prev => ({
+      ...prev,
+      [workflowId]: !prev[workflowId]
+    }));
+  };
+
+  // Calculate average execution time
+  const getAverageExecutionTime = () => {
+    const completedExecutions = executions.filter(e => e.completedAt && e.startedAt);
+    if (completedExecutions.length === 0) return 0;
+
+    const totalTime = completedExecutions.reduce((acc, exec) => {
+      const duration = new Date(exec.completedAt) - new Date(exec.startedAt);
+      return acc + duration;
+    }, 0);
+
+    return Math.round(totalTime / completedExecutions.length / 1000); // seconds
+  };
+
+  // Get recent activity
+  const getRecentActivity = () => {
+    return executions.slice(0, 5).map(exec => ({
+      ...exec,
+      timeAgo: getTimeAgo(exec.startedAt)
+    }));
+  };
+
+  // Time ago helper
+  const getTimeAgo = (date) => {
+    const seconds = Math.floor((new Date() - new Date(date)) / 1000);
+    if (seconds < 60) return `${seconds}s ago`;
+    const minutes = Math.floor(seconds / 60);
+    if (minutes < 60) return `${minutes}m ago`;
+    const hours = Math.floor(minutes / 60);
+    if (hours < 24) return `${hours}h ago`;
+    const days = Math.floor(hours / 24);
+    return `${days}d ago`;
+  };
+
   // Render workflows tab
   const renderWorkflowsTab = () => (
     <Box>
-      <TableContainer component={Paper}>
-        <Table>
-          <TableHead>
-            <TableRow>
-              <TableCell>Name</TableCell>
-              <TableCell>Description</TableCell>
-              <TableCell>Trigger</TableCell>
-              <TableCell>Status</TableCell>
-              <TableCell>Nodes</TableCell>
-              <TableCell>Last Updated</TableCell>
-              <TableCell align="right">Actions</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {workflows.length > 0 ? (
-              workflows.map((workflow) => (
-                <TableRow key={workflow.id} hover>
-                  <TableCell>
-                    <Typography variant="body2" fontWeight="bold">
+      {workflows.length > 0 ? (
+        <Grid container spacing={3}>
+          {workflows.map((workflow) => (
+            <Grid item xs={12} md={6} lg={4} key={workflow.id}>
+              <Card
+                sx={{
+                  height: '100%',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  borderRadius: 3,
+                  border: `2px solid ${alpha(
+                    workflow.status === WORKFLOW_STATUS.ACTIVE
+                      ? theme.palette.success.main
+                      : theme.palette.grey[300],
+                    0.3
+                  )}`,
+                  transition: 'all 0.3s ease',
+                  '&:hover': {
+                    boxShadow: 6,
+                    transform: 'translateY(-4px)',
+                  }
+                }}
+              >
+                <CardHeader
+                  avatar={
+                    <Avatar
+                      sx={{
+                        bgcolor: alpha(theme.palette.primary.main, 0.1),
+                        color: 'primary.main'
+                      }}
+                    >
+                      {getTriggerIcon(workflow.trigger)}
+                    </Avatar>
+                  }
+                  action={
+                    <IconButton onClick={(e) => handleMenuOpen(e, workflow)}>
+                      <MoreIcon />
+                    </IconButton>
+                  }
+                  title={
+                    <Typography variant="h6" fontWeight="700">
                       {workflow.name}
                     </Typography>
-                  </TableCell>
-                  <TableCell>{workflow.description}</TableCell>
-                  <TableCell>
-                    <Chip label={workflow.trigger} size="small" />
-                  </TableCell>
-                  <TableCell>
+                  }
+                  subheader={
                     <Chip
                       label={workflow.status}
                       color={getStatusColor(workflow.status)}
                       size="small"
+                      sx={{ mt: 0.5 }}
                     />
-                  </TableCell>
-                  <TableCell>{workflow.nodes?.length || 0}</TableCell>
-                  <TableCell>
-                    {new Date(workflow.updatedAt).toLocaleDateString()}
-                  </TableCell>
-                  <TableCell align="right">
-                    {workflow.status === WORKFLOW_STATUS.ACTIVE && (
-                      <IconButton
-                        size="small"
-                        color="primary"
-                        onClick={() => {
-                          setSelectedWorkflow(workflow);
-                          setRunDialogOpen(true);
-                        }}
-                      >
-                        <RunIcon />
-                      </IconButton>
-                    )}
-                    <IconButton
-                      size="small"
-                      onClick={(e) => handleMenuOpen(e, workflow)}
-                    >
-                      <MoreIcon />
-                    </IconButton>
-                  </TableCell>
-                </TableRow>
-              ))
-            ) : (
-              <TableRow>
-                <TableCell colSpan={7} align="center">
-                  <Typography color="text.secondary">
-                    No workflows yet. Create one to get started!
+                  }
+                />
+
+                <CardContent sx={{ flexGrow: 1, pt: 0 }}>
+                  <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                    {workflow.description || 'No description provided'}
                   </Typography>
-                </TableCell>
-              </TableRow>
-            )}
-          </TableBody>
-        </Table>
-      </TableContainer>
+
+                  <Stack direction="row" spacing={1} sx={{ mb: 2, flexWrap: 'wrap', gap: 1 }}>
+                    <Chip
+                      icon={getTriggerIcon(workflow.trigger)}
+                      label={workflow.trigger.replace(/_/g, ' ')}
+                      size="small"
+                      variant="outlined"
+                    />
+                    <Chip
+                      icon={<NodeIcon />}
+                      label={`${workflow.nodes?.length || 0} steps`}
+                      size="small"
+                      variant="outlined"
+                    />
+                  </Stack>
+
+                  <Divider sx={{ my: 2 }} />
+
+                  <Stack direction="row" justifyContent="space-between" sx={{ mb: 1 }}>
+                    <Typography variant="caption" color="text.secondary">
+                      <TimeIcon sx={{ fontSize: 14, mr: 0.5, verticalAlign: 'middle' }} />
+                      Updated {new Date(workflow.updatedAt).toLocaleDateString()}
+                    </Typography>
+                  </Stack>
+
+                  {/* Node visualization */}
+                  <IconButton
+                    size="small"
+                    onClick={() => toggleExpand(workflow.id)}
+                    sx={{ mt: 1 }}
+                  >
+                    {expandedWorkflows[workflow.id] ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+                    <Typography variant="caption" sx={{ ml: 0.5 }}>
+                      {expandedWorkflows[workflow.id] ? 'Hide' : 'Show'} Workflow Steps
+                    </Typography>
+                  </IconButton>
+
+                  <Collapse in={expandedWorkflows[workflow.id]}>
+                    <Box sx={{ mt: 2, p: 2, bgcolor: alpha(theme.palette.primary.main, 0.05), borderRadius: 2 }}>
+                      {workflow.nodes && workflow.nodes.length > 0 ? (
+                        <Timeline sx={{ p: 0, m: 0 }}>
+                          {workflow.nodes.map((node, index) => (
+                            <TimelineItem key={index} sx={{ '&::before': { display: 'none' } }}>
+                              <TimelineSeparator>
+                                <TimelineDot color="primary" variant="outlined">
+                                  <ActionIcon sx={{ fontSize: 14 }} />
+                                </TimelineDot>
+                                {index < workflow.nodes.length - 1 && <TimelineConnector />}
+                              </TimelineSeparator>
+                              <TimelineContent>
+                                <Typography variant="caption" fontWeight="600">
+                                  {node.type}
+                                </Typography>
+                                <Typography variant="caption" display="block" color="text.secondary">
+                                  {node.config?.description || 'No description'}
+                                </Typography>
+                              </TimelineContent>
+                            </TimelineItem>
+                          ))}
+                        </Timeline>
+                      ) : (
+                        <Typography variant="caption" color="text.secondary">
+                          No steps configured
+                        </Typography>
+                      )}
+                    </Box>
+                  </Collapse>
+                </CardContent>
+
+                <CardActions sx={{ justifyContent: 'space-between', px: 2, pb: 2 }}>
+                  {workflow.status === WORKFLOW_STATUS.ACTIVE ? (
+                    <Button
+                      size="small"
+                      variant="contained"
+                      startIcon={<RunIcon />}
+                      onClick={() => {
+                        setSelectedWorkflow(workflow);
+                        setRunDialogOpen(true);
+                      }}
+                    >
+                      Run Now
+                    </Button>
+                  ) : (
+                    <Button
+                      size="small"
+                      variant="outlined"
+                      startIcon={<ActiveIcon />}
+                      onClick={() => handleActivate(workflow.id)}
+                    >
+                      Activate
+                    </Button>
+                  )}
+                  <Button
+                    size="small"
+                    startIcon={<ViewIcon />}
+                    onClick={() => {
+                      setSelectedWorkflow(workflow);
+                      setDetailsDialogOpen(true);
+                    }}
+                  >
+                    Details
+                  </Button>
+                </CardActions>
+              </Card>
+            </Grid>
+          ))}
+        </Grid>
+      ) : (
+        <Paper sx={{ p: 6, textAlign: 'center', borderRadius: 3 }}>
+          <NodeIcon sx={{ fontSize: 64, color: 'text.secondary', mb: 2 }} />
+          <Typography variant="h6" color="text.secondary" gutterBottom>
+            No workflows yet
+          </Typography>
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+            Create your first workflow to automate your business processes
+          </Typography>
+          <Button
+            variant="contained"
+            startIcon={<AddIcon />}
+            onClick={() => setCreateDialogOpen(true)}
+          >
+            Create Workflow
+          </Button>
+        </Paper>
+      )}
     </Box>
   );
 
   // Render executions tab
   const renderExecutionsTab = () => (
     <Box>
-      <TableContainer component={Paper}>
-        <Table>
-          <TableHead>
-            <TableRow>
-              <TableCell>Workflow</TableCell>
-              <TableCell>Status</TableCell>
-              <TableCell>Started</TableCell>
-              <TableCell>Completed</TableCell>
-              <TableCell>Steps Executed</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {executions.length > 0 ? (
-              executions.slice(0, 50).map((execution) => (
-                <TableRow key={execution.id}>
-                  <TableCell>{execution.workflowName}</TableCell>
-                  <TableCell>
-                    <Chip
-                      label={execution.status}
-                      color={getStatusColor(execution.status)}
-                      size="small"
-                    />
-                  </TableCell>
-                  <TableCell>
-                    {new Date(execution.startedAt).toLocaleString()}
-                  </TableCell>
-                  <TableCell>
-                    {execution.completedAt
-                      ? new Date(execution.completedAt).toLocaleString()
-                      : '-'}
-                  </TableCell>
-                  <TableCell>
-                    {execution.result?.executionLog?.length || 0}
-                  </TableCell>
-                </TableRow>
-              ))
-            ) : (
-              <TableRow>
-                <TableCell colSpan={5} align="center">
-                  <Typography color="text.secondary">No executions yet</Typography>
-                </TableCell>
-              </TableRow>
-            )}
-          </TableBody>
-        </Table>
-      </TableContainer>
+      {executions.length > 0 ? (
+        <Stack spacing={2}>
+          {executions.slice(0, 20).map((execution) => {
+            const duration = execution.completedAt
+              ? Math.round((new Date(execution.completedAt) - new Date(execution.startedAt)) / 1000)
+              : null;
+
+            return (
+              <Paper
+                key={execution.id}
+                sx={{
+                  p: 3,
+                  borderRadius: 2,
+                  border: `1px solid ${alpha(
+                    execution.status === 'completed'
+                      ? theme.palette.success.main
+                      : execution.status === 'failed'
+                      ? theme.palette.error.main
+                      : theme.palette.grey[300],
+                    0.3
+                  )}`,
+                  transition: 'all 0.2s ease',
+                  '&:hover': {
+                    boxShadow: 3,
+                    cursor: 'pointer',
+                  },
+                }}
+                onClick={() => {
+                  setSelectedExecution(execution);
+                  setExecutionDetailsOpen(true);
+                }}
+              >
+                <Stack direction="row" spacing={2} alignItems="center" justifyContent="space-between">
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, flex: 1 }}>
+                    <Avatar
+                      sx={{
+                        bgcolor: alpha(
+                          execution.status === 'completed'
+                            ? theme.palette.success.main
+                            : execution.status === 'failed'
+                            ? theme.palette.error.main
+                            : theme.palette.info.main,
+                          0.1
+                        ),
+                        color:
+                          execution.status === 'completed'
+                            ? 'success.main'
+                            : execution.status === 'failed'
+                            ? 'error.main'
+                            : 'info.main',
+                      }}
+                    >
+                      {execution.status === 'completed' ? (
+                        <CheckCircle />
+                      ) : execution.status === 'failed' ? (
+                        <ErrorIcon />
+                      ) : (
+                        <RunIcon />
+                      )}
+                    </Avatar>
+
+                    <Box sx={{ flex: 1 }}>
+                      <Typography variant="subtitle1" fontWeight="600">
+                        {execution.workflowName}
+                      </Typography>
+                      <Stack direction="row" spacing={2} sx={{ mt: 0.5 }}>
+                        <Typography variant="caption" color="text.secondary">
+                          <TimeIcon sx={{ fontSize: 12, mr: 0.5, verticalAlign: 'middle' }} />
+                          {getTimeAgo(execution.startedAt)}
+                        </Typography>
+                        {duration !== null && (
+                          <Typography variant="caption" color="text.secondary">
+                            <SpeedIcon sx={{ fontSize: 12, mr: 0.5, verticalAlign: 'middle' }} />
+                            {duration}s duration
+                          </Typography>
+                        )}
+                        <Typography variant="caption" color="text.secondary">
+                          <NodeIcon sx={{ fontSize: 12, mr: 0.5, verticalAlign: 'middle' }} />
+                          {execution.result?.executionLog?.length || 0} steps
+                        </Typography>
+                      </Stack>
+                    </Box>
+                  </Box>
+
+                  <Chip
+                    label={execution.status}
+                    color={getStatusColor(execution.status)}
+                    size="small"
+                    sx={{ fontWeight: 600 }}
+                  />
+                </Stack>
+
+                {/* Progress bar for duration */}
+                {execution.status === 'running' && (
+                  <LinearProgress sx={{ mt: 2, borderRadius: 1 }} />
+                )}
+              </Paper>
+            );
+          })}
+        </Stack>
+      ) : (
+        <Paper sx={{ p: 6, textAlign: 'center', borderRadius: 3 }}>
+          <TimelineIcon sx={{ fontSize: 64, color: 'text.secondary', mb: 2 }} />
+          <Typography variant="h6" color="text.secondary" gutterBottom>
+            No executions yet
+          </Typography>
+          <Typography variant="body2" color="text.secondary">
+            Run a workflow to see execution history
+          </Typography>
+        </Paper>
+      )}
     </Box>
   );
 
@@ -322,50 +599,149 @@ const WorkflowBuilder = () => {
       </Box>
 
       {/* Statistics Cards */}
-      <Grid container spacing={2} sx={{ mb: 3 }}>
+      <Grid container spacing={3} sx={{ mb: 4 }}>
         <Grid item xs={12} sm={6} md={3}>
-          <Card>
+          <Card
+            sx={{
+              borderRadius: 3,
+              background: `linear-gradient(135deg, ${alpha(theme.palette.primary.main, 0.1)} 0%, ${alpha(theme.palette.primary.dark, 0.2)} 100%)`,
+              border: `1px solid ${alpha(theme.palette.primary.main, 0.2)}`,
+            }}
+          >
             <CardContent>
-              <Typography variant="body2" color="text.secondary" gutterBottom>
-                Total Workflows
-              </Typography>
-              <Typography variant="h4">{workflows.length}</Typography>
+              <Stack direction="row" justifyContent="space-between" alignItems="flex-start">
+                <Box>
+                  <Typography variant="body2" color="text.secondary" gutterBottom fontWeight="600">
+                    Total Workflows
+                  </Typography>
+                  <Typography variant="h3" fontWeight="700" color="primary.main">
+                    {workflows.length}
+                  </Typography>
+                  <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
+                    {draftWorkflows.length} drafts
+                  </Typography>
+                </Box>
+                <Avatar
+                  sx={{
+                    bgcolor: alpha(theme.palette.primary.main, 0.2),
+                    color: 'primary.main',
+                    width: 56,
+                    height: 56,
+                  }}
+                >
+                  <NodeIcon />
+                </Avatar>
+              </Stack>
             </CardContent>
           </Card>
         </Grid>
+
         <Grid item xs={12} sm={6} md={3}>
-          <Card>
+          <Card
+            sx={{
+              borderRadius: 3,
+              background: `linear-gradient(135deg, ${alpha(theme.palette.success.main, 0.1)} 0%, ${alpha(theme.palette.success.dark, 0.2)} 100%)`,
+              border: `1px solid ${alpha(theme.palette.success.main, 0.2)}`,
+            }}
+          >
             <CardContent>
-              <Typography variant="body2" color="text.secondary" gutterBottom>
-                Active
-              </Typography>
-              <Typography variant="h4" color="success.main">
-                {activeWorkflows.length}
-              </Typography>
+              <Stack direction="row" justifyContent="space-between" alignItems="flex-start">
+                <Box>
+                  <Typography variant="body2" color="text.secondary" gutterBottom fontWeight="600">
+                    Active Workflows
+                  </Typography>
+                  <Typography variant="h3" fontWeight="700" color="success.main">
+                    {activeWorkflows.length}
+                  </Typography>
+                  <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
+                    Running now
+                  </Typography>
+                </Box>
+                <Avatar
+                  sx={{
+                    bgcolor: alpha(theme.palette.success.main, 0.2),
+                    color: 'success.main',
+                    width: 56,
+                    height: 56,
+                  }}
+                >
+                  <ActiveIcon />
+                </Avatar>
+              </Stack>
             </CardContent>
           </Card>
         </Grid>
+
         <Grid item xs={12} sm={6} md={3}>
-          <Card>
+          <Card
+            sx={{
+              borderRadius: 3,
+              background: `linear-gradient(135deg, ${alpha(theme.palette.info.main, 0.1)} 0%, ${alpha(theme.palette.info.dark, 0.2)} 100%)`,
+              border: `1px solid ${alpha(theme.palette.info.main, 0.2)}`,
+            }}
+          >
             <CardContent>
-              <Typography variant="body2" color="text.secondary" gutterBottom>
-                Executions
-              </Typography>
-              <Typography variant="h4">{stats.total}</Typography>
+              <Stack direction="row" justifyContent="space-between" alignItems="flex-start">
+                <Box>
+                  <Typography variant="body2" color="text.secondary" gutterBottom fontWeight="600">
+                    Total Executions
+                  </Typography>
+                  <Typography variant="h3" fontWeight="700" color="info.main">
+                    {stats.total}
+                  </Typography>
+                  <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
+                    {stats.successful} successful
+                  </Typography>
+                </Box>
+                <Avatar
+                  sx={{
+                    bgcolor: alpha(theme.palette.info.main, 0.2),
+                    color: 'info.main',
+                    width: 56,
+                    height: 56,
+                  }}
+                >
+                  <RunIcon />
+                </Avatar>
+              </Stack>
             </CardContent>
           </Card>
         </Grid>
+
         <Grid item xs={12} sm={6} md={3}>
-          <Card>
+          <Card
+            sx={{
+              borderRadius: 3,
+              background: `linear-gradient(135deg, ${alpha(theme.palette.warning.main, 0.1)} 0%, ${alpha(theme.palette.warning.dark, 0.2)} 100%)`,
+              border: `1px solid ${alpha(theme.palette.warning.main, 0.2)}`,
+            }}
+          >
             <CardContent>
-              <Typography variant="body2" color="text.secondary" gutterBottom>
-                Success Rate
-              </Typography>
-              <Typography variant="h4" color="primary">
-                {stats.total > 0
-                  ? Math.round((stats.successful / stats.total) * 100)
-                  : 0}%
-              </Typography>
+              <Stack direction="row" justifyContent="space-between" alignItems="flex-start">
+                <Box>
+                  <Typography variant="body2" color="text.secondary" gutterBottom fontWeight="600">
+                    Success Rate
+                  </Typography>
+                  <Typography variant="h3" fontWeight="700" color="warning.main">
+                    {stats.total > 0
+                      ? Math.round((stats.successful / stats.total) * 100)
+                      : 0}%
+                  </Typography>
+                  <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
+                    Avg: {getAverageExecutionTime()}s
+                  </Typography>
+                </Box>
+                <Avatar
+                  sx={{
+                    bgcolor: alpha(theme.palette.warning.main, 0.2),
+                    color: 'warning.main',
+                    width: 56,
+                    height: 56,
+                  }}
+                >
+                  <TrendingUpIcon />
+                </Avatar>
+              </Stack>
             </CardContent>
           </Card>
         </Grid>
@@ -508,6 +884,311 @@ const WorkflowBuilder = () => {
           <Button onClick={handleRun} variant="contained" startIcon={<RunIcon />}>
             Run
           </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Workflow Details Dialog */}
+      <Dialog
+        open={detailsDialogOpen}
+        onClose={() => setDetailsDialogOpen(false)}
+        maxWidth="md"
+        fullWidth
+      >
+        <DialogTitle>
+          <Stack direction="row" alignItems="center" spacing={2}>
+            {selectedWorkflow && getTriggerIcon(selectedWorkflow.trigger)}
+            <Box>
+              <Typography variant="h6" fontWeight="700">
+                {selectedWorkflow?.name}
+              </Typography>
+              <Chip
+                label={selectedWorkflow?.status}
+                color={getStatusColor(selectedWorkflow?.status)}
+                size="small"
+                sx={{ mt: 0.5 }}
+              />
+            </Box>
+          </Stack>
+        </DialogTitle>
+        <DialogContent>
+          {selectedWorkflow && (
+            <Box>
+              <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+                {selectedWorkflow.description || 'No description provided'}
+              </Typography>
+
+              <Divider sx={{ my: 2 }} />
+
+              <Grid container spacing={2} sx={{ mb: 3 }}>
+                <Grid item xs={6}>
+                  <Typography variant="caption" color="text.secondary">
+                    Trigger Type
+                  </Typography>
+                  <Typography variant="body2" fontWeight="600">
+                    {selectedWorkflow.trigger.replace(/_/g, ' ')}
+                  </Typography>
+                </Grid>
+                <Grid item xs={6}>
+                  <Typography variant="caption" color="text.secondary">
+                    Workflow Steps
+                  </Typography>
+                  <Typography variant="body2" fontWeight="600">
+                    {selectedWorkflow.nodes?.length || 0} steps
+                  </Typography>
+                </Grid>
+                <Grid item xs={6}>
+                  <Typography variant="caption" color="text.secondary">
+                    Created
+                  </Typography>
+                  <Typography variant="body2" fontWeight="600">
+                    {new Date(selectedWorkflow.createdAt).toLocaleDateString()}
+                  </Typography>
+                </Grid>
+                <Grid item xs={6}>
+                  <Typography variant="caption" color="text.secondary">
+                    Last Updated
+                  </Typography>
+                  <Typography variant="body2" fontWeight="600">
+                    {new Date(selectedWorkflow.updatedAt).toLocaleDateString()}
+                  </Typography>
+                </Grid>
+              </Grid>
+
+              <Divider sx={{ my: 2 }} />
+
+              <Typography variant="subtitle2" fontWeight="700" gutterBottom>
+                Workflow Steps
+              </Typography>
+
+              {selectedWorkflow.nodes && selectedWorkflow.nodes.length > 0 ? (
+                <Box sx={{ mt: 2 }}>
+                  {selectedWorkflow.nodes.map((node, index) => (
+                    <Paper
+                      key={index}
+                      sx={{
+                        p: 2,
+                        mb: 1,
+                        border: `1px solid ${alpha(theme.palette.primary.main, 0.2)}`,
+                        borderRadius: 2,
+                      }}
+                    >
+                      <Stack direction="row" spacing={2} alignItems="center">
+                        <Avatar
+                          sx={{
+                            width: 32,
+                            height: 32,
+                            bgcolor: alpha(theme.palette.primary.main, 0.1),
+                            color: 'primary.main',
+                            fontSize: '0.875rem',
+                            fontWeight: 700,
+                          }}
+                        >
+                          {index + 1}
+                        </Avatar>
+                        <Box sx={{ flex: 1 }}>
+                          <Typography variant="body2" fontWeight="600">
+                            {node.type}
+                          </Typography>
+                          <Typography variant="caption" color="text.secondary">
+                            {node.config?.description || 'No description'}
+                          </Typography>
+                        </Box>
+                        <ActionIcon color="action" />
+                      </Stack>
+                    </Paper>
+                  ))}
+                </Box>
+              ) : (
+                <Alert severity="info" sx={{ mt: 2 }}>
+                  No steps configured yet
+                </Alert>
+              )}
+            </Box>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setDetailsDialogOpen(false)}>Close</Button>
+          {selectedWorkflow && selectedWorkflow.status === WORKFLOW_STATUS.ACTIVE && (
+            <Button
+              variant="contained"
+              startIcon={<RunIcon />}
+              onClick={() => {
+                setDetailsDialogOpen(false);
+                setRunDialogOpen(true);
+              }}
+            >
+              Run Workflow
+            </Button>
+          )}
+        </DialogActions>
+      </Dialog>
+
+      {/* Execution Details Dialog */}
+      <Dialog
+        open={executionDetailsOpen}
+        onClose={() => setExecutionDetailsOpen(false)}
+        maxWidth="md"
+        fullWidth
+      >
+        <DialogTitle>
+          <Stack direction="row" alignItems="center" spacing={2}>
+            <Avatar
+              sx={{
+                bgcolor: alpha(
+                  selectedExecution?.status === 'completed'
+                    ? theme.palette.success.main
+                    : selectedExecution?.status === 'failed'
+                    ? theme.palette.error.main
+                    : theme.palette.info.main,
+                  0.1
+                ),
+                color:
+                  selectedExecution?.status === 'completed'
+                    ? 'success.main'
+                    : selectedExecution?.status === 'failed'
+                    ? 'error.main'
+                    : 'info.main',
+              }}
+            >
+              {selectedExecution?.status === 'completed' ? (
+                <CheckCircle />
+              ) : selectedExecution?.status === 'failed' ? (
+                <ErrorIcon />
+              ) : (
+                <RunIcon />
+              )}
+            </Avatar>
+            <Box>
+              <Typography variant="h6" fontWeight="700">
+                {selectedExecution?.workflowName}
+              </Typography>
+              <Typography variant="caption" color="text.secondary">
+                Execution #{selectedExecution?.id}
+              </Typography>
+            </Box>
+          </Stack>
+        </DialogTitle>
+        <DialogContent>
+          {selectedExecution && (
+            <Box>
+              <Grid container spacing={2} sx={{ mb: 3 }}>
+                <Grid item xs={6}>
+                  <Typography variant="caption" color="text.secondary">
+                    Status
+                  </Typography>
+                  <Box>
+                    <Chip
+                      label={selectedExecution.status}
+                      color={getStatusColor(selectedExecution.status)}
+                      size="small"
+                      sx={{ mt: 0.5 }}
+                    />
+                  </Box>
+                </Grid>
+                <Grid item xs={6}>
+                  <Typography variant="caption" color="text.secondary">
+                    Duration
+                  </Typography>
+                  <Typography variant="body2" fontWeight="600">
+                    {selectedExecution.completedAt
+                      ? `${Math.round(
+                          (new Date(selectedExecution.completedAt) -
+                            new Date(selectedExecution.startedAt)) /
+                            1000
+                        )}s`
+                      : 'Running...'}
+                  </Typography>
+                </Grid>
+                <Grid item xs={6}>
+                  <Typography variant="caption" color="text.secondary">
+                    Started At
+                  </Typography>
+                  <Typography variant="body2" fontWeight="600">
+                    {new Date(selectedExecution.startedAt).toLocaleString()}
+                  </Typography>
+                </Grid>
+                <Grid item xs={6}>
+                  <Typography variant="caption" color="text.secondary">
+                    Completed At
+                  </Typography>
+                  <Typography variant="body2" fontWeight="600">
+                    {selectedExecution.completedAt
+                      ? new Date(selectedExecution.completedAt).toLocaleString()
+                      : '-'}
+                  </Typography>
+                </Grid>
+              </Grid>
+
+              <Divider sx={{ my: 2 }} />
+
+              <Typography variant="subtitle2" fontWeight="700" gutterBottom>
+                Execution Timeline
+              </Typography>
+
+              {selectedExecution.result?.executionLog &&
+              selectedExecution.result.executionLog.length > 0 ? (
+                <Box sx={{ mt: 2 }}>
+                  <Timeline>
+                    {selectedExecution.result.executionLog.map((log, index) => (
+                      <TimelineItem key={index}>
+                        <TimelineOppositeContent color="text.secondary" sx={{ flex: 0.2 }}>
+                          <Typography variant="caption">
+                            Step {index + 1}
+                          </Typography>
+                        </TimelineOppositeContent>
+                        <TimelineSeparator>
+                          <TimelineDot
+                            color={
+                              log.status === 'success'
+                                ? 'success'
+                                : log.status === 'error'
+                                ? 'error'
+                                : 'primary'
+                            }
+                          />
+                          {index < selectedExecution.result.executionLog.length - 1 && (
+                            <TimelineConnector />
+                          )}
+                        </TimelineSeparator>
+                        <TimelineContent>
+                          <Paper
+                            elevation={0}
+                            sx={{
+                              p: 2,
+                              bgcolor: alpha(theme.palette.background.default, 0.5),
+                            }}
+                          >
+                            <Typography variant="body2" fontWeight="600">
+                              {log.step}
+                            </Typography>
+                            <Typography variant="caption" color="text.secondary">
+                              {log.message}
+                            </Typography>
+                          </Paper>
+                        </TimelineContent>
+                      </TimelineItem>
+                    ))}
+                  </Timeline>
+                </Box>
+              ) : (
+                <Alert severity="info" sx={{ mt: 2 }}>
+                  No execution logs available
+                </Alert>
+              )}
+
+              {selectedExecution.error && (
+                <Alert severity="error" sx={{ mt: 2 }}>
+                  <Typography variant="body2" fontWeight="600">
+                    Error Message:
+                  </Typography>
+                  <Typography variant="caption">{selectedExecution.error}</Typography>
+                </Alert>
+              )}
+            </Box>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setExecutionDetailsOpen(false)}>Close</Button>
         </DialogActions>
       </Dialog>
     </Box>

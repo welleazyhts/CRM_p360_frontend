@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import callService from '../../services/callService';
 import {
   Dialog,
@@ -22,13 +22,30 @@ import {
   FormControlLabel,
   Checkbox,
   Alert,
+  Chip,
+  Divider,
+  Avatar,
+  Card,
+  CardContent,
+  Badge,
+  Tabs,
+  Tab,
+  List,
+  ListItem,
+  ListItemText,
+  ListItemIcon,
+  Slide,
+  Fade,
+  LinearProgress,
+  Stack,
+  alpha,
 } from '@mui/material';
 import { LocalizationProvider } from '@mui/x-date-pickers';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { TimePicker } from '@mui/x-date-pickers/TimePicker';
-import { 
+import {
   Close as CloseIcon,
   Phone as PhoneIcon,
   Email as EmailIcon,
@@ -42,11 +59,27 @@ import {
   Search as SearchIcon,
   Schedule as FollowUpIcon,
   CallReceived as IncomingCallIcon,
+  History as HistoryIcon,
+  CheckCircle as CheckCircleIcon,
+  Timer as TimerIcon,
+  Info as InfoIcon,
+  TrendingUp as TrendingUpIcon,
+  AccessTime as AccessTimeIcon,
+  Category as CategoryIcon,
+  Label as LabelIcon,
+  PersonSearch as PersonSearchIcon,
+  CallEnd as CallEndIcon,
+  Star as StarIcon,
+  Verified as VerifiedIcon,
+  ArrowForward as ArrowForwardIcon,
 } from '@mui/icons-material';
 
 const QRCDialog = ({ open, onClose, onSubmit }) => {
   const theme = useTheme();
-  
+  const [activeTab, setActiveTab] = useState(0);
+  const [callDuration, setCallDuration] = useState(0);
+  const [callStartTime, setCallStartTime] = useState(null);
+
   const [formData, setFormData] = useState({
     leadId: '',
     searchPhone: '',
@@ -65,45 +98,98 @@ const QRCDialog = ({ open, onClose, onSubmit }) => {
     followUpDate: null,
     followUpTime: null,
     followUpRequired: false,
-    incomingCallerNumber: ''
+    incomingCallerNumber: '',
+    priority: 'Medium'
   });
 
   // Search state
   const [searching, setSearching] = useState(false);
   const [searchError, setSearchError] = useState('');
-  
+  const [customerFound, setCustomerFound] = useState(false);
+  const [customerHistory, setCustomerHistory] = useState([]);
+
+  // Quick tags for common scenarios
+  const quickTags = [
+    { label: 'Hot Lead', color: 'error', icon: '🔥' },
+    { label: 'Renewal', color: 'warning', icon: '🔄' },
+    { label: 'Urgent', color: 'error', icon: '⚡' },
+    { label: 'VIP', color: 'success', icon: '⭐' },
+    { label: 'Follow-up', color: 'info', icon: '📅' },
+    { label: 'Complaint', color: 'warning', icon: '⚠️' },
+  ];
+
+  // Call timer
+  useEffect(() => {
+    let interval;
+    if (open && callStartTime) {
+      interval = setInterval(() => {
+        setCallDuration(Math.floor((Date.now() - callStartTime) / 1000));
+      }, 1000);
+    }
+    return () => clearInterval(interval);
+  }, [open, callStartTime]);
+
+  // Format call duration
+  const formatDuration = (seconds) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+  };
+
   // Auto-capture incoming caller number on component mount
-  React.useEffect(() => {
+  useEffect(() => {
     const captureIncomingCall = async () => {
+      setCallStartTime(Date.now());
+      setCallDuration(0);
+
       // Capture incoming call using call service
       const incomingCall = callService.captureIncomingCall();
-      
+
       setFormData(prev => ({
         ...prev,
         incomingCallerNumber: incomingCall.callerNumber,
         searchPhone: incomingCall.callerNumber.replace(/[^0-9]/g, '').slice(-10),
         phone: incomingCall.callerNumber
       }));
-      
+
       // Auto-search for existing customer
       const customerLookup = await callService.lookupCustomerByPhone(incomingCall.callerNumber);
-      
+
       if (customerLookup.found) {
+        setCustomerFound(true);
         setFormData(prev => ({
           ...prev,
           leadId: customerLookup.customer.id,
           callerName: customerLookup.customer.name,
           email: customerLookup.customer.email,
-          phone: customerLookup.customer.phone
+          phone: customerLookup.customer.phone,
+          company: customerLookup.customer.company || '',
+          location: customerLookup.customer.location || ''
         }));
+
+        // Mock customer history
+        setCustomerHistory([
+          { date: '2025-01-05', type: 'Call', reason: 'Policy Renewal Query', resolved: true },
+          { date: '2024-12-15', type: 'Email', reason: 'Premium Payment', resolved: true },
+          { date: '2024-11-20', type: 'Call', reason: 'General Inquiry', resolved: true },
+        ]);
+
         setSearchError('');
       } else {
-        setSearchError('Customer not found in database - please enter details manually');
+        setCustomerFound(false);
+        setSearchError('New customer - please enter details to create profile');
       }
     };
-    
+
     if (open) {
       captureIncomingCall();
+    } else {
+      // Reset on close
+      setCallStartTime(null);
+      setCallDuration(0);
+      setCustomerFound(false);
+      setCustomerHistory([]);
+      setActiveTab(0);
     }
   }, [open]);
 
@@ -111,12 +197,13 @@ const QRCDialog = ({ open, onClose, onSubmit }) => {
   const lookupLead = async (searchTerm) => {
     setSearching(true);
     setSearchError('');
-    
+
     try {
       const customerLookup = await callService.lookupCustomerByPhone(searchTerm);
-      
+
       if (customerLookup.found) {
         const customer = customerLookup.customer;
+        setCustomerFound(true);
         setFormData(prev => ({
           ...prev,
           leadId: customer.id,
@@ -127,11 +214,19 @@ const QRCDialog = ({ open, onClose, onSubmit }) => {
           location: customer.location || ''
         }));
         setSearchError('');
+
+        // Load customer history
+        setCustomerHistory([
+          { date: '2025-01-05', type: 'Call', reason: 'Policy Renewal Query', resolved: true },
+          { date: '2024-12-15', type: 'Email', reason: 'Premium Payment', resolved: true },
+        ]);
       } else {
-        setSearchError('No customer found with the provided ID or phone number');
+        setCustomerFound(false);
+        setSearchError('No customer found - New customer profile will be created');
       }
     } catch (error) {
       setSearchError('Error looking up customer details');
+      setCustomerFound(false);
     } finally {
       setSearching(false);
     }
@@ -146,9 +241,17 @@ const QRCDialog = ({ open, onClose, onSubmit }) => {
     }
   };
 
+  const handleQuickTagClick = (tag) => {
+    setFormData(prev => ({
+      ...prev,
+      tag: prev.tag ? `${prev.tag}, ${tag.label}` : tag.label
+    }));
+  };
+
   const communicationModes = ['Call', 'Email', 'WhatsApp'];
   const types = ['Query', 'Request', 'Complaint'];
   const resolutions = ['Pending', 'In Progress', 'Resolved', 'Escalated'];
+  const priorities = ['Low', 'Medium', 'High', 'Critical'];
   const reasonTypes = [
     'Renewal Query',
     'Policy Information',
@@ -176,21 +279,21 @@ const QRCDialog = ({ open, onClose, onSubmit }) => {
       dateTime: newValue
     });
   };
-  
+
   const handleFollowUpDateChange = (newValue) => {
     setFormData({
       ...formData,
       followUpDate: newValue
     });
   };
-  
+
   const handleFollowUpTimeChange = (newValue) => {
     setFormData({
       ...formData,
       followUpTime: newValue
     });
   };
-  
+
   const handleFollowUpRequiredChange = (event) => {
     setFormData({
       ...formData,
@@ -213,11 +316,14 @@ const QRCDialog = ({ open, onClose, onSubmit }) => {
         communicationMode: formData.communicationMode,
         type: formData.type,
         resolution: formData.resolution,
-        tag: formData.tag
+        tag: formData.tag,
+        priority: formData.priority,
+        duration: callDuration
       });
-      
-      onSubmit(formData);
-      
+
+      onSubmit({...formData, callDuration});
+
+      // Reset form
       setFormData({
         leadId: '',
         searchPhone: '',
@@ -236,13 +342,13 @@ const QRCDialog = ({ open, onClose, onSubmit }) => {
         followUpDate: null,
         followUpTime: null,
         followUpRequired: false,
-        incomingCallerNumber: ''
+        incomingCallerNumber: '',
+        priority: 'Medium'
       });
-      
+
       onClose();
     } catch (error) {
       console.error('Error saving call details:', error);
-      // Still submit the form data to parent component
       onSubmit(formData);
       onClose();
     }
@@ -261,379 +367,699 @@ const QRCDialog = ({ open, onClose, onSubmit }) => {
     }
   };
 
+  const getPriorityColor = (priority) => {
+    switch (priority) {
+      case 'Critical': return 'error';
+      case 'High': return 'warning';
+      case 'Medium': return 'info';
+      case 'Low': return 'success';
+      default: return 'default';
+    }
+  };
+
   return (
-    <Dialog 
-      open={open} 
+    <Dialog
+      open={open}
       onClose={onClose}
-      maxWidth="md"
+      maxWidth="lg"
       fullWidth
       PaperProps={{
         sx: {
-          borderRadius: 2,
-          boxShadow: '0 8px 32px rgba(0,0,0,0.1)'
+          borderRadius: 3,
+          boxShadow: '0 12px 48px rgba(0,0,0,0.15)',
+          background: `linear-gradient(135deg, ${alpha(theme.palette.background.paper, 1)} 0%, ${alpha(theme.palette.background.default, 0.95)} 100%)`
         }
       }}
+      TransitionComponent={Slide}
+      TransitionProps={{ direction: 'up' }}
     >
       <LocalizationProvider dateAdapter={AdapterDateFns}>
-        <DialogTitle sx={{ 
-          display: 'flex', 
-          justifyContent: 'space-between', 
-          alignItems: 'center',
-          bgcolor: 'background.paper',
-          borderBottom: `1px solid ${theme.palette.divider}`
+        {/* Enhanced Header */}
+        <DialogTitle sx={{
+          background: `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.primary.dark} 100%)`,
+          color: 'white',
+          p: 3
         }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            <PhoneIcon color="primary" />
-            <Typography variant="h6">Inbound Call Tagging</Typography>
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+              <Badge
+                badgeContent={
+                  <Box sx={{
+                    width: 12,
+                    height: 12,
+                    borderRadius: '50%',
+                    bgcolor: 'success.main',
+                    animation: 'pulse 2s infinite',
+                    '@keyframes pulse': {
+                      '0%, 100%': { opacity: 1 },
+                      '50%': { opacity: 0.5 }
+                    }
+                  }} />
+                }
+                overlap="circular"
+              >
+                <Avatar sx={{ bgcolor: alpha('#fff', 0.2), width: 48, height: 48 }}>
+                  <IncomingCallIcon />
+                </Avatar>
+              </Badge>
+              <Box>
+                <Typography variant="h5" fontWeight="700" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                  Inbound Call Tagging
+                  {customerFound && (
+                    <Chip
+                      icon={<VerifiedIcon sx={{ color: 'white !important' }} />}
+                      label="Existing Customer"
+                      size="small"
+                      sx={{
+                        bgcolor: alpha('#fff', 0.2),
+                        color: 'white',
+                        fontWeight: 600
+                      }}
+                    />
+                  )}
+                </Typography>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mt: 0.5 }}>
+                  <Chip
+                    icon={<TimerIcon sx={{ color: 'white !important' }} />}
+                    label={`Duration: ${formatDuration(callDuration)}`}
+                    size="small"
+                    sx={{
+                      bgcolor: alpha('#fff', 0.15),
+                      color: 'white',
+                      fontWeight: 600
+                    }}
+                  />
+                  {formData.incomingCallerNumber && (
+                    <Chip
+                      icon={<PhoneIcon sx={{ color: 'white !important' }} />}
+                      label={formData.incomingCallerNumber}
+                      size="small"
+                      sx={{
+                        bgcolor: alpha('#fff', 0.15),
+                        color: 'white',
+                        fontWeight: 600
+                      }}
+                    />
+                  )}
+                </Box>
+              </Box>
+            </Box>
+            <IconButton
+              onClick={onClose}
+              size="small"
+              sx={{
+                color: 'white',
+                bgcolor: alpha('#fff', 0.1),
+                '&:hover': {
+                  bgcolor: alpha('#fff', 0.2)
+                }
+              }}
+            >
+              <CloseIcon />
+            </IconButton>
           </Box>
-          <IconButton onClick={onClose} size="small">
-            <CloseIcon />
-          </IconButton>
         </DialogTitle>
 
-        <DialogContent sx={{ mt: 2 }}>
-          <Grid container spacing={3}>
-            {/* Incoming Call Info */}
-            {formData.incomingCallerNumber && (
-              <Grid item xs={12}>
-                <Alert 
-                  severity="info" 
-                  icon={<IncomingCallIcon />}
-                  sx={{ mb: 2 }}
-                >
-                  <Typography variant="body2">
-                    <strong>Incoming Call Detected:</strong> {formData.incomingCallerNumber}
-                  </Typography>
-                </Alert>
-              </Grid>
-            )}
-            
-            {/* Lead Search Section */}
-            <Grid item xs={12}>
-              <Paper 
-                elevation={0} 
-                sx={{ 
-                  p: 2, 
-                  mb: 2, 
-                  bgcolor: theme.palette.background.default,
-                  border: `1px solid ${theme.palette.divider}`
+        {/* Progress indicator */}
+        <LinearProgress
+          variant="determinate"
+          value={(activeTab + 1) * 33.33}
+          sx={{ height: 3 }}
+        />
+
+        <DialogContent sx={{ p: 3, bgcolor: alpha(theme.palette.background.default, 0.3) }}>
+          {/* Customer Status Banner */}
+          {customerFound ? (
+            <Fade in={customerFound}>
+              <Alert
+                severity="success"
+                icon={<CheckCircleIcon />}
+                sx={{
+                  mb: 3,
+                  borderRadius: 2,
+                  '& .MuiAlert-icon': {
+                    fontSize: 28
+                  }
                 }}
+                action={
+                  <Chip
+                    label={`ID: ${formData.leadId}`}
+                    size="small"
+                    color="success"
+                    variant="outlined"
+                  />
+                }
               >
-                <Grid container spacing={2} alignItems="center">
-                  <Grid item xs={12} md={5}>
-                    <TextField
-                      fullWidth
-                      label="Lead ID"
-                      value={formData.leadId}
-                      onChange={handleInputChange('leadId')}
-                      placeholder="Enter Lead ID"
-                      InputProps={{
-                        startAdornment: <SearchIcon sx={{ mr: 1, color: 'text.secondary' }} />
-                      }}
-                    />
+                <Typography variant="body1" fontWeight="600">
+                  Customer Found in Database!
+                </Typography>
+                <Typography variant="body2">
+                  {formData.callerName} • {formData.email}
+                </Typography>
+              </Alert>
+            </Fade>
+          ) : searchError && (
+            <Alert
+              severity="info"
+              icon={<InfoIcon />}
+              sx={{ mb: 3, borderRadius: 2 }}
+            >
+              <Typography variant="body2">{searchError}</Typography>
+            </Alert>
+          )}
+
+          {/* Tabs */}
+          <Paper sx={{ mb: 3, borderRadius: 2 }}>
+            <Tabs
+              value={activeTab}
+              onChange={(e, v) => setActiveTab(v)}
+              variant="fullWidth"
+              sx={{
+                '& .MuiTab-root': {
+                  fontWeight: 600,
+                  textTransform: 'none',
+                  fontSize: '1rem'
+                }
+              }}
+            >
+              <Tab icon={<PersonSearchIcon />} iconPosition="start" label="Customer Lookup" />
+              <Tab icon={<DescriptionIcon />} iconPosition="start" label="Call Details" />
+              <Tab icon={<FollowUpIcon />} iconPosition="start" label="Actions & Follow-up" />
+            </Tabs>
+          </Paper>
+
+          {/* Tab 0: Customer Lookup */}
+          {activeTab === 0 && (
+            <Fade in={activeTab === 0}>
+              <Box>
+                <Grid container spacing={3}>
+                  {/* Search Section */}
+                  <Grid item xs={12}>
+                    <Card sx={{ borderRadius: 2, boxShadow: 3 }}>
+                      <CardContent sx={{ p: 3 }}>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
+                          <SearchIcon color="primary" />
+                          <Typography variant="h6" fontWeight="600">
+                            Search Customer Database
+                          </Typography>
+                        </Box>
+                        <Grid container spacing={2}>
+                          <Grid item xs={12} md={5}>
+                            <TextField
+                              fullWidth
+                              label="Customer/Lead ID"
+                              value={formData.leadId}
+                              onChange={handleInputChange('leadId')}
+                              placeholder="Enter Customer ID"
+                              InputProps={{
+                                startAdornment: <PersonIcon sx={{ mr: 1, color: 'text.secondary' }} />
+                              }}
+                            />
+                          </Grid>
+                          <Grid item xs={12} md={5}>
+                            <TextField
+                              fullWidth
+                              label="Phone Number"
+                              value={formData.searchPhone}
+                              onChange={handleInputChange('searchPhone')}
+                              placeholder="Enter 10-digit phone"
+                              InputProps={{
+                                startAdornment: <PhoneIcon sx={{ mr: 1, color: 'text.secondary' }} />
+                              }}
+                            />
+                          </Grid>
+                          <Grid item xs={12} md={2}>
+                            <Button
+                              fullWidth
+                              variant="contained"
+                              onClick={handleSearch}
+                              disabled={searching}
+                              sx={{
+                                height: 56,
+                                background: `linear-gradient(45deg, ${theme.palette.primary.main}, ${theme.palette.primary.dark})`
+                              }}
+                            >
+                              {searching ? <CircularProgress size={24} /> : 'Search'}
+                            </Button>
+                          </Grid>
+                        </Grid>
+                      </CardContent>
+                    </Card>
                   </Grid>
-                  <Grid item xs={12} md={5}>
-                    <TextField
-                      fullWidth
-                      label="Phone Number"
-                      value={formData.searchPhone}
-                      onChange={handleInputChange('searchPhone')}
-                      placeholder="Enter phone number"
-                      InputProps={{
-                        startAdornment: <PhoneIcon sx={{ mr: 1, color: 'text.secondary' }} />
-                      }}
-                    />
+
+                  {/* Customer Info Section */}
+                  <Grid item xs={12} md={customerFound ? 8 : 12}>
+                    <Card sx={{ borderRadius: 2, boxShadow: 3 }}>
+                      <CardContent sx={{ p: 3 }}>
+                        <Typography variant="h6" fontWeight="600" gutterBottom>
+                          Customer Information
+                        </Typography>
+                        <Divider sx={{ mb: 2 }} />
+                        <Grid container spacing={2}>
+                          <Grid item xs={12} md={6}>
+                            <TextField
+                              fullWidth
+                              label="Caller Name"
+                              value={formData.callerName}
+                              onChange={handleInputChange('callerName')}
+                              InputProps={{
+                                startAdornment: <PersonIcon sx={{ mr: 1, color: 'text.secondary' }} />
+                              }}
+                            />
+                          </Grid>
+                          <Grid item xs={12} md={6}>
+                            <TextField
+                              fullWidth
+                              label="Company"
+                              value={formData.company}
+                              onChange={handleInputChange('company')}
+                              InputProps={{
+                                startAdornment: <BusinessIcon sx={{ mr: 1, color: 'text.secondary' }} />
+                              }}
+                            />
+                          </Grid>
+                          <Grid item xs={12} md={6}>
+                            <TextField
+                              fullWidth
+                              label="Email Address"
+                              value={formData.email}
+                              onChange={handleInputChange('email')}
+                              InputProps={{
+                                startAdornment: <EmailIcon sx={{ mr: 1, color: 'text.secondary' }} />
+                              }}
+                            />
+                          </Grid>
+                          <Grid item xs={12} md={6}>
+                            <TextField
+                              fullWidth
+                              label="Phone Number"
+                              value={formData.phone}
+                              onChange={handleInputChange('phone')}
+                              InputProps={{
+                                startAdornment: <PhoneIcon sx={{ mr: 1, color: 'text.secondary' }} />
+                              }}
+                            />
+                          </Grid>
+                          <Grid item xs={12}>
+                            <TextField
+                              fullWidth
+                              label="Location"
+                              value={formData.location}
+                              onChange={handleInputChange('location')}
+                              InputProps={{
+                                startAdornment: <LocationIcon sx={{ mr: 1, color: 'text.secondary' }} />
+                              }}
+                            />
+                          </Grid>
+                        </Grid>
+                      </CardContent>
+                    </Card>
                   </Grid>
-                  <Grid item xs={12} md={2}>
-                    <Button
-                      fullWidth
-                      variant="contained"
-                      onClick={handleSearch}
-                      disabled={searching}
-                      sx={{ height: '56px' }}
-                    >
-                      {searching ? <CircularProgress size={24} /> : 'Search'}
-                    </Button>
-                  </Grid>
-                  {searchError && (
-                    <Grid item xs={12}>
-                      <Typography color="error" variant="body2">
-                        {searchError}
-                      </Typography>
+
+                  {/* Customer History (Only if found) */}
+                  {customerFound && customerHistory.length > 0 && (
+                    <Grid item xs={12} md={4}>
+                      <Card sx={{ borderRadius: 2, boxShadow: 3, height: '100%' }}>
+                        <CardContent sx={{ p: 3 }}>
+                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
+                            <HistoryIcon color="primary" />
+                            <Typography variant="h6" fontWeight="600">
+                              Recent Activity
+                            </Typography>
+                          </Box>
+                          <List dense>
+                            {customerHistory.map((item, index) => (
+                              <ListItem
+                                key={index}
+                                sx={{
+                                  px: 0,
+                                  borderLeft: `3px solid ${theme.palette.primary.main}`,
+                                  pl: 2,
+                                  mb: 1,
+                                  bgcolor: alpha(theme.palette.primary.main, 0.05),
+                                  borderRadius: 1
+                                }}
+                              >
+                                <ListItemIcon sx={{ minWidth: 36 }}>
+                                  {item.resolved ? (
+                                    <CheckCircleIcon color="success" fontSize="small" />
+                                  ) : (
+                                    <AccessTimeIcon color="warning" fontSize="small" />
+                                  )}
+                                </ListItemIcon>
+                                <ListItemText
+                                  primary={
+                                    <Typography variant="body2" fontWeight="600">
+                                      {item.reason}
+                                    </Typography>
+                                  }
+                                  secondary={
+                                    <Typography variant="caption" color="text.secondary">
+                                      {item.type} • {item.date}
+                                    </Typography>
+                                  }
+                                />
+                              </ListItem>
+                            ))}
+                          </List>
+                        </CardContent>
+                      </Card>
                     </Grid>
                   )}
                 </Grid>
-              </Paper>
-            </Grid>
 
-            {/* Communication Mode */}
-            <Grid item xs={12} md={4}>
-              <FormControl fullWidth>
-                <InputLabel>Mode</InputLabel>
-                <Select
-                  value={formData.communicationMode}
-                  onChange={handleInputChange('communicationMode')}
-                  label="Mode"
-                  startAdornment={
-                    <Box sx={{ mr: 1, display: 'flex', alignItems: 'center' }}>
-                      {getIcon(formData.communicationMode)}
-                    </Box>
-                  }
-                >
-                  {communicationModes.map((mode) => (
-                    <MenuItem key={mode} value={mode}>
-                      {mode}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-            </Grid>
-
-            {/* QRC Type */}
-            <Grid item xs={12} md={4}>
-              <FormControl fullWidth>
-                <InputLabel>Type</InputLabel>
-                <Select
-                  value={formData.type}
-                  onChange={handleInputChange('type')}
-                  label="Type"
-                >
-                  {types.map((type) => (
-                    <MenuItem key={type} value={type}>
-                      {type}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-            </Grid>
-
-            {/* Resolution Status */}
-            <Grid item xs={12} md={4}>
-              <FormControl fullWidth>
-                <InputLabel>Resolution</InputLabel>
-                <Select
-                  value={formData.resolution}
-                  onChange={handleInputChange('resolution')}
-                  label="Resolution"
-                >
-                  {resolutions.map((res) => (
-                    <MenuItem key={res} value={res}>
-                      {res}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-            </Grid>
-
-            {/* Reason */}
-            <Grid item xs={12} md={6}>
-              <FormControl fullWidth>
-                <InputLabel>Reason</InputLabel>
-                <Select
-                  value={formData.reason}
-                  onChange={handleInputChange('reason')}
-                  label="Reason"
-                >
-                  {reasonTypes.map((reason) => (
-                    <MenuItem key={reason} value={reason}>
-                      {reason}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-            </Grid>
-
-            {/* Date Time */}
-            <Grid item xs={12} md={6}>
-              <DateTimePicker
-                label="Date & Time"
-                value={formData.dateTime}
-                onChange={handleDateChange}
-                renderInput={(props) => <TextField {...props} fullWidth />}
-              />
-            </Grid>
-
-            {/* Caller Name */}
-            <Grid item xs={12} md={6}>
-              <TextField
-                fullWidth
-                label="Caller Name"
-                value={formData.callerName}
-                onChange={handleInputChange('callerName')}
-                InputProps={{
-                  startAdornment: (
-                    <PersonIcon sx={{ mr: 1, color: 'text.secondary' }} />
-                  ),
-                }}
-              />
-            </Grid>
-
-            {/* Company */}
-            <Grid item xs={12} md={6}>
-              <TextField
-                fullWidth
-                label="Company"
-                value={formData.company}
-                onChange={handleInputChange('company')}
-                InputProps={{
-                  startAdornment: (
-                    <BusinessIcon sx={{ mr: 1, color: 'text.secondary' }} />
-                  ),
-                }}
-              />
-            </Grid>
-
-            {/* Email */}
-            <Grid item xs={12} md={6}>
-              <TextField
-                fullWidth
-                label="Email"
-                value={formData.email}
-                onChange={handleInputChange('email')}
-                InputProps={{
-                  startAdornment: (
-                    <EmailIcon sx={{ mr: 1, color: 'text.secondary' }} />
-                  ),
-                }}
-              />
-            </Grid>
-
-            {/* Phone */}
-            <Grid item xs={12} md={6}>
-              <TextField
-                fullWidth
-                label="Phone"
-                value={formData.phone}
-                onChange={handleInputChange('phone')}
-                InputProps={{
-                  startAdornment: (
-                    <PhoneIcon sx={{ mr: 1, color: 'text.secondary' }} />
-                  ),
-                }}
-              />
-            </Grid>
-
-            {/* Location */}
-            <Grid item xs={12} md={6}>
-              <TextField
-                fullWidth
-                label="Location"
-                value={formData.location}
-                onChange={handleInputChange('location')}
-                InputProps={{
-                  startAdornment: (
-                    <LocationIcon sx={{ mr: 1, color: 'text.secondary' }} />
-                  ),
-                }}
-              />
-            </Grid>
-
-            {/* Tag */}
-            <Grid item xs={12} md={6}>
-              <TextField
-                fullWidth
-                label="Tag"
-                value={formData.tag}
-                onChange={handleInputChange('tag')}
-                InputProps={{
-                  startAdornment: (
-                    <TagIcon sx={{ mr: 1, color: 'text.secondary' }} />
-                  ),
-                }}
-              />
-            </Grid>
-
-            {/* Notes */}
-            <Grid item xs={12}>
-              <TextField
-                fullWidth
-                label="Notes"
-                value={formData.notes}
-                onChange={handleInputChange('notes')}
-                multiline
-                rows={4}
-                InputProps={{
-                  startAdornment: (
-                    <DescriptionIcon sx={{ mr: 1, mt: 1, color: 'text.secondary' }} />
-                  ),
-                }}
-              />
-            </Grid>
-            
-            {/* Follow-up Section */}
-            <Grid item xs={12}>
-              <Paper 
-                elevation={0} 
-                sx={{ 
-                  p: 2, 
-                  bgcolor: theme.palette.background.default,
-                  border: `1px solid ${theme.palette.divider}`
-                }}
-              >
-                <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                  <FollowUpIcon sx={{ mr: 1, color: 'primary.main' }} />
-                  <Typography variant="subtitle1" fontWeight="600">
-                    Follow-up Details
-                  </Typography>
+                <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 3 }}>
+                  <Button
+                    variant="contained"
+                    onClick={() => setActiveTab(1)}
+                    endIcon={<ArrowForwardIcon />}
+                  >
+                    Continue to Call Details
+                  </Button>
                 </Box>
-                
-                <Grid container spacing={2}>
+              </Box>
+            </Fade>
+          )}
+
+          {/* Tab 1: Call Details */}
+          {activeTab === 1 && (
+            <Fade in={activeTab === 1}>
+              <Box>
+                <Grid container spacing={3}>
                   <Grid item xs={12}>
+                    <Card sx={{ borderRadius: 2, boxShadow: 3 }}>
+                      <CardContent sx={{ p: 3 }}>
+                        <Typography variant="h6" fontWeight="600" gutterBottom>
+                          Call Classification
+                        </Typography>
+                        <Divider sx={{ mb: 3 }} />
+
+                        <Grid container spacing={2}>
+                          <Grid item xs={12} md={3}>
+                            <FormControl fullWidth>
+                              <InputLabel>Communication Mode</InputLabel>
+                              <Select
+                                value={formData.communicationMode}
+                                onChange={handleInputChange('communicationMode')}
+                                label="Communication Mode"
+                                startAdornment={
+                                  <Box sx={{ mr: 1, display: 'flex', alignItems: 'center' }}>
+                                    {getIcon(formData.communicationMode)}
+                                  </Box>
+                                }
+                              >
+                                {communicationModes.map((mode) => (
+                                  <MenuItem key={mode} value={mode}>
+                                    {mode}
+                                  </MenuItem>
+                                ))}
+                              </Select>
+                            </FormControl>
+                          </Grid>
+
+                          <Grid item xs={12} md={3}>
+                            <FormControl fullWidth>
+                              <InputLabel>Type</InputLabel>
+                              <Select
+                                value={formData.type}
+                                onChange={handleInputChange('type')}
+                                label="Type"
+                              >
+                                {types.map((type) => (
+                                  <MenuItem key={type} value={type}>
+                                    {type}
+                                  </MenuItem>
+                                ))}
+                              </Select>
+                            </FormControl>
+                          </Grid>
+
+                          <Grid item xs={12} md={3}>
+                            <FormControl fullWidth>
+                              <InputLabel>Priority</InputLabel>
+                              <Select
+                                value={formData.priority}
+                                onChange={handleInputChange('priority')}
+                                label="Priority"
+                              >
+                                {priorities.map((priority) => (
+                                  <MenuItem key={priority} value={priority}>
+                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                      <Box
+                                        sx={{
+                                          width: 8,
+                                          height: 8,
+                                          borderRadius: '50%',
+                                          bgcolor: `${getPriorityColor(priority)}.main`
+                                        }}
+                                      />
+                                      {priority}
+                                    </Box>
+                                  </MenuItem>
+                                ))}
+                              </Select>
+                            </FormControl>
+                          </Grid>
+
+                          <Grid item xs={12} md={3}>
+                            <FormControl fullWidth>
+                              <InputLabel>Resolution Status</InputLabel>
+                              <Select
+                                value={formData.resolution}
+                                onChange={handleInputChange('resolution')}
+                                label="Resolution Status"
+                              >
+                                {resolutions.map((res) => (
+                                  <MenuItem key={res} value={res}>
+                                    {res}
+                                  </MenuItem>
+                                ))}
+                              </Select>
+                            </FormControl>
+                          </Grid>
+
+                          <Grid item xs={12} md={6}>
+                            <FormControl fullWidth>
+                              <InputLabel>Call Reason</InputLabel>
+                              <Select
+                                value={formData.reason}
+                                onChange={handleInputChange('reason')}
+                                label="Call Reason"
+                              >
+                                {reasonTypes.map((reason) => (
+                                  <MenuItem key={reason} value={reason}>
+                                    {reason}
+                                  </MenuItem>
+                                ))}
+                              </Select>
+                            </FormControl>
+                          </Grid>
+
+                          <Grid item xs={12} md={6}>
+                            <DateTimePicker
+                              label="Call Date & Time"
+                              value={formData.dateTime}
+                              onChange={handleDateChange}
+                              renderInput={(props) => <TextField {...props} fullWidth />}
+                            />
+                          </Grid>
+                        </Grid>
+                      </CardContent>
+                    </Card>
+                  </Grid>
+
+                  {/* Quick Tags */}
+                  <Grid item xs={12}>
+                    <Card sx={{ borderRadius: 2, boxShadow: 3 }}>
+                      <CardContent sx={{ p: 3 }}>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
+                          <LabelIcon color="primary" />
+                          <Typography variant="h6" fontWeight="600">
+                            Quick Tags
+                          </Typography>
+                        </Box>
+                        <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+                          {quickTags.map((tag) => (
+                            <Chip
+                              key={tag.label}
+                              label={`${tag.icon} ${tag.label}`}
+                              color={tag.color}
+                              onClick={() => handleQuickTagClick(tag)}
+                              sx={{
+                                fontWeight: 600,
+                                cursor: 'pointer',
+                                '&:hover': {
+                                  transform: 'scale(1.05)'
+                                },
+                                transition: 'transform 0.2s'
+                              }}
+                            />
+                          ))}
+                        </Stack>
+                        <TextField
+                          fullWidth
+                          label="Custom Tags"
+                          value={formData.tag}
+                          onChange={handleInputChange('tag')}
+                          placeholder="Add custom tags (comma separated)"
+                          sx={{ mt: 2 }}
+                          InputProps={{
+                            startAdornment: <TagIcon sx={{ mr: 1, color: 'text.secondary' }} />
+                          }}
+                        />
+                      </CardContent>
+                    </Card>
+                  </Grid>
+
+                  {/* Notes Section */}
+                  <Grid item xs={12}>
+                    <Card sx={{ borderRadius: 2, boxShadow: 3 }}>
+                      <CardContent sx={{ p: 3 }}>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
+                          <DescriptionIcon color="primary" />
+                          <Typography variant="h6" fontWeight="600">
+                            Call Notes & Summary
+                          </Typography>
+                        </Box>
+                        <TextField
+                          fullWidth
+                          label="Detailed Notes"
+                          value={formData.notes}
+                          onChange={handleInputChange('notes')}
+                          multiline
+                          rows={4}
+                          placeholder="Document the call conversation, customer concerns, and any commitments made..."
+                        />
+                      </CardContent>
+                    </Card>
+                  </Grid>
+                </Grid>
+
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 3 }}>
+                  <Button
+                    variant="outlined"
+                    onClick={() => setActiveTab(0)}
+                  >
+                    Back
+                  </Button>
+                  <Button
+                    variant="contained"
+                    onClick={() => setActiveTab(2)}
+                    endIcon={<ArrowForwardIcon />}
+                  >
+                    Continue to Actions
+                  </Button>
+                </Box>
+              </Box>
+            </Fade>
+          )}
+
+          {/* Tab 2: Actions & Follow-up */}
+          {activeTab === 2 && (
+            <Fade in={activeTab === 2}>
+              <Box>
+                <Card sx={{ borderRadius: 2, boxShadow: 3 }}>
+                  <CardContent sx={{ p: 3 }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 3 }}>
+                      <FollowUpIcon color="primary" />
+                      <Typography variant="h6" fontWeight="600">
+                        Follow-up & Next Steps
+                      </Typography>
+                    </Box>
+
                     <FormControlLabel
                       control={
                         <Checkbox
                           checked={formData.followUpRequired}
                           onChange={handleFollowUpRequiredChange}
                           color="primary"
+                          size="large"
                         />
                       }
-                      label="Follow-up Required"
+                      label={
+                        <Typography variant="body1" fontWeight="600">
+                          Schedule Follow-up
+                        </Typography>
+                      }
                     />
-                  </Grid>
-                  
-                  {formData.followUpRequired && (
-                    <>
-                      <Grid item xs={12} md={6}>
-                        <DatePicker
-                          label="Follow-up Date"
-                          value={formData.followUpDate}
-                          onChange={handleFollowUpDateChange}
-                          renderInput={(props) => <TextField {...props} fullWidth />}
-                          minDate={new Date()}
-                        />
-                      </Grid>
-                      <Grid item xs={12} md={6}>
-                        <TimePicker
-                          label="Follow-up Time"
-                          value={formData.followUpTime}
-                          onChange={handleFollowUpTimeChange}
-                          renderInput={(props) => <TextField {...props} fullWidth />}
-                        />
-                      </Grid>
-                    </>
-                  )}
-                </Grid>
-              </Paper>
-            </Grid>
-          </Grid>
+
+                    {formData.followUpRequired && (
+                      <Fade in={formData.followUpRequired}>
+                        <Box sx={{ mt: 3, p: 3, bgcolor: alpha(theme.palette.primary.main, 0.05), borderRadius: 2 }}>
+                          <Grid container spacing={3}>
+                            <Grid item xs={12} md={6}>
+                              <DatePicker
+                                label="Follow-up Date"
+                                value={formData.followUpDate}
+                                onChange={handleFollowUpDateChange}
+                                renderInput={(props) => <TextField {...props} fullWidth />}
+                                minDate={new Date()}
+                              />
+                            </Grid>
+                            <Grid item xs={12} md={6}>
+                              <TimePicker
+                                label="Follow-up Time"
+                                value={formData.followUpTime}
+                                onChange={handleFollowUpTimeChange}
+                                renderInput={(props) => <TextField {...props} fullWidth />}
+                              />
+                            </Grid>
+                            <Grid item xs={12}>
+                              <Alert severity="info" icon={<InfoIcon />}>
+                                A reminder will be created and the customer will be notified via their preferred communication channel.
+                              </Alert>
+                            </Grid>
+                          </Grid>
+                        </Box>
+                      </Fade>
+                    )}
+                  </CardContent>
+                </Card>
+
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 3 }}>
+                  <Button
+                    variant="outlined"
+                    onClick={() => setActiveTab(1)}
+                  >
+                    Back
+                  </Button>
+                </Box>
+              </Box>
+            </Fade>
+          )}
         </DialogContent>
 
-        <DialogActions sx={{ p: 2.5, borderTop: `1px solid ${theme.palette.divider}` }}>
-          <Button onClick={onClose}>
+        {/* Enhanced Footer */}
+        <DialogActions sx={{
+          p: 3,
+          borderTop: `1px solid ${theme.palette.divider}`,
+          bgcolor: alpha(theme.palette.background.default, 0.5)
+        }}>
+          <Button
+            onClick={onClose}
+            variant="outlined"
+            size="large"
+            startIcon={<CallEndIcon />}
+          >
             Cancel
           </Button>
           <Button
             variant="contained"
             onClick={handleSubmit}
+            size="large"
+            startIcon={<CheckCircleIcon />}
             sx={{
               px: 4,
-              background: `linear-gradient(45deg, ${theme.palette.primary.main}, ${theme.palette.primary.dark})`,
+              background: `linear-gradient(135deg, ${theme.palette.success.main}, ${theme.palette.success.dark})`,
               '&:hover': {
-                background: `linear-gradient(45deg, ${theme.palette.primary.dark}, ${theme.palette.primary.main})`,
-              }
+                background: `linear-gradient(135deg, ${theme.palette.success.dark}, ${theme.palette.success.main})`,
+                transform: 'translateY(-2px)',
+                boxShadow: 6
+              },
+              transition: 'all 0.3s ease'
             }}
           >
-            Submit
+            Complete & Save Call
           </Button>
         </DialogActions>
       </LocalizationProvider>

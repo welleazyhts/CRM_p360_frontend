@@ -71,7 +71,11 @@ import {
   ThumbDown as LostLeadsIcon,
   BarChart as MISIcon,
   RecordVoiceOver as CallRecordingIcon,
-  CalendarToday as CalendarIcon
+  CalendarToday as CalendarIcon,
+  Business as InsurerIcon,
+  Category as DispositionIcon,
+  Share as DistributionIcon,
+  DirectionsCar as VahanIcon
 } from '@mui/icons-material';
 import { useAuth } from '../../context/AuthContext.js';
 import { useThemeMode } from '../../context/ThemeModeContext.js';
@@ -126,6 +130,7 @@ const Layout = ({ children }) => {
   const [leadMenuOpen, setLeadMenuOpen] = useState(false);
   const [customerMenuOpen, setCustomerMenuOpen] = useState(false);
   const [automationMenuOpen, setAutomationMenuOpen] = useState(false);
+  const [workforceMenuOpen, setWorkforceMenuOpen] = useState(false);
 
   const [currentTime, setCurrentTime] = useState(new Date());
   const [qrcDialog, setQrcDialog] = useState(false);
@@ -245,7 +250,9 @@ const Layout = ({ children }) => {
     setAutomationMenuOpen(!automationMenuOpen);
   };
 
-
+  const handleWorkforceMenuClick = () => {
+    setWorkforceMenuOpen(!workforceMenuOpen);
+  };
 
   const handleQRCOpen = () => {
     setQrcDialog(true);
@@ -291,11 +298,8 @@ const Layout = ({ children }) => {
   const menuModules = {
     business: {
       items: [
-        { text: 'Attendance', icon: <AttendanceIcon />, path: '/attendance', permission: 'attendance' },
-        { text: 'Leave Management', icon: <CalendarIcon />, path: '/leave-management', permission: 'attendance' },
-        { text: 'KPI Management', icon: <KPIIcon />, path: '/kpi', permission: 'kpi' },
       ],
-      permissions: ['policy-servicing', 'new-business', 'medical-management', 'leads', 'attendance', 'kpi']
+      permissions: ['policy-servicing', 'new-business', 'medical-management', 'leads']
     },
     marketing: {
       items: [
@@ -314,6 +318,12 @@ const Layout = ({ children }) => {
         { text: t('navigation.whatsapp'), icon: <WhatsAppIcon />, path: '/whatsapp-flow', permission: 'whatsapp-flow' },
       ],
       permissions: ['whatsapp-flow']
+    },
+    training: {
+      items: [
+        { text: 'Training & Analysis', icon: <TrainingIcon />, path: '/training-management', permission: 'training' },
+      ],
+      permissions: ['training']
     }
   };
 
@@ -374,6 +384,15 @@ const Layout = ({ children }) => {
     { text: 'Commission Tracking', icon: <CommissionIcon />, path: '/commissions', permission: 'commissions' },
     { text: 'Call Recording', icon: <CallRecordingIcon />, path: '/call-recording', permission: 'call_recording' },
     { text: 'Call Quality Monitoring', icon: <RateReviewIcon />, path: '/call-quality-monitoring', permission: 'call_quality_monitoring' },
+    { text: 'Insurer & Products', icon: <InsurerIcon />, path: '/insurer-product-configurator', permission: 'settings' },
+    { text: 'Dispositions', icon: <DispositionIcon />, path: '/disposition-configurator', permission: 'settings' },
+    { text: 'Vahan Integration', icon: <VahanIcon />, path: '/vahan-integration', permission: 'settings' },
+  ].filter(item => hasPermission(item.permission));
+
+  const workforceMenuItems = [
+    { text: 'Attendance', icon: <AttendanceIcon />, path: '/attendance', permission: 'attendance' },
+    { text: 'Leave Management', icon: <CalendarIcon />, path: '/leave-management', permission: 'attendance' },
+    { text: 'KPI Management', icon: <KPIIcon />, path: '/kpi', permission: 'kpi' },
   ].filter(item => hasPermission(item.permission));
 
   const secondaryMenuItems = [
@@ -669,6 +688,60 @@ const Layout = ({ children }) => {
 
 
 
+
+        {/* Workforce Management Menu */}
+        {workforceMenuItems.length > 0 && (
+          <>
+            <ListItem disablePadding>
+              <StyledListItemButton onClick={handleWorkforceMenuClick}>
+                <ListItemIcon sx={{ minWidth: 40, color: theme.palette.text.secondary }}>
+                  <PeopleIcon />
+                </ListItemIcon>
+                <ListItemText
+                  primary="Workforce Management"
+                  primaryTypographyProps={{
+                    fontWeight: 500,
+                    color: theme.palette.text.primary
+                  }}
+                />
+                {workforceMenuOpen ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+              </StyledListItemButton>
+            </ListItem>
+
+            {/* Workforce Management Submenu */}
+            <Collapse in={workforceMenuOpen} timeout="auto" unmountOnExit>
+              <List component="div" disablePadding>
+                {workforceMenuItems.map((item) => (
+                  <ListItem key={item.text} disablePadding>
+                    <StyledListItemButton
+                      onClick={() => handleNavigate(item.path)}
+                      selected={location.pathname === item.path}
+                      sx={{ pl: 4 }}
+                    >
+                      <ListItemIcon sx={{
+                        minWidth: 40,
+                        color: location.pathname === item.path
+                          ? theme.palette.primary.main
+                          : theme.palette.text.secondary
+                      }}>
+                        {item.icon}
+                      </ListItemIcon>
+                      <ListItemText
+                        primary={item.text}
+                        primaryTypographyProps={{
+                          fontWeight: location.pathname === item.path ? 600 : 400,
+                          color: location.pathname === item.path
+                            ? theme.palette.primary.main
+                            : theme.palette.text.primary
+                        }}
+                      />
+                    </StyledListItemButton>
+                  </ListItem>
+                ))}
+              </List>
+            </Collapse>
+          </>
+        )}
 
         {/* Main Menu Items */}
         {menuItems.map((item) => (

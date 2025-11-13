@@ -71,8 +71,8 @@ export const AuthProvider = ({ children }) => {
           'policy-servicing', 'new-business', 'medical-management',
           // Lead Management
           'leads', 'lead-management', 'lead-analytics', 'pipeline',
-          // HR Management
-          'attendance', 'kpi',
+          // HR Management & Leave
+          'attendance', 'kpi', 'leave-management',
           // Email Pages
           'emails', 'email-dashboard', 'email-analytics', 'bulk-email',
           // Marketing Pages
@@ -83,6 +83,8 @@ export const AuthProvider = ({ children }) => {
           'whatsapp-flow',
           // Automation & Tools
           'sla_monitoring', 'auto_assignment', 'tasks', 'commissions', 'workflows', 'call_scheduling', 'call_recording', 'call_quality_monitoring',
+          // Training & Analysis
+          'training',
           // Admin Pages
           'settings', 'billing', 'users',
           // Personal Pages
@@ -103,8 +105,8 @@ export const AuthProvider = ({ children }) => {
           'policy-servicing', 'new-business', 'medical-management',
           // Lead Management
           'leads', 'lead-management', 'lead-analytics', 'pipeline',
-          // HR Management
-          'attendance', 'kpi',
+          // HR Management & Leave
+          'attendance', 'kpi', 'leave-management',
           // Customer Management
           'contact-database', 'customer-database', 'inbound-service', 'service-email',
           'complaints', 'feedback', 'training-analysis',
@@ -114,6 +116,8 @@ export const AuthProvider = ({ children }) => {
           'renewal-email-manager', 'renewal-whatsapp-manager',
           // Automation & Tools
           'sla_monitoring', 'auto_assignment', 'tasks', 'commissions', 'workflows', 'call_scheduling', 'call_recording', 'call_quality_monitoring',
+          // Training & Analysis
+          'training',
           // Admin
           'settings', 'billing', 'users', 'profile'
         ]

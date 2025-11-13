@@ -1,6 +1,7 @@
 /* eslint-disable no-console */
 import React, { createContext, useState, useContext, useEffect } from 'react';
 import customerMocks from '../mock/customerMocks';
+import contactMocks from '../mock/contactMocks';
 
 const CustomerManagementContext = createContext();
 
@@ -22,13 +23,18 @@ export const CustomerManagementProvider = ({ children }) => {
     // Read env flag robustly (allow boolean or string values)
     const useMocks = String(process.env.REACT_APP_USE_MOCKS).toLowerCase() === 'true';
     console.log('REACT_APP_USE_MOCKS:', process.env.REACT_APP_USE_MOCKS, '=> useMocks:', useMocks);
-    console.log('Mock data available:', Array.isArray(customerMocks) ? customerMocks.length : typeof customerMocks);
+    console.log('Mock data available - Customers:', Array.isArray(customerMocks) ? customerMocks.length : typeof customerMocks);
+    console.log('Mock data available - Contacts:', Array.isArray(contactMocks) ? contactMocks.length : typeof contactMocks);
 
     if (useMocks) {
       console.log('Loading mock data (env override)');
-      // Do not wipe all localStorage unconditionally; only seed customerDatabase for dev
+      // Seed both contacts and customers for dev
+      setContacts(contactMocks);
       setCustomers(customerMocks);
-      try { localStorage.setItem('customerDatabase', JSON.stringify(customerMocks)); } catch (e) { /* ignore */ }
+      try {
+        localStorage.setItem('contactDatabase', JSON.stringify(contactMocks));
+        localStorage.setItem('customerDatabase', JSON.stringify(customerMocks));
+      } catch (e) { /* ignore */ }
       return;
     }
 
@@ -54,9 +60,17 @@ export const CustomerManagementProvider = ({ children }) => {
 
     // If nothing was found in storage and mocks exist, seed with mocks as a safe fallback.
     // This ensures the UI shows sample data during local development even if env isn't set.
+    const noSavedContacts = !savedContacts || savedContacts === '[]';
     const noSavedCustomers = !savedCustomers || savedCustomers === '[]';
+
+    if (noSavedContacts && Array.isArray(contactMocks) && contactMocks.length > 0) {
+      console.log('No saved contacts found — seeding mock contact data as fallback');
+      setContacts(contactMocks);
+      try { localStorage.setItem('contactDatabase', JSON.stringify(contactMocks)); } catch (e) { /* ignore */ }
+    }
+
     if (noSavedCustomers && Array.isArray(customerMocks) && customerMocks.length > 0) {
-      console.log('No saved customers found — seeding mock data as fallback');
+      console.log('No saved customers found — seeding mock customer data as fallback');
       setCustomers(customerMocks);
       try { localStorage.setItem('customerDatabase', JSON.stringify(customerMocks)); } catch (e) { /* ignore */ }
     }

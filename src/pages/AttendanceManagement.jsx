@@ -131,18 +131,35 @@ const AttendanceManagement = () => {
     setCurrentPage(1);
   }, [attendanceData, searchTerm, statusFilter, departmentFilter, dateFilter]);
 
-  // Calculate pagination
-  const totalPages = Math.ceil(filteredData.length / itemsPerPage);
+  // Get today's date
+  const today = new Date().toISOString().split('T')[0];
+
+  // Filter data based on selected tab
+  const getTabData = () => {
+    if (selectedTab === 0) {
+      // Today's Attendance
+      return filteredData.filter(record => record.date === today);
+    } else if (selectedTab === 1) {
+      // Attendance History
+      return filteredData;
+    }
+    return [];
+  };
+
+  const tabData = getTabData();
+
+  // Calculate pagination for current tab data
+  const totalPages = Math.ceil(tabData.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
-  const currentData = filteredData.slice(startIndex, startIndex + itemsPerPage);
+  const currentData = tabData.slice(startIndex, startIndex + itemsPerPage);
 
   // Calculate attendance statistics
   const attendanceStats = {
     totalEmployees: employees.length,
-    presentToday: attendanceData.filter(record => record.status === 'Present').length,
-    absentToday: attendanceData.filter(record => record.status === 'Absent').length,
-    lateToday: attendanceData.filter(record => record.isLate).length,
-    averageHours: attendanceData.reduce((sum, record) => sum + record.totalHours, 0) / attendanceData.length,
+    presentToday: attendanceData.filter(record => record.status === 'Present' && record.date === today).length,
+    absentToday: attendanceData.filter(record => record.status === 'Absent' && record.date === today).length,
+    lateToday: attendanceData.filter(record => record.isLate && record.date === today).length,
+    averageHours: attendanceData.reduce((sum, record) => sum + record.totalHours, 0) / attendanceData.length || 0,
     totalOvertime: attendanceData.reduce((sum, record) => sum + record.overtimeHours, 0)
   };
 
@@ -359,7 +376,13 @@ const AttendanceManagement = () => {
       {/* Tabs */}
       <Card className="healthcare-card" sx={{ mb: 3 }}>
         <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
-          <Tabs value={selectedTab} onChange={(e, newValue) => setSelectedTab(newValue)}>
+          <Tabs
+            value={selectedTab}
+            onChange={(e, newValue) => {
+              setSelectedTab(newValue);
+              setCurrentPage(1); // Reset to first page when switching tabs
+            }}
+          >
             <Tab label="Today's Attendance" />
             <Tab label="Attendance History" />
             <Tab label="Reports" />
@@ -367,222 +390,434 @@ const AttendanceManagement = () => {
         </Box>
       </Card>
 
-      {/* Filters */}
-      <Card className="healthcare-card" sx={{ mb: 3 }}>
-        <CardContent>
-          <Grid container spacing={2} alignItems="center">
-            <Grid item xs={12} md={3}>
-              <TextField
-                fullWidth
-                placeholder="Search employees..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <SearchIcon />
-                    </InputAdornment>
-                  ),
-                }}
-              />
-            </Grid>
-            <Grid item xs={12} md={2}>
-              <FormControl fullWidth>
-                <InputLabel>Status</InputLabel>
-                <Select
-                  value={statusFilter}
-                  label="Status"
-                  onChange={(e) => setStatusFilter(e.target.value)}
+      {/* Filters - Only show for tabs 0 and 1 */}
+      {(selectedTab === 0 || selectedTab === 1) && (
+        <Card className="healthcare-card" sx={{ mb: 3 }}>
+          <CardContent>
+            <Grid container spacing={2} alignItems="center">
+              <Grid item xs={12} md={3}>
+                <TextField
+                  fullWidth
+                  placeholder="Search employees..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <SearchIcon />
+                      </InputAdornment>
+                    ),
+                  }}
+                />
+              </Grid>
+              <Grid item xs={12} md={2}>
+                <FormControl fullWidth>
+                  <InputLabel>Status</InputLabel>
+                  <Select
+                    value={statusFilter}
+                    label="Status"
+                    onChange={(e) => setStatusFilter(e.target.value)}
+                  >
+                    <MenuItem value="All">All Status</MenuItem>
+                    {statusOptions.map(status => (
+                      <MenuItem key={status} value={status}>{status}</MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+              </Grid>
+              <Grid item xs={12} md={2}>
+                <FormControl fullWidth>
+                  <InputLabel>Department</InputLabel>
+                  <Select
+                    value={departmentFilter}
+                    label="Department"
+                    onChange={(e) => setDepartmentFilter(e.target.value)}
+                  >
+                    <MenuItem value="All">All Departments</MenuItem>
+                    {departments.map(dept => (
+                      <MenuItem key={dept} value={dept}>{dept}</MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+              </Grid>
+              <Grid item xs={12} md={2}>
+                <TextField
+                  fullWidth
+                  label="Date"
+                  type="date"
+                  value={dateFilter}
+                  onChange={(e) => setDateFilter(e.target.value)}
+                  InputLabelProps={{ shrink: true }}
+                />
+              </Grid>
+              <Grid item xs={12} md={3}>
+                <Button
+                  fullWidth
+                  variant="outlined"
+                  startIcon={<RefreshIcon />}
+                  onClick={() => {
+                    setSearchTerm('');
+                    setStatusFilter('All');
+                    setDepartmentFilter('All');
+                    setDateFilter('');
+                  }}
                 >
-                  <MenuItem value="All">All Status</MenuItem>
-                  {statusOptions.map(status => (
-                    <MenuItem key={status} value={status}>{status}</MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
+                  Reset Filters
+                </Button>
+              </Grid>
             </Grid>
-            <Grid item xs={12} md={2}>
-              <FormControl fullWidth>
-                <InputLabel>Department</InputLabel>
-                <Select
-                  value={departmentFilter}
-                  label="Department"
-                  onChange={(e) => setDepartmentFilter(e.target.value)}
-                >
-                  <MenuItem value="All">All Departments</MenuItem>
-                  {departments.map(dept => (
-                    <MenuItem key={dept} value={dept}>{dept}</MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-            </Grid>
-            <Grid item xs={12} md={2}>
-              <TextField
-                fullWidth
-                label="Date"
-                type="date"
-                value={dateFilter}
-                onChange={(e) => setDateFilter(e.target.value)}
-                InputLabelProps={{ shrink: true }}
-              />
-            </Grid>
-            <Grid item xs={12} md={3}>
-              <Button
-                fullWidth
-                variant="outlined"
-                startIcon={<RefreshIcon />}
-                onClick={() => {
-                  setSearchTerm('');
-                  setStatusFilter('All');
-                  setDepartmentFilter('All');
-                  setDateFilter('');
-                }}
-              >
-                Reset Filters
-              </Button>
-            </Grid>
-          </Grid>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+      )}
 
-      {/* Attendance Table */}
-      <Card className="healthcare-card">
-        <CardContent>
-          <TableContainer>
-            <Table>
-              <TableHead>
-                <TableRow>
-                  <TableCell>Employee</TableCell>
-                  <TableCell>Date</TableCell>
-                  <TableCell>Check In</TableCell>
-                  <TableCell>Check Out</TableCell>
-                  <TableCell>Total Hours</TableCell>
-                  <TableCell>Status</TableCell>
-                  <TableCell>Location</TableCell>
-                  <TableCell>Device</TableCell>
-                  <TableCell align="center">Actions</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {currentData.map((record) => (
-                  <TableRow key={record.id} hover>
-                    <TableCell>
-                      <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                        <Avatar sx={{ mr: 2, bgcolor: theme.palette.primary.main }}>
-                          {record.employeeName.split(' ').map(n => n[0]).join('')}
-                        </Avatar>
-                        <Box>
-                          <Typography variant="subtitle2" fontWeight="600">
-                            {record.employeeName}
+      {/* Tab Content */}
+      {(selectedTab === 0 || selectedTab === 1) && (
+        <Card className="healthcare-card">
+          <CardContent>
+            {currentData.length === 0 ? (
+              <Box sx={{ textAlign: 'center', py: 6 }}>
+                <Typography variant="h6" color="text.secondary" gutterBottom>
+                  {selectedTab === 0 ? 'No attendance records for today' : 'No attendance records found'}
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  {selectedTab === 0 ? 'Start by adding attendance records for today' : 'Try adjusting your filters'}
+                </Typography>
+              </Box>
+            ) : (
+              <>
+                <TableContainer>
+                  <Table>
+                    <TableHead>
+                      <TableRow>
+                        <TableCell>Employee</TableCell>
+                        <TableCell>Date</TableCell>
+                        <TableCell>Check In</TableCell>
+                        <TableCell>Check Out</TableCell>
+                        <TableCell>Total Hours</TableCell>
+                        <TableCell>Status</TableCell>
+                        <TableCell>Location</TableCell>
+                        <TableCell>Device</TableCell>
+                        <TableCell align="center">Actions</TableCell>
+                      </TableRow>
+                    </TableHead>
+                    <TableBody>
+                      {currentData.map((record) => (
+                        <TableRow key={record.id} hover>
+                          <TableCell>
+                            <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                              <Avatar sx={{ mr: 2, bgcolor: theme.palette.primary.main }}>
+                                {record.employeeName.split(' ').map(n => n[0]).join('')}
+                              </Avatar>
+                              <Box>
+                                <Typography variant="subtitle2" fontWeight="600">
+                                  {record.employeeName}
+                                </Typography>
+                                <Typography variant="body2" color="text.secondary">
+                                  {record.employeeId} • {record.department}
+                                </Typography>
+                              </Box>
+                            </Box>
+                          </TableCell>
+                          <TableCell>
+                            <Typography variant="body2">
+                              {new Date(record.date).toLocaleDateString()}
+                            </Typography>
+                          </TableCell>
+                          <TableCell>
+                            <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                              <CheckInIcon sx={{ mr: 1, color: 'success.main', fontSize: 16 }} />
+                              <Typography variant="body2">
+                                {record.checkIn || 'N/A'}
+                              </Typography>
+                            </Box>
+                          </TableCell>
+                          <TableCell>
+                            <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                              <CheckOutIcon sx={{ mr: 1, color: 'error.main', fontSize: 16 }} />
+                              <Typography variant="body2">
+                                {record.checkOut || 'N/A'}
+                              </Typography>
+                            </Box>
+                          </TableCell>
+                          <TableCell>
+                            <Typography variant="body2" fontWeight="600">
+                              {record.totalHours}h
+                              {record.overtimeHours > 0 && (
+                                <Chip
+                                  label={`+${record.overtimeHours}h OT`}
+                                  size="small"
+                                  sx={{ ml: 1, fontSize: '0.7rem' }}
+                                  color="info"
+                                />
+                              )}
+                            </Typography>
+                          </TableCell>
+                          <TableCell>
+                            <Chip
+                              label={record.status}
+                              size="small"
+                              sx={{
+                                backgroundColor: alpha(getStatusColor(record.status), 0.1),
+                                color: getStatusColor(record.status),
+                                border: `1px solid ${alpha(getStatusColor(record.status), 0.3)}`
+                              }}
+                            />
+                          </TableCell>
+                          <TableCell>
+                            <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                              <LocationOnIcon sx={{ mr: 1, fontSize: 16, color: 'text.secondary' }} />
+                              <Typography variant="body2">
+                                {record.location || 'N/A'}
+                              </Typography>
+                            </Box>
+                          </TableCell>
+                          <TableCell>
+                            <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                              {record.device === 'Desktop' && <ComputerIcon sx={{ mr: 1, fontSize: 16, color: 'text.secondary' }} />}
+                              {record.device === 'Laptop' && <ComputerIcon sx={{ mr: 1, fontSize: 16, color: 'text.secondary' }} />}
+                              {record.device === 'Mobile' && <PhoneIcon sx={{ mr: 1, fontSize: 16, color: 'text.secondary' }} />}
+                              {record.device === 'Tablet' && <TabletIcon sx={{ mr: 1, fontSize: 16, color: 'text.secondary' }} />}
+                              <Typography variant="body2">
+                                {record.device || 'N/A'}
+                              </Typography>
+                            </Box>
+                          </TableCell>
+                          <TableCell align="center">
+                            <Box sx={{ display: 'flex', gap: 1, justifyContent: 'center' }}>
+                              <Tooltip title="View Details">
+                                <IconButton size="small" onClick={() => handleOpenDialog(record)}>
+                                  <ViewIcon />
+                                </IconButton>
+                              </Tooltip>
+                              <Tooltip title="Edit Attendance">
+                                <IconButton size="small" onClick={() => handleOpenDialog(record)}>
+                                  <EditIcon />
+                                </IconButton>
+                              </Tooltip>
+                              <Tooltip title="More Actions">
+                                <IconButton size="small">
+                                  <MoreVertIcon />
+                                </IconButton>
+                              </Tooltip>
+                            </Box>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </TableContainer>
+
+                {/* Pagination */}
+                {totalPages > 1 && (
+                  <Box sx={{ display: 'flex', justifyContent: 'center', mt: 3 }}>
+                    <Pagination
+                      count={totalPages}
+                      page={currentPage}
+                      onChange={(event, value) => setCurrentPage(value)}
+                      color="primary"
+                    />
+                  </Box>
+                )}
+              </>
+            )}
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Reports Tab */}
+      {selectedTab === 2 && (
+        <Grid container spacing={3}>
+          {/* Department-wise Attendance */}
+          <Grid item xs={12} md={6}>
+            <Card className="healthcare-card">
+              <CardContent>
+                <Typography variant="h6" fontWeight="600" gutterBottom>
+                  Department-wise Attendance
+                </Typography>
+                <Box sx={{ mt: 2 }}>
+                  {departments.map((dept) => {
+                    const deptRecords = attendanceData.filter(r => r.department === dept);
+                    const presentCount = deptRecords.filter(r => r.status === 'Present').length;
+                    const totalCount = deptRecords.length;
+                    const percentage = totalCount > 0 ? (presentCount / totalCount) * 100 : 0;
+
+                    return (
+                      <Box key={dept} sx={{ mb: 3 }}>
+                        <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
+                          <Typography variant="body2" fontWeight="600">
+                            {dept}
                           </Typography>
                           <Typography variant="body2" color="text.secondary">
-                            {record.employeeId} • {record.department}
+                            {presentCount}/{totalCount} ({percentage.toFixed(0)}%)
                           </Typography>
                         </Box>
-                      </Box>
-                    </TableCell>
-                    <TableCell>
-                      <Typography variant="body2">
-                        {new Date(record.date).toLocaleDateString()}
-                      </Typography>
-                    </TableCell>
-                    <TableCell>
-                      <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                        <CheckInIcon sx={{ mr: 1, color: 'success.main', fontSize: 16 }} />
-                        <Typography variant="body2">
-                          {record.checkIn || 'N/A'}
-                        </Typography>
-                      </Box>
-                    </TableCell>
-                    <TableCell>
-                      <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                        <CheckOutIcon sx={{ mr: 1, color: 'error.main', fontSize: 16 }} />
-                        <Typography variant="body2">
-                          {record.checkOut || 'N/A'}
-                        </Typography>
-                      </Box>
-                    </TableCell>
-                    <TableCell>
-                      <Typography variant="body2" fontWeight="600">
-                        {record.totalHours}h
-                        {record.overtimeHours > 0 && (
-                          <Chip
-                            label={`+${record.overtimeHours}h OT`}
-                            size="small"
-                            sx={{ ml: 1, fontSize: '0.7rem' }}
-                            color="info"
+                        <Box
+                          sx={{
+                            width: '100%',
+                            height: 8,
+                            bgcolor: alpha(theme.palette.grey[300], 0.3),
+                            borderRadius: 1,
+                            overflow: 'hidden'
+                          }}
+                        >
+                          <Box
+                            sx={{
+                              width: `${percentage}%`,
+                              height: '100%',
+                              bgcolor: percentage >= 80 ? theme.palette.success.main :
+                                      percentage >= 60 ? theme.palette.warning.main :
+                                      theme.palette.error.main,
+                              borderRadius: 1,
+                              transition: 'width 0.3s ease'
+                            }}
                           />
-                        )}
-                      </Typography>
-                    </TableCell>
-                    <TableCell>
-                      <Chip
-                        label={record.status}
-                        size="small"
-                        sx={{
-                          backgroundColor: alpha(getStatusColor(record.status), 0.1),
-                          color: getStatusColor(record.status),
-                          border: `1px solid ${alpha(getStatusColor(record.status), 0.3)}`
-                        }}
-                      />
-                    </TableCell>
-                    <TableCell>
-                      <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                        <LocationOnIcon sx={{ mr: 1, fontSize: 16, color: 'text.secondary' }} />
-                        <Typography variant="body2">
-                          {record.location || 'N/A'}
-                        </Typography>
+                        </Box>
                       </Box>
-                    </TableCell>
-                    <TableCell>
-                      <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                        {record.device === 'Desktop' && <ComputerIcon sx={{ mr: 1, fontSize: 16, color: 'text.secondary' }} />}
-                        {record.device === 'Laptop' && <ComputerIcon sx={{ mr: 1, fontSize: 16, color: 'text.secondary' }} />}
-                        {record.device === 'Mobile' && <PhoneIcon sx={{ mr: 1, fontSize: 16, color: 'text.secondary' }} />}
-                        {record.device === 'Tablet' && <TabletIcon sx={{ mr: 1, fontSize: 16, color: 'text.secondary' }} />}
-                        <Typography variant="body2">
-                          {record.device || 'N/A'}
-                        </Typography>
-                      </Box>
-                    </TableCell>
-                    <TableCell align="center">
-                      <Box sx={{ display: 'flex', gap: 1, justifyContent: 'center' }}>
-                        <Tooltip title="View Details">
-                          <IconButton size="small" onClick={() => handleOpenDialog(record)}>
-                            <ViewIcon />
-                          </IconButton>
-                        </Tooltip>
-                        <Tooltip title="Edit Attendance">
-                          <IconButton size="small" onClick={() => handleOpenDialog(record)}>
-                            <EditIcon />
-                          </IconButton>
-                        </Tooltip>
-                        <Tooltip title="More Actions">
-                          <IconButton size="small">
-                            <MoreVertIcon />
-                          </IconButton>
-                        </Tooltip>
-                      </Box>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </TableContainer>
+                    );
+                  })}
+                </Box>
+              </CardContent>
+            </Card>
+          </Grid>
 
-          {/* Pagination */}
-          {totalPages > 1 && (
-            <Box sx={{ display: 'flex', justifyContent: 'center', mt: 3 }}>
-              <Pagination
-                count={totalPages}
-                page={currentPage}
-                onChange={(event, value) => setCurrentPage(value)}
-                color="primary"
-              />
-            </Box>
-          )}
-        </CardContent>
-      </Card>
+          {/* Status Distribution */}
+          <Grid item xs={12} md={6}>
+            <Card className="healthcare-card">
+              <CardContent>
+                <Typography variant="h6" fontWeight="600" gutterBottom>
+                  Status Distribution
+                </Typography>
+                <Box sx={{ mt: 2 }}>
+                  {statusOptions.map((status) => {
+                    const statusCount = attendanceData.filter(r => r.status === status).length;
+                    const percentage = attendanceData.length > 0 ? (statusCount / attendanceData.length) * 100 : 0;
+
+                    return (
+                      <Box key={status} sx={{ mb: 3 }}>
+                        <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
+                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                            <Chip
+                              label={status}
+                              size="small"
+                              sx={{
+                                backgroundColor: alpha(getStatusColor(status), 0.1),
+                                color: getStatusColor(status),
+                                border: `1px solid ${alpha(getStatusColor(status), 0.3)}`
+                              }}
+                            />
+                          </Box>
+                          <Typography variant="body2" color="text.secondary">
+                            {statusCount} records ({percentage.toFixed(1)}%)
+                          </Typography>
+                        </Box>
+                        <Box
+                          sx={{
+                            width: '100%',
+                            height: 8,
+                            bgcolor: alpha(theme.palette.grey[300], 0.3),
+                            borderRadius: 1,
+                            overflow: 'hidden'
+                          }}
+                        >
+                          <Box
+                            sx={{
+                              width: `${percentage}%`,
+                              height: '100%',
+                              bgcolor: getStatusColor(status),
+                              borderRadius: 1,
+                              transition: 'width 0.3s ease'
+                            }}
+                          />
+                        </Box>
+                      </Box>
+                    );
+                  })}
+                </Box>
+              </CardContent>
+            </Card>
+          </Grid>
+
+          {/* Top Performers */}
+          <Grid item xs={12}>
+            <Card className="healthcare-card">
+              <CardContent>
+                <Typography variant="h6" fontWeight="600" gutterBottom>
+                  Top Performers (Most Hours Worked)
+                </Typography>
+                <TableContainer>
+                  <Table>
+                    <TableHead>
+                      <TableRow>
+                        <TableCell>Rank</TableCell>
+                        <TableCell>Employee</TableCell>
+                        <TableCell>Department</TableCell>
+                        <TableCell>Total Hours</TableCell>
+                        <TableCell>Overtime Hours</TableCell>
+                        <TableCell>Attendance Rate</TableCell>
+                      </TableRow>
+                    </TableHead>
+                    <TableBody>
+                      {employees.map((emp, index) => {
+                        const empRecords = attendanceData.filter(r => r.employeeId === emp.id);
+                        const totalHours = empRecords.reduce((sum, r) => sum + r.totalHours, 0);
+                        const overtimeHours = empRecords.reduce((sum, r) => sum + r.overtimeHours, 0);
+                        const presentCount = empRecords.filter(r => r.status === 'Present').length;
+                        const attendanceRate = empRecords.length > 0 ? (presentCount / empRecords.length) * 100 : 0;
+
+                        return (
+                          <TableRow key={emp.id} hover>
+                            <TableCell>
+                              <Chip
+                                label={`#${index + 1}`}
+                                size="small"
+                                color={index === 0 ? 'success' : index === 1 ? 'info' : 'default'}
+                              />
+                            </TableCell>
+                            <TableCell>
+                              <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                                <Avatar sx={{ mr: 2, bgcolor: theme.palette.primary.main, width: 32, height: 32 }}>
+                                  {emp.name.split(' ').map(n => n[0]).join('')}
+                                </Avatar>
+                                <Typography variant="body2" fontWeight="600">
+                                  {emp.name}
+                                </Typography>
+                              </Box>
+                            </TableCell>
+                            <TableCell>
+                              <Typography variant="body2">{emp.department}</Typography>
+                            </TableCell>
+                            <TableCell>
+                              <Typography variant="body2" fontWeight="600" color="primary.main">
+                                {totalHours.toFixed(1)}h
+                              </Typography>
+                            </TableCell>
+                            <TableCell>
+                              <Typography variant="body2" color="info.main">
+                                {overtimeHours.toFixed(1)}h
+                              </Typography>
+                            </TableCell>
+                            <TableCell>
+                              <Chip
+                                label={`${attendanceRate.toFixed(0)}%`}
+                                size="small"
+                                color={attendanceRate >= 90 ? 'success' : attendanceRate >= 75 ? 'warning' : 'error'}
+                              />
+                            </TableCell>
+                          </TableRow>
+                        );
+                      }).sort((a, b) => {
+                        const aTotal = attendanceData.filter(r => r.employeeId === employees[a.key]?.id).reduce((sum, r) => sum + r.totalHours, 0);
+                        const bTotal = attendanceData.filter(r => r.employeeId === employees[b.key]?.id).reduce((sum, r) => sum + r.totalHours, 0);
+                        return bTotal - aTotal;
+                      })}
+                    </TableBody>
+                  </Table>
+                </TableContainer>
+              </CardContent>
+            </Card>
+          </Grid>
+        </Grid>
+      )}
 
       {/* Add/Edit Attendance Dialog */}
       <Dialog open={openDialog} onClose={handleCloseDialog} maxWidth="md" fullWidth>

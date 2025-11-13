@@ -30,7 +30,16 @@ import {
   MenuItem,
   Tooltip,
   useTheme,
-  alpha
+  alpha,
+  Accordion,
+  AccordionSummary,
+  AccordionDetails,
+  Stack,
+  List,
+  ListItem,
+  ListItemText,
+  ListItemIcon,
+  ListItemSecondaryAction
 } from '@mui/material';
 import {
   Add as AddIcon,
@@ -50,7 +59,14 @@ import {
   DirectionsCar as VehicleIcon,
   Fingerprint as FingerprintIcon,
   Description as DocumentIcon,
-  Shield as ShieldIcon
+  Shield as ShieldIcon,
+  ExpandMore as ExpandMoreIcon,
+  Rule as RuleIcon,
+  Block as BlockIcon,
+  AccessTime as TimeIcon,
+  Person as PersonIcon,
+  Business as BusinessIcon,
+  FilterList as FilterIcon
 } from '@mui/icons-material';
 import { useDedupe } from '../../context/DedupeContext';
 
@@ -68,14 +84,84 @@ const DedupeSettings = () => {
   } = useDedupe();
 
   const [customFieldDialog, setCustomFieldDialog] = useState(false);
+  const [conditionDialog, setConditionDialog] = useState(false);
+  const [exceptionDialog, setExceptionDialog] = useState(false);
   const [editingField, setEditingField] = useState(null);
+  const [editingCondition, setEditingCondition] = useState(null);
+  const [editingException, setEditingException] = useState(null);
   const [customFieldForm, setCustomFieldForm] = useState({
     fieldName: '',
     label: '',
     severity: 'medium'
   });
+  const [conditionForm, setConditionForm] = useState({
+    name: '',
+    field: '',
+    operator: 'equals',
+    value: '',
+    description: ''
+  });
+  const [exceptionForm, setExceptionForm] = useState({
+    name: '',
+    type: 'value',
+    field: '',
+    value: '',
+    description: ''
+  });
   const [successMessage, setSuccessMessage] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
+
+  // Mock data for conditions and exceptions
+  const [conditions, setConditions] = useState([
+    {
+      id: 1,
+      name: 'Active Records Only',
+      field: 'status',
+      operator: 'equals',
+      value: 'Active',
+      description: 'Only check duplicates for active records',
+      enabled: true
+    },
+    {
+      id: 2,
+      name: 'Recent Leads',
+      field: 'createdDate',
+      operator: 'within_days',
+      value: '30',
+      description: 'Check duplicates only for leads created in last 30 days',
+      enabled: false
+    }
+  ]);
+
+  const [exceptions, setExceptions] = useState([
+    {
+      id: 1,
+      name: 'VIP Customers',
+      type: 'value',
+      field: 'customerType',
+      value: 'VIP',
+      description: 'Skip duplicate check for VIP customers',
+      enabled: true
+    },
+    {
+      id: 2,
+      name: 'Test Records',
+      type: 'value',
+      field: 'email',
+      value: '*@test.com',
+      description: 'Allow duplicate test email addresses',
+      enabled: true
+    },
+    {
+      id: 3,
+      name: 'Migration Data',
+      type: 'source',
+      field: 'source',
+      value: 'Migration',
+      description: 'Skip duplicate check for migrated data',
+      enabled: false
+    }
+  ]);
 
   // Default dedupe fields configuration
   const defaultFields = [
@@ -160,6 +246,100 @@ const DedupeSettings = () => {
       };
       reader.readAsText(file);
     }
+  };
+
+  // Condition handlers
+  const handleAddCondition = () => {
+    if (!conditionForm.name || !conditionForm.field) {
+      setErrorMessage('Please fill in all required fields');
+      return;
+    }
+
+    if (editingCondition) {
+      setConditions(conditions.map(c =>
+        c.id === editingCondition.id ? { ...conditionForm, id: c.id, enabled: c.enabled } : c
+      ));
+      setSuccessMessage('Condition updated successfully');
+    } else {
+      setConditions([...conditions, { ...conditionForm, id: Date.now(), enabled: true }]);
+      setSuccessMessage('Condition added successfully');
+    }
+
+    setConditionDialog(false);
+    setConditionForm({ name: '', field: '', operator: 'equals', value: '', description: '' });
+    setEditingCondition(null);
+    setTimeout(() => setSuccessMessage(''), 3000);
+  };
+
+  const handleEditCondition = (condition) => {
+    setEditingCondition(condition);
+    setConditionForm({
+      name: condition.name,
+      field: condition.field,
+      operator: condition.operator,
+      value: condition.value,
+      description: condition.description
+    });
+    setConditionDialog(true);
+  };
+
+  const handleDeleteCondition = (id) => {
+    setConditions(conditions.filter(c => c.id !== id));
+    setSuccessMessage('Condition deleted successfully');
+    setTimeout(() => setSuccessMessage(''), 3000);
+  };
+
+  const handleToggleCondition = (id) => {
+    setConditions(conditions.map(c =>
+      c.id === id ? { ...c, enabled: !c.enabled } : c
+    ));
+  };
+
+  // Exception handlers
+  const handleAddException = () => {
+    if (!exceptionForm.name || !exceptionForm.field) {
+      setErrorMessage('Please fill in all required fields');
+      return;
+    }
+
+    if (editingException) {
+      setExceptions(exceptions.map(e =>
+        e.id === editingException.id ? { ...exceptionForm, id: e.id, enabled: e.enabled } : e
+      ));
+      setSuccessMessage('Exception updated successfully');
+    } else {
+      setExceptions([...exceptions, { ...exceptionForm, id: Date.now(), enabled: true }]);
+      setSuccessMessage('Exception added successfully');
+    }
+
+    setExceptionDialog(false);
+    setExceptionForm({ name: '', type: 'value', field: '', value: '', description: '' });
+    setEditingException(null);
+    setTimeout(() => setSuccessMessage(''), 3000);
+  };
+
+  const handleEditException = (exception) => {
+    setEditingException(exception);
+    setExceptionForm({
+      name: exception.name,
+      type: exception.type,
+      field: exception.field,
+      value: exception.value,
+      description: exception.description
+    });
+    setExceptionDialog(true);
+  };
+
+  const handleDeleteException = (id) => {
+    setExceptions(exceptions.filter(e => e.id !== id));
+    setSuccessMessage('Exception deleted successfully');
+    setTimeout(() => setSuccessMessage(''), 3000);
+  };
+
+  const handleToggleException = (id) => {
+    setExceptions(exceptions.map(e =>
+      e.id === id ? { ...e, enabled: !e.enabled } : e
+    ));
   };
 
   return (
@@ -380,6 +560,201 @@ const DedupeSettings = () => {
         </CardContent>
       </Card>
 
+      {/* Deduplication Conditions */}
+      <Card sx={{ mb: 3 }}>
+        <CardContent>
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+            <Box>
+              <Typography variant="h6" fontWeight="600">
+                Deduplication Conditions
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                Define when deduplication checks should be applied
+              </Typography>
+            </Box>
+            <Button
+              variant="contained"
+              startIcon={<AddIcon />}
+              onClick={() => {
+                setEditingCondition(null);
+                setConditionForm({ name: '', field: '', operator: 'equals', value: '', description: '' });
+                setConditionDialog(true);
+              }}
+            >
+              Add Condition
+            </Button>
+          </Box>
+
+          <Alert severity="info" sx={{ mb: 3 }}>
+            Conditions define criteria that must be met for records to be checked for duplicates. Only records matching these conditions will undergo deduplication.
+          </Alert>
+
+          {conditions.length > 0 ? (
+            <List>
+              {conditions.map((condition) => (
+                <Paper key={condition.id} variant="outlined" sx={{ mb: 2 }}>
+                  <ListItem>
+                    <ListItemIcon>
+                      <RuleIcon color={condition.enabled ? 'primary' : 'disabled'} />
+                    </ListItemIcon>
+                    <ListItemText
+                      primary={
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                          <Typography variant="subtitle2" fontWeight="600">
+                            {condition.name}
+                          </Typography>
+                          <Chip
+                            label={condition.enabled ? 'Active' : 'Inactive'}
+                            size="small"
+                            color={condition.enabled ? 'success' : 'default'}
+                          />
+                        </Box>
+                      }
+                      secondary={
+                        <Box sx={{ mt: 1 }}>
+                          <Typography variant="caption" color="text.secondary" display="block">
+                            {condition.description}
+                          </Typography>
+                          <Typography variant="caption" color="primary.main" sx={{ mt: 0.5, display: 'block' }}>
+                            Rule: {condition.field} {condition.operator} "{condition.value}"
+                          </Typography>
+                        </Box>
+                      }
+                    />
+                    <ListItemSecondaryAction>
+                      <Stack direction="row" spacing={1}>
+                        <Tooltip title={condition.enabled ? 'Disable' : 'Enable'}>
+                          <Switch
+                            checked={condition.enabled}
+                            onChange={() => handleToggleCondition(condition.id)}
+                            color="success"
+                          />
+                        </Tooltip>
+                        <Tooltip title="Edit">
+                          <IconButton onClick={() => handleEditCondition(condition)} size="small">
+                            <EditIcon fontSize="small" />
+                          </IconButton>
+                        </Tooltip>
+                        <Tooltip title="Delete">
+                          <IconButton onClick={() => handleDeleteCondition(condition.id)} size="small" color="error">
+                            <DeleteIcon fontSize="small" />
+                          </IconButton>
+                        </Tooltip>
+                      </Stack>
+                    </ListItemSecondaryAction>
+                  </ListItem>
+                </Paper>
+              ))}
+            </List>
+          ) : (
+            <Alert severity="info">
+              No conditions defined. Deduplication will apply to all records.
+            </Alert>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Deduplication Exceptions */}
+      <Card sx={{ mb: 3 }}>
+        <CardContent>
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+            <Box>
+              <Typography variant="h6" fontWeight="600">
+                Deduplication Exceptions
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                Define when to skip duplicate checking
+              </Typography>
+            </Box>
+            <Button
+              variant="contained"
+              color="warning"
+              startIcon={<AddIcon />}
+              onClick={() => {
+                setEditingException(null);
+                setExceptionForm({ name: '', type: 'value', field: '', value: '', description: '' });
+                setExceptionDialog(true);
+              }}
+            >
+              Add Exception
+            </Button>
+          </Box>
+
+          <Alert severity="warning" sx={{ mb: 3 }}>
+            Exceptions allow specific records to bypass deduplication checks. Use carefully to avoid unwanted duplicates.
+          </Alert>
+
+          {exceptions.length > 0 ? (
+            <List>
+              {exceptions.map((exception) => (
+                <Paper key={exception.id} variant="outlined" sx={{ mb: 2 }}>
+                  <ListItem>
+                    <ListItemIcon>
+                      <BlockIcon color={exception.enabled ? 'warning' : 'disabled'} />
+                    </ListItemIcon>
+                    <ListItemText
+                      primary={
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                          <Typography variant="subtitle2" fontWeight="600">
+                            {exception.name}
+                          </Typography>
+                          <Chip
+                            label={exception.enabled ? 'Active' : 'Inactive'}
+                            size="small"
+                            color={exception.enabled ? 'warning' : 'default'}
+                          />
+                          <Chip
+                            label={exception.type}
+                            size="small"
+                            variant="outlined"
+                            sx={{ textTransform: 'capitalize' }}
+                          />
+                        </Box>
+                      }
+                      secondary={
+                        <Box sx={{ mt: 1 }}>
+                          <Typography variant="caption" color="text.secondary" display="block">
+                            {exception.description}
+                          </Typography>
+                          <Typography variant="caption" color="warning.main" sx={{ mt: 0.5, display: 'block' }}>
+                            Exception: Skip if {exception.field} matches "{exception.value}"
+                          </Typography>
+                        </Box>
+                      }
+                    />
+                    <ListItemSecondaryAction>
+                      <Stack direction="row" spacing={1}>
+                        <Tooltip title={exception.enabled ? 'Disable' : 'Enable'}>
+                          <Switch
+                            checked={exception.enabled}
+                            onChange={() => handleToggleException(exception.id)}
+                            color="warning"
+                          />
+                        </Tooltip>
+                        <Tooltip title="Edit">
+                          <IconButton onClick={() => handleEditException(exception)} size="small">
+                            <EditIcon fontSize="small" />
+                          </IconButton>
+                        </Tooltip>
+                        <Tooltip title="Delete">
+                          <IconButton onClick={() => handleDeleteException(exception.id)} size="small" color="error">
+                            <DeleteIcon fontSize="small" />
+                          </IconButton>
+                        </Tooltip>
+                      </Stack>
+                    </ListItemSecondaryAction>
+                  </ListItem>
+                </Paper>
+              ))}
+            </List>
+          ) : (
+            <Alert severity="info">
+              No exceptions defined. All records will be subject to deduplication checks.
+            </Alert>
+          )}
+        </CardContent>
+      </Card>
+
       {/* Import/Export Configuration */}
       <Card>
         <CardContent>
@@ -463,6 +838,164 @@ const DedupeSettings = () => {
           <Button onClick={() => setCustomFieldDialog(false)}>Cancel</Button>
           <Button variant="contained" onClick={handleAddCustomField}>
             {editingField ? 'Update' : 'Add'}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Add/Edit Condition Dialog */}
+      <Dialog open={conditionDialog} onClose={() => setConditionDialog(false)} maxWidth="sm" fullWidth>
+        <DialogTitle>
+          {editingCondition ? 'Edit Condition' : 'Add Condition'}
+        </DialogTitle>
+        <DialogContent>
+          <Alert severity="info" sx={{ mt: 2, mb: 3 }}>
+            Conditions determine which records should be checked for duplicates. Only records meeting these criteria will undergo deduplication.
+          </Alert>
+          <Grid container spacing={2}>
+            <Grid item xs={12}>
+              <TextField
+                fullWidth
+                required
+                label="Condition Name"
+                value={conditionForm.name}
+                onChange={(e) => setConditionForm({ ...conditionForm, name: e.target.value })}
+                helperText="A descriptive name for this condition"
+              />
+            </Grid>
+            <Grid item xs={12}>
+              <TextField
+                fullWidth
+                required
+                label="Field"
+                value={conditionForm.field}
+                onChange={(e) => setConditionForm({ ...conditionForm, field: e.target.value })}
+                helperText="The field to check (e.g., 'status', 'source', 'createdDate')"
+              />
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <FormControl fullWidth required>
+                <InputLabel>Operator</InputLabel>
+                <Select
+                  value={conditionForm.operator}
+                  label="Operator"
+                  onChange={(e) => setConditionForm({ ...conditionForm, operator: e.target.value })}
+                >
+                  <MenuItem value="equals">Equals</MenuItem>
+                  <MenuItem value="not_equals">Not Equals</MenuItem>
+                  <MenuItem value="contains">Contains</MenuItem>
+                  <MenuItem value="starts_with">Starts With</MenuItem>
+                  <MenuItem value="ends_with">Ends With</MenuItem>
+                  <MenuItem value="greater_than">Greater Than</MenuItem>
+                  <MenuItem value="less_than">Less Than</MenuItem>
+                  <MenuItem value="within_days">Within Days</MenuItem>
+                  <MenuItem value="in_list">In List</MenuItem>
+                </Select>
+              </FormControl>
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <TextField
+                fullWidth
+                required
+                label="Value"
+                value={conditionForm.value}
+                onChange={(e) => setConditionForm({ ...conditionForm, value: e.target.value })}
+                helperText="The value to match against"
+              />
+            </Grid>
+            <Grid item xs={12}>
+              <TextField
+                fullWidth
+                label="Description"
+                multiline
+                rows={2}
+                value={conditionForm.description}
+                onChange={(e) => setConditionForm({ ...conditionForm, description: e.target.value })}
+                helperText="Explain when this condition should apply"
+              />
+            </Grid>
+          </Grid>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setConditionDialog(false)}>Cancel</Button>
+          <Button variant="contained" onClick={handleAddCondition}>
+            {editingCondition ? 'Update' : 'Add'}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Add/Edit Exception Dialog */}
+      <Dialog open={exceptionDialog} onClose={() => setExceptionDialog(false)} maxWidth="sm" fullWidth>
+        <DialogTitle>
+          {editingException ? 'Edit Exception' : 'Add Exception'}
+        </DialogTitle>
+        <DialogContent>
+          <Alert severity="warning" sx={{ mt: 2, mb: 3 }}>
+            Exceptions allow specific records to bypass deduplication checks. Use with caution to prevent unwanted duplicates.
+          </Alert>
+          <Grid container spacing={2}>
+            <Grid item xs={12}>
+              <TextField
+                fullWidth
+                required
+                label="Exception Name"
+                value={exceptionForm.name}
+                onChange={(e) => setExceptionForm({ ...exceptionForm, name: e.target.value })}
+                helperText="A descriptive name for this exception"
+              />
+            </Grid>
+            <Grid item xs={12}>
+              <FormControl fullWidth required>
+                <InputLabel>Exception Type</InputLabel>
+                <Select
+                  value={exceptionForm.type}
+                  label="Exception Type"
+                  onChange={(e) => setExceptionForm({ ...exceptionForm, type: e.target.value })}
+                >
+                  <MenuItem value="value">Field Value</MenuItem>
+                  <MenuItem value="source">Data Source</MenuItem>
+                  <MenuItem value="user">User/Role</MenuItem>
+                  <MenuItem value="pattern">Pattern Match</MenuItem>
+                  <MenuItem value="time">Time-based</MenuItem>
+                </Select>
+              </FormControl>
+            </Grid>
+            <Grid item xs={12}>
+              <TextField
+                fullWidth
+                required
+                label="Field"
+                value={exceptionForm.field}
+                onChange={(e) => setExceptionForm({ ...exceptionForm, field: e.target.value })}
+                helperText="The field to check for exception (e.g., 'customerType', 'email', 'source')"
+              />
+            </Grid>
+            <Grid item xs={12}>
+              <TextField
+                fullWidth
+                required
+                label="Value/Pattern"
+                value={exceptionForm.value}
+                onChange={(e) => setExceptionForm({ ...exceptionForm, value: e.target.value })}
+                helperText="Value or pattern to match. Use * for wildcards (e.g., '*@test.com')"
+              />
+            </Grid>
+            <Grid item xs={12}>
+              <TextField
+                fullWidth
+                label="Description"
+                multiline
+                rows={2}
+                value={exceptionForm.description}
+                onChange={(e) => setExceptionForm({ ...exceptionForm, description: e.target.value })}
+                helperText="Explain why this exception is needed"
+              />
+            </Grid>
+          </Grid>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setExceptionDialog(false)}>Cancel</Button>
+          <Button variant="contained" color="warning" onClick={handleAddException}>
+            {editingException ? 'Update' : 'Add'}
           </Button>
         </DialogActions>
       </Dialog>

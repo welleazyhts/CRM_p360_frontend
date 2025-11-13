@@ -51,6 +51,7 @@ import LeaveManagement from './pages/LeaveManagement';
 import SalesPipeline from './pages/SalesPipeline';
 import AttendanceManagement from './pages/AttendanceManagement';
 import KPIManagement from './pages/KPIManagement';
+import TrainingManagement from './pages/TrainingManagement';
 import QRCManagement from './pages/QRCManagement';
 import ContactDatabase from './pages/ContactDatabase';
 import CustomerDatabase from './pages/CustomerDatabase';
@@ -68,7 +69,10 @@ import CustomerServiceEmail from './pages/CustomerServiceEmail';
 import ComplaintsManagement from './pages/ComplaintsManagement';
 import CustomerFeedback from './pages/CustomerFeedback';
 import TrainingAnalysis from './pages/TrainingAnalysis';
-
+import InsurerProductConfigurator from './pages/InsurerProductConfigurator';
+import DispositionConfigurator from './pages/DispositionConfigurator';
+import VahanIntegration from './pages/VahanIntegration';
+import FeaturesShowcase from './pages/FeaturesShowcase';
 
 import SLAMonitoring from './pages/SLAMonitoring';
 import SLASettings from './components/settings/SLASettings';
@@ -102,6 +106,9 @@ import { AutoAssignmentProvider } from './context/AutoAssignmentContext.jsx';
 import { TaskManagementProvider } from './context/TaskManagementContext.jsx';
 import { CommissionProvider } from './context/CommissionContext.jsx';
 import { WorkflowProvider } from './context/WorkflowContext.jsx';
+import { InsurerProductProvider } from './context/InsurerProductContext.jsx';
+import { DispositionProvider } from './context/DispositionContext.jsx';
+import { VahanProvider } from './context/VahanContext.jsx';
 import './i18n'; // Initialize i18n
 
 function AppWithTheme() {
@@ -331,10 +338,13 @@ function AppWithTheme() {
                         <TaskManagementProvider>
                           <CommissionProvider>
                             <WorkflowProvider>
-                              <CustomerManagementProvider>
-                                <LeadProvider>
-                                  <AttendanceProvider>
-                                    <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+                              <InsurerProductProvider>
+                                <DispositionProvider>
+                                  <VahanProvider>
+                                    <CustomerManagementProvider>
+                                      <LeadProvider>
+                                        <AttendanceProvider>
+                                        <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
             <Routes>
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
@@ -710,6 +720,14 @@ function AppWithTheme() {
                   </ProtectedRoute>
                 } />
 
+                <Route path="/training-management" element={
+                  <ProtectedRoute requiredPermission="training">
+                    <Layout>
+                      <TrainingManagement />
+                    </Layout>
+                  </ProtectedRoute>
+                } />
+
                 {/* Customer Management Module */}
                 <Route path="/customer-management/contact-database" element={
                   <ProtectedRoute requiredPermission="contact-database">
@@ -970,17 +988,52 @@ function AppWithTheme() {
                   </ProtectedRoute>
                 } />
 
+                {/* Insurer & Product Configurator */}
+                <Route path="/insurer-product-configurator" element={
+                  <ProtectedRoute requiredPermission="settings">
+                    <Layout>
+                      <InsurerProductConfigurator />
+                    </Layout>
+                  </ProtectedRoute>
+                } />
 
+                {/* Disposition Configurator */}
+                <Route path="/disposition-configurator" element={
+                  <ProtectedRoute requiredPermission="settings">
+                    <Layout>
+                      <DispositionConfigurator />
+                    </Layout>
+                  </ProtectedRoute>
+                } />
 
+                {/* Vahan Integration */}
+                <Route path="/vahan-integration" element={
+                  <ProtectedRoute requiredPermission="settings">
+                    <Layout>
+                      <VahanIntegration />
+                    </Layout>
+                  </ProtectedRoute>
+                } />
 
+                {/* Features Showcase */}
+                <Route path="/features-showcase" element={
+                  <ProtectedRoute>
+                    <Layout>
+                      <FeaturesShowcase />
+                    </Layout>
+                  </ProtectedRoute>
+                } />
 
             <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
             <WelcomeModal open={welcomeModalOpen} onClose={handleCloseWelcomeModal} />
-                                    </Router>
-                                  </AttendanceProvider>
-                                </LeadProvider>
-                              </CustomerManagementProvider>
+                                        </Router>
+                                        </AttendanceProvider>
+                                      </LeadProvider>
+                                    </CustomerManagementProvider>
+                                  </VahanProvider>
+                                </DispositionProvider>
+                              </InsurerProductProvider>
                             </WorkflowProvider>
                           </CommissionProvider>
                         </TaskManagementProvider>

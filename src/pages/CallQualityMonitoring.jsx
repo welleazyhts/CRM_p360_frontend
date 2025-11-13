@@ -2,15 +2,18 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Box, Typography, Paper, Table, TableBody, TableCell, TableContainer,
-  TableHead, TableRow, Button, Chip, Rating, TextField, Grid, Card, CardContent
+  TableHead, TableRow, Button, Chip, Rating, TextField, Grid, Card, CardContent,
+  LinearProgress, Stack, Tooltip, useTheme, alpha
 } from '@mui/material';
 import {
-  RateReview as ReviewIcon, Analytics as AnalyticsIcon, PlayArrow as PlayIcon
+  RateReview as ReviewIcon, Analytics as AnalyticsIcon, PlayArrow as PlayIcon,
+  CheckCircle as ExcellentIcon, Cancel as PoorIcon, Warning as NeedsImprovementIcon
 } from '@mui/icons-material';
 
 const CallQualityMonitoring = () => {
   const navigate = useNavigate();
-  
+  const theme = useTheme();
+
   const [calls] = useState([
     {
       id: 1,
@@ -21,6 +24,7 @@ const CallQualityMonitoring = () => {
       recordedAudio: 'call_recording_001.mp3',
       rating: 4,
       qaStatus: 'Reviewed',
+      qualityScore: 85,
       feedback: 'Good communication, clear explanation of policy terms'
     },
     {
@@ -32,6 +36,7 @@ const CallQualityMonitoring = () => {
       recordedAudio: 'call_recording_002.mp3',
       rating: null,
       qaStatus: 'Pending',
+      qualityScore: null,
       feedback: ''
     },
     {
@@ -43,7 +48,32 @@ const CallQualityMonitoring = () => {
       recordedAudio: 'call_recording_003.mp3',
       rating: 5,
       qaStatus: 'Reviewed',
+      qualityScore: 95,
       feedback: 'Excellent customer service, resolved all queries efficiently'
+    },
+    {
+      id: 4,
+      customerName: 'Kavita Nair',
+      agent: 'Amit Patel',
+      date: '2025-01-17',
+      duration: '06:45',
+      recordedAudio: 'call_recording_004.mp3',
+      rating: 3,
+      qaStatus: 'Reviewed',
+      qualityScore: 72,
+      feedback: 'Needs improvement in handling objections'
+    },
+    {
+      id: 5,
+      customerName: 'Deepak Sharma',
+      agent: 'Priya Sharma',
+      date: '2025-01-16',
+      duration: '09:30',
+      recordedAudio: 'call_recording_005.mp3',
+      rating: 2,
+      qaStatus: 'Reviewed',
+      qualityScore: 58,
+      feedback: 'Poor product knowledge, customer seemed unsatisfied'
     }
   ]);
 
@@ -51,11 +81,30 @@ const CallQualityMonitoring = () => {
     totalCalls: calls.length,
     reviewedCalls: calls.filter(c => c.qaStatus === 'Reviewed').length,
     pendingCalls: calls.filter(c => c.qaStatus === 'Pending').length,
-    averageRating: calls.filter(c => c.rating).reduce((sum, c) => sum + c.rating, 0) / calls.filter(c => c.rating).length || 0
+    averageRating: calls.filter(c => c.rating).reduce((sum, c) => sum + c.rating, 0) / calls.filter(c => c.rating).length || 0,
+    averageQualityScore: calls.filter(c => c.qualityScore).reduce((sum, c) => sum + c.qualityScore, 0) / calls.filter(c => c.qualityScore).length || 0
   };
 
   const getStatusColor = (status) => {
     return status === 'Reviewed' ? 'success' : 'warning';
+  };
+
+  const getScoreColor = (score) => {
+    if (score >= 85) return 'success';
+    if (score >= 70) return 'warning';
+    return 'error';
+  };
+
+  const getScoreIcon = (score) => {
+    if (score >= 85) return <ExcellentIcon sx={{ fontSize: 18 }} />;
+    if (score >= 70) return <NeedsImprovementIcon sx={{ fontSize: 18 }} />;
+    return <PoorIcon sx={{ fontSize: 18 }} />;
+  };
+
+  const getScoreLabel = (score) => {
+    if (score >= 85) return 'Excellent';
+    if (score >= 70) return 'Needs Improvement';
+    return 'Poor';
   };
 
   return (
@@ -75,7 +124,7 @@ const CallQualityMonitoring = () => {
 
       {/* Statistics Cards */}
       <Grid container spacing={3} sx={{ mb: 3 }}>
-        <Grid item xs={12} sm={6} md={3}>
+        <Grid item xs={12} sm={6} md={2.4}>
           <Card>
             <CardContent sx={{ textAlign: 'center' }}>
               <Typography variant="h4" fontWeight="600" color="primary">
@@ -87,7 +136,7 @@ const CallQualityMonitoring = () => {
             </CardContent>
           </Card>
         </Grid>
-        <Grid item xs={12} sm={6} md={3}>
+        <Grid item xs={12} sm={6} md={2.4}>
           <Card>
             <CardContent sx={{ textAlign: 'center' }}>
               <Typography variant="h4" fontWeight="600" color="success.main">
@@ -99,7 +148,7 @@ const CallQualityMonitoring = () => {
             </CardContent>
           </Card>
         </Grid>
-        <Grid item xs={12} sm={6} md={3}>
+        <Grid item xs={12} sm={6} md={2.4}>
           <Card>
             <CardContent sx={{ textAlign: 'center' }}>
               <Typography variant="h4" fontWeight="600" color="warning.main">
@@ -111,7 +160,7 @@ const CallQualityMonitoring = () => {
             </CardContent>
           </Card>
         </Grid>
-        <Grid item xs={12} sm={6} md={3}>
+        <Grid item xs={12} sm={6} md={2.4}>
           <Card>
             <CardContent sx={{ textAlign: 'center' }}>
               <Typography variant="h4" fontWeight="600" color="secondary.main">
@@ -119,6 +168,21 @@ const CallQualityMonitoring = () => {
               </Typography>
               <Typography variant="body2" color="text.secondary">
                 Avg Rating
+              </Typography>
+            </CardContent>
+          </Card>
+        </Grid>
+        <Grid item xs={12} sm={6} md={2.4}>
+          <Card sx={{
+            background: `linear-gradient(135deg, ${alpha(theme.palette.info.main, 0.1)} 0%, ${alpha(theme.palette.info.dark, 0.2)} 100%)`,
+            border: `1px solid ${alpha(theme.palette.info.main, 0.2)}`
+          }}>
+            <CardContent sx={{ textAlign: 'center' }}>
+              <Typography variant="h4" fontWeight="600" color="info.main">
+                {stats.averageQualityScore > 0 ? stats.averageQualityScore.toFixed(1) : '--'}
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                Avg Quality Score
               </Typography>
             </CardContent>
           </Card>
@@ -139,6 +203,7 @@ const CallQualityMonitoring = () => {
                 <TableCell>Date</TableCell>
                 <TableCell>Duration</TableCell>
                 <TableCell>Rating</TableCell>
+                <TableCell>Quality Score</TableCell>
                 <TableCell>Status</TableCell>
                 <TableCell>Actions</TableCell>
               </TableRow>
@@ -156,6 +221,38 @@ const CallQualityMonitoring = () => {
                     ) : (
                       <Typography variant="body2" color="text.secondary">
                         Not Rated
+                      </Typography>
+                    )}
+                  </TableCell>
+                  <TableCell>
+                    {call.qualityScore ? (
+                      <Tooltip title={getScoreLabel(call.qualityScore)} arrow>
+                        <Box>
+                          <Stack direction="row" spacing={1} alignItems="center">
+                            <Chip
+                              icon={getScoreIcon(call.qualityScore)}
+                              label={`${call.qualityScore}%`}
+                              color={getScoreColor(call.qualityScore)}
+                              size="small"
+                              sx={{ fontWeight: 600 }}
+                            />
+                          </Stack>
+                          <LinearProgress
+                            variant="determinate"
+                            value={call.qualityScore}
+                            color={getScoreColor(call.qualityScore)}
+                            sx={{
+                              mt: 0.5,
+                              height: 4,
+                              borderRadius: 2,
+                              backgroundColor: alpha(theme.palette.grey[300], 0.3)
+                            }}
+                          />
+                        </Box>
+                      </Tooltip>
+                    ) : (
+                      <Typography variant="body2" color="text.secondary">
+                        Not Scored
                       </Typography>
                     )}
                   </TableCell>

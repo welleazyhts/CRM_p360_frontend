@@ -8,7 +8,7 @@ import {
   useTheme, alpha, Fade, Grow, Zoom, Dialog, DialogTitle, DialogContent, DialogActions,
   Table, TableBody, TableCell, TableContainer, TableHead, TableRow,
   FormControlLabel, Checkbox,
-  Chip, IconButton, Grid, Avatar
+  Chip, IconButton, Grid, Avatar, Paper, Stack
 } from '@mui/material';
 import {
   DarkMode as DarkModeIcon,
@@ -83,7 +83,9 @@ import {
   Download as DownloadIcon,
   Upload as UploadIcon,
   Timer as TimerIcon,
-  AssignmentInd as AssignmentIndIcon
+  AssignmentInd as AssignmentIndIcon,
+  Event as EventIcon,
+  LocalCafe as CoffeeIcon
 } from '@mui/icons-material';
 import { useThemeMode } from '../context/ThemeModeContext';
 import { useSettings } from '../context/SettingsContext';
@@ -95,6 +97,7 @@ import DedupeSettings from '../components/settings/DedupeSettings';
 import AdminSettings from '../components/settings/AdminSettings';
 import AutoAssignmentSettings from '../components/settings/AutoAssignmentSettings';
 import SLASettings from '../components/settings/SLASettings';
+import DialerConfiguration from '../components/settings/DialerConfiguration';
 
 import { supportedLanguages } from '../i18n';
 
@@ -710,7 +713,7 @@ const Settings = () => {
     { label: 'Auto-Assignment', icon: <AssignmentIndIcon /> },
     { label: 'SLA Management', icon: <TimerIcon /> },
     { label: 'Language Test', icon: <LanguageIcon /> },
-    { label: 'Scheduled Dialer', icon: <PhoneIcon /> }
+    { label: 'Scheduled Dialer', icon: <PhoneIcon />, component: <DialerConfiguration /> }
   ], []);
 
   useEffect(() => {
@@ -4596,7 +4599,13 @@ const Settings = () => {
   // Scheduled Dialer Settings Tab
   const ScheduledDialerSettingsTab = () => {
     const [dialerStatus, setDialerStatus] = useState(true);
+    const [activeTab, setActiveTab] = useState(0);
+    const theme = useTheme();
     
+    const handleTabChange = (event, newValue) => {
+      setActiveTab(newValue);
+    };
+
     const scheduledCalls = [
       {
         id: 1,
@@ -4664,10 +4673,43 @@ const Settings = () => {
           Scheduled Dialer
         </Typography>
         <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-          Monitor dialer status, office hours, and manage scheduled calls
+          Monitor dialer status, configure office hours, breaks, and manage scheduled calls
         </Typography>
 
-        <Grid container spacing={3}>
+        {/* Configuration Tabs */}
+        <Paper sx={{ mb: 3 }}>
+          <Tabs
+            value={activeTab}
+            onChange={handleTabChange}
+            variant="scrollable"
+            scrollButtons="auto"
+            sx={{ borderBottom: 1, borderColor: 'divider', mb: 2 }}
+          >
+            <Tab 
+              icon={<PhoneIcon />} 
+              label="General" 
+              iconPosition="start"
+            />
+            <Tab
+              icon={<AccessTimeIcon />}
+              label="Office Hours"
+              iconPosition="start"
+            />
+            <Tab
+              icon={<EventIcon />}
+              label="Holidays"
+              iconPosition="start"
+            />
+            <Tab
+              icon={<CoffeeIcon />}
+              label="Breaks"
+              iconPosition="start"
+            />
+          </Tabs>
+
+          <Box sx={{ p: 2 }}>
+            {activeTab === 0 && (
+              <Grid container spacing={3}>
           {/* Dialer Status */}
           <Grid item xs={12} md={6}>
             <Card sx={{ borderRadius: 3, boxShadow: '0 8px 24px rgba(0,0,0,0.05)' }}>
@@ -4782,19 +4824,292 @@ const Settings = () => {
             </Card>
           </Grid>
         </Grid>
+      )}
+
+            {/* Office Hours Tab */}
+            {activeTab === 1 && (
+              <Grid container spacing={3}>
+                <Grid item xs={12}>
+                  <Card sx={{ borderRadius: 3, boxShadow: '0 8px 24px rgba(0,0,0,0.05)' }}>
+                    <CardContent sx={{ p: 3 }}>
+                      <Typography variant="h6" fontWeight="600" gutterBottom>
+                        Configure Office Hours
+                      </Typography>
+                      <Divider sx={{ mb: 3 }} />
+
+                      <Grid container spacing={3}>
+                        {['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'].map((day) => (
+                          <Grid item xs={12} key={day}>
+                            <Paper sx={{ p: 2, bgcolor: alpha(theme.palette.primary.main, 0.02) }}>
+                              <Grid container spacing={2} alignItems="center">
+                                <Grid item xs={12} sm={3}>
+                                  <FormControlLabel
+                                    control={<Switch defaultChecked={day !== 'Sunday'} />}
+                                    label={<Typography fontWeight="600">{day}</Typography>}
+                                  />
+                                </Grid>
+                                <Grid item xs={12} sm={4}>
+                                  <TextField
+                                    fullWidth
+                                    label="Start Time"
+                                    type="time"
+                                    defaultValue="09:00"
+                                    InputLabelProps={{ shrink: true }}
+                                    size="small"
+                                  />
+                                </Grid>
+                                <Grid item xs={12} sm={4}>
+                                  <TextField
+                                    fullWidth
+                                    label="End Time"
+                                    type="time"
+                                    defaultValue="18:00"
+                                    InputLabelProps={{ shrink: true }}
+                                    size="small"
+                                  />
+                                </Grid>
+                                <Grid item xs={12} sm={1}>
+                                  <Chip
+                                    label={day === 'Sunday' ? 'Off' : '9h'}
+                                    size="small"
+                                    color={day === 'Sunday' ? 'error' : 'success'}
+                                  />
+                                </Grid>
+                              </Grid>
+                            </Paper>
+                          </Grid>
+                        ))}
+                      </Grid>
+
+                      <Box sx={{ mt: 3, display: 'flex', gap: 2 }}>
+                        <Button variant="contained" startIcon={<SaveIcon />}>
+                          Save Office Hours
+                        </Button>
+                        <Button variant="outlined">
+                          Reset to Default
+                        </Button>
+                      </Box>
+                    </CardContent>
+                  </Card>
+                </Grid>
+              </Grid>
+            )}
+
+            {/* Holidays Tab */}
+            {activeTab === 2 && (
+              <Grid container spacing={3}>
+                <Grid item xs={12} md={8}>
+                  <Card sx={{ borderRadius: 3, boxShadow: '0 8px 24px rgba(0,0,0,0.05)' }}>
+                    <CardContent sx={{ p: 3 }}>
+                      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+                        <Typography variant="h6" fontWeight="600">
+                          Holiday Calendar
+                        </Typography>
+                        <Button variant="contained" size="small" startIcon={<AddIcon />}>
+                          Add Holiday
+                        </Button>
+                      </Box>
+                      <Divider sx={{ mb: 2 }} />
+
+                      <Table>
+                        <TableHead>
+                          <TableRow>
+                            <TableCell><Typography fontWeight="600">Holiday Name</Typography></TableCell>
+                            <TableCell><Typography fontWeight="600">Date</Typography></TableCell>
+                            <TableCell><Typography fontWeight="600">Type</Typography></TableCell>
+                            <TableCell align="center"><Typography fontWeight="600">Actions</Typography></TableCell>
+                          </TableRow>
+                        </TableHead>
+                        <TableBody>
+                          {[
+                            { name: 'Republic Day', date: '2025-01-26', type: 'National' },
+                            { name: 'Holi', date: '2025-03-14', type: 'Festival' },
+                            { name: 'Good Friday', date: '2025-04-18', type: 'Religious' },
+                            { name: 'Independence Day', date: '2025-08-15', type: 'National' },
+                            { name: 'Diwali', date: '2025-10-20', type: 'Festival' },
+                            { name: 'Christmas', date: '2025-12-25', type: 'Religious' }
+                          ].map((holiday, index) => (
+                            <TableRow key={index} hover>
+                              <TableCell>{holiday.name}</TableCell>
+                              <TableCell>{holiday.date}</TableCell>
+                              <TableCell>
+                                <Chip
+                                  label={holiday.type}
+                                  size="small"
+                                  color={
+                                    holiday.type === 'National' ? 'primary' :
+                                    holiday.type === 'Festival' ? 'success' : 'info'
+                                  }
+                                />
+                              </TableCell>
+                              <TableCell align="center">
+                                <IconButton size="small" color="primary">
+                                  <EditIcon fontSize="small" />
+                                </IconButton>
+                                <IconButton size="small" color="error">
+                                  <DeleteIcon fontSize="small" />
+                                </IconButton>
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </CardContent>
+                  </Card>
+                </Grid>
+
+                <Grid item xs={12} md={4}>
+                  <Card sx={{ borderRadius: 3, boxShadow: '0 8px 24px rgba(0,0,0,0.05)' }}>
+                    <CardContent sx={{ p: 3 }}>
+                      <Typography variant="h6" fontWeight="600" gutterBottom>
+                        Quick Stats
+                      </Typography>
+                      <Divider sx={{ mb: 2 }} />
+
+                      <Stack spacing={2}>
+                        <Box>
+                          <Typography variant="body2" color="text.secondary">
+                            Total Holidays
+                          </Typography>
+                          <Typography variant="h4" fontWeight="600">
+                            6
+                          </Typography>
+                        </Box>
+                        <Divider />
+                        <Box>
+                          <Typography variant="body2" color="text.secondary">
+                            Upcoming Holiday
+                          </Typography>
+                          <Typography variant="h6" fontWeight="600">
+                            Holi
+                          </Typography>
+                          <Typography variant="caption" color="text.secondary">
+                            March 14, 2025
+                          </Typography>
+                        </Box>
+                      </Stack>
+                    </CardContent>
+                  </Card>
+                </Grid>
+              </Grid>
+            )}
+
+            {/* Breaks Tab */}
+            {activeTab === 3 && (
+              <Grid container spacing={3}>
+                <Grid item xs={12}>
+                  <Card sx={{ borderRadius: 3, boxShadow: '0 8px 24px rgba(0,0,0,0.05)' }}>
+                    <CardContent sx={{ p: 3 }}>
+                      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+                        <Typography variant="h6" fontWeight="600">
+                          Configure Break Times
+                        </Typography>
+                        <Button variant="contained" size="small" startIcon={<AddIcon />}>
+                          Add Break
+                        </Button>
+                      </Box>
+                      <Divider sx={{ mb: 3 }} />
+
+                      <Grid container spacing={3}>
+                        {[
+                          { name: 'Lunch Break', start: '13:00', end: '14:00', enabled: true },
+                          { name: 'Tea Break (Morning)', start: '11:00', end: '11:15', enabled: true },
+                          { name: 'Tea Break (Evening)', start: '16:00', end: '16:15', enabled: true }
+                        ].map((breakTime, index) => (
+                          <Grid item xs={12} key={index}>
+                            <Paper sx={{ p: 3, bgcolor: alpha(theme.palette.info.main, 0.02) }}>
+                              <Grid container spacing={2} alignItems="center">
+                                <Grid item xs={12} sm={3}>
+                                  <FormControlLabel
+                                    control={<Switch defaultChecked={breakTime.enabled} />}
+                                    label={
+                                      <Box>
+                                        <Typography fontWeight="600">{breakTime.name}</Typography>
+                                        <Typography variant="caption" color="text.secondary">
+                                          {breakTime.end === '14:00' ? '1 hour' : '15 minutes'}
+                                        </Typography>
+                                      </Box>
+                                    }
+                                  />
+                                </Grid>
+                                <Grid item xs={12} sm={3}>
+                                  <TextField
+                                    fullWidth
+                                    label="Start Time"
+                                    type="time"
+                                    defaultValue={breakTime.start}
+                                    InputLabelProps={{ shrink: true }}
+                                    size="small"
+                                  />
+                                </Grid>
+                                <Grid item xs={12} sm={3}>
+                                  <TextField
+                                    fullWidth
+                                    label="End Time"
+                                    type="time"
+                                    defaultValue={breakTime.end}
+                                    InputLabelProps={{ shrink: true }}
+                                    size="small"
+                                  />
+                                </Grid>
+                                <Grid item xs={12} sm={2}>
+                                  <FormControl fullWidth size="small">
+                                    <InputLabel>Apply To</InputLabel>
+                                    <Select defaultValue="all">
+                                      <MenuItem value="all">All Days</MenuItem>
+                                      <MenuItem value="weekdays">Weekdays Only</MenuItem>
+                                      <MenuItem value="custom">Custom</MenuItem>
+                                    </Select>
+                                  </FormControl>
+                                </Grid>
+                                <Grid item xs={12} sm={1}>
+                                  <IconButton color="error" size="small">
+                                    <DeleteIcon />
+                                  </IconButton>
+                                </Grid>
+                              </Grid>
+                            </Paper>
+                          </Grid>
+                        ))}
+                      </Grid>
+
+                      <Box sx={{ mt: 3 }}>
+                        <Alert severity="info" sx={{ mb: 2 }}>
+                          <Typography variant="body2">
+                            The dialer will automatically pause during break times. Agents will not receive calls during configured breaks.
+                          </Typography>
+                        </Alert>
+
+                        <Box sx={{ display: 'flex', gap: 2 }}>
+                          <Button variant="contained" startIcon={<SaveIcon />}>
+                            Save Break Configuration
+                          </Button>
+                          <Button variant="outlined">
+                            Reset to Default
+                          </Button>
+                        </Box>
+                      </Box>
+                    </CardContent>
+                  </Card>
+                </Grid>
+              </Grid>
+            )}
+          </Box>
+        </Paper>
       </Box>
     );
   };
 
   // Feedback Settings Tab
-  const FeedbackSettingsTab = () => (
-    <Box>
-      <Typography variant="h5" fontWeight="600" gutterBottom>
-        Feedback & Surveys Settings
-      </Typography>
-      <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-        Configure feedback collection, survey preferences, and integrations
-      </Typography>
+  const FeedbackSettingsTab = () => {
+    return (
+      <Box>
+        <Typography variant="h5" fontWeight="600" gutterBottom>
+          Feedback & Surveys Settings
+        </Typography>
+        <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+          Configure feedback collection, survey preferences, and integrations
+        </Typography>
 
       <Grid container spacing={3}>
         <Grid item xs={12} md={6}>
@@ -5088,6 +5403,7 @@ const Settings = () => {
       </Grid>
     </Box>
   );
+  };
 
   // Knowledge/Process Folder Tab
   const KnowledgeProcessFolderTab = () => {

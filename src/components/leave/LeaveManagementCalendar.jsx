@@ -1,0 +1,1102 @@
+import React, { useState } from 'react';
+import {
+  Box,
+  Typography,
+  Card,
+  CardContent,
+  Grid,
+  Button,
+  Chip,
+  Avatar,
+  IconButton,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  TextField,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+  Stack,
+  Divider,
+  Badge,
+  Tooltip,
+  useTheme,
+  alpha,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Paper,
+  Tabs,
+  Tab,
+  Alert,
+  Snackbar,
+} from '@mui/material';
+import {
+  ChevronLeft as ChevronLeftIcon,
+  ChevronRight as ChevronRightIcon,
+  Add as AddIcon,
+  BeachAccess as VacationIcon,
+  LocalHospital as SickIcon,
+  Work as WorkIcon,
+  Event as EventIcon,
+  CheckCircle as ApprovedIcon,
+  HourglassEmpty as PendingIcon,
+  Cancel as RejectedIcon,
+  Person as PersonIcon,
+  Check as CheckIcon,
+  Close as CloseIcon,
+  AccessTime as RegularizationIcon,
+  Visibility as ViewIcon,
+} from '@mui/icons-material';
+
+const LeaveManagementCalendar = () => {
+  const theme = useTheme();
+  const [currentDate, setCurrentDate] = useState(new Date());
+  const [selectedDate, setSelectedDate] = useState(null);
+  const [openDialog, setOpenDialog] = useState(false);
+  const [openRegularizationDialog, setOpenRegularizationDialog] = useState(false);
+  const [activeTab, setActiveTab] = useState(0);
+  const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
+  const [leaveForm, setLeaveForm] = useState({
+    type: 'Casual Leave',
+    startDate: '',
+    endDate: '',
+    reason: '',
+  });
+  const [regularizationForm, setRegularizationForm] = useState({
+    date: '',
+    actualCheckIn: '',
+    actualCheckOut: '',
+    reason: '',
+  });
+
+  // Mock leave data
+  const [leaves, setLeaves] = useState([
+    {
+      id: 1,
+      employee: 'Amit Patel',
+      employeeId: 'EMP003',
+      type: 'Casual Leave',
+      startDate: '2025-01-15',
+      endDate: '2025-01-16',
+      days: 2,
+      reason: 'Personal work',
+      status: 'Approved',
+      appliedDate: '2025-01-10',
+    },
+    {
+      id: 2,
+      employee: 'Priya Sharma',
+      employeeId: 'EMP002',
+      type: 'Sick Leave',
+      startDate: '2025-01-20',
+      endDate: '2025-01-20',
+      days: 1,
+      reason: 'Medical appointment',
+      status: 'Pending',
+      appliedDate: '2025-01-18',
+    },
+    {
+      id: 3,
+      employee: 'Vikram Singh',
+      employeeId: 'EMP004',
+      type: 'Earned Leave',
+      startDate: '2025-01-25',
+      endDate: '2025-01-28',
+      days: 4,
+      reason: 'Family vacation',
+      status: 'Approved',
+      appliedDate: '2025-01-12',
+    },
+    {
+      id: 4,
+      employee: 'Sneha Reddy',
+      employeeId: 'EMP005',
+      type: 'Casual Leave',
+      startDate: '2025-02-05',
+      endDate: '2025-02-06',
+      days: 2,
+      reason: 'Family function',
+      status: 'Pending',
+      appliedDate: '2025-01-28',
+    },
+    {
+      id: 5,
+      employee: 'Rahul Gupta',
+      employeeId: 'EMP006',
+      type: 'Work From Home',
+      startDate: '2025-01-22',
+      endDate: '2025-01-22',
+      days: 1,
+      reason: 'Home renovation work',
+      status: 'Pending',
+      appliedDate: '2025-01-20',
+    },
+  ]);
+
+  // Mock regularization data
+  const [regularizations, setRegularizations] = useState([
+    {
+      id: 1,
+      employee: 'Amit Patel',
+      employeeId: 'EMP003',
+      date: '2025-01-18',
+      scheduledCheckIn: '09:00',
+      actualCheckIn: '10:30',
+      scheduledCheckOut: '18:00',
+      actualCheckOut: '18:00',
+      reason: 'Traffic jam on highway',
+      status: 'Pending',
+      appliedDate: '2025-01-18',
+    },
+    {
+      id: 2,
+      employee: 'Meera Joshi',
+      employeeId: 'EMP007',
+      date: '2025-01-17',
+      scheduledCheckIn: '09:00',
+      actualCheckIn: '09:00',
+      scheduledCheckOut: '18:00',
+      actualCheckOut: '16:30',
+      reason: 'Urgent family matter',
+      status: 'Approved',
+      appliedDate: '2025-01-17',
+    },
+    {
+      id: 3,
+      employee: 'Kavya Nair',
+      employeeId: 'EMP008',
+      date: '2025-01-19',
+      scheduledCheckIn: '09:00',
+      actualCheckIn: '11:00',
+      scheduledCheckOut: '18:00',
+      actualCheckOut: '20:00',
+      reason: 'Client meeting ran late',
+      status: 'Pending',
+      appliedDate: '2025-01-19',
+    },
+    {
+      id: 4,
+      employee: 'Sanjay Kumar',
+      employeeId: 'EMP009',
+      date: '2025-01-16',
+      scheduledCheckIn: '09:00',
+      actualCheckIn: '09:00',
+      scheduledCheckOut: '18:00',
+      actualCheckOut: '15:00',
+      reason: 'Feeling unwell',
+      status: 'Rejected',
+      appliedDate: '2025-01-16',
+      rejectionReason: 'Insufficient sick leave balance',
+    },
+  ]);
+
+  const leaveTypes = {
+    'Casual Leave': { icon: EventIcon, color: theme.palette.info.main },
+    'Sick Leave': { icon: SickIcon, color: theme.palette.error.main },
+    'Earned Leave': { icon: VacationIcon, color: theme.palette.success.main },
+    'Work From Home': { icon: WorkIcon, color: theme.palette.warning.main },
+  };
+
+  const getDaysInMonth = (date) => {
+    const year = date.getFullYear();
+    const month = date.getMonth();
+    const firstDay = new Date(year, month, 1);
+    const lastDay = new Date(year, month + 1, 0);
+    const daysInMonth = lastDay.getDate();
+    const startingDayOfWeek = firstDay.getDay();
+
+    return { daysInMonth, startingDayOfWeek };
+  };
+
+  const getLeaveForDate = (date) => {
+    const dateStr = date.toISOString().split('T')[0];
+    return leaves.filter((leave) => {
+      const start = new Date(leave.startDate);
+      const end = new Date(leave.endDate);
+      const current = new Date(dateStr);
+      return current >= start && current <= end;
+    });
+  };
+
+  const handlePrevMonth = () => {
+    setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1));
+  };
+
+  const handleNextMonth = () => {
+    setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1));
+  };
+
+  const handleDateClick = (day) => {
+    const date = new Date(currentDate.getFullYear(), currentDate.getMonth(), day);
+    setSelectedDate(date);
+  };
+
+  const handleAddLeave = () => {
+    setOpenDialog(true);
+  };
+
+  const handleCloseDialog = () => {
+    setOpenDialog(false);
+    setLeaveForm({
+      type: 'Casual Leave',
+      startDate: '',
+      endDate: '',
+      reason: '',
+    });
+  };
+
+  const handleSubmitLeave = () => {
+    const newLeave = {
+      id: leaves.length + 1,
+      employee: 'Current User',
+      employeeId: 'EMP001',
+      ...leaveForm,
+      days: calculateDays(leaveForm.startDate, leaveForm.endDate),
+      status: 'Pending',
+      appliedDate: new Date().toISOString().split('T')[0],
+    };
+    setLeaves([...leaves, newLeave]);
+    setSnackbar({ open: true, message: 'Leave request submitted successfully!', severity: 'success' });
+    handleCloseDialog();
+  };
+
+  // Approve leave
+  const handleApproveLeave = (leaveId) => {
+    setLeaves(leaves.map(leave =>
+      leave.id === leaveId ? { ...leave, status: 'Approved' } : leave
+    ));
+    setSnackbar({ open: true, message: 'Leave request approved!', severity: 'success' });
+  };
+
+  // Reject leave
+  const handleRejectLeave = (leaveId) => {
+    setLeaves(leaves.map(leave =>
+      leave.id === leaveId ? { ...leave, status: 'Rejected' } : leave
+    ));
+    setSnackbar({ open: true, message: 'Leave request rejected!', severity: 'error' });
+  };
+
+  // Handle regularization dialog
+  const handleOpenRegularizationDialog = () => {
+    setOpenRegularizationDialog(true);
+  };
+
+  const handleCloseRegularizationDialog = () => {
+    setOpenRegularizationDialog(false);
+    setRegularizationForm({
+      date: '',
+      actualCheckIn: '',
+      actualCheckOut: '',
+      reason: '',
+    });
+  };
+
+  const handleSubmitRegularization = () => {
+    const newRegularization = {
+      id: regularizations.length + 1,
+      employee: 'Current User',
+      employeeId: 'EMP001',
+      date: regularizationForm.date,
+      scheduledCheckIn: '09:00',
+      actualCheckIn: regularizationForm.actualCheckIn,
+      scheduledCheckOut: '18:00',
+      actualCheckOut: regularizationForm.actualCheckOut,
+      reason: regularizationForm.reason,
+      status: 'Pending',
+      appliedDate: new Date().toISOString().split('T')[0],
+    };
+    setRegularizations([...regularizations, newRegularization]);
+    setSnackbar({ open: true, message: 'Regularization request submitted successfully!', severity: 'success' });
+    handleCloseRegularizationDialog();
+  };
+
+  // Approve regularization
+  const handleApproveRegularization = (regId) => {
+    setRegularizations(regularizations.map(reg =>
+      reg.id === regId ? { ...reg, status: 'Approved' } : reg
+    ));
+    setSnackbar({ open: true, message: 'Regularization request approved!', severity: 'success' });
+  };
+
+  // Reject regularization
+  const handleRejectRegularization = (regId) => {
+    setRegularizations(regularizations.map(reg =>
+      reg.id === regId ? { ...reg, status: 'Rejected' } : reg
+    ));
+    setSnackbar({ open: true, message: 'Regularization request rejected!', severity: 'error' });
+  };
+
+  const calculateDays = (start, end) => {
+    const startDate = new Date(start);
+    const endDate = new Date(end);
+    const diffTime = Math.abs(endDate - startDate);
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
+    return diffDays;
+  };
+
+  const getStatusIcon = (status) => {
+    switch (status) {
+      case 'Approved':
+        return <ApprovedIcon />;
+      case 'Pending':
+        return <PendingIcon />;
+      case 'Rejected':
+        return <RejectedIcon />;
+      default:
+        return null;
+    }
+  };
+
+  const getStatusColor = (status) => {
+    switch (status) {
+      case 'Approved':
+        return 'success';
+      case 'Pending':
+        return 'warning';
+      case 'Rejected':
+        return 'error';
+      default:
+        return 'default';
+    }
+  };
+
+  const { daysInMonth, startingDayOfWeek } = getDaysInMonth(currentDate);
+  const monthName = currentDate.toLocaleString('default', { month: 'long', year: 'numeric' });
+
+  return (
+    <Box>
+      {/* Header Stats */}
+      <Grid container spacing={3} sx={{ mb: 3 }}>
+        <Grid item xs={12} md={3}>
+          <Card sx={{ borderRadius: 3, boxShadow: 3 }}>
+            <CardContent>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                <Avatar sx={{ bgcolor: alpha(theme.palette.info.main, 0.15), color: 'info.main' }}>
+                  <EventIcon />
+                </Avatar>
+                <Box>
+                  <Typography variant="h4" fontWeight="700">
+                    12
+                  </Typography>
+                  <Typography variant="caption" color="text.secondary">
+                    Total Leaves
+                  </Typography>
+                </Box>
+              </Box>
+            </CardContent>
+          </Card>
+        </Grid>
+        <Grid item xs={12} md={3}>
+          <Card sx={{ borderRadius: 3, boxShadow: 3 }}>
+            <CardContent>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                <Avatar sx={{ bgcolor: alpha(theme.palette.success.main, 0.15), color: 'success.main' }}>
+                  <ApprovedIcon />
+                </Avatar>
+                <Box>
+                  <Typography variant="h4" fontWeight="700">
+                    8
+                  </Typography>
+                  <Typography variant="caption" color="text.secondary">
+                    Available
+                  </Typography>
+                </Box>
+              </Box>
+            </CardContent>
+          </Card>
+        </Grid>
+        <Grid item xs={12} md={3}>
+          <Card sx={{ borderRadius: 3, boxShadow: 3 }}>
+            <CardContent>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                <Avatar sx={{ bgcolor: alpha(theme.palette.warning.main, 0.15), color: 'warning.main' }}>
+                  <PendingIcon />
+                </Avatar>
+                <Box>
+                  <Typography variant="h4" fontWeight="700">
+                    4
+                  </Typography>
+                  <Typography variant="caption" color="text.secondary">
+                    Used
+                  </Typography>
+                </Box>
+              </Box>
+            </CardContent>
+          </Card>
+        </Grid>
+        <Grid item xs={12} md={3}>
+          <Card sx={{ borderRadius: 3, boxShadow: 3 }}>
+            <CardContent>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                <Avatar sx={{ bgcolor: alpha(theme.palette.error.main, 0.15), color: 'error.main' }}>
+                  <VacationIcon />
+                </Avatar>
+                <Box>
+                  <Typography variant="h4" fontWeight="700">
+                    2
+                  </Typography>
+                  <Typography variant="caption" color="text.secondary">
+                    Pending
+                  </Typography>
+                </Box>
+              </Box>
+            </CardContent>
+          </Card>
+        </Grid>
+      </Grid>
+
+      {/* Tabs */}
+      <Card sx={{ borderRadius: 3, boxShadow: 3, mb: 3 }}>
+        <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
+          <Tabs value={activeTab} onChange={(e, newValue) => setActiveTab(newValue)}>
+            <Tab label="Calendar View" />
+            <Tab label={`Leave Requests (${leaves.filter(l => l.status === 'Pending').length})`} />
+            <Tab label={`Regularization Requests (${regularizations.filter(r => r.status === 'Pending').length})`} />
+          </Tabs>
+        </Box>
+      </Card>
+
+      <Grid container spacing={3}>
+        {/* Calendar */}
+        {activeTab === 0 && (
+        <>
+        <Grid item xs={12} lg={8}>
+          <Card sx={{ borderRadius: 3, boxShadow: 3 }}>
+            <CardContent sx={{ p: 3 }}>
+              {/* Calendar Header */}
+              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 3 }}>
+                <Typography variant="h5" fontWeight="700">
+                  {monthName}
+                </Typography>
+                <Box sx={{ display: 'flex', gap: 1 }}>
+                  <IconButton onClick={handlePrevMonth} size="small">
+                    <ChevronLeftIcon />
+                  </IconButton>
+                  <Button variant="outlined" size="small" startIcon={<AddIcon />} onClick={handleAddLeave}>
+                    Request Leave
+                  </Button>
+                  <IconButton onClick={handleNextMonth} size="small">
+                    <ChevronRightIcon />
+                  </IconButton>
+                </Box>
+              </Box>
+
+              {/* Calendar Grid */}
+              <Box>
+                {/* Day Headers */}
+                <Grid container spacing={1} sx={{ mb: 1 }}>
+                  {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day) => (
+                    <Grid item xs key={day}>
+                      <Typography
+                        variant="caption"
+                        fontWeight="700"
+                        color="text.secondary"
+                        align="center"
+                        display="block"
+                      >
+                        {day}
+                      </Typography>
+                    </Grid>
+                  ))}
+                </Grid>
+
+                {/* Calendar Days */}
+                <Grid container spacing={1}>
+                  {/* Empty cells for days before month starts */}
+                  {Array.from({ length: startingDayOfWeek }).map((_, index) => (
+                    <Grid item xs key={`empty-${index}`}>
+                      <Box sx={{ height: 80 }} />
+                    </Grid>
+                  ))}
+
+                  {/* Calendar days */}
+                  {Array.from({ length: daysInMonth }).map((_, index) => {
+                    const day = index + 1;
+                    const date = new Date(currentDate.getFullYear(), currentDate.getMonth(), day);
+                    const leavesOnDate = getLeaveForDate(date);
+                    const isToday =
+                      date.toDateString() === new Date().toDateString();
+
+                    return (
+                      <Grid item xs key={day}>
+                        <Box
+                          onClick={() => handleDateClick(day)}
+                          sx={{
+                            height: 80,
+                            border: `1px solid ${theme.palette.divider}`,
+                            borderRadius: 2,
+                            p: 1,
+                            cursor: 'pointer',
+                            bgcolor: isToday ? alpha(theme.palette.primary.main, 0.05) : 'background.paper',
+                            transition: 'all 0.2s',
+                            '&:hover': {
+                              bgcolor: alpha(theme.palette.primary.main, 0.1),
+                              transform: 'scale(1.02)',
+                            },
+                          }}
+                        >
+                          <Typography
+                            variant="caption"
+                            fontWeight={isToday ? 700 : 400}
+                            color={isToday ? 'primary' : 'text.primary'}
+                          >
+                            {day}
+                          </Typography>
+
+                          {/* Leave indicators */}
+                          <Stack spacing={0.5} sx={{ mt: 0.5 }}>
+                            {leavesOnDate.slice(0, 2).map((leave) => {
+                              const LeaveIcon = leaveTypes[leave.type].icon;
+                              return (
+                                <Tooltip key={leave.id} title={`${leave.employee} - ${leave.type}`}>
+                                  <Chip
+                                    icon={<LeaveIcon sx={{ fontSize: 12 }} />}
+                                    label={leave.employee.split(' ')[0]}
+                                    size="small"
+                                    sx={{
+                                      height: 18,
+                                      fontSize: 9,
+                                      bgcolor: alpha(leaveTypes[leave.type].color, 0.1),
+                                      color: leaveTypes[leave.type].color,
+                                      '& .MuiChip-label': {
+                                        px: 0.5,
+                                      },
+                                      '& .MuiChip-icon': {
+                                        fontSize: 10,
+                                        color: leaveTypes[leave.type].color,
+                                      },
+                                    }}
+                                  />
+                                </Tooltip>
+                              );
+                            })}
+                            {leavesOnDate.length > 2 && (
+                              <Typography variant="caption" fontSize={8} color="text.secondary">
+                                +{leavesOnDate.length - 2} more
+                              </Typography>
+                            )}
+                          </Stack>
+                        </Box>
+                      </Grid>
+                    );
+                  })}
+                </Grid>
+              </Box>
+
+              {/* Legend */}
+              <Box sx={{ mt: 3, pt: 2, borderTop: `1px solid ${theme.palette.divider}` }}>
+                <Typography variant="caption" fontWeight="600" gutterBottom display="block">
+                  Leave Types:
+                </Typography>
+                <Stack direction="row" spacing={2} flexWrap="wrap" useFlexGap>
+                  {Object.entries(leaveTypes).map(([type, config]) => {
+                    const Icon = config.icon;
+                    return (
+                      <Chip
+                        key={type}
+                        icon={<Icon />}
+                        label={type}
+                        size="small"
+                        sx={{
+                          bgcolor: alpha(config.color, 0.1),
+                          color: config.color,
+                          '& .MuiChip-icon': {
+                            color: config.color,
+                          },
+                        }}
+                      />
+                    );
+                  })}
+                </Stack>
+              </Box>
+            </CardContent>
+          </Card>
+        </Grid>
+
+        {/* Leave Requests List (Calendar View) */}
+        <Grid item xs={12} lg={4}>
+          <Card sx={{ borderRadius: 3, boxShadow: 3, height: '100%' }}>
+            <CardContent sx={{ p: 3 }}>
+              <Typography variant="h6" fontWeight="700" gutterBottom>
+                Recent Leave Requests
+              </Typography>
+              <Divider sx={{ mb: 2 }} />
+
+              <Stack spacing={2}>
+                {leaves.slice(0, 5).map((leave) => {
+                  const LeaveIcon = leaveTypes[leave.type].icon;
+                  return (
+                    <Paper
+                      key={leave.id}
+                      sx={{
+                        p: 2,
+                        borderRadius: 2,
+                        border: `1px solid ${alpha(leaveTypes[leave.type].color, 0.3)}`,
+                      }}
+                    >
+                      <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1.5 }}>
+                        <Avatar
+                          sx={{
+                            bgcolor: alpha(leaveTypes[leave.type].color, 0.15),
+                            color: leaveTypes[leave.type].color,
+                            width: 40,
+                            height: 40,
+                          }}
+                        >
+                          <LeaveIcon fontSize="small" />
+                        </Avatar>
+                        <Box sx={{ flex: 1 }}>
+                          <Typography variant="body2" fontWeight="600">
+                            {leave.employee}
+                          </Typography>
+                          <Typography variant="caption" color="text.secondary" display="block">
+                            {leave.type}
+                          </Typography>
+                          <Typography variant="caption" color="text.secondary" display="block">
+                            {leave.startDate} to {leave.endDate} ({leave.days} days)
+                          </Typography>
+                          <Chip
+                            icon={getStatusIcon(leave.status)}
+                            label={leave.status}
+                            size="small"
+                            color={getStatusColor(leave.status)}
+                            sx={{ mt: 1 }}
+                          />
+                        </Box>
+                      </Box>
+                    </Paper>
+                  );
+                })}
+              </Stack>
+            </CardContent>
+          </Card>
+        </Grid>
+        </>
+        )}
+      </Grid>
+
+      {/* Tab 1: Leave Requests */}
+      {activeTab === 1 && (
+        <Card sx={{ borderRadius: 3, boxShadow: 3 }}>
+          <CardContent sx={{ p: 3 }}>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+              <Typography variant="h6" fontWeight="700">
+                Leave Requests Management
+              </Typography>
+              <Button
+                variant="contained"
+                startIcon={<AddIcon />}
+                onClick={handleAddLeave}
+              >
+                Request Leave
+              </Button>
+            </Box>
+
+            <TableContainer>
+              <Table>
+                <TableHead>
+                  <TableRow>
+                    <TableCell>Employee</TableCell>
+                    <TableCell>Leave Type</TableCell>
+                    <TableCell>Duration</TableCell>
+                    <TableCell>Days</TableCell>
+                    <TableCell>Reason</TableCell>
+                    <TableCell>Applied On</TableCell>
+                    <TableCell>Status</TableCell>
+                    <TableCell align="center">Actions</TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {leaves.map((leave) => {
+                    const LeaveIcon = leaveTypes[leave.type].icon;
+                    return (
+                      <TableRow key={leave.id} hover>
+                        <TableCell>
+                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                            <Avatar sx={{ width: 36, height: 36, bgcolor: alpha(theme.palette.primary.main, 0.1), color: 'primary.main' }}>
+                              <PersonIcon fontSize="small" />
+                            </Avatar>
+                            <Box>
+                              <Typography variant="body2" fontWeight="600">
+                                {leave.employee}
+                              </Typography>
+                              <Typography variant="caption" color="text.secondary">
+                                {leave.employeeId}
+                              </Typography>
+                            </Box>
+                          </Box>
+                        </TableCell>
+                        <TableCell>
+                          <Chip
+                            icon={<LeaveIcon />}
+                            label={leave.type}
+                            size="small"
+                            sx={{
+                              bgcolor: alpha(leaveTypes[leave.type].color, 0.1),
+                              color: leaveTypes[leave.type].color,
+                              '& .MuiChip-icon': { color: leaveTypes[leave.type].color },
+                            }}
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <Typography variant="body2">
+                            {leave.startDate}
+                          </Typography>
+                          <Typography variant="caption" color="text.secondary">
+                            to {leave.endDate}
+                          </Typography>
+                        </TableCell>
+                        <TableCell>
+                          <Chip label={`${leave.days} day${leave.days > 1 ? 's' : ''}`} size="small" variant="outlined" />
+                        </TableCell>
+                        <TableCell>
+                          <Typography variant="body2" sx={{ maxWidth: 200 }}>
+                            {leave.reason}
+                          </Typography>
+                        </TableCell>
+                        <TableCell>
+                          <Typography variant="caption" color="text.secondary">
+                            {leave.appliedDate}
+                          </Typography>
+                        </TableCell>
+                        <TableCell>
+                          <Chip
+                            icon={getStatusIcon(leave.status)}
+                            label={leave.status}
+                            size="small"
+                            color={getStatusColor(leave.status)}
+                          />
+                        </TableCell>
+                        <TableCell align="center">
+                          {leave.status === 'Pending' ? (
+                            <Stack direction="row" spacing={1} justifyContent="center">
+                              <Tooltip title="Approve">
+                                <IconButton
+                                  size="small"
+                                  color="success"
+                                  onClick={() => handleApproveLeave(leave.id)}
+                                  sx={{
+                                    bgcolor: alpha(theme.palette.success.main, 0.1),
+                                    '&:hover': { bgcolor: alpha(theme.palette.success.main, 0.2) }
+                                  }}
+                                >
+                                  <CheckIcon fontSize="small" />
+                                </IconButton>
+                              </Tooltip>
+                              <Tooltip title="Reject">
+                                <IconButton
+                                  size="small"
+                                  color="error"
+                                  onClick={() => handleRejectLeave(leave.id)}
+                                  sx={{
+                                    bgcolor: alpha(theme.palette.error.main, 0.1),
+                                    '&:hover': { bgcolor: alpha(theme.palette.error.main, 0.2) }
+                                  }}
+                                >
+                                  <CloseIcon fontSize="small" />
+                                </IconButton>
+                              </Tooltip>
+                            </Stack>
+                          ) : (
+                            <Tooltip title="View Details">
+                              <IconButton size="small">
+                                <ViewIcon fontSize="small" />
+                              </IconButton>
+                            </Tooltip>
+                          )}
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+              </Table>
+            </TableContainer>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Tab 2: Regularization Requests */}
+      {activeTab === 2 && (
+        <Card sx={{ borderRadius: 3, boxShadow: 3 }}>
+          <CardContent sx={{ p: 3 }}>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+              <Typography variant="h6" fontWeight="700">
+                Attendance Regularization Requests
+              </Typography>
+              <Button
+                variant="contained"
+                startIcon={<AddIcon />}
+                onClick={handleOpenRegularizationDialog}
+              >
+                Request Regularization
+              </Button>
+            </Box>
+
+            <TableContainer>
+              <Table>
+                <TableHead>
+                  <TableRow>
+                    <TableCell>Employee</TableCell>
+                    <TableCell>Date</TableCell>
+                    <TableCell>Check In</TableCell>
+                    <TableCell>Check Out</TableCell>
+                    <TableCell>Reason</TableCell>
+                    <TableCell>Applied On</TableCell>
+                    <TableCell>Status</TableCell>
+                    <TableCell align="center">Actions</TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {regularizations.map((reg) => (
+                    <TableRow key={reg.id} hover>
+                      <TableCell>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                          <Avatar sx={{ width: 36, height: 36, bgcolor: alpha(theme.palette.warning.main, 0.1), color: 'warning.main' }}>
+                            <RegularizationIcon fontSize="small" />
+                          </Avatar>
+                          <Box>
+                            <Typography variant="body2" fontWeight="600">
+                              {reg.employee}
+                            </Typography>
+                            <Typography variant="caption" color="text.secondary">
+                              {reg.employeeId}
+                            </Typography>
+                          </Box>
+                        </Box>
+                      </TableCell>
+                      <TableCell>
+                        <Typography variant="body2" fontWeight="600">
+                          {reg.date}
+                        </Typography>
+                      </TableCell>
+                      <TableCell>
+                        <Box>
+                          <Typography variant="caption" color="text.secondary">
+                            Scheduled: {reg.scheduledCheckIn}
+                          </Typography>
+                          <Typography
+                            variant="body2"
+                            fontWeight="600"
+                            color={reg.actualCheckIn > reg.scheduledCheckIn ? 'error.main' : 'success.main'}
+                          >
+                            Actual: {reg.actualCheckIn}
+                          </Typography>
+                        </Box>
+                      </TableCell>
+                      <TableCell>
+                        <Box>
+                          <Typography variant="caption" color="text.secondary">
+                            Scheduled: {reg.scheduledCheckOut}
+                          </Typography>
+                          <Typography
+                            variant="body2"
+                            fontWeight="600"
+                            color={reg.actualCheckOut < reg.scheduledCheckOut ? 'error.main' : 'success.main'}
+                          >
+                            Actual: {reg.actualCheckOut}
+                          </Typography>
+                        </Box>
+                      </TableCell>
+                      <TableCell>
+                        <Typography variant="body2" sx={{ maxWidth: 200 }}>
+                          {reg.reason}
+                        </Typography>
+                      </TableCell>
+                      <TableCell>
+                        <Typography variant="caption" color="text.secondary">
+                          {reg.appliedDate}
+                        </Typography>
+                      </TableCell>
+                      <TableCell>
+                        <Chip
+                          icon={getStatusIcon(reg.status)}
+                          label={reg.status}
+                          size="small"
+                          color={getStatusColor(reg.status)}
+                        />
+                      </TableCell>
+                      <TableCell align="center">
+                        {reg.status === 'Pending' ? (
+                          <Stack direction="row" spacing={1} justifyContent="center">
+                            <Tooltip title="Approve">
+                              <IconButton
+                                size="small"
+                                color="success"
+                                onClick={() => handleApproveRegularization(reg.id)}
+                                sx={{
+                                  bgcolor: alpha(theme.palette.success.main, 0.1),
+                                  '&:hover': { bgcolor: alpha(theme.palette.success.main, 0.2) }
+                                }}
+                              >
+                                <CheckIcon fontSize="small" />
+                              </IconButton>
+                            </Tooltip>
+                            <Tooltip title="Reject">
+                              <IconButton
+                                size="small"
+                                color="error"
+                                onClick={() => handleRejectRegularization(reg.id)}
+                                sx={{
+                                  bgcolor: alpha(theme.palette.error.main, 0.1),
+                                  '&:hover': { bgcolor: alpha(theme.palette.error.main, 0.2) }
+                                }}
+                              >
+                                <CloseIcon fontSize="small" />
+                              </IconButton>
+                            </Tooltip>
+                          </Stack>
+                        ) : (
+                          <Tooltip title="View Details">
+                            <IconButton size="small">
+                              <ViewIcon fontSize="small" />
+                            </IconButton>
+                          </Tooltip>
+                        )}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </TableContainer>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Leave Request Dialog */}
+      <Dialog open={openDialog} onClose={handleCloseDialog} maxWidth="sm" fullWidth>
+        <DialogTitle>Request Leave</DialogTitle>
+        <DialogContent>
+          <Stack spacing={3} sx={{ mt: 2 }}>
+            <FormControl fullWidth>
+              <InputLabel>Leave Type</InputLabel>
+              <Select
+                value={leaveForm.type}
+                onChange={(e) => setLeaveForm({ ...leaveForm, type: e.target.value })}
+                label="Leave Type"
+              >
+                {Object.keys(leaveTypes).map((type) => (
+                  <MenuItem key={type} value={type}>
+                    {type}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+            <TextField
+              fullWidth
+              label="Start Date"
+              type="date"
+              value={leaveForm.startDate}
+              onChange={(e) => setLeaveForm({ ...leaveForm, startDate: e.target.value })}
+              InputLabelProps={{ shrink: true }}
+            />
+            <TextField
+              fullWidth
+              label="End Date"
+              type="date"
+              value={leaveForm.endDate}
+              onChange={(e) => setLeaveForm({ ...leaveForm, endDate: e.target.value })}
+              InputLabelProps={{ shrink: true }}
+            />
+            <TextField
+              fullWidth
+              label="Reason"
+              multiline
+              rows={3}
+              value={leaveForm.reason}
+              onChange={(e) => setLeaveForm({ ...leaveForm, reason: e.target.value })}
+            />
+          </Stack>
+        </DialogContent>
+        <DialogActions sx={{ p: 2.5 }}>
+          <Button onClick={handleCloseDialog}>Cancel</Button>
+          <Button variant="contained" onClick={handleSubmitLeave}>
+            Submit Request
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Regularization Request Dialog */}
+      <Dialog open={openRegularizationDialog} onClose={handleCloseRegularizationDialog} maxWidth="sm" fullWidth>
+        <DialogTitle>Request Attendance Regularization</DialogTitle>
+        <DialogContent>
+          <Alert severity="info" sx={{ mt: 2, mb: 3 }}>
+            Use this form to regularize your attendance if you forgot to check-in/out or had timing issues.
+          </Alert>
+          <Stack spacing={3}>
+            <TextField
+              fullWidth
+              label="Date"
+              type="date"
+              value={regularizationForm.date}
+              onChange={(e) => setRegularizationForm({ ...regularizationForm, date: e.target.value })}
+              InputLabelProps={{ shrink: true }}
+            />
+            <Grid container spacing={2}>
+              <Grid item xs={6}>
+                <TextField
+                  fullWidth
+                  label="Actual Check-In Time"
+                  type="time"
+                  value={regularizationForm.actualCheckIn}
+                  onChange={(e) => setRegularizationForm({ ...regularizationForm, actualCheckIn: e.target.value })}
+                  InputLabelProps={{ shrink: true }}
+                  helperText="Enter your actual check-in time"
+                />
+              </Grid>
+              <Grid item xs={6}>
+                <TextField
+                  fullWidth
+                  label="Actual Check-Out Time"
+                  type="time"
+                  value={regularizationForm.actualCheckOut}
+                  onChange={(e) => setRegularizationForm({ ...regularizationForm, actualCheckOut: e.target.value })}
+                  InputLabelProps={{ shrink: true }}
+                  helperText="Enter your actual check-out time"
+                />
+              </Grid>
+            </Grid>
+            <TextField
+              fullWidth
+              label="Reason for Regularization"
+              multiline
+              rows={4}
+              value={regularizationForm.reason}
+              onChange={(e) => setRegularizationForm({ ...regularizationForm, reason: e.target.value })}
+              placeholder="Explain why you need to regularize your attendance..."
+            />
+          </Stack>
+        </DialogContent>
+        <DialogActions sx={{ p: 2.5 }}>
+          <Button onClick={handleCloseRegularizationDialog}>Cancel</Button>
+          <Button variant="contained" onClick={handleSubmitRegularization}>
+            Submit Request
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Snackbar for notifications */}
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={3000}
+        onClose={() => setSnackbar({ ...snackbar, open: false })}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+      >
+        <Alert
+          onClose={() => setSnackbar({ ...snackbar, open: false })}
+          severity={snackbar.severity}
+          sx={{ width: '100%' }}
+        >
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
+    </Box>
+  );
+};
+
+export default LeaveManagementCalendar;

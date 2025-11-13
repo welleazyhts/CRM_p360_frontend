@@ -5,7 +5,10 @@ import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import BulkUpload from '../components/common/BulkUpload';
 import FailedRecordsViewer from '../components/common/FailedRecordsViewer';
 import { useDedupe } from '../context/DedupeContext';
+import { useVahan } from '../context/VahanContext';
 import { History as HistoryIcon } from '@mui/icons-material';
+import LeadScoringIndicator from '../components/leads/LeadScoringIndicator';
+import PriorityIndicator from '../components/leads/PriorityIndicator';
 import {
   Box,
   Card,
@@ -84,7 +87,9 @@ import {
   InsertDriveFile as InsuranceDocIcon,
   CloudUpload as CloudUploadIcon,
   Phone as PhoneForwardedIcon,
-  CloudDownload as CloudDownloadIcon
+  CloudDownload as CloudDownloadIcon,
+  VerifiedUser as VerifiedUserIcon,
+  Error as ErrorIcon
 } from '@mui/icons-material';
 
 // Mock data for leads with Premium/Regular types
@@ -99,7 +104,7 @@ const mockLeads = [
     position: 'Senior Manager',
     source: 'Website',
     status: 'New',
-    priority: 'High',
+    priority: 'Hot',
     leadType: 'Premium',
     assignedTo: 'Priya Patel',
     assignedToId: 'priya.patel',
@@ -111,7 +116,8 @@ const mockLeads = [
     createdAt: '2024-01-10',
     updatedAt: '2024-01-15',
     preferredLanguage: 'Hindi',
-    totalCalls: 3
+    totalCalls: 3,
+    score: 85
   },
   {
     id: 2,
@@ -123,11 +129,12 @@ const mockLeads = [
     position: 'HR Director',
     source: 'Referral',
     status: 'Qualified',
-    priority: 'Medium',
+    priority: 'Warm',
     leadType: 'Premium',
     assignedTo: 'Amit Kumar',
     assignedToId: 'amit.kumar',
     value: 750000,
+    score: 72,
     expectedCloseDate: '2024-02-28',
     lastContactDate: '2024-01-12',
     notes: 'Looking for group health insurance for 1000+ employees.',
@@ -394,10 +401,229 @@ const mockLeads = [
   }
 ];
 
+// Helper function to normalize priority values from High/Medium/Low to Hot/Warm/Cold
+const normalizePriority = (priority) => {
+  if (!priority) return 'Cold';
+  const lowerPriority = priority.toLowerCase();
+  if (lowerPriority === 'high' || lowerPriority === 'hot') return 'Hot';
+  if (lowerPriority === 'medium' || lowerPriority === 'warm') return 'Warm';
+  return 'Cold';
+};
+
+// Helper function to calculate lead score based on FRD scoring model
+// Engagement: 30%, Budget: 25%, Timeline: 20%, Authority: 15%, Need: 10%
+const calculateLeadScore = (lead) => {
+  // 1. ENGAGEMENT SCORE (30%) - Based on interactions, responses, and status
+  const calculateEngagementScore = () => {
+    let engagementScore = 0;
+
+    // Status progression indicates engagement level
+    const statusScores = {
+      'New': 30,
+      'Contacted': 45,
+      'Qualified': 70,
+      'Proposal': 85,
+      'Negotiation': 95,
+      'Won': 100,
+      'Lost': 10,
+      'Archived': 5
+    };
+    engagementScore += (statusScores[lead.status] || 30) * 0.5; // 50% weight on status
+
+    // Call/interaction frequency (0-10+ calls mapped to 0-100)
+    const callScore = Math.min((lead.totalCalls || 0) * 10, 100);
+    engagementScore += callScore * 0.3; // 30% weight on calls
+
+    // Lead type indicates engagement potential
+    const typeScore = lead.leadType === 'Premium' ? 100 : 70;
+    engagementScore += typeScore * 0.2; // 20% weight on lead type
+
+    return Math.min(engagementScore, 100);
+  };
+
+  // 2. BUDGET FIT SCORE (25%) - Based on deal value and lead capacity
+  const calculateBudgetScore = () => {
+    let budgetScore = 0;
+
+    // Deal value scoring (normalized)
+    if (!lead.value || lead.value === 0) {
+      budgetScore = 30; // Unknown budget
+    } else if (lead.value >= 1500000) {
+      budgetScore = 100; // High value
+    } else if (lead.value >= 1000000) {
+      budgetScore = 90;
+    } else if (lead.value >= 750000) {
+      budgetScore = 80;
+    } else if (lead.value >= 500000) {
+      budgetScore = 70;
+    } else if (lead.value >= 250000) {
+      budgetScore = 60;
+    } else {
+      budgetScore = 40; // Lower value deals
+    }
+
+    // Premium leads typically have better budget alignment
+    if (lead.leadType === 'Premium') {
+      budgetScore = Math.min(budgetScore + 10, 100);
+    }
+
+    return budgetScore;
+  };
+
+  // 3. TIMELINE SCORE (20%) - Based on expected close date and urgency
+  const calculateTimelineScore = () => {
+    let timelineScore = 50; // Default/unknown timeline
+
+    if (lead.expectedCloseDate) {
+      const today = new Date();
+      const closeDate = new Date(lead.expectedCloseDate);
+      const daysUntilClose = Math.ceil((closeDate - today) / (1000 * 60 * 60 * 24));
+
+      // Ideal timeline: 15-60 days (higher score)
+      if (daysUntilClose < 0) {
+        timelineScore = 20; // Overdue
+      } else if (daysUntilClose <= 7) {
+        timelineScore = 100; // Closing within a week - very hot
+      } else if (daysUntilClose <= 15) {
+        timelineScore = 95; // Closing within 2 weeks
+      } else if (daysUntilClose <= 30) {
+        timelineScore = 85; // Closing within a month
+      } else if (daysUntilClose <= 60) {
+        timelineScore = 70; // Closing within 2 months
+      } else if (daysUntilClose <= 90) {
+        timelineScore = 55; // Closing within 3 months
+      } else {
+        timelineScore = 35; // Long timeline
+      }
+    }
+
+    // Priority affects timeline urgency
+    const priority = normalizePriority(lead.priority);
+    if (priority === 'Hot') timelineScore = Math.min(timelineScore + 10, 100);
+    else if (priority === 'Warm') timelineScore = Math.min(timelineScore + 5, 100);
+
+    // Status affects timeline confidence
+    if (lead.status === 'Negotiation') timelineScore = Math.min(timelineScore + 15, 100);
+    else if (lead.status === 'Proposal') timelineScore = Math.min(timelineScore + 10, 100);
+
+    return timelineScore;
+  };
+
+  // 4. AUTHORITY SCORE (15%) - Based on contact position and decision-making power
+  const calculateAuthorityScore = () => {
+    let authorityScore = 50; // Default
+
+    // Position-based authority
+    const position = (lead.position || '').toLowerCase();
+
+    // C-Level / Top Management
+    if (position.includes('ceo') || position.includes('cto') || position.includes('cfo') ||
+        position.includes('coo') || position.includes('founder') || position.includes('owner') ||
+        position.includes('president') || position.includes('chairman')) {
+      authorityScore = 100;
+    }
+    // VP / Director Level
+    else if (position.includes('vp') || position.includes('vice president') ||
+             position.includes('director') || position.includes('head')) {
+      authorityScore = 90;
+    }
+    // Manager Level
+    else if (position.includes('manager') || position.includes('lead')) {
+      authorityScore = 75;
+    }
+    // Senior Level
+    else if (position.includes('senior') || position.includes('sr')) {
+      authorityScore = 65;
+    }
+    // Individual Contributor
+    else if (position.includes('executive') || position.includes('specialist') ||
+             position.includes('officer')) {
+      authorityScore = 50;
+    }
+    // Unknown or junior
+    else {
+      authorityScore = 40;
+    }
+
+    // Premium leads often have better authority access
+    if (lead.leadType === 'Premium') {
+      authorityScore = Math.min(authorityScore + 5, 100);
+    }
+
+    return authorityScore;
+  };
+
+  // 5. NEED SCORE (10%) - Based on source and lead context
+  const calculateNeedScore = () => {
+    let needScore = 50; // Default
+
+    // Source indicates need/intent level
+    const source = (lead.source || '').toLowerCase();
+
+    if (source.includes('referral')) {
+      needScore = 95; // High intent - someone referred them
+    } else if (source.includes('website') || source.includes('demo request')) {
+      needScore = 85; // Self-service inquiry - active intent
+    } else if (source.includes('linkedin') || source.includes('social')) {
+      needScore = 75; // Social engagement
+    } else if (source.includes('email campaign')) {
+      needScore = 65; // Marketing qualified
+    } else if (source.includes('cold call') || source.includes('outbound')) {
+      needScore = 45; // Outbound - lower initial intent
+    } else {
+      needScore = 60; // Other sources
+    }
+
+    // Status progression indicates validated need
+    if (lead.status === 'Qualified') needScore = Math.min(needScore + 10, 100);
+    else if (lead.status === 'Proposal' || lead.status === 'Negotiation') needScore = 100;
+
+    // Tags can indicate specific needs
+    if (lead.tags && Array.isArray(lead.tags)) {
+      if (lead.tags.some(tag => tag.toLowerCase().includes('urgent'))) {
+        needScore = Math.min(needScore + 15, 100);
+      }
+    }
+
+    return needScore;
+  };
+
+  // Calculate all factor scores
+  const engagementScore = calculateEngagementScore();
+  const budgetScore = calculateBudgetScore();
+  const timelineScore = calculateTimelineScore();
+  const authorityScore = calculateAuthorityScore();
+  const needScore = calculateNeedScore();
+
+  // Apply weights and calculate final score
+  // Engagement: 30%, Budget: 25%, Timeline: 20%, Authority: 15%, Need: 10%
+  const finalScore = (
+    (engagementScore * 0.30) +
+    (budgetScore * 0.25) +
+    (timelineScore * 0.20) +
+    (authorityScore * 0.15) +
+    (needScore * 0.10)
+  );
+
+  // Store factor breakdown for detailed view (optional)
+  if (lead.scoreBreakdown === undefined) {
+    lead.scoreBreakdown = {
+      engagement: Math.round(engagementScore),
+      budget: Math.round(budgetScore),
+      timeline: Math.round(timelineScore),
+      authority: Math.round(authorityScore),
+      need: Math.round(needScore)
+    };
+  }
+
+  return Math.round(finalScore);
+};
+
 const LeadManagement = () => {
   const theme = useTheme();
   const navigate = useNavigate();
   const { checkDuplicate } = useDedupe();
+  const { verifyVehicle, bulkVerifyVehicles, getVerificationByLeadId, isVehicleVerified, loading: vahanLoading } = useVahan();
   const [leads, setLeads] = useState(mockLeads);
   const [filteredLeads, setFilteredLeads] = useState(mockLeads);
   const [openDialog, setOpenDialog] = useState(false);
@@ -452,6 +678,11 @@ const LeadManagement = () => {
   const [expiryCheckDialog, setExpiryCheckDialog] = useState(false);
   const [selectedPolicy, setSelectedPolicy] = useState(null);
   const [navCheckLoading, setNavCheckLoading] = useState(false);
+
+  // Vahan verification state
+  const [vahanDialog, setVahanDialog] = useState(false);
+  const [vahanVerificationLead, setVahanVerificationLead] = useState(null);
+  const [vahanVehicleNumber, setVahanVehicleNumber] = useState('');
 
   // Form state
   const [formData, setFormData] = useState({
@@ -1122,6 +1353,80 @@ const LeadManagement = () => {
     });
   };
 
+  // ============ VAHAN VERIFICATION HANDLERS ============
+
+  const handlePushToVahan = (lead) => {
+    if (!lead.vehicleRegistrationNumber) {
+      setSnackbar({ open: true, message: 'No vehicle registration number found for this lead', severity: 'warning' });
+      return;
+    }
+    setVahanVerificationLead(lead);
+    setVahanVehicleNumber(lead.vehicleRegistrationNumber);
+    setVahanDialog(true);
+  };
+
+  const handleConfirmVahanVerification = async () => {
+    if (!vahanVehicleNumber) {
+      setSnackbar({ open: true, message: 'Please enter vehicle registration number', severity: 'warning' });
+      return;
+    }
+
+    const result = await verifyVehicle(vahanVehicleNumber, vahanVerificationLead.id.toString(), 'System');
+
+    if (result.success) {
+      setSnackbar({ open: true, message: 'Vehicle verified successfully with Vahan', severity: 'success' });
+      setVahanDialog(false);
+      setVahanVerificationLead(null);
+      setVahanVehicleNumber('');
+    } else {
+      setSnackbar({ open: true, message: `Verification failed: ${result.error}`, severity: 'error' });
+    }
+  };
+
+  const handleBulkPushToVahan = async () => {
+    if (selectedLeads.length === 0) {
+      setSnackbar({ open: true, message: 'Please select leads to push to Vahan', severity: 'warning' });
+      return;
+    }
+
+    const leadsWithVehicles = selectedLeads
+      .map(leadId => leads.find(l => l.id === leadId))
+      .filter(lead => lead && lead.vehicleRegistrationNumber);
+
+    if (leadsWithVehicles.length === 0) {
+      setSnackbar({ open: true, message: 'No selected leads have vehicle registration numbers', severity: 'warning' });
+      return;
+    }
+
+    const vehicleList = leadsWithVehicles.map(lead => ({
+      vehicleNumber: lead.vehicleRegistrationNumber,
+      leadId: lead.id.toString()
+    }));
+
+    const result = await bulkVerifyVehicles(vehicleList, 'System');
+
+    if (result.success) {
+      setSnackbar({
+        open: true,
+        message: `Bulk verification complete: ${result.summary.successful} successful, ${result.summary.failed} failed`,
+        severity: 'success'
+      });
+      setSelectedLeads([]);
+    } else {
+      setSnackbar({ open: true, message: 'Bulk verification failed', severity: 'error' });
+    }
+  };
+
+  const getVahanStatus = (leadId) => {
+    const verification = getVerificationByLeadId(leadId.toString());
+    if (!verification) return null;
+    return {
+      status: verification.status,
+      verifiedAt: verification.verifiedAt,
+      vehicleDetails: verification.vehicleDetails
+    };
+  };
+
   // Get lead type badge color
   const getLeadTypeBadgeColor = (leadType) => {
     return leadType === 'Premium' ? '#FFD700' : '#90CAF9';
@@ -1540,6 +1845,16 @@ const LeadManagement = () => {
                 </Button>
                 <Button
                   variant="outlined"
+                  startIcon={<VehicleIcon />}
+                  onClick={handleBulkPushToVahan}
+                  size="small"
+                  color="secondary"
+                  disabled={vahanLoading}
+                >
+                  {vahanLoading ? 'Verifying...' : 'Push to Vahan'}
+                </Button>
+                <Button
+                  variant="outlined"
                   startIcon={<ArchiveIcon />}
                   onClick={() => {
                     const updatedLeads = leads.filter(lead => !selectedLeads.includes(lead.id));
@@ -1576,12 +1891,14 @@ const LeadManagement = () => {
                   <TableCell>Company</TableCell>
                   <TableCell>Type</TableCell>
                   <TableCell>Status</TableCell>
+                  <TableCell>Score</TableCell>
                   <TableCell>Priority</TableCell>
                   <TableCell>Assigned To</TableCell>
                   <TableCell>Language</TableCell>
                   <TableCell>Total Calls</TableCell>
                   <TableCell>Value</TableCell>
                   <TableCell>Last Contact</TableCell>
+                  <TableCell align="center">Vahan</TableCell>
                   <TableCell align="center">Actions</TableCell>
                 </TableRow>
               </TableHead>
@@ -1668,14 +1985,17 @@ const LeadManagement = () => {
                       />
                     </TableCell>
                     <TableCell>
-                      <Chip
-                        label={lead.priority}
-                        size="small"
-                        sx={{
-                          backgroundColor: alpha(getPriorityColor(lead.priority), 0.1),
-                          color: getPriorityColor(lead.priority),
-                          border: `1px solid ${alpha(getPriorityColor(lead.priority), 0.3)}`
-                        }}
+                      <LeadScoringIndicator
+                        score={lead.score || calculateLeadScore(lead)}
+                        stage={lead.status}
+                        showDetails={false}
+                        scoreBreakdown={lead.scoreBreakdown}
+                      />
+                    </TableCell>
+                    <TableCell>
+                      <PriorityIndicator
+                        priority={normalizePriority(lead.priority)}
+                        compact={true}
                       />
                     </TableCell>
                     <TableCell>
@@ -1712,6 +2032,53 @@ const LeadManagement = () => {
                       <Typography variant="body2" color="text.secondary">
                         {lead.lastContactDate || 'Never'}
                       </Typography>
+                    </TableCell>
+                    <TableCell align="center">
+                      {lead.vehicleRegistrationNumber ? (
+                        (() => {
+                          const vahanStatus = getVahanStatus(lead.id);
+                          if (vahanStatus) {
+                            if (vahanStatus.status === 'verified') {
+                              return (
+                                <Tooltip title={`Verified on ${new Date(vahanStatus.verifiedAt).toLocaleDateString()}`}>
+                                  <Chip
+                                    icon={<VerifiedUserIcon />}
+                                    label="Verified"
+                                    color="success"
+                                    size="small"
+                                  />
+                                </Tooltip>
+                              );
+                            } else if (vahanStatus.status === 'failed') {
+                              return (
+                                <Tooltip title="Verification failed">
+                                  <Chip
+                                    icon={<ErrorIcon />}
+                                    label="Failed"
+                                    color="error"
+                                    size="small"
+                                  />
+                                </Tooltip>
+                              );
+                            }
+                          }
+                          return (
+                            <Tooltip title="Click to verify vehicle">
+                              <IconButton
+                                size="small"
+                                onClick={() => handlePushToVahan(lead)}
+                                color="primary"
+                              >
+                                <VehicleIcon />
+                              </IconButton>
+                            </Tooltip>
+                          );
+                        })()
+                      ) : (
+                        <Typography variant="caption" color="text.secondary">
+                          N/A
+                        </Typography>
+                      )}
                     </TableCell>
                     <TableCell align="center">
                       <Box sx={{ display: 'flex', gap: 1, justifyContent: 'center' }}>
@@ -2799,6 +3166,80 @@ const LeadManagement = () => {
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setCallDialogOpen(false)}>Close</Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Vahan Verification Dialog */}
+      <Dialog
+        open={vahanDialog}
+        onClose={() => {
+          setVahanDialog(false);
+          setVahanVerificationLead(null);
+          setVahanVehicleNumber('');
+        }}
+        maxWidth="sm"
+        fullWidth
+      >
+        <DialogTitle>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <VehicleIcon color="primary" />
+            <Typography variant="h6">Vahan Vehicle Verification</Typography>
+          </Box>
+        </DialogTitle>
+        <DialogContent>
+          <Box sx={{ pt: 2 }}>
+            {vahanVerificationLead && (
+              <Alert severity="info" sx={{ mb: 2 }}>
+                Verifying vehicle for: <strong>{vahanVerificationLead.firstName} {vahanVerificationLead.lastName}</strong>
+              </Alert>
+            )}
+
+            <TextField
+              fullWidth
+              label="Vehicle Registration Number"
+              value={vahanVehicleNumber}
+              onChange={(e) => setVahanVehicleNumber(e.target.value.toUpperCase())}
+              placeholder="e.g., MH12AB1234"
+              helperText="Enter the vehicle registration number to verify with Vahan API"
+              disabled={vahanLoading}
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <VehicleIcon />
+                  </InputAdornment>
+                ),
+              }}
+            />
+
+            {vahanLoading && (
+              <Box sx={{ mt: 2 }}>
+                <LinearProgress />
+                <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block', textAlign: 'center' }}>
+                  Verifying with Vahan database...
+                </Typography>
+              </Box>
+            )}
+          </Box>
+        </DialogContent>
+        <DialogActions>
+          <Button
+            onClick={() => {
+              setVahanDialog(false);
+              setVahanVerificationLead(null);
+              setVahanVehicleNumber('');
+            }}
+            disabled={vahanLoading}
+          >
+            Cancel
+          </Button>
+          <Button
+            onClick={handleConfirmVahanVerification}
+            variant="contained"
+            disabled={!vahanVehicleNumber || vahanLoading}
+            startIcon={vahanLoading ? <CircularProgress size={16} /> : <VerifiedUserIcon />}
+          >
+            {vahanLoading ? 'Verifying...' : 'Verify Vehicle'}
+          </Button>
         </DialogActions>
       </Dialog>
     </Box>

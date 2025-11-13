@@ -19,8 +19,8 @@ const mockUserPermissions = {
     'policy-servicing', 'new-business', 'medical-management',
     // Lead Management
     'leads', 'lead-management', 'lead-analytics', 'pipeline',
-    // HR Management
-    'attendance', 'kpi',
+    // HR Management & Leave
+    'attendance', 'kpi', 'leave-management',
     // Email Pages
     'emails', 'email-dashboard', 'email-analytics', 'bulk-email',
     // Marketing Pages
@@ -33,6 +33,8 @@ const mockUserPermissions = {
     'renewal-email-manager', 'renewal-whatsapp-manager',
     // Automation & Tools
     'sla_monitoring', 'auto_assignment', 'tasks', 'commissions', 'workflows', 'call_scheduling', 'call_recording', 'call_quality_monitoring',
+    // Training & Analysis
+    'training',
     // Admin Pages
     'settings', 'billing', 'users',
     // Personal Pages
@@ -44,8 +46,8 @@ const mockUserPermissions = {
     'policy-servicing', 'new-business', 'medical-management',
     // Lead Management
     'leads', 'lead-management', 'lead-analytics', 'pipeline',
-    // HR Management
-    'attendance', 'kpi',
+    // HR Management & Leave
+    'attendance', 'kpi', 'leave-management',
     // Email Pages
     'emails', 'email-dashboard', 'email-analytics', 'bulk-email',
     // Marketing Pages
@@ -58,6 +60,8 @@ const mockUserPermissions = {
     'renewal-email-manager', 'renewal-whatsapp-manager',
     // Automation & Tools
     'sla_monitoring', 'auto_assignment', 'tasks', 'commissions', 'workflows', 'call_scheduling', 'call_recording', 'call_quality_monitoring',
+    // Training & Analysis
+    'training',
     // Admin Pages
     'settings', 'billing', 'users',
     // Personal Pages
@@ -77,8 +81,8 @@ const mockUserPermissions = {
     'policy-servicing', 'new-business', 'medical-management',
     // Lead Management
     'leads', 'lead-management', 'lead-analytics', 'pipeline',
-    // HR Management
-    'attendance', 'kpi',
+    // HR Management & Leave
+    'attendance', 'kpi', 'leave-management',
     // Email Pages
     'emails', 'email-dashboard', 'email-analytics', 'bulk-email',
     // Marketing Pages
@@ -89,6 +93,8 @@ const mockUserPermissions = {
     'whatsapp-flow',
     // Automation & Tools
     'sla_monitoring', 'auto_assignment', 'tasks', 'commissions', 'workflows', 'call_scheduling', 'call_recording', 'call_quality_monitoring',
+    // Training & Analysis
+    'training',
     // Admin Pages
     'settings', 'billing', 'users',
     // Personal Pages
@@ -99,8 +105,8 @@ const mockUserPermissions = {
     'dashboard', 'upload', 'cases', 'closed-cases', 'policy-timeline', 'logs', 'claims',
     // Lead Management
     'leads', 'lead-management', 'lead-analytics', 'pipeline',
-    // HR Management
-    'attendance', 'kpi',
+    // HR Management & Leave
+    'attendance', 'kpi', 'leave-management',
     // Email Pages
     'emails', 'email-dashboard', 'email-analytics', 'bulk-email',
     // Marketing Pages
@@ -113,6 +119,8 @@ const mockUserPermissions = {
     'renewal-email-manager', 'renewal-whatsapp-manager',
     // Automation & Tools
     'sla_monitoring', 'auto_assignment', 'tasks', 'commissions', 'workflows', 'call_scheduling', 'call_recording', 'call_quality_monitoring',
+    // Training & Analysis
+    'training',
     // Personal Pages
     'profile'
   ],
@@ -182,6 +190,9 @@ export const PermissionsProvider = ({ children }) => {
       '/settings': 'settings',
       '/billing': 'billing',
       '/users': 'users',
+      '/attendance': 'attendance',
+      '/leave-management': 'attendance',
+      '/kpi': 'kpi',
       '/emails': 'emails',
       '/emails/dashboard': 'email-dashboard',
       '/emails/analytics': 'email-analytics',
@@ -196,7 +207,8 @@ export const PermissionsProvider = ({ children }) => {
       '/medical-management': 'medical-management',
       '/whatsapp-flow': 'whatsapp-flow',
       '/renewals/email-manager': 'renewal-email-manager',
-      '/renewals/whatsapp-manager': 'renewal-whatsapp-manager'
+      '/renewals/whatsapp-manager': 'renewal-whatsapp-manager',
+      '/training-management': 'training'
     };
 
     const requiredPermission = routePermissions[routePath];
