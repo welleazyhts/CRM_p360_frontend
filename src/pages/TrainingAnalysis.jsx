@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import trainingAnalysisService from '../services/trainingAnalysisService';
 import {
   Box, Typography, Card, CardContent, Button, TextField, Grid,
   Paper, Chip, Dialog, DialogTitle, DialogContent, DialogActions,
@@ -19,6 +20,7 @@ const TrainingAnalysis = () => {
   const [trainingModules, setTrainingModules] = useState([]);
   const [trainingRecords, setTrainingRecords] = useState([]);
   const [moduleDialogOpen, setModuleDialogOpen] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   const [formData, setFormData] = useState({
     title: '',
@@ -32,91 +34,23 @@ const TrainingAnalysis = () => {
     loadTrainingData();
   }, []);
 
-  const loadTrainingData = () => {
-    const mockModules = [
-      {
-        id: 1,
-        title: 'Customer Service Excellence',
-        description: 'Learn best practices for exceptional customer service',
-        duration: '2 hours',
-        category: 'Soft Skills',
-        difficulty: 'Beginner',
-        completionRate: 85,
-        enrolledCount: 45
-      },
-      {
-        id: 2,
-        title: 'Claims Processing Fundamentals',
-        description: 'Comprehensive guide to processing insurance claims',
-        duration: '3 hours',
-        category: 'Technical',
-        difficulty: 'Intermediate',
-        completionRate: 72,
-        enrolledCount: 38
-      },
-      {
-        id: 3,
-        title: 'Product Knowledge - Health Insurance',
-        description: 'Deep dive into health insurance products and features',
-        duration: '4 hours',
-        category: 'Product Knowledge',
-        difficulty: 'Advanced',
-        completionRate: 68,
-        enrolledCount: 35
-      },
-      {
-        id: 4,
-        title: 'Complaint Resolution Strategies',
-        description: 'Effective techniques for resolving customer complaints',
-        duration: '1.5 hours',
-        category: 'Soft Skills',
-        difficulty: 'Intermediate',
-        completionRate: 90,
-        enrolledCount: 42
-      }
-    ];
-
-    const mockRecords = [
-      {
-        id: 1,
-        employeeName: 'Priya Sharma',
-        moduleTitle: 'Customer Service Excellence',
-        status: 'Completed',
-        score: 92,
-        completedDate: '2025-01-10',
-        timeSpent: '2.1 hours'
-      },
-      {
-        id: 2,
-        employeeName: 'Amit Patel',
-        moduleTitle: 'Claims Processing Fundamentals',
-        status: 'In Progress',
-        progress: 65,
-        startedDate: '2025-01-08',
-        timeSpent: '1.8 hours'
-      },
-      {
-        id: 3,
-        employeeName: 'Rajesh Kumar',
-        moduleTitle: 'Product Knowledge - Health Insurance',
-        status: 'Completed',
-        score: 88,
-        completedDate: '2025-01-09',
-        timeSpent: '4.2 hours'
-      },
-      {
-        id: 4,
-        employeeName: 'Anita Desai',
-        moduleTitle: 'Complaint Resolution Strategies',
-        status: 'Completed',
-        score: 95,
-        completedDate: '2025-01-11',
-        timeSpent: '1.6 hours'
-      }
-    ];
-
-    setTrainingModules(mockModules);
-    setTrainingRecords(mockRecords);
+  const loadTrainingData = async () => {
+    try {
+      setLoading(true);
+      const [modules, records] = await Promise.all([
+        trainingAnalysisService.getTrainingModules(),
+        trainingAnalysisService.getTrainingRecords()
+      ]);
+      setTrainingModules(modules);
+      setTrainingRecords(records);
+    } catch (error) {
+      console.error('Error loading training data:', error);
+      // Fallback to empty arrays on error
+      setTrainingModules([]);
+      setTrainingRecords([]);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleAddModule = () => {
@@ -130,15 +64,16 @@ const TrainingAnalysis = () => {
     setModuleDialogOpen(true);
   };
 
-  const handleSaveModule = () => {
-    const newModule = {
-      ...formData,
-      id: trainingModules.length + 1,
-      completionRate: 0,
-      enrolledCount: 0
-    };
-    setTrainingModules([...trainingModules, newModule]);
-    setModuleDialogOpen(false);
+  const handleSaveModule = async () => {
+    try {
+      const newModule = await trainingAnalysisService.createTrainingModule(formData);
+      setTrainingModules([...trainingModules, newModule]);
+      setModuleDialogOpen(false);
+    } catch (error) {
+      console.error('Error saving module:', error);
+      // Still close dialog on error, user can retry
+      setModuleDialogOpen(false);
+    }
   };
 
   const avgCompletionRate = trainingModules.reduce((sum, m) => sum + m.completionRate, 0) / trainingModules.length || 0;

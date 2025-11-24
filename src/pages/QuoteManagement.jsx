@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import {
   Box, Paper, Typography, Tabs, Tab, Button, TextField, Grid,
   Table, TableBody, TableCell, TableContainer, TableHead, TableRow,
@@ -48,6 +48,8 @@ import {
   Print as PrintIcon
 } from '@mui/icons-material';
 
+import QuoteService from '../services/qouteservice';
+
 const QuoteManagement = () => {
   const theme = useTheme();
   const [currentTab, setCurrentTab] = useState(0);
@@ -80,211 +82,45 @@ const QuoteManagement = () => {
     previousInsurance: ''
   });
 
-  const [quotes, setQuotes] = useState([
-    {
-      id: 'Q001',
-      leadId: 'L1234',
-      customerName: 'Rajesh Kumar',
-      customerEmail: 'rajesh.k@example.com',
-      customerPhone: '+91 98765 43210',
-      productType: 'Health Insurance',
-      productPlan: 'Health Insurance Premium Plus',
-      coverageAmount: '₹10,00,000',
-      premium: '₹12,000',
-      sumInsured: '₹10,00,000',
-      tenure: '1 Year',
-      quoteAmount: '₹12,000',
-      status: 'Pending',
-      validUntil: '2025-02-15',
-      raisedDate: '2025-01-15',
-      raisedBy: 'Admin User',
-      lastUpdated: '2025-01-15',
-      version: 1,
-      conversionProbability: 75,
-      attachments: ['policy_terms.pdf', 'coverage_details.pdf'],
-      timeline: [
-        { action: 'Quote Created', user: 'Admin', timestamp: '2025-01-15 10:30 AM', details: 'Initial quote raised' },
-        { action: 'Email Sent', user: 'System', timestamp: '2025-01-15 10:35 AM', details: 'Quote sent to customer' }
-      ]
-    },
-    {
-      id: 'Q002',
-      leadId: 'L1235',
-      customerName: 'Priya Sharma',
-      customerEmail: 'priya.s@example.com',
-      customerPhone: '+91 98765 43211',
-      productType: 'Life Insurance',
-      productPlan: 'Life Insurance Gold',
-      coverageAmount: '₹50,00,000',
-      premium: '₹25,000',
-      sumInsured: '₹50,00,000',
-      tenure: '20 Years',
-      quoteAmount: '₹5,00,000',
-      status: 'Approved',
-      validUntil: '2025-02-16',
-      raisedDate: '2025-01-16',
-      raisedBy: 'Priya Patel',
-      lastUpdated: '2025-01-17',
-      version: 2,
-      conversionProbability: 90,
-      attachments: ['policy_document.pdf'],
-      timeline: [
-        { action: 'Quote Created', user: 'Priya Patel', timestamp: '2025-01-16 09:00 AM', details: 'Initial quote raised' },
-        { action: 'Status Changed', user: 'Manager', timestamp: '2025-01-17 02:15 PM', details: 'Status updated to Approved' },
-        { action: 'Customer Follow-up', user: 'Priya Patel', timestamp: '2025-01-17 03:00 PM', details: 'Customer confirmed interest' }
-      ]
-    },
-    {
-      id: 'Q003',
-      leadId: 'L1236',
-      customerName: 'Amit Singh',
-      customerEmail: 'amit.s@example.com',
-      customerPhone: '+91 98765 43212',
-      productType: 'Motor Insurance',
-      productPlan: 'Comprehensive Car Insurance',
-      coverageAmount: '₹10,00,000',
-      premium: '₹8,500',
-      sumInsured: '₹8,00,000',
-      tenure: '1 Year',
-      quoteAmount: '₹8,500',
-      status: 'Rejected',
-      validUntil: '2025-02-14',
-      raisedDate: '2025-01-14',
-      raisedBy: 'Amit Kumar',
-      lastUpdated: '2025-01-18',
-      version: 1,
-      conversionProbability: 30,
-      attachments: [],
-      timeline: [
-        { action: 'Quote Created', user: 'Amit Kumar', timestamp: '2025-01-14 11:00 AM', details: 'Initial quote raised' },
-        { action: 'Quote Rejected', user: 'Underwriter', timestamp: '2025-01-18 11:45 AM', details: 'High risk vehicle profile' }
-      ]
-    },
-    {
-      id: 'Q004',
-      leadId: 'L1237',
-      customerName: 'Sneha Reddy',
-      customerEmail: 'sneha.r@example.com',
-      customerPhone: '+91 98765 43213',
-      productType: 'Health Insurance',
-      productPlan: 'Family Floater Plan',
-      coverageAmount: '₹15,00,000',
-      premium: '₹18,000',
-      sumInsured: '₹15,00,000',
-      tenure: '1 Year',
-      quoteAmount: '₹18,000',
-      status: 'Converted',
-      validUntil: '2025-02-10',
-      raisedDate: '2025-01-10',
-      raisedBy: 'Admin User',
-      lastUpdated: '2025-01-19',
-      policyNumber: 'POL/2025/001234',
-      version: 3,
-      conversionProbability: 100,
-      attachments: ['policy_certificate.pdf', 'payment_receipt.pdf'],
-      timeline: [
-        { action: 'Quote Created', user: 'Admin', timestamp: '2025-01-10 10:00 AM', details: 'Initial quote raised' },
-        { action: 'Quote Revised', user: 'Admin', timestamp: '2025-01-12 03:00 PM', details: 'Coverage amount updated' },
-        { action: 'Status Changed', user: 'Manager', timestamp: '2025-01-15 10:00 AM', details: 'Approved by underwriter' },
-        { action: 'Converted to Policy', user: 'System', timestamp: '2025-01-19 11:00 AM', details: 'Policy issued' }
-      ]
-    },
-    {
-      id: 'Q005',
-      leadId: 'L1238',
-      customerName: 'Vikram Malhotra',
-      customerEmail: 'vikram.m@example.com',
-      customerPhone: '+91 98765 43214',
-      productType: 'Life Insurance',
-      productPlan: 'Term Insurance Basic',
-      coverageAmount: '₹1,00,00,000',
-      premium: '₹15,000',
-      sumInsured: '₹1,00,00,000',
-      tenure: '30 Years',
-      quoteAmount: '₹4,50,000',
-      status: 'Draft',
-      validUntil: '',
-      raisedDate: '2025-01-20',
-      raisedBy: 'Priya Patel',
-      lastUpdated: '2025-01-20',
-      version: 1,
-      conversionProbability: 50,
-      attachments: [],
-      timeline: [
-        { action: 'Quote Drafted', user: 'Priya Patel', timestamp: '2025-01-20 02:00 PM', details: 'Quote in preparation' }
-      ]
-    },
-    {
-      id: 'Q006',
-      leadId: 'L1239',
-      customerName: 'Kavita Nair',
-      customerEmail: 'kavita.n@example.com',
-      customerPhone: '+91 98765 43215',
-      productType: 'Travel Insurance',
-      productPlan: 'International Travel Insurance',
-      coverageAmount: '₹5,00,000',
-      premium: '₹3,500',
-      sumInsured: '₹5,00,000',
-      tenure: '30 Days',
-      quoteAmount: '₹3,500',
-      status: 'Lost',
-      validUntil: '2025-01-25',
-      raisedDate: '2025-01-05',
-      raisedBy: 'Amit Kumar',
-      lastUpdated: '2025-01-21',
-      version: 1,
-      conversionProbability: 0,
-      attachments: [],
-      timeline: [
-        { action: 'Quote Created', user: 'Amit Kumar', timestamp: '2025-01-05 09:00 AM', details: 'Initial quote raised' },
-        { action: 'Customer Follow-up', user: 'Amit Kumar', timestamp: '2025-01-08 10:00 AM', details: 'No response from customer' },
-        { action: 'Marked as Lost', user: 'Amit Kumar', timestamp: '2025-01-21 04:00 PM', details: 'Customer chose competitor' }
-      ]
-    }
-  ]);
+  // --- state now backed by QuoteService (instead of hard-coded list) ---
+  const [quotes, setQuotes] = useState([]);
+  const [mockHistory, setMockHistory] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
 
-  const mockHistory = [
-    {
-      id: 1,
-      quoteId: 'Q001',
-      action: 'Quote Created',
-      user: 'Admin',
-      timestamp: '2025-01-15 10:30 AM',
-      details: 'Initial quote raised for Health Insurance'
-    },
-    {
-      id: 2,
-      quoteId: 'Q002',
-      action: 'Status Changed',
-      user: 'Manager',
-      timestamp: '2025-01-16 02:15 PM',
-      details: 'Status updated from Pending to Approved'
-    },
-    {
-      id: 3,
-      quoteId: 'Q003',
-      action: 'Quote Rejected',
-      user: 'Underwriter',
-      timestamp: '2025-01-17 11:45 AM',
-      details: 'Quote rejected due to high risk profile'
-    },
-    {
-      id: 4,
-      quoteId: 'Q004',
-      action: 'Policy Issued',
-      user: 'System',
-      timestamp: '2025-01-19 11:00 AM',
-      details: 'Quote converted to policy POL/2025/001234'
-    },
-    {
-      id: 5,
-      quoteId: 'Q005',
-      action: 'Quote Drafted',
-      user: 'Priya Patel',
-      timestamp: '2025-01-20 02:00 PM',
-      details: 'New quote created for Term Insurance'
-    }
-  ];
+  // fetch quotes + history on mount
+  useEffect(() => {
+    let mounted = true;
+    const load = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const res = await QuoteService.listQuotes();
+        // service may return { items, total } or an array
+        const items = Array.isArray(res) ? res : (res.items || []);
+        if (!mounted) return;
+        setQuotes(items);
+
+        try {
+          const h = await QuoteService.listHistory();
+          if (!mounted) return;
+          setMockHistory(Array.isArray(h) ? h : (h.items || []));
+        } catch (histErr) {
+          // ignore history error but log
+          console.warn('Failed to load history', histErr);
+        }
+      } catch (err) {
+        console.error('Failed to load quotes', err);
+        if (mounted) setError(err.message || 'Failed to load quotes');
+      } finally {
+        if (mounted) setLoading(false);
+      }
+    };
+
+    load();
+
+    return () => { mounted = false; };
+  }, []);
 
   // Statistics
   const stats = useMemo(() => {
@@ -297,12 +133,14 @@ const QuoteManagement = () => {
     const lostQuotes = quotes.filter(q => q.status === 'Lost').length;
 
     const totalValue = quotes.reduce((acc, q) => {
-      const amount = parseInt(q.quoteAmount.replace(/[₹,]/g, ''));
+      // defensive parsing
+      const amt = (q.quoteAmount || '').toString().replace(/[₹,]/g, '');
+      const amount = parseInt(amt || '0', 10);
       return acc + (isNaN(amount) ? 0 : amount);
     }, 0);
 
     const conversionRate = totalQuotes > 0
-      ? ((convertedQuotes / (totalQuotes - draftQuotes)) * 100).toFixed(1)
+      ? ((convertedQuotes / Math.max(1, (totalQuotes - draftQuotes))) * 100).toFixed(1)
       : 0;
 
     const avgQuoteValue = totalQuotes > 0 ? Math.round(totalValue / totalQuotes) : 0;
@@ -325,9 +163,9 @@ const QuoteManagement = () => {
   const filteredQuotes = useMemo(() => {
     return quotes.filter(quote => {
       const matchesSearch = searchTerm === '' ||
-        quote.customerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        quote.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        quote.productPlan.toLowerCase().includes(searchTerm.toLowerCase());
+        (quote.customerName || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (quote.id || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (quote.productPlan || '').toLowerCase().includes(searchTerm.toLowerCase());
 
       const matchesStatus = statusFilter === 'all' || quote.status === statusFilter;
 
@@ -343,10 +181,10 @@ const QuoteManagement = () => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
-  const handleSubmit = () => {
-    const newQuote = {
-      id: `Q${String(quotes.length + 1).padStart(3, '0')}`,
-      leadId: formData.leadId || `L${1000 + quotes.length}`,
+  // submit with QuoteService.createQuote
+  const handleSubmit = async () => {
+    const payload = {
+      leadId: formData.leadId || undefined,
       customerName: formData.customerName,
       customerEmail: formData.customerEmail,
       customerPhone: formData.customerPhone,
@@ -356,14 +194,10 @@ const QuoteManagement = () => {
       premium: formData.premium,
       sumInsured: formData.sumInsured,
       tenure: formData.tenure,
-      quoteAmount: formData.quoteAmount.startsWith('₹') ? formData.quoteAmount : `₹${formData.quoteAmount}`,
+      quoteAmount: formData.quoteAmount && formData.quoteAmount.toString().startsWith('₹') ? formData.quoteAmount : `₹${formData.quoteAmount}`,
       status: 'Draft',
       validUntil: '',
-      raisedDate: new Date().toISOString().split('T')[0],
       raisedBy: 'Current User',
-      lastUpdated: new Date().toISOString().split('T')[0],
-      version: 1,
-      conversionProbability: 50,
       attachments: [],
       timeline: [
         {
@@ -375,27 +209,39 @@ const QuoteManagement = () => {
       ]
     };
 
-    setQuotes([newQuote, ...quotes]);
-    setFormData({
-      customerName: '',
-      customerEmail: '',
-      customerPhone: '',
-      leadId: '',
-      productType: '',
-      productPlan: '',
-      coverageAmount: '',
-      premium: '',
-      sumInsured: '',
-      tenure: '1',
-      quoteAmount: '',
-      validityPeriod: '30',
-      remarks: '',
-      ageOfInsured: '',
-      medicalHistory: '',
-      vehicleDetails: '',
-      previousInsurance: ''
-    });
-    setCurrentTab(0);
+    setLoading(true);
+    setError(null);
+    try {
+      const created = await QuoteService.createQuote(payload);
+      // QuoteService mock returns created item; prepend to local list
+      setQuotes(prev => [created, ...prev]);
+      // reset form
+      setFormData({
+        customerName: '',
+        customerEmail: '',
+        customerPhone: '',
+        leadId: '',
+        productType: '',
+        productPlan: '',
+        coverageAmount: '',
+        premium: '',
+        sumInsured: '',
+        tenure: '1',
+        quoteAmount: '',
+        validityPeriod: '30',
+        remarks: '',
+        ageOfInsured: '',
+        medicalHistory: '',
+        vehicleDetails: '',
+        previousInsurance: ''
+      });
+      setCurrentTab(0);
+    } catch (err) {
+      console.error('createQuote error', err);
+      setError(err.message || 'Failed to create quote');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleViewQuote = (quote) => {
@@ -412,28 +258,26 @@ const QuoteManagement = () => {
     setMenuAnchor(null);
   };
 
-  const handleStatusChange = (newStatus) => {
-    if (selectedQuote) {
-      setQuotes(quotes.map(q =>
-        q.id === selectedQuote.id
-          ? {
-              ...q,
-              status: newStatus,
-              lastUpdated: new Date().toISOString().split('T')[0],
-              timeline: [
-                ...q.timeline,
-                {
-                  action: `Status Changed to ${newStatus}`,
-                  user: 'Current User',
-                  timestamp: new Date().toLocaleString(),
-                  details: `Quote status updated`
-                }
-              ]
-            }
-          : q
-      ));
+  // change status via QuoteService.changeStatus
+  const handleStatusChange = async (newStatus) => {
+    if (!selectedQuote) {
+      handleMenuClose();
+      return;
     }
-    handleMenuClose();
+    setLoading(true);
+    setError(null);
+    try {
+      const updated = await QuoteService.changeStatus(selectedQuote.id, newStatus, `Changed via UI to ${newStatus}`);
+      // update local list and selectedQuote
+      setQuotes(prev => prev.map(q => (q.id === updated.id ? updated : q)));
+      setSelectedQuote(updated);
+    } catch (err) {
+      console.error('changeStatus error', err);
+      setError(err.message || 'Failed to change status');
+    } finally {
+      setLoading(false);
+      handleMenuClose();
+    }
   };
 
   const toggleExpandCard = (quoteId) => {
@@ -464,6 +308,82 @@ const QuoteManagement = () => {
       case 'Converted': return <ConvertedIcon />;
       case 'Lost': return <LostIcon />;
       default: return <QuoteIcon />;
+    }
+  };
+
+  // helper: send quote (not wired in UI automatically)
+  const handleSendQuote = async (quoteId, opts = { channel: 'email' }) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await QuoteService.sendQuote(quoteId, opts);
+      // optionally reload quote
+      try {
+        const updated = await QuoteService.getQuote(quoteId);
+        setQuotes(prev => prev.map(q => (q.id === updated.id ? updated : q)));
+        setSelectedQuote(updated);
+      } catch (e) {
+        // ignore
+      }
+      return res;
+    } catch (err) {
+      console.error('sendQuote error', err);
+      setError(err.message || 'Failed to send quote');
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // helper: download PDF (not wired in UI automatically)
+  const handleDownloadPDF = async (quoteId) => {
+    setError(null);
+    try {
+      const blob = await QuoteService.downloadQuotePDF(quoteId);
+      if (!(blob instanceof Blob)) {
+        // if service returned text, create blob
+        const b = new Blob([JSON.stringify(blob)], { type: 'application/pdf' });
+        const url = URL.createObjectURL(b);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `${quoteId}.pdf`;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        URL.revokeObjectURL(url);
+        return;
+      }
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${quoteId}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error('downloadPDF error', err);
+      setError(err.message || 'Failed to download PDF');
+    }
+  };
+
+  // helper: upload attachment (not wired in UI automatically)
+  const handleUploadAttachment = async (quoteId, file) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await QuoteService.uploadAttachment(quoteId, file);
+      // refresh quote
+      const updated = await QuoteService.getQuote(quoteId);
+      setQuotes(prev => prev.map(q => (q.id === updated.id ? updated : q)));
+      setSelectedQuote(updated);
+      return res;
+    } catch (err) {
+      console.error('uploadAttachment error', err);
+      setError(err.message || 'Failed to upload attachment');
+      throw err;
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -1161,6 +1081,14 @@ const QuoteManagement = () => {
           New Quote
         </Button>
       </Box>
+
+      {/* show loading / error as logic-only — UI left untouched otherwise */}
+      {loading && <LinearProgress sx={{ mb: 2 }} />}
+      {error && (
+        <Alert severity="error" onClose={() => setError(null)} sx={{ mb: 2 }}>
+          {error}
+        </Alert>
+      )}
 
       {/* Enhanced Statistics Cards */}
       <Grid container spacing={3} sx={{ mb: 4 }}>

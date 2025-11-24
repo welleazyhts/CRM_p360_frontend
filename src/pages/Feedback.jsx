@@ -37,6 +37,8 @@ import {
   Archive as ArchiveIcon, Reply as ReplyIcon, PersonAdd as AssignIcon
 } from '@mui/icons-material';
 
+import feedbackService from '../services/feedbackserver';
+
 const Feedback = () => {
   const theme = useTheme();
   const navigate = useNavigate();
@@ -139,7 +141,7 @@ const Feedback = () => {
     { name: 'Negative', value: 10, color: '#f44336' }
   ]);
 
-  const [recentFeedback] = useState([
+  const [recentFeedback, setRecentFeedback] = useState([
     {
       id: 1,
               customer: 'Arjun Sharma',
@@ -318,6 +320,20 @@ const Feedback = () => {
     }
   ]);
 
+  // Load persisted feedback from service on mount (overrides default mock if present)
+  useEffect(() => {
+    let mounted = true;
+    (async () => {
+      try {
+        const list = await feedbackService.listFeedback();
+        if (mounted && Array.isArray(list)) setRecentFeedback(list);
+      } catch (e) {
+        // ignore and keep default mock
+      }
+    })();
+    return () => { mounted = false; };
+  }, []);
+
   const [surveys, setSurveys] = useState([
     {
       id: 1,
@@ -405,9 +421,16 @@ const Feedback = () => {
   };
 
   const handleResolveFeedback = (_feedbackId) => {
-    // Update feedback status to resolved
-    // Resolving feedback
-    // In real app, this would call an API
+    (async (id) => {
+      try {
+        await feedbackService.updateFeedback(id, { status: 'resolved' });
+        const list = await feedbackService.listFeedback();
+        setRecentFeedback(list);
+      } catch (e) {
+        // fallback: update local state
+        setRecentFeedback(prev => prev.map(f => f.id === id ? { ...f, status: 'resolved' } : f));
+      }
+    })(_feedbackId);
   };
 
 
@@ -679,10 +702,15 @@ const Feedback = () => {
   };
 
   const handleFlagFeedback = (_feedbackId) => {
-    // Update feedback to flagged status
-
-    // In real app, this would call an API to update the feedback flag status
-    // You could update the local state here for immediate UI feedback
+    (async (id) => {
+      try {
+        await feedbackService.updateFeedback(id, { flagged: true });
+        const list = await feedbackService.listFeedback();
+        setRecentFeedback(list);
+      } catch (e) {
+        setRecentFeedback(prev => prev.map(f => f.id === id ? { ...f, flagged: true } : f));
+      }
+    })(_feedbackId);
   };
 
   const handleActionMenuClick = useCallback((event, feedback) => {
@@ -725,14 +753,30 @@ const Feedback = () => {
 
   const handleArchiveFeedback = (feedbackId) => {
 
-    // In real app, this would call an API to archive the feedback
-    handleActionMenuClose(feedbackId);
+    (async (id) => {
+      try {
+        await feedbackService.updateFeedback(id, { status: 'archived' });
+        const list = await feedbackService.listFeedback();
+        setRecentFeedback(list);
+      } catch (e) {
+        setRecentFeedback(prev => prev.map(f => f.id === id ? { ...f, status: 'archived' } : f));
+      }
+      handleActionMenuClose();
+    })(feedbackId);
   };
 
   const handleDeleteFeedback = (feedbackId) => {
 
-    // In real app, this would call an API to delete the feedback
-    handleActionMenuClose(feedbackId);
+    (async (id) => {
+      try {
+        await feedbackService.deleteFeedback(id);
+        const list = await feedbackService.listFeedback();
+        setRecentFeedback(list);
+      } catch (e) {
+        setRecentFeedback(prev => prev.filter(f => f.id !== id));
+      }
+      handleActionMenuClose();
+    })(feedbackId);
   };
 
   const [editFeedbackDialog, setEditFeedbackDialog] = useState({ open: false, feedback: null });
@@ -763,22 +807,20 @@ const Feedback = () => {
   };
   
   const handleSaveFeedback = () => {
-    // In a real app, this would save the feedback changes to the backend
-
-    
-    // Update the feedback in the local state
-    // In a real app, this would update the state:
-    // const updatedFeedback = recentFeedback.map(f => 
-    //   f.id === editedFeedback.id ? editedFeedback : f
-    // );
-    // setRecentFeedback(updatedFeedback);
-
-    
-    // Close the dialog
-    setEditFeedbackDialog({ open: false, feedback: null });
-    
-    // Show success message (would use a proper notification in a real app)
-    alert('Feedback updated successfully');
+    (async () => {
+      try {
+        if (editedFeedback && editedFeedback.id) {
+          await feedbackService.updateFeedback(editedFeedback.id, editedFeedback);
+          const list = await feedbackService.listFeedback();
+          setRecentFeedback(list);
+        }
+      } catch (e) {
+        // fallback: local update
+        setRecentFeedback(prev => prev.map(f => f.id === editedFeedback.id ? editedFeedback : f));
+      } finally {
+        setEditFeedbackDialog({ open: false, feedback: null });
+      }
+    })();
   };
 
   const TabPanel = ({ children, value, index, ...other }) => (

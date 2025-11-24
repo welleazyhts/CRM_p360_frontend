@@ -1,16 +1,17 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
   Box, Typography, Paper, Button, Grid, Divider, Alert, Container
 } from '@mui/material';
 import { ArrowBack as ArrowBackIcon, Save as SaveIcon } from '@mui/icons-material';
 import QualityAssessmentForm from '../components/common/QualityAssessmentForm';
+import { getCallStatus } from '../services/callService';
 
 const CallQualityDetails = () => {
   const { callId } = useParams();
   const navigate = useNavigate();
 
-  const [callData] = useState({
+  const [callData, setCallData] = useState({
     id: callId,
     customerName: 'Rajesh Kumar',
     agent: 'Priya Sharma',
@@ -18,6 +19,29 @@ const CallQualityDetails = () => {
     duration: '05:23',
     recordedAudio: 'call_recording_001.mp3'
   });
+
+  useEffect(() => {
+    let mounted = true;
+    const loadStatus = async () => {
+      if (!callId) return;
+      try {
+        const status = await getCallStatus(callId);
+        if (!mounted) return;
+        setCallData(prev => ({
+          ...prev,
+          agent: status.agentId || prev.agent,
+          date: status.startTime ? new Date(status.startTime).toLocaleString() : prev.date,
+          duration: status.duration && typeof status.duration === 'number' ? `${status.duration} secs` : (status.duration || prev.duration),
+          recordedAudio: status.recordingUrl || prev.recordedAudio
+        }));
+      } catch (e) {
+        // console.error('Failed to load call status', e);
+      }
+    };
+
+    loadStatus();
+    return () => { mounted = false; };
+  }, [callId]);
 
   const [assessment, setAssessment] = useState({
     scores: {},

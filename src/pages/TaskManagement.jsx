@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import {
   Box,
   Card,
@@ -39,6 +39,7 @@ import TaskListView from '../components/tasks/TaskListView';
 import TaskKanbanView from '../components/tasks/TaskKanbanView';
 import TaskCalendarView from '../components/tasks/TaskCalendarView';
 import TaskDialog from '../components/tasks/TaskDialog';
+import taskService from '../services/taskManagementService';
 
 const TaskManagement = () => {
   const {
@@ -95,6 +96,20 @@ const TaskManagement = () => {
 
     return getFilteredTasks(taskFilters, sortBy, sortOrder);
   }, [tasks, filters, currentTab, sortBy, sortOrder]);
+
+  // Quick verification: call service list once (no UI change) — safe fallback
+  useEffect(() => {
+    let mounted = true;
+    (async () => {
+      try {
+        const list = await taskService.listTasks();
+        if (mounted) console.debug('taskService.listTasks sample:', Array.isArray(list) ? list.length : list);
+      } catch (e) {
+        // ignore — fallback/mock may not require action
+      }
+    })();
+    return () => { mounted = false; };
+  }, []);
 
   // Handle view change
   const handleViewChange = (event, newView) => {

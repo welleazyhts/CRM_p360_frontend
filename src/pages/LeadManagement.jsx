@@ -91,6 +91,7 @@ import {
   VerifiedUser as VerifiedUserIcon,
   Error as ErrorIcon
 } from '@mui/icons-material';
+import { analyzeEmail } from '../services/emailAI';
 
 // Mock data for leads with Premium/Regular types
 const mockLeads = [
@@ -937,8 +938,19 @@ const LeadManagement = () => {
   };
 
   const handleSendEmail = (lead) => {
-    // This would integrate with your email system
-    setSnackbar({ open: true, message: `Email sent to ${lead.email}`, severity: 'success' });
+    (async () => {
+      try {
+        // Best-effort email analysis before send (non-blocking)
+        const sample = { from: 'agent@company.com', subject: `Regarding your interest`, body: `Hi ${lead.firstName},\n\nI wanted to follow up regarding your interest in our services.` };
+        const analysis = await analyzeEmail(sample).catch(() => null);
+        if (analysis) console.debug('Email AI analysis:', analysis);
+      } catch (e) {
+        console.error('Email analysis failed:', e);
+      } finally {
+        // This would integrate with your email system
+        setSnackbar({ open: true, message: `Email sent to ${lead.email}`, severity: 'success' });
+      }
+    })();
   };
 
   // Auto-assign agent based on language matching with enhanced logic
@@ -1574,19 +1586,6 @@ const LeadManagement = () => {
               onClick={() => setAgentTableOpen(true)}
             >
               View Agents
-            </Button>
-            <Button
-              variant="outlined"
-              color="secondary"
-              onClick={() => {
-                console.log('🔍 Debug Info:');
-                console.log('Total leads:', leads.length);
-                console.log('Unassigned leads:', leads.filter(l => !l.assignedTo || l.assignedTo.trim() === '').map(l => ({ id: l.id, name: `${l.firstName} ${l.lastName}`, language: l.preferredLanguage })));
-                console.log('Agents:', agents.map(a => ({ name: a.name, languages: a.languages })));
-                console.log('Selected leads:', selectedLeads);
-              }}
-            >
-              Debug Info
             </Button>
           </Box>
           <Button

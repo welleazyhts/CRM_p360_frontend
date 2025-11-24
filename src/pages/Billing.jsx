@@ -35,6 +35,7 @@ import {
   Notifications as NotificationsIcon
 } from '@mui/icons-material';
 import { useSettings } from '../context/SettingsContext';
+import billingService from '../services/billingService';
 
 const Billing = () => {
   const theme = useTheme();
@@ -78,263 +79,19 @@ const Billing = () => {
   });
 
   // Vendor communication data
-  const [vendorCommunications] = useState([
-    {
-      vendorId: 'VEN001',
-      vendorName: 'SMS Gateway Pro',
-      vendorType: 'SMS Provider',
-      totalCommunications: 1247,
-      deliveryStats: {
-        delivered: 1198,
-        failed: 35,
-        pending: 14
-      },
-      costPerMessage: 0.05,
-      totalCost: 62.35,
-      lastActivity: '2024-01-15T10:30:00Z',
-      contactPerson: 'John Smith',
-      supportEmail: 'support@smsgateway.com'
-    },
-    {
-      vendorId: 'VEN002',
-      vendorName: 'Email Service Plus',
-      vendorType: 'Email Provider',
-      totalCommunications: 892,
-      deliveryStats: {
-        delivered: 856,
-        failed: 23,
-        pending: 13
-      },
-      costPerMessage: 0.02,
-      totalCost: 17.84,
-      lastActivity: '2024-01-15T09:45:00Z',
-      contactPerson: 'Sarah Johnson',
-      supportEmail: 'support@emailplus.com'
-    },
-    {
-      vendorId: 'VEN003',
-      vendorName: 'WhatsApp Business API',
-      vendorType: 'WhatsApp Provider',
-      totalCommunications: 634,
-      deliveryStats: {
-        delivered: 612,
-        failed: 18,
-        pending: 4
-      },
-      costPerMessage: 0.08,
-      totalCost: 50.72,
-      lastActivity: '2024-01-15T11:20:00Z',
-      contactPerson: 'Mike Chen',
-      supportEmail: 'api-support@whatsapp.com'
-    }
-  ]);
+  const [vendorCommunications, setVendorCommunications] = useState([]);
 
   // Communication delivery status tracking
   const [deliveryStatusView, setDeliveryStatusView] = useState('individual'); // 'individual' or 'bulk'
-  const [individualCases] = useState([
-    {
-      caseId: 'CASE001',
-      customerName: 'Arjun Sharma',
-      policyNumber: 'POL123456',
-      communicationType: 'SMS',
-      message: 'Policy renewal reminder - Due in 7 days',
-      sentAt: '2024-01-15T08:30:00Z',
-      deliveryStatus: 'delivered',
-      deliveredAt: '2024-01-15T08:30:15Z',
-      vendor: 'SMS Gateway Pro',
-      cost: 0.05,
-      attempts: 1,
-      errorMessage: null
-    },
-    {
-      caseId: 'CASE002',
-      customerName: 'Priya Patel',
-      policyNumber: 'POL789012',
-      communicationType: 'Email',
-      message: 'Welcome to your new policy',
-      sentAt: '2024-01-15T09:15:00Z',
-      deliveryStatus: 'failed',
-      deliveredAt: null,
-      vendor: 'Email Service Plus',
-      cost: 0.02,
-      attempts: 3,
-      errorMessage: 'Invalid email address'
-    },
-    {
-      caseId: 'CASE003',
-      customerName: 'Rajesh Kumar',
-      policyNumber: 'POL345678',
-      communicationType: 'WhatsApp',
-      message: 'Claim status update - Approved',
-      sentAt: '2024-01-15T10:00:00Z',
-      deliveryStatus: 'pending',
-      deliveredAt: null,
-      vendor: 'WhatsApp Business API',
-      cost: 0.08,
-      attempts: 1,
-      errorMessage: null
-    }
-  ]);
+  const [individualCases, setIndividualCases] = useState([]);
 
-  const [bulkCampaigns] = useState([
-    {
-      campaignId: 'BULK001',
-      campaignName: 'Monthly Policy Renewal Reminders',
-      type: 'SMS',
-      totalRecipients: 1500,
-      sentCount: 1500,
-      deliveredCount: 1435,
-      failedCount: 45,
-      pendingCount: 20,
-      startedAt: '2024-01-15T06:00:00Z',
-      completedAt: '2024-01-15T06:45:00Z',
-      vendor: 'SMS Gateway Pro',
-      totalCost: 75.00,
-      deliveryRate: 95.67
-    },
-    {
-      campaignId: 'BULK002',
-      campaignName: 'New Product Launch Announcement',
-      type: 'Email',
-      totalRecipients: 2500,
-      sentCount: 2500,
-      deliveredCount: 2387,
-      failedCount: 89,
-      pendingCount: 24,
-      startedAt: '2024-01-14T14:00:00Z',
-      completedAt: '2024-01-14T15:30:00Z',
-      vendor: 'Email Service Plus',
-      totalCost: 50.00,
-      deliveryRate: 95.48
-    }
-  ]);
-  
+  const [bulkCampaigns, setBulkCampaigns] = useState([]);
+
   // Sample communication statistics data
-  const [communicationStats] = useState({
-    sms: [
-      { date: '2024-01-01', count: 150, status: 'Delivered' },
-      { date: '2024-01-02', count: 200, status: 'Delivered' },
-      { date: '2024-01-03', count: 180, status: 'Delivered' }
-    ],
-    email: [
-      { date: '2024-01-01', count: 75, status: 'Sent' },
-      { date: '2024-01-02', count: 90, status: 'Sent' },
-      { date: '2024-01-03', count: 85, status: 'Sent' }
-    ],
-    whatsapp: [
-      { date: '2024-01-01', count: 120, status: 'Delivered' },
-      { date: '2024-01-02', count: 150, status: 'Delivered' },
-      { date: '2024-01-03', count: 130, status: 'Delivered' }
-    ]
-  });
+  const [communicationStats, setCommunicationStats] = useState({ sms: [], email: [], whatsapp: [] });
 
   // Sample invoice data with enhanced receivable information
-  const [invoices, setInvoices] = useState([
-    { 
-      id: 'INV-2023-IN001', 
-      date: '2023-10-01', 
-      amount: 95000.00, 
-      status: 'Paid', 
-      pdfUrl: '#',
-      receivableInfo: {
-        dueDate: '2023-10-31',
-        paymentTerms: 'Net 30',
-        creditLimit: '500000',
-        accountingCode: 'ACC-001',
-        taxId: 'TAX123456',
-        billingAddress: '123 Business St, Mumbai, MH 400001',
-        contactPerson: 'Finance Manager',
-        contactEmail: 'finance@company.com',
-        contactPhone: '+91-9876543210',
-        paymentMethod: 'bank_transfer',
-        bankDetails: {
-          accountNumber: '1234567890',
-          routingNumber: 'HDFC0001234',
-          bankName: 'HDFC Bank',
-          swiftCode: 'HDFCINBB'
-        },
-        notes: 'Payment received on time'
-      }
-    },
-    { 
-      id: 'INV-2023-IN002', 
-      date: '2023-11-01', 
-      amount: 102500.50, 
-      status: 'Paid', 
-      pdfUrl: '#',
-      receivableInfo: {
-        dueDate: '2023-11-30',
-        paymentTerms: 'Net 30',
-        creditLimit: '500000',
-        accountingCode: 'ACC-002',
-        taxId: 'TAX789012',
-        billingAddress: '456 Corporate Ave, Delhi, DL 110001',
-        contactPerson: 'Accounts Payable',
-        contactEmail: 'ap@company.com',
-        contactPhone: '+91-9876543211',
-        paymentMethod: 'cheque',
-        bankDetails: {
-          accountNumber: '',
-          routingNumber: '',
-          bankName: '',
-          swiftCode: ''
-        },
-        notes: 'Paid via cheque'
-      }
-    },
-    { 
-      id: 'INV-2023-IN003', 
-      date: '2023-12-01', 
-      amount: 108750.75, 
-      status: 'Pending', 
-      pdfUrl: '#',
-      receivableInfo: {
-        dueDate: '2023-12-31',
-        paymentTerms: 'Net 30',
-        creditLimit: '500000',
-        accountingCode: 'ACC-003',
-        taxId: 'TAX345678',
-        billingAddress: '789 Enterprise Blvd, Bangalore, KA 560001',
-        contactPerson: 'CFO',
-        contactEmail: 'cfo@company.com',
-        contactPhone: '+91-9876543212',
-        paymentMethod: 'bank_transfer',
-        bankDetails: {
-          accountNumber: '9876543210',
-          routingNumber: 'ICIC0001234',
-          bankName: 'ICICI Bank',
-          swiftCode: 'ICICINBB'
-        },
-        notes: 'Follow up required'
-      }
-    },
-    { 
-      id: 'INV-2024-IN001', 
-      date: '2024-01-01', 
-      amount: 105000.25, 
-      status: 'Pending', 
-      pdfUrl: '#',
-      receivableInfo: {
-        dueDate: '2024-01-31',
-        paymentTerms: 'Net 30',
-        creditLimit: '500000',
-        accountingCode: 'ACC-004',
-        taxId: 'TAX901234',
-        billingAddress: '321 Business Park, Pune, MH 411001',
-        contactPerson: 'Finance Director',
-        contactEmail: 'finance.director@company.com',
-        contactPhone: '+91-9876543213',
-        paymentMethod: 'bank_transfer',
-        bankDetails: {
-          accountNumber: '5432109876',
-          routingNumber: 'SBIN0001234',
-          bankName: 'State Bank of India',
-          swiftCode: 'SBININBB'
-        },
-        notes: 'New client - monitor closely'
-      }
-    }
-  ]);
+  const [invoices, setInvoices] = useState([]);
 
   // Months array for dropdown
   const months = [
@@ -346,16 +103,38 @@ const Billing = () => {
   const currentYear = new Date().getFullYear();
   const years = [currentYear, currentYear - 1, currentYear - 2];
 
-  // Load animation effect
+  // Load animation effect and data from service
   useEffect(() => {
-    setLoaded(true);
+    const loadBillingData = async () => {
+      try {
+        const [invoicesData, vendorCommsData, statsData, individualCasesData, bulkCampaignsData] = await Promise.all([
+          billingService.getInvoices(),
+          billingService.getVendorCommunications(),
+          billingService.getCommunicationStats(),
+          billingService.getIndividualCases(),
+          billingService.getBulkCampaigns()
+        ]);
+
+        setInvoices(invoicesData);
+        setVendorCommunications(vendorCommsData);
+        setCommunicationStats(statsData);
+        setIndividualCases(individualCasesData);
+        setBulkCampaigns(bulkCampaignsData);
+      } catch (error) {
+        console.error('Failed to load billing data:', error);
+      } finally {
+        setLoaded(true);
+      }
+    };
+
+    loadBillingData();
   }, []);
 
   // Apply filters and update data
   useEffect(() => {
     // In a real app, this would fetch filtered data from an API
     // For this demo, we'll just use the sample data from settings
-    
+
     // Simulate filtered data based on selected filters
     // In a real app, you would fetch this data from your backend
     setFilteredData({
@@ -363,13 +142,13 @@ const Billing = () => {
       platform: settings.billing.platform,
       totalMonthly: settings.billing.totalMonthly
     });
-    
+
     // Just for demonstration, we'll log the filter criteria
     if (filterType === 'month') {
-              // Filtering for specific month and year
-      } else {
-        // Filtering by date range
-      }
+      // Filtering for specific month and year
+    } else {
+      // Filtering by date range
+    }
   }, [filterType, selectedMonth, selectedYear, startDate, endDate, settings.billing]);
 
   const handleTabChange = (event, newValue) => {
@@ -462,14 +241,24 @@ const Billing = () => {
     }
   };
 
-  const handleQuickEditSave = () => {
-    setInvoices(prev => prev.map(invoice => 
-      invoice.id === quickEditDialog.invoiceId 
-        ? { ...invoice, receivableInfo: { ...quickEditDialog.receivableInfo } }
-        : invoice
-    ));
-    setQuickEditDialog({ open: false, invoiceId: null, receivableInfo: {} });
-    alert('Receivable information updated successfully!');
+  const handleQuickEditSave = async () => {
+    try {
+      await billingService.updateReceivableInfo(
+        quickEditDialog.invoiceId,
+        quickEditDialog.receivableInfo
+      );
+
+      setInvoices(prev => prev.map(invoice =>
+        invoice.id === quickEditDialog.invoiceId
+          ? { ...invoice, receivableInfo: { ...quickEditDialog.receivableInfo } }
+          : invoice
+      ));
+      setQuickEditDialog({ open: false, invoiceId: null, receivableInfo: {} });
+      alert('Receivable information updated successfully!');
+    } catch (error) {
+      console.error('Failed to update receivable info:', error);
+      alert('Failed to update receivable information. Please try again.');
+    }
   };
 
   const handleQuickEditCancel = () => {
@@ -517,37 +306,38 @@ const Billing = () => {
 
   const handleProcessPayment = async () => {
     setPaymentDialog(prev => ({ ...prev, processing: true }));
-    
-    // Simulate payment processing
-    setTimeout(() => {
-      const success = Math.random() > 0.1; // 90% success rate
-      const transactionId = `TXN${Date.now()}`;
-      
-      if (success) {
-        // Update invoice status to paid
-        setInvoices(prev => prev.map(invoice => 
-          invoice.id === paymentDialog.invoiceId 
-            ? { ...invoice, status: 'Paid' }
-            : invoice
-        ));
-        
-        setPaymentStatus({
-          show: true,
-          success: true,
-          transactionId,
-          message: 'Payment processed successfully!'
-        });
-      } else {
-        setPaymentStatus({
-          show: true,
-          success: false,
-          transactionId: '',
-          message: 'Payment failed. Please try again.'
-        });
-      }
-      
+
+    try {
+      const result = await billingService.processPayment(paymentDialog.invoiceId, {
+        method: paymentDialog.method,
+        cardDetails: paymentDialog.cardDetails,
+        upiId: paymentDialog.upiId,
+        netBankingBank: paymentDialog.netBankingBank
+      });
+
+      // Update invoice status to paid
+      setInvoices(prev => prev.map(invoice =>
+        invoice.id === paymentDialog.invoiceId
+          ? { ...invoice, status: 'Paid' }
+          : invoice
+      ));
+
+      setPaymentStatus({
+        show: true,
+        success: true,
+        transactionId: result.transactionId,
+        message: result.message
+      });
+    } catch (error) {
+      setPaymentStatus({
+        show: true,
+        success: false,
+        transactionId: '',
+        message: error.message || 'Payment failed. Please try again.'
+      });
+    } finally {
       setPaymentDialog(prev => ({ ...prev, processing: false, open: false }));
-    }, 3000);
+    }
   };
 
   const handleClosePaymentDialog = () => {
@@ -589,15 +379,15 @@ const Billing = () => {
   // Filter communication statistics based on date range
   const getFilteredCommunicationStats = () => {
     let filtered = {
-      sms: [...communicationStats.sms],
-      email: [...communicationStats.email],
-      whatsapp: [...communicationStats.whatsapp]
+      sms: [...(communicationStats?.sms || [])],
+      email: [...(communicationStats?.email || [])],
+      whatsapp: [...(communicationStats?.whatsapp || [])]
     };
 
     if (filterType === 'month') {
       const startOfMonth = new Date(selectedYear, selectedMonth, 1);
       const endOfMonth = new Date(selectedYear, selectedMonth + 1, 0);
-      
+
       filtered = {
         sms: filtered.sms.filter(item => {
           const date = new Date(item.date);
@@ -635,9 +425,9 @@ const Billing = () => {
   // Calculate totals for communication statistics
   const calculateCommunicationTotals = (stats) => {
     return {
-      sms: stats.sms.reduce((sum, item) => sum + item.count, 0),
-      email: stats.email.reduce((sum, item) => sum + item.count, 0),
-      whatsapp: stats.whatsapp.reduce((sum, item) => sum + item.count, 0)
+      sms: (stats?.sms || []).reduce((sum, item) => sum + item.count, 0),
+      email: (stats?.email || []).reduce((sum, item) => sum + item.count, 0),
+      whatsapp: (stats?.whatsapp || []).reduce((sum, item) => sum + item.count, 0)
     };
   };
 
@@ -655,9 +445,9 @@ const Billing = () => {
       </Fade>
 
       <Grow in={loaded} timeout={1000}>
-        <Card 
+        <Card
           elevation={0}
-          sx={{ 
+          sx={{
             borderRadius: 3,
             mb: 4,
             boxShadow: '0 8px 24px rgba(0,0,0,0.05)',
@@ -666,8 +456,8 @@ const Billing = () => {
         >
           <CardContent sx={{ p: 3 }}>
             <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 3 }}>
-              <Tabs 
-                value={activeTab} 
+              <Tabs
+                value={activeTab}
                 onChange={handleTabChange}
                 aria-label="billing tabs"
                 variant="scrollable"
@@ -768,7 +558,8 @@ const Billing = () => {
                         label="Start Date"
                         value={startDate}
                         onChange={(newValue) => setStartDate(newValue)}
-                        renderInput={(params) => <TextField {...params} fullWidth />}
+                        slots={{ textField: TextField }}
+                        slotProps={{ textField: { fullWidth: true } }}
                       />
                     </LocalizationProvider>
                   </Grid>
@@ -778,7 +569,8 @@ const Billing = () => {
                         label="End Date"
                         value={endDate}
                         onChange={(newValue) => setEndDate(newValue)}
-                        renderInput={(params) => <TextField {...params} fullWidth />}
+                        slots={{ textField: TextField }}
+                        slotProps={{ textField: { fullWidth: true } }}
                         minDate={startDate}
                       />
                     </LocalizationProvider>
@@ -787,11 +579,11 @@ const Billing = () => {
               )}
 
               <Grid item xs={12} md={3}>
-                <Button 
-                  variant="contained" 
+                <Button
+                  variant="contained"
                   color="primary"
                   fullWidth
-                  sx={{ 
+                  sx={{
                     py: 1.7,
                     borderRadius: 2,
                     fontWeight: 600,
@@ -809,9 +601,9 @@ const Billing = () => {
       {activeTab === 0 ? (
         <>
           <Grow in={loaded} timeout={1200}>
-            <Card 
+            <Card
               elevation={0}
-              sx={{ 
+              sx={{
                 borderRadius: 3,
                 boxShadow: '0 8px 24px rgba(0,0,0,0.05)',
                 overflow: 'visible',
@@ -831,11 +623,11 @@ const Billing = () => {
                   </Typography>
                 </Box>
                 <Divider sx={{ mb: 2 }} />
-                
+
                 <Typography variant="subtitle1" fontWeight="500" sx={{ mb: 2 }}>
                   Portal Usage - Utilization Charges
                 </Typography>
-                
+
                 <TableContainer component={Paper} elevation={0} sx={{ mb: 3, borderRadius: 2 }}>
                   <Table>
                     <TableHead>
@@ -856,11 +648,11 @@ const Billing = () => {
                     </TableBody>
                   </Table>
                 </TableContainer>
-                
+
                 <Typography variant="subtitle1" fontWeight="500" sx={{ mb: 2 }}>
                   Platform Charges
                 </Typography>
-                
+
                 <TableContainer component={Paper} elevation={0} sx={{ borderRadius: 2 }}>
                   <Table>
                     <TableHead>
@@ -891,9 +683,9 @@ const Billing = () => {
           </Grow>
 
           <Grow in={loaded} timeout={1400}>
-            <Card 
+            <Card
               elevation={0}
-              sx={{ 
+              sx={{
                 borderRadius: 3,
                 boxShadow: '0 8px 24px rgba(0,0,0,0.05)',
                 overflow: 'visible',
@@ -912,11 +704,11 @@ const Billing = () => {
                   </Typography>
                 </Box>
                 <Divider sx={{ mb: 2 }} />
-                
+
                 <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
                   View, download, and pay your invoices directly from the portal
                 </Typography>
-                
+
                 <TableContainer component={Paper} elevation={0} sx={{ borderRadius: 2 }}>
                   <Table>
                     <TableHead>
@@ -940,11 +732,11 @@ const Billing = () => {
                           <TableCell>{new Date(invoice.date).toLocaleDateString()}</TableCell>
                           <TableCell align="right">₹{invoice.amount.toFixed(2)}</TableCell>
                           <TableCell align="center">
-                            <Chip 
-                              label={invoice.status} 
+                            <Chip
+                              label={invoice.status}
                               size="small"
                               color={invoice.status === 'Paid' ? 'success' : 'warning'}
-                              sx={{ 
+                              sx={{
                                 fontWeight: 500,
                                 minWidth: 80
                               }}
@@ -953,37 +745,37 @@ const Billing = () => {
                           <TableCell align="center">
                             <Box sx={{ display: 'flex', justifyContent: 'center', gap: 1 }}>
                               <Tooltip title="Quick Edit Receivables">
-                                <IconButton 
-                                  size="small" 
+                                <IconButton
+                                  size="small"
                                   color="info"
                                   onClick={() => handleQuickEdit(invoice.id)}
                                 >
                                   <EditIcon fontSize="small" />
                                 </IconButton>
                               </Tooltip>
-                              
+
                               <Tooltip title="View Invoice">
-                                <IconButton 
-                                  size="small" 
+                                <IconButton
+                                  size="small"
                                   onClick={() => handleViewInvoice(invoice.id)}
                                 >
                                   <VisibilityIcon fontSize="small" />
                                 </IconButton>
                               </Tooltip>
-                              
+
                               <Tooltip title="Download Invoice">
-                                <IconButton 
-                                  size="small" 
+                                <IconButton
+                                  size="small"
                                   onClick={() => handleDownloadInvoice(invoice.id)}
                                 >
                                   <FileDownloadIcon fontSize="small" />
                                 </IconButton>
                               </Tooltip>
-                              
+
                               {invoice.status === 'Pending' && (
                                 <Tooltip title="Pay Now">
-                                  <IconButton 
-                                    size="small" 
+                                  <IconButton
+                                    size="small"
                                     color="primary"
                                     onClick={() => handlePayInvoice(invoice.id)}
                                   >
@@ -1005,9 +797,9 @@ const Billing = () => {
       ) : activeTab === 1 ? (
         // Communication Statistics Tab
         <Grow in={loaded} timeout={1200}>
-          <Card 
+          <Card
             elevation={0}
-            sx={{ 
+            sx={{
               borderRadius: 3,
               boxShadow: '0 8px 24px rgba(0,0,0,0.05)',
               overflow: 'visible'
@@ -1024,9 +816,9 @@ const Billing = () => {
               <Grid container spacing={3}>
                 {/* SMS Statistics */}
                 <Grid item xs={12} md={4}>
-                  <Card 
+                  <Card
                     elevation={0}
-                    sx={{ 
+                    sx={{
                       p: 2,
                       borderRadius: 2,
                       bgcolor: alpha(theme.palette.primary.main, 0.05)
@@ -1049,9 +841,9 @@ const Billing = () => {
 
                 {/* Email Statistics */}
                 <Grid item xs={12} md={4}>
-                  <Card 
+                  <Card
                     elevation={0}
-                    sx={{ 
+                    sx={{
                       p: 2,
                       borderRadius: 2,
                       bgcolor: alpha(theme.palette.info.main, 0.05)
@@ -1074,9 +866,9 @@ const Billing = () => {
 
                 {/* WhatsApp Statistics */}
                 <Grid item xs={12} md={4}>
-                  <Card 
+                  <Card
                     elevation={0}
-                    sx={{ 
+                    sx={{
                       p: 2,
                       borderRadius: 2,
                       bgcolor: alpha(theme.palette.success.main, 0.05)
@@ -1159,9 +951,9 @@ const Billing = () => {
       ) : activeTab === 2 ? (
         // Vendor Communications Tab
         <Grow in={loaded} timeout={1200}>
-          <Card 
+          <Card
             elevation={0}
-            sx={{ 
+            sx={{
               borderRadius: 3,
               boxShadow: '0 8px 24px rgba(0,0,0,0.05)',
               overflow: 'visible'
@@ -1182,9 +974,9 @@ const Billing = () => {
               <Grid container spacing={3}>
                 {vendorCommunications.map((vendor) => (
                   <Grid item xs={12} md={4} key={vendor.vendorId}>
-                    <Card 
+                    <Card
                       elevation={0}
-                      sx={{ 
+                      sx={{
                         p: 3,
                         borderRadius: 2,
                         border: '1px solid',
@@ -1198,8 +990,8 @@ const Billing = () => {
                       }}
                     >
                       <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                        <Avatar 
-                          sx={{ 
+                        <Avatar
+                          sx={{
                             bgcolor: theme.palette.primary.main,
                             width: 40,
                             height: 40,
@@ -1236,8 +1028,8 @@ const Billing = () => {
                             {((vendor.deliveryStats.delivered / vendor.totalCommunications) * 100).toFixed(1)}%
                           </Typography>
                         </Box>
-                        <LinearProgress 
-                          variant="determinate" 
+                        <LinearProgress
+                          variant="determinate"
                           value={(vendor.deliveryStats.delivered / vendor.totalCommunications) * 100}
                           sx={{ height: 6, borderRadius: 3 }}
                         />
@@ -1299,10 +1091,10 @@ const Billing = () => {
                         <Typography variant="caption" color="text.secondary">
                           Last activity: {new Date(vendor.lastActivity).toLocaleDateString()}
                         </Typography>
-                        <Chip 
-                          label="Active" 
-                          size="small" 
-                          color="success" 
+                        <Chip
+                          label="Active"
+                          size="small"
+                          color="success"
                           sx={{ fontWeight: 500 }}
                         />
                       </Box>
@@ -1347,9 +1139,9 @@ const Billing = () => {
                             </Box>
                           </TableCell>
                           <TableCell align="center">
-                            <Chip 
-                              label={vendor.vendorType} 
-                              size="small" 
+                            <Chip
+                              label={vendor.vendorType}
+                              size="small"
                               variant="outlined"
                               sx={{ fontWeight: 500 }}
                             />
@@ -1364,12 +1156,12 @@ const Billing = () => {
                               <Typography variant="body2" fontWeight="600" sx={{ mr: 1 }}>
                                 {((vendor.deliveryStats.delivered / vendor.totalCommunications) * 100).toFixed(1)}%
                               </Typography>
-                              <Chip 
-                                label={vendor.deliveryStats.delivered > vendor.totalCommunications * 0.95 ? 'Excellent' : 
-                                       vendor.deliveryStats.delivered > vendor.totalCommunications * 0.90 ? 'Good' : 'Needs Attention'}
+                              <Chip
+                                label={vendor.deliveryStats.delivered > vendor.totalCommunications * 0.95 ? 'Excellent' :
+                                  vendor.deliveryStats.delivered > vendor.totalCommunications * 0.90 ? 'Good' : 'Needs Attention'}
                                 size="small"
-                                color={vendor.deliveryStats.delivered > vendor.totalCommunications * 0.95 ? 'success' : 
-                                       vendor.deliveryStats.delivered > vendor.totalCommunications * 0.90 ? 'info' : 'warning'}
+                                color={vendor.deliveryStats.delivered > vendor.totalCommunications * 0.95 ? 'success' :
+                                  vendor.deliveryStats.delivered > vendor.totalCommunications * 0.90 ? 'info' : 'warning'}
                               />
                             </Box>
                           </TableCell>
@@ -1400,9 +1192,9 @@ const Billing = () => {
       ) : activeTab === 3 ? (
         // Delivery Status Tab
         <Grow in={loaded} timeout={1200}>
-          <Card 
+          <Card
             elevation={0}
-            sx={{ 
+            sx={{
               borderRadius: 3,
               boxShadow: '0 8px 24px rgba(0,0,0,0.05)',
               overflow: 'visible'
@@ -1468,19 +1260,19 @@ const Billing = () => {
                               </Box>
                             </TableCell>
                             <TableCell align="center">
-                              <Chip 
+                              <Chip
                                 label={case_.communicationType}
                                 size="small"
-                                color={case_.communicationType === 'SMS' ? 'primary' : 
-                                       case_.communicationType === 'Email' ? 'info' : 'success'}
-                                icon={case_.communicationType === 'SMS' ? <SmsIcon /> : 
-                                      case_.communicationType === 'Email' ? <EmailIcon /> : <WhatsAppIcon />}
+                                color={case_.communicationType === 'SMS' ? 'primary' :
+                                  case_.communicationType === 'Email' ? 'info' : 'success'}
+                                icon={case_.communicationType === 'SMS' ? <SmsIcon /> :
+                                  case_.communicationType === 'Email' ? <EmailIcon /> : <WhatsAppIcon />}
                               />
                             </TableCell>
                             <TableCell>
-                              <Typography 
-                                variant="body2" 
-                                sx={{ 
+                              <Typography
+                                variant="body2"
+                                sx={{
                                   maxWidth: 200,
                                   overflow: 'hidden',
                                   textOverflow: 'ellipsis',
@@ -1542,9 +1334,9 @@ const Billing = () => {
                   <Grid container spacing={3} sx={{ mb: 4 }}>
                     {bulkCampaigns.map((campaign) => (
                       <Grid item xs={12} md={6} key={campaign.campaignId}>
-                        <Card 
+                        <Card
                           elevation={0}
-                          sx={{ 
+                          sx={{
                             p: 3,
                             borderRadius: 2,
                             border: '1px solid',
@@ -1556,11 +1348,11 @@ const Billing = () => {
                             <Typography variant="h6" fontWeight="600">
                               {campaign.campaignName}
                             </Typography>
-                            <Chip 
+                            <Chip
                               label={campaign.type}
                               size="small"
-                              color={campaign.type === 'SMS' ? 'primary' : 
-                                     campaign.type === 'Email' ? 'info' : 'success'}
+                              color={campaign.type === 'SMS' ? 'primary' :
+                                campaign.type === 'Email' ? 'info' : 'success'}
                             />
                           </Box>
 
@@ -1598,8 +1390,8 @@ const Billing = () => {
                                 {campaign.deliveredCount} / {campaign.totalRecipients}
                               </Typography>
                             </Box>
-                            <LinearProgress 
-                              variant="determinate" 
+                            <LinearProgress
+                              variant="determinate"
                               value={(campaign.deliveredCount / campaign.totalRecipients) * 100}
                               sx={{ height: 8, borderRadius: 4 }}
                             />
@@ -1698,11 +1490,11 @@ const Billing = () => {
                               </Box>
                             </TableCell>
                             <TableCell align="center">
-                              <Chip 
+                              <Chip
                                 label={campaign.type}
                                 size="small"
-                                color={campaign.type === 'SMS' ? 'primary' : 
-                                       campaign.type === 'Email' ? 'info' : 'success'}
+                                color={campaign.type === 'SMS' ? 'primary' :
+                                  campaign.type === 'Email' ? 'info' : 'success'}
                               />
                             </TableCell>
                             <TableCell align="center">
@@ -1715,17 +1507,17 @@ const Billing = () => {
                                 <Typography variant="body2" fontWeight="600" sx={{ mr: 1 }}>
                                   {campaign.deliveryRate.toFixed(1)}%
                                 </Typography>
-                                <Chip 
-                                  label={campaign.deliveryRate > 95 ? 'Excellent' : 
-                                         campaign.deliveryRate > 90 ? 'Good' : 'Needs Attention'}
+                                <Chip
+                                  label={campaign.deliveryRate > 95 ? 'Excellent' :
+                                    campaign.deliveryRate > 90 ? 'Good' : 'Needs Attention'}
                                   size="small"
-                                  color={campaign.deliveryRate > 95 ? 'success' : 
-                                         campaign.deliveryRate > 90 ? 'info' : 'warning'}
+                                  color={campaign.deliveryRate > 95 ? 'success' :
+                                    campaign.deliveryRate > 90 ? 'info' : 'warning'}
                                 />
                               </Box>
                             </TableCell>
                             <TableCell align="center">
-                              <Chip 
+                              <Chip
                                 label="Completed"
                                 size="small"
                                 color="success"
@@ -1786,7 +1578,8 @@ const Billing = () => {
                   label="Due Date"
                   value={quickEditDialog.receivableInfo.dueDate ? new Date(quickEditDialog.receivableInfo.dueDate) : null}
                   onChange={(newValue) => handleReceivableInfoChange('dueDate', newValue?.toISOString().split('T')[0])}
-                  renderInput={(params) => <TextField {...params} fullWidth />}
+                  slots={{ textField: TextField }}
+                  slotProps={{ textField: { fullWidth: true } }}
                 />
               </LocalizationProvider>
             </Grid>
@@ -2015,9 +1808,9 @@ const Billing = () => {
           </Typography>
           <Grid container spacing={2} sx={{ mb: 3 }}>
             <Grid item xs={4}>
-              <Card 
-                sx={{ 
-                  p: 2, 
+              <Card
+                sx={{
+                  p: 2,
                   cursor: 'pointer',
                   border: paymentDialog.method === 'card' ? 2 : 1,
                   borderColor: paymentDialog.method === 'card' ? 'primary.main' : 'divider',
@@ -2034,9 +1827,9 @@ const Billing = () => {
               </Card>
             </Grid>
             <Grid item xs={4}>
-              <Card 
-                sx={{ 
-                  p: 2, 
+              <Card
+                sx={{
+                  p: 2,
                   cursor: 'pointer',
                   border: paymentDialog.method === 'upi' ? 2 : 1,
                   borderColor: paymentDialog.method === 'upi' ? 'primary.main' : 'divider',
@@ -2053,9 +1846,9 @@ const Billing = () => {
               </Card>
             </Grid>
             <Grid item xs={4}>
-              <Card 
-                sx={{ 
-                  p: 2, 
+              <Card
+                sx={{
+                  p: 2,
                   cursor: 'pointer',
                   border: paymentDialog.method === 'netbanking' ? 2 : 1,
                   borderColor: paymentDialog.method === 'netbanking' ? 'primary.main' : 'divider',
@@ -2187,7 +1980,7 @@ const Billing = () => {
 
           <Alert severity="info" sx={{ mt: 2 }}>
             <Typography variant="body2">
-              <strong>Secure Payment:</strong> Your payment information is encrypted and secure. 
+              <strong>Secure Payment:</strong> Your payment information is encrypted and secure.
               Processing fee of 2% applies to all transactions.
             </Typography>
           </Alert>
@@ -2204,7 +1997,7 @@ const Billing = () => {
           <Button
             onClick={handleProcessPayment}
             variant="contained"
-            disabled={paymentDialog.processing || 
+            disabled={paymentDialog.processing ||
               (paymentDialog.method === 'card' && (!paymentDialog.cardDetails.name || !paymentDialog.cardDetails.number || !paymentDialog.cardDetails.expiry || !paymentDialog.cardDetails.cvv)) ||
               (paymentDialog.method === 'upi' && !paymentDialog.upiId) ||
               (paymentDialog.method === 'netbanking' && !paymentDialog.netBankingBank)
@@ -2226,8 +2019,8 @@ const Billing = () => {
         PaperProps={{ sx: { borderRadius: 3 } }}
       >
         <DialogContent sx={{ textAlign: 'center', py: 4 }}>
-          <Avatar 
-            sx={{ 
+          <Avatar
+            sx={{
               bgcolor: paymentStatus.success ? 'success.main' : 'error.main',
               width: 80,
               height: 80,
@@ -2237,15 +2030,15 @@ const Billing = () => {
           >
             {paymentStatus.success ? <CheckCircleIcon sx={{ fontSize: 40 }} /> : <ErrorIcon sx={{ fontSize: 40 }} />}
           </Avatar>
-          
+
           <Typography variant="h5" fontWeight="600" sx={{ mb: 1 }}>
             {paymentStatus.success ? 'Payment Successful!' : 'Payment Failed'}
           </Typography>
-          
+
           <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>
             {paymentStatus.message}
           </Typography>
-          
+
           {paymentStatus.success && paymentStatus.transactionId && (
             <Box sx={{ p: 2, bgcolor: 'success.50', borderRadius: 2, mb: 3 }}>
               <Typography variant="body2" color="text.secondary">
@@ -2256,7 +2049,7 @@ const Billing = () => {
               </Typography>
             </Box>
           )}
-          
+
           <Button
             onClick={handleClosePaymentStatus}
             variant="contained"

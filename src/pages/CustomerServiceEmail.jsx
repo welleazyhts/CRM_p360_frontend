@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { enhanceEmailContent } from '../services/emailAI';
 import {
   Box, Typography, Card, CardContent, Button, TextField, Grid,
   Paper, IconButton, Chip, Dialog, DialogTitle, DialogContent,
@@ -108,9 +109,22 @@ const CustomerServiceEmail = () => {
   };
 
   const handleSendEmail = () => {
-    // In real app, send email via API
-    setComposeOpen(false);
-    setComposeData({ to: '', subject: '', body: '' });
+    (async () => {
+      try {
+        // Try to enhance email content before sending (best-effort)
+        const enhanced = await enhanceEmailContent(composeData).catch(() => null);
+        if (enhanced && typeof enhanced === 'string') {
+          // If service returned a formatted response, replace body (best-effort)
+          setComposeData(prev => ({ ...prev, body: enhanced }));
+        }
+      } catch (e) {
+        console.error('Email enhancement failed:', e);
+      } finally {
+        // In real app, send email via API
+        setComposeOpen(false);
+        setComposeData({ to: '', subject: '', body: '' });
+      }
+    })();
   };
 
   const unreadCount = emails.filter(e => !e.read).length;

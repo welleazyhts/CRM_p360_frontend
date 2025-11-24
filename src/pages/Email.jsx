@@ -48,9 +48,6 @@ import {
   Accordion,
   AccordionSummary,
   AccordionDetails,
-  SpeedDial,
-  SpeedDialAction,
-  SpeedDialIcon,
   FormControlLabel,
   Switch
 } from '@mui/material';
@@ -63,7 +60,6 @@ import {
   Email as EmailIcon,
   Attachment as AttachmentIcon,
   Schedule as ScheduleIcon,
-
   Edit as EditIcon,
   Reply as ReplyIcon,
   Star as StarIcon,
@@ -89,8 +85,12 @@ import {
   Flag as FlagIcon,
   GetApp as GetAppIcon,
   Close as CloseIcon,
-  Save as SaveIcon
+  Save as SaveIcon,
+  AutoAwesome as AutoAwesomeIcon,
+  Psychology as PsychologyIcon,
+  Lightbulb as LightbulbIcon
 } from '@mui/icons-material';
+import emailAI from '../services/emailAI';
 import { useNavigate } from 'react-router-dom';
 
 const EmailInbox = () => {
@@ -112,7 +112,7 @@ const EmailInbox = () => {
   const [actionMenus, setActionMenus] = useState({});
   const [selectedEmails, setSelectedEmails] = useState([]);
   const [notification, setNotification] = useState({ open: false, message: '', severity: 'success' });
-  
+
   // New state for sorting
   const [sortConfig] = useState({ key: 'dateReceived', direction: 'desc' });
 
@@ -121,7 +121,7 @@ const EmailInbox = () => {
   const [lastUpdated, setLastUpdated] = useState(new Date());
   const [autoRefresh, setAutoRefresh] = useState(true);
   const [newEmailsCount, setNewEmailsCount] = useState(0);
-  
+
   // Email Templates and Automation states (removed unused dialogs)
 
   // New Outlook-style features state
@@ -167,8 +167,10 @@ const EmailInbox = () => {
   const [composeDialog, setComposeDialog] = useState({ open: false, mode: 'new', replyTo: null, forwardFrom: null });
   const [auditTrailDialog, setAuditTrailDialog] = useState({ open: false, emailId: null });
 
-  // Automation and template management states (restored for compatibility)
-    // Removed unused template management states
+  // AI Integration State
+  const [analysisDialog, setAnalysisDialog] = useState({ open: false, loading: false, result: null, email: null });
+  const [aiProcessing, setAiProcessing] = useState(false);
+  const [smartReplyOptions, setSmartReplyOptions] = useState([]);
 
   // Customer categorization options
   const customerCategoryOptions = [
@@ -180,16 +182,11 @@ const EmailInbox = () => {
 
   const agentsList = useMemo(() => [
     'Priya Patel',
-    'Bob Smith', 
+    'Bob Smith',
     'Charlie Brown',
     'Diana Wilson',
     'Eric Thompson'
   ], []);
-
-  // Removed unused categoryOptions
-
-  // Email Templates
-  // Removed unused emailTemplates array
 
   // Generate dynamic email data based on current filters and time
   const generateDynamicEmails = useCallback(() => {
@@ -374,14 +371,14 @@ const EmailInbox = () => {
       const statuses = ['new', 'in_progress', 'resolved'];
       const priorities = ['low', 'medium', 'high'];
       const slaStatuses = ['ok', 'warning', 'breach'];
-      
+
       const category = categories[Math.floor(Math.random() * categories.length)];
       const status = statuses[Math.floor(Math.random() * statuses.length)];
-      
+
       // Apply filter bias
       const categoryBias = categoryFilter !== 'all' ? categoryFilter : category;
       const statusBias = statusFilter !== 'all' ? statusFilter : status;
-      
+
       // Use realistic email data if available, otherwise generate
       const emailTemplate = realisticEmails[i % realisticEmails.length];
       const customEmail = i < realisticEmails.length ? emailTemplate : {
@@ -390,7 +387,7 @@ const EmailInbox = () => {
         category: categoryBias,
         content: `This is regarding my ${categoryBias} request. Please provide assistance with my policy matter.`
       };
-      
+
       additionalEmails.push({
         id: `EMAIL-${String(i + 100).padStart(3, '0')}`,
         from: customEmail.from,
@@ -415,22 +412,22 @@ const EmailInbox = () => {
   // Auto-refresh functionality
   const refreshEmails = useCallback(async () => {
     setIsRefreshing(true);
-    
+
     // Simulate API call delay
     await new Promise(resolve => setTimeout(resolve, 1000));
-    
+
     const newEmails = generateDynamicEmails();
     const previousCount = emails.length;
     const newCount = newEmails.length;
-    
+
     setEmails(newEmails);
     setLastUpdated(new Date());
-    
+
     if (newCount > previousCount) {
       setNewEmailsCount(newCount - previousCount);
       showNotification(`${newCount - previousCount} new emails received`, 'info');
     }
-    
+
     setIsRefreshing(false);
   }, [generateDynamicEmails, emails.length]);
 
@@ -460,7 +457,7 @@ const EmailInbox = () => {
 
     // Apply search filter
     if (searchTerm) {
-      filtered = filtered.filter(email => 
+      filtered = filtered.filter(email =>
         email.subject.toLowerCase().includes(searchTerm.toLowerCase()) ||
         email.from.toLowerCase().includes(searchTerm.toLowerCase()) ||
         email.content.toLowerCase().includes(searchTerm.toLowerCase())
@@ -481,7 +478,7 @@ const EmailInbox = () => {
     if (dateFilter !== 'all') {
       const now = new Date();
       const filterDate = new Date();
-      
+
       switch (dateFilter) {
         case 'today':
           filterDate.setHours(0, 0, 0, 0);
@@ -505,9 +502,9 @@ const EmailInbox = () => {
         default:
           break;
       }
-      
+
       if (dateFilter !== 'all' && dateFilter !== 'unread' && dateFilter !== 'sla_breach') {
-        filtered = filtered.filter(email => 
+        filtered = filtered.filter(email =>
           new Date(email.dateReceived) >= filterDate
         );
       }
@@ -517,7 +514,7 @@ const EmailInbox = () => {
     if (dueDateFilter !== 'all') {
       const now = new Date();
       const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-      
+
       switch (dueDateFilter) {
         case 'current':
           // Due within next 30 days
@@ -586,17 +583,12 @@ const EmailInbox = () => {
 
   // Enhanced mark as read with real-time update
   const markAsRead = (emailId) => {
-    setEmails(prev => prev.map(email => 
+    setEmails(prev => prev.map(email =>
       email.id === emailId ? { ...email, isRead: true } : email
     ));
     showNotification('Email marked as read', 'success');
   };
 
-
-
-  // Removed unused handleSort function
-
-  // Apply sorting to filtered emails
   const sortedEmails = React.useMemo(() => {
     const sortableEmails = [...filteredEmails];
     if (sortConfig.key) {
@@ -625,11 +617,6 @@ const EmailInbox = () => {
     return sortableEmails;
   }, [filteredEmails, sortConfig]);
 
-  // Removed unused SLATimeRemaining component
-
-  // Removed unused getCategoryColor and getStatusColor functions
-
-
   const formatDate = (dateString) => {
     const date = new Date(dateString);
     return date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
@@ -649,8 +636,8 @@ const EmailInbox = () => {
   };
 
   const handleSelectEmail = (emailId) => {
-    setSelectedEmails(prev => 
-      prev.includes(emailId) 
+    setSelectedEmails(prev =>
+      prev.includes(emailId)
         ? prev.filter(id => id !== emailId)
         : [...prev, emailId]
     );
@@ -662,22 +649,8 @@ const EmailInbox = () => {
     navigate(`/emails/detail/${emailId}`);
   };
 
-  // Removed unused legacy functions:
-  // - handleReplyEmail, handleConfirmReply
-  // - handleAssignEmail, handleConfirmAssign  
-  // - handleMarkAsResolved, handleConfirmReclassify
-  // - handleArchiveEmail, handleExportEmails
-  // - handleUseTemplate, handleAddTemplate
-  // - handleEditTemplate, handleSaveTemplate
-  // - handleDeleteTemplate, getAllTemplates
-
-
-
   const paginatedEmails = sortedEmails.slice((page - 1) * rowsPerPage, page * rowsPerPage);
 
-  // Removed unused processTemplate function
-
-  // Template management states
   const [templateManagementDialog, setTemplateManagementDialog] = useState(false);
   const [createTemplateDialog, setCreateTemplateDialog] = useState(false);
   const [selectedTemplate, setSelectedTemplate] = useState(null);
@@ -740,7 +713,6 @@ Renew-iQ Insurance`,
     }
   ]);
 
-  // Template management functions
   const handleOpenTemplateManagement = () => {
     setTemplateManagementDialog(true);
   };
@@ -826,7 +798,7 @@ Renew-iQ Insurance`,
   const processTemplate = (template, email, additionalVars = {}) => {
     let processedSubject = template.subject || '';
     let processedContent = template.content || '';
-    
+
     const variables = {
       customerName: email.from.split('@')[0].replace('.', ' ').replace(/\b\w/g, l => l.toUpperCase()),
       subject: email.subject,
@@ -835,13 +807,13 @@ Renew-iQ Insurance`,
       companyName: 'Renew-iQ Insurance',
       ...additionalVars
     };
-    
+
     Object.entries(variables).forEach(([key, value]) => {
       const regex = new RegExp(`\\{\\{${key}\\}\\}`, 'g');
       processedSubject = processedSubject.replace(regex, value);
       processedContent = processedContent.replace(regex, value);
     });
-    
+
     return { subject: processedSubject, content: processedContent };
   };
 
@@ -853,8 +825,8 @@ Renew-iQ Insurance`,
 
   const handleBulkMarkResolved = () => {
     // Mark selected emails as resolved
-    setEmails(prev => prev.map(email => 
-      selectedEmails.includes(email.id) 
+    setEmails(prev => prev.map(email =>
+      selectedEmails.includes(email.id)
         ? { ...email, status: 'resolved' }
         : email
     ));
@@ -864,8 +836,8 @@ Renew-iQ Insurance`,
 
   const handleBulkFlag = () => {
     // Flag selected emails for follow-up
-    setEmails(prev => prev.map(email => 
-      selectedEmails.includes(email.id) 
+    setEmails(prev => prev.map(email =>
+      selectedEmails.includes(email.id)
         ? { ...email, flagged: true, priority: 'high' }
         : email
     ));
@@ -887,6 +859,11 @@ Renew-iQ Insurance`,
       'Has Attachments': email.hasAttachments ? 'Yes' : 'No'
     }));
 
+    if (exportData.length === 0) {
+      showNotification('No emails selected for export', 'info');
+      return;
+    }
+
     const csvContent = [
       Object.keys(exportData[0]).join(','),
       ...exportData.map(row => Object.values(row).map(val => `"${val}"`).join(','))
@@ -906,7 +883,6 @@ Renew-iQ Insurance`,
     setSelectedEmails([]);
   };
 
-  // New Outlook-style feature handlers
   const handleStarEmail = (emailId) => {
     setStarredEmails(prev => {
       const newStarred = new Set(prev);
@@ -917,14 +893,14 @@ Renew-iQ Insurance`,
       }
       return newStarred;
     });
-    showNotification(`Email ${starredEmails.has(emailId) ? 'unstarred' : 'starred'}`, 'success');
+    showNotification(`Star toggled for email`, 'success');
   };
 
   const handleFindRelatedEmails = (email) => {
     // Find emails from same sender or with similar subject
-    const related = emails.filter(e => 
+    const related = emails.filter(e =>
       e.id !== email.id && (
-        e.from === email.from || 
+        e.from === email.from ||
         e.subject.toLowerCase().includes(email.subject.toLowerCase().split(' ')[0]) ||
         e.content.toLowerCase().includes(email.from.split('@')[0].toLowerCase())
       )
@@ -939,12 +915,12 @@ Renew-iQ Insurance`,
   };
 
   const handleMoveToFolder = (emailIds, folderId) => {
-    setEmails(prev => prev.map(email => 
-      emailIds.includes(email.id) 
+    setEmails(prev => prev.map(email =>
+      emailIds.includes(email.id)
         ? { ...email, folder: folderId, isJunk: folderId === 'junk', isSpam: folderId === 'spam' }
         : email
     ));
-    
+
     const folderName = [...emailFolders, ...customFolders].find(f => f.id === folderId)?.name || folderId;
     showNotification(`Moved ${emailIds.length} email(s) to ${folderName}`, 'success');
     setSelectedEmails([]);
@@ -1000,20 +976,20 @@ Renew-iQ Insurance`,
   };
 
   const handleReplyWithThread = (email) => {
-    setComposeDialog({ 
-      open: true, 
-      mode: 'reply', 
-      replyTo: email, 
-      forwardFrom: null 
+    setComposeDialog({
+      open: true,
+      mode: 'reply',
+      replyTo: email,
+      forwardFrom: null
     });
   };
 
   const handleForwardWithThread = (email) => {
-    setComposeDialog({ 
-      open: true, 
-      mode: 'forward', 
-      replyTo: null, 
-      forwardFrom: email 
+    setComposeDialog({
+      open: true,
+      mode: 'forward',
+      replyTo: null,
+      forwardFrom: email
     });
   };
 
@@ -1033,9 +1009,103 @@ Renew-iQ Insurance`,
     return categoryOption ? categoryOption.icon : PersonIcon;
   };
 
+  // AI Handlers
+  const handleAnalyzeEmail = async (email) => {
+    setAnalysisDialog({ open: true, loading: true, result: null, email });
+    try {
+      const analysis = await emailAI.analyzeEmail({
+        from: email.from,
+        subject: email.subject,
+        body: email.content
+      });
+      setAnalysisDialog(prev => ({ ...prev, loading: false, result: analysis }));
+    } catch (error) {
+      showNotification('Failed to analyze email', 'error');
+      setAnalysisDialog({ open: false, loading: false, result: null, email: null });
+    }
+  };
+
+  const handleGenerateSmartReply = async (email) => {
+    setAiProcessing(true);
+    try {
+      // First analyze to get context
+      const analysis = await emailAI.analyzeEmail({
+        from: email.from,
+        subject: email.subject,
+        body: email.content
+      });
+
+      // Then generate replies
+      const replies = await emailAI.generateSmartReplies(
+        { from: email.from, subject: email.subject, content: email.content },
+        { sentiment: 'neutral', urgency: 'medium', ...analysis } // Mock analysis object if parsing fails, but usually string
+      );
+
+      // Parse the replies string into options (simple split for now, or just show raw)
+      // For this demo, we'll just put the whole text in the compose window or show a selection dialog
+      // Let's put it in the compose window directly for now or show in a dialog
+
+      setComposeDialog({
+        open: true,
+        mode: 'reply',
+        replyTo: email,
+        body: replies // Pre-fill with generated options
+      });
+      showNotification('Smart replies generated', 'success');
+    } catch (error) {
+      showNotification('Failed to generate smart replies', 'error');
+    } finally {
+      setAiProcessing(false);
+    }
+  };
+
+  const handleEnhanceDraft = async () => {
+    if (!composeDialog.body) {
+      showNotification('Please write some content first to enhance', 'warning');
+      return;
+    }
+
+    setAiProcessing(true);
+    try {
+      const enhanced = await emailAI.enhanceEmailContent({
+        subject: composeDialog.subject,
+        body: composeDialog.body,
+        renewalContext: { customerName: 'Customer' } // Mock context
+      });
+
+      // Parse result if possible, otherwise just append or replace
+      // Assuming the AI returns a string with "Subject: ... Body: ..." format
+      // For simplicity, we'll just update the body with the whole result or try to parse
+
+      let newBody = enhanced;
+      let newSubject = composeDialog.subject;
+
+      // Simple parsing attempt
+      if (enhanced.includes('Body:')) {
+        const parts = enhanced.split('Body:');
+        if (parts[0].includes('Subject:')) {
+          newSubject = parts[0].replace('Subject:', '').trim();
+        }
+        newBody = parts[1].trim();
+      }
+
+      setComposeDialog(prev => ({
+        ...prev,
+        subject: newSubject,
+        body: newBody
+      }));
+
+      showNotification('Email enhanced with AI', 'success');
+    } catch (error) {
+      showNotification('Failed to enhance email', 'error');
+    } finally {
+      setAiProcessing(false);
+    }
+  };
+
   return (
     <Fade in={true} timeout={800}>
-      <Box sx={{ display: 'flex', height: 'calc(100vh - 100px)' }}>
+      <Box sx={{ display: 'flex', height: 'calc(100vh - 100px)', overflow: 'hidden' }}>
         {/* Sidebar */}
         <Drawer
           variant="persistent"
@@ -1109,7 +1179,7 @@ Renew-iQ Insurance`,
                     {folder.icon === 'archive' && <ArchiveIcon />}
                     {folder.icon === 'delete' && <DeleteIcon />}
                   </ListItemIcon>
-                  <ListItemText 
+                  <ListItemText
                     primary={folder.name}
                     secondary={folder.count > 0 ? folder.count : null}
                   />
@@ -1145,7 +1215,7 @@ Renew-iQ Insurance`,
                       <ListItemIcon sx={{ minWidth: 36 }}>
                         <FolderIcon />
                       </ListItemIcon>
-                      <ListItemText 
+                      <ListItemText
                         primary={folder.name}
                         secondary={folder.count > 0 ? folder.count : null}
                       />
@@ -1182,614 +1252,663 @@ Renew-iQ Insurance`,
         </Drawer>
 
         {/* Main Content */}
-        <Box sx={{ flex: 1, px: 1 }}>
-        {/* Header */}
-        <Box sx={{ 
-          display: 'flex', 
-          justifyContent: 'space-between', 
-          alignItems: 'center', 
-            mb: 3
+        <Box sx={{
+          flex: 1,
+          px: 1,
+          display: 'flex',
+          flexDirection: 'column',
+          minHeight: 0,
+          minWidth: 0 /* CRUCIAL: allows children to shrink/overflow and enables inner scrolling */
         }}>
-          <Box>
-            <Typography variant="h4" fontWeight="600">
+          {/* Header */}
+          <Box sx={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            mb: 3
+          }}>
+            <Box>
+              <Typography variant="h4" fontWeight="600">
                 {emailFolders.find(f => f.id === currentFolder)?.name || 'Email Inbox'}
-              {newEmailsCount > 0 && (
-                <Badge 
-                  badgeContent={newEmailsCount} 
-                  color="primary" 
-                  sx={{ ml: 2 }}
-                  onClick={() => setNewEmailsCount(0)}
-                />
-              )}
-            </Typography>
-            <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-              {filteredEmails.length} emails found
-              {selectedEmails.length > 0 && ` • ${selectedEmails.length} selected`}
-              {isRefreshing && (
-                <Box component="span" sx={{ display: 'inline-flex', alignItems: 'center', ml: 1 }}>
-                  <CircularProgress size={12} sx={{ mr: 0.5 }} />
-                  Refreshing...
-                </Box>
-              )}
-            </Typography>
-            <Typography variant="caption" color="text.secondary">
-              Last updated: {lastUpdated.toLocaleTimeString()} 
-              {autoRefresh && ' • Auto-refresh enabled'}
-            </Typography>
-          </Box>
-          <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
-            <Tooltip title={autoRefresh ? 'Disable auto-refresh' : 'Enable auto-refresh'}>
-              <IconButton
-                onClick={handleToggleAutoRefresh}
-                color={autoRefresh ? 'primary' : 'default'}
-                sx={{ 
-                  bgcolor: autoRefresh ? alpha(theme.palette.primary.main, 0.1) : 'transparent',
-                  '&:hover': { 
-                    bgcolor: autoRefresh ? alpha(theme.palette.primary.main, 0.2) : alpha(theme.palette.action.hover, 0.1)
+                {newEmailsCount > 0 && (
+                  <Badge
+                    badgeContent={newEmailsCount}
+                    color="primary"
+                    sx={{ ml: 2 }}
+                    onClick={() => setNewEmailsCount(0)}
+                  />
+                )}
+              </Typography>
+              <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+                {filteredEmails.length} emails found
+                {selectedEmails.length > 0 && ` • ${selectedEmails.length} selected`}
+                {isRefreshing && (
+                  <Box component="span" sx={{ display: 'inline-flex', alignItems: 'center', ml: 1 }}>
+                    <CircularProgress size={12} sx={{ mr: 0.5 }} />
+                    Refreshing...
+                  </Box>
+                )}
+              </Typography>
+              <Typography variant="caption" color="text.secondary">
+                Last updated: {lastUpdated.toLocaleTimeString()}
+                {autoRefresh && ' • Auto-refresh enabled'}
+              </Typography>
+            </Box>
+            <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
+              <Tooltip title="New Email">
+                <IconButton
+                  color="primary"
+                  onClick={handleComposeNew}
+                  sx={{ bgcolor: alpha(theme.palette.primary.main, 0.08), '&:hover': { bgcolor: alpha(theme.palette.primary.main, 0.12) } }}
+                >
+                  <CreateIcon />
+                </IconButton>
+              </Tooltip>
+              <Tooltip title={autoRefresh ? 'Disable auto-refresh' : 'Enable auto-refresh'}>
+                <IconButton
+                  onClick={handleToggleAutoRefresh}
+                  color={autoRefresh ? 'primary' : 'default'}
+                  sx={{
+                    bgcolor: autoRefresh ? alpha(theme.palette.primary.main, 0.1) : 'transparent',
+                    '&:hover': {
+                      bgcolor: autoRefresh ? alpha(theme.palette.primary.main, 0.2) : alpha(theme.palette.action.hover, 0.1)
+                    }
+                  }}
+                >
+                  <ScheduleIcon />
+                </IconButton>
+              </Tooltip>
+
+              {/* Automation button removed - functionality not implemented */}
+              <Button
+                startIcon={<EditIcon />}
+                variant="outlined"
+                onClick={handleOpenTemplateManagement}
+                sx={{
+                  borderRadius: 2,
+                  transition: 'all 0.2s',
+                  '&:hover': {
+                    transform: 'translateY(-2px)',
+                    boxShadow: 2
                   }
                 }}
               >
-                <ScheduleIcon />
-              </IconButton>
-            </Tooltip>
-
-            {/* Automation button removed - functionality not implemented */}
-            <Button
-              startIcon={<EditIcon />}
-              variant="outlined"
-              onClick={handleOpenTemplateManagement}
-              sx={{ 
-                borderRadius: 2,
-                transition: 'all 0.2s',
-                '&:hover': {
-                  transform: 'translateY(-2px)',
-                  boxShadow: 2
-                }
-              }}
-            >
-              Templates
-            </Button>
-            <Button
-              startIcon={isRefreshing ? <CircularProgress size={16} /> : <RefreshIcon />}
-              variant="outlined"
-              onClick={handleManualRefresh}
-              disabled={isRefreshing}
-              sx={{ borderRadius: 2 }}
-            >
-              {isRefreshing ? 'Refreshing...' : 'Refresh'}
-            </Button>
+                Templates
+              </Button>
+              <Button
+                startIcon={isRefreshing ? <CircularProgress size={16} /> : <RefreshIcon />}
+                variant="outlined"
+                onClick={handleManualRefresh}
+                disabled={isRefreshing}
+                sx={{ borderRadius: 2 }}
+              >
+                {isRefreshing ? 'Refreshing...' : 'Refresh'}
+              </Button>
+            </Box>
           </Box>
-        </Box>
 
           {/* Enhanced Email Content Area */}
-          <Box sx={{ flex: 1, overflow: 'hidden' }}>
-        {/* Search and Filters */}
-        <Grow in={loaded} timeout={400}>
-          <Paper sx={{ p: 3, mb: 3, borderRadius: 3, boxShadow: '0 4px 12px rgba(0,0,0,0.05)' }}>
-            <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap', alignItems: 'center' }}>
-              <TextField
+          <Box
+            className="horizontal-scroll-box"
+            sx={{
+              flex: 1,
+              minHeight: 0,
+              display: 'flex',
+              flexDirection: 'column',
+              width: '100%',
+              minWidth: 0, // CRUCIAL: allow this flex child to overflow internally
+              overflowX: 'auto',      // show horizontal scrollbar when inner content is wider
+              overflowY: 'hidden',
+              WebkitOverflowScrolling: 'touch',
+              /* custom scrollbar styling (WebKit) */
+              '&::-webkit-scrollbar': {
+                height: 10
+              },
+              '&::-webkit-scrollbar-thumb': {
+                backgroundColor: alpha(theme.palette.action.disabled, 0.6),
+                borderRadius: 6
+              },
+              /* Firefox */
+              scrollbarWidth: 'thin',
+              msOverflowStyle: 'auto'
+            }}
+          >
+            {/* Search and Filters */}
+            <Grow in={loaded} timeout={400}>
+              <Paper sx={{ p: 3, mb: 3, borderRadius: 3, boxShadow: '0 4px 12px rgba(0,0,0,0.05)' }}>
+                <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap', alignItems: 'center' }}>
+                  <TextField
                     placeholder="Search emails or use 'from:sender@domain.com' for specific senders..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <SearchIcon color="action" />
-                    </InputAdornment>
-                  ),
-                  sx: { borderRadius: 2 }
-                }}
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    InputProps={{
+                      startAdornment: (
+                        <InputAdornment position="start">
+                          <SearchIcon color="action" />
+                        </InputAdornment>
+                      ),
+                      sx: { borderRadius: 2 }
+                    }}
                     sx={{ minWidth: 350, flex: 1 }}
-              />
-              
-              <FormControl sx={{ minWidth: 150 }}>
+                  />
+
+                  <FormControl sx={{ minWidth: 150 }}>
                     <InputLabel>Customer Type</InputLabel>
-                <Select
-                  value={categoryFilter}
+                    <Select
+                      value={categoryFilter}
                       label="Customer Type"
-                  onChange={(e) => setCategoryFilter(e.target.value)}
-                  sx={{ borderRadius: 2 }}
-                >
+                      onChange={(e) => setCategoryFilter(e.target.value)}
+                      sx={{ borderRadius: 2 }}
+                    >
                       <MenuItem value="all">All Customers</MenuItem>
                       <MenuItem value="normal">Normal</MenuItem>
                       <MenuItem value="hni">HNI</MenuItem>
                       <MenuItem value="super_hni">Super HNI</MenuItem>
                       <MenuItem value="vip">VIP</MenuItem>
-                </Select>
-              </FormControl>
-
-              <FormControl sx={{ minWidth: 120 }}>
-                <InputLabel>Status</InputLabel>
-                <Select
-                  value={statusFilter}
-                  label="Status"
-                  onChange={(e) => setStatusFilter(e.target.value)}
-                  sx={{ borderRadius: 2 }}
-                >
-                  <MenuItem value="all">All Status</MenuItem>
-                  <MenuItem value="new">New</MenuItem>
-                  <MenuItem value="in_progress">In Progress</MenuItem>
-                  <MenuItem value="resolved">Resolved</MenuItem>
-                </Select>
-              </FormControl>
+                    </Select>
+                  </FormControl>
 
                   <FormControl sx={{ minWidth: 120 }}>
-                <InputLabel>Filter</InputLabel>
-                <Select
-                  value={dateFilter}
-                  label="Filter"
-                  onChange={(e) => setDateFilter(e.target.value)}
-                  sx={{ borderRadius: 2 }}
-                >
+                    <InputLabel>Status</InputLabel>
+                    <Select
+                      value={statusFilter}
+                      label="Status"
+                      onChange={(e) => setStatusFilter(e.target.value)}
+                      sx={{ borderRadius: 2 }}
+                    >
+                      <MenuItem value="all">All Status</MenuItem>
+                      <MenuItem value="new">New</MenuItem>
+                      <MenuItem value="in_progress">In Progress</MenuItem>
+                      <MenuItem value="resolved">Resolved</MenuItem>
+                    </Select>
+                  </FormControl>
+
+                  <FormControl sx={{ minWidth: 120 }}>
+                    <InputLabel>Filter</InputLabel>
+                    <Select
+                      value={dateFilter}
+                      label="Filter"
+                      onChange={(e) => setDateFilter(e.target.value)}
+                      sx={{ borderRadius: 2 }}
+                    >
                       <MenuItem value="all">All Emails</MenuItem>
                       <MenuItem value="unread">Unread</MenuItem>
                       <MenuItem value="starred">Starred</MenuItem>
-                  <MenuItem value="today">Today</MenuItem>
-                  <MenuItem value="week">This Week</MenuItem>
-                  <MenuItem value="month">This Month</MenuItem>
-                </Select>
-              </FormControl>
+                      <MenuItem value="today">Today</MenuItem>
+                      <MenuItem value="week">This Week</MenuItem>
+                      <MenuItem value="month">This Month</MenuItem>
+                    </Select>
+                  </FormControl>
 
-              <FormControl sx={{ minWidth: 140 }}>
-                <InputLabel>Due Status</InputLabel>
-                <Select
-                  value={dueDateFilter}
-                  label="Due Status"
-                  onChange={(e) => setDueDateFilter(e.target.value)}
-                  sx={{ borderRadius: 2 }}
-                >
-                  <MenuItem value="all">All Emails</MenuItem>
-                  <MenuItem value="current">Current (30 days)</MenuItem>
-                  <MenuItem value="due">Due Soon (7 days)</MenuItem>
-                  <MenuItem value="overdue">Overdue</MenuItem>
-                  <MenuItem value="custom">Custom Range</MenuItem>
-                </Select>
-              </FormControl>
+                  <FormControl sx={{ minWidth: 140 }}>
+                    <InputLabel>Due Status</InputLabel>
+                    <Select
+                      value={dueDateFilter}
+                      label="Due Status"
+                      onChange={(e) => setDueDateFilter(e.target.value)}
+                      sx={{ borderRadius: 2 }}
+                    >
+                      <MenuItem value="all">All Emails</MenuItem>
+                      <MenuItem value="current">Current (30 days)</MenuItem>
+                      <MenuItem value="due">Due Soon (7 days)</MenuItem>
+                      <MenuItem value="overdue">Overdue</MenuItem>
+                      <MenuItem value="custom">Custom Range</MenuItem>
+                    </Select>
+                  </FormControl>
 
-              {dueDateFilter === 'custom' && (
-                <>
-                  <TextField
-                    type="date"
-                    label="Start Date"
-                    value={customDateRange.start}
-                    onChange={(e) => setCustomDateRange(prev => ({ ...prev, start: e.target.value }))}
-                    InputLabelProps={{ shrink: true }}
-                    sx={{ minWidth: 150 }}
-                  />
-                  <TextField
-                    type="date"
-                    label="End Date"
-                    value={customDateRange.end}
-                    onChange={(e) => setCustomDateRange(prev => ({ ...prev, end: e.target.value }))}
-                    InputLabelProps={{ shrink: true }}
-                    sx={{ minWidth: 150 }}
-                  />
-                </>
-              )}
-            </Box>
-          </Paper>
-        </Grow>
-
-        {/* Bulk Actions Toolbar */}
-        {selectedEmails.length > 0 && (
-          <Grow in={selectedEmails.length > 0} timeout={300}>
-            <Paper sx={{ 
-              p: 2, 
-              mb: 3, 
-              borderRadius: 3, 
-              bgcolor: alpha(theme.palette.primary.main, 0.05),
-              border: `1px solid ${alpha(theme.palette.primary.main, 0.2)}`
-            }}>
-              <Toolbar sx={{ px: '0 !important', minHeight: 'auto !important' }}>
-                <Box sx={{ display: 'flex', alignItems: 'center', flex: 1 }}>
-                  <CheckCircleIcon sx={{ mr: 1, color: theme.palette.primary.main }} />
-                  <Typography variant="h6" sx={{ fontWeight: 600 }}>
-                    {selectedEmails.length} email(s) selected
-                  </Typography>
+                  {dueDateFilter === 'custom' && (
+                    <>
+                      <TextField
+                        type="date"
+                        label="Start Date"
+                        value={customDateRange.start}
+                        onChange={(e) => setCustomDateRange(prev => ({ ...prev, start: e.target.value }))}
+                        InputLabelProps={{ shrink: true }}
+                        sx={{ minWidth: 150 }}
+                      />
+                      <TextField
+                        type="date"
+                        label="End Date"
+                        value={customDateRange.end}
+                        onChange={(e) => setCustomDateRange(prev => ({ ...prev, end: e.target.value }))}
+                        InputLabelProps={{ shrink: true }}
+                        sx={{ minWidth: 150 }}
+                      />
+                    </>
+                  )}
                 </Box>
-                <Box sx={{ display: 'flex', gap: 1 }}>
-                  <Button
-                    startIcon={<PersonIcon />}
-                    variant="contained"
-                    size="small"
-                    onClick={() => handleBulkAssign()}
-                    sx={{ 
-                      borderRadius: 2,
-                      fontWeight: 600,
-                      boxShadow: '0 4px 14px rgba(0,118,255,0.25)',
-                      '&:hover': {
-                        boxShadow: '0 6px 20px rgba(0,118,255,0.35)',
-                      }
-                    }}
-                  >
-                    Bulk Assign
-                  </Button>
-                  <Button
-                    startIcon={<CheckCircleIcon />}
-                    variant="contained"
-                    color="success"
-                    size="small"
-                    onClick={() => handleBulkMarkResolved()}
-                    sx={{ 
-                      borderRadius: 2,
-                      fontWeight: 600,
-                      boxShadow: '0 4px 14px rgba(76,175,80,0.25)',
-                      '&:hover': {
-                        boxShadow: '0 6px 20px rgba(76,175,80,0.35)',
-                      }
-                    }}
-                  >
-                    Mark Resolved
-                  </Button>
-                  <Button
-                    startIcon={<FlagIcon />}
-                    variant="contained"
-                    color="warning"
-                    size="small"
-                    onClick={() => handleBulkFlag()}
-                    sx={{ 
-                      borderRadius: 2,
-                      fontWeight: 600,
-                      boxShadow: '0 4px 14px rgba(255,152,0,0.25)',
-                      '&:hover': {
-                        boxShadow: '0 6px 20px rgba(255,152,0,0.35)',
-                      }
-                    }}
-                  >
-                    Flag for Follow-Up
-                  </Button>
-                  <Button
-                    startIcon={<GetAppIcon />}
-                    variant="outlined"
-                    size="small"
-                    onClick={() => handleBulkExport()}
-                    sx={{ 
-                      borderRadius: 2,
-                      fontWeight: 600
-                    }}
-                  >
-                    Export Selected
-                  </Button>
-                  <Button
-                    startIcon={<CloseIcon />}
-                    variant="text"
-                    size="small"
-                    onClick={() => setSelectedEmails([])}
-                    sx={{ 
-                      borderRadius: 2,
-                      fontWeight: 600,
-                      color: theme.palette.error.main,
-                      '&:hover': {
-                        backgroundColor: alpha(theme.palette.error.main, 0.05),
-                      }
-                    }}
-                  >
-                    Clear Selection
-                  </Button>
-                </Box>
-              </Toolbar>
-            </Paper>
-          </Grow>
-        )}
+              </Paper>
+            </Grow>
+
+            {/* Bulk Actions Toolbar */}
+            {selectedEmails.length > 0 && (
+              <Grow in={selectedEmails.length > 0} timeout={300}>
+                <Paper sx={{
+                  p: 2,
+                  mb: 3,
+                  borderRadius: 3,
+                  bgcolor: alpha(theme.palette.primary.main, 0.05),
+                  border: `1px solid ${alpha(theme.palette.primary.main, 0.2)}`
+                }}>
+                  <Toolbar sx={{ px: '0 !important', minHeight: 'auto !important' }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', flex: 1 }}>
+                      <CheckCircleIcon sx={{ mr: 1, color: theme.palette.primary.main }} />
+                      <Typography variant="h6" sx={{ fontWeight: 600 }}>
+                        {selectedEmails.length} email(s) selected
+                      </Typography>
+                    </Box>
+                    <Box sx={{ display: 'flex', gap: 1 }}>
+                      <Button
+                        startIcon={<PersonIcon />}
+                        variant="contained"
+                        size="small"
+                        onClick={() => handleBulkAssign()}
+                        sx={{
+                          borderRadius: 2,
+                          fontWeight: 600,
+                          boxShadow: '0 4px 14px rgba(0,118,255,0.25)',
+                          '&:hover': {
+                            boxShadow: '0 6px 20px rgba(0,118,255,0.35)',
+                          }
+                        }}
+                      >
+                        Bulk Assign
+                      </Button>
+                      <Button
+                        startIcon={<CheckCircleIcon />}
+                        variant="contained"
+                        color="success"
+                        size="small"
+                        onClick={() => handleBulkMarkResolved()}
+                        sx={{
+                          borderRadius: 2,
+                          fontWeight: 600,
+                          boxShadow: '0 4px 14px rgba(76,175,80,0.25)',
+                          '&:hover': {
+                            boxShadow: '0 6px 20px rgba(76,175,80,0.35)',
+                          }
+                        }}
+                      >
+                        Mark Resolved
+                      </Button>
+                      <Button
+                        startIcon={<FlagIcon />}
+                        variant="contained"
+                        color="warning"
+                        size="small"
+                        onClick={() => handleBulkFlag()}
+                        sx={{
+                          borderRadius: 2,
+                          fontWeight: 600,
+                          boxShadow: '0 4px 14px rgba(255,152,0,0.25)',
+                          '&:hover': {
+                            boxShadow: '0 6px 20px rgba(255,152,0,0.35)',
+                          }
+                        }}
+                      >
+                        Flag for Follow-Up
+                      </Button>
+                      <Button
+                        startIcon={<GetAppIcon />}
+                        variant="outlined"
+                        size="small"
+                        onClick={() => handleBulkExport()}
+                        sx={{
+                          borderRadius: 2,
+                          fontWeight: 600
+                        }}
+                      >
+                        Export Selected
+                      </Button>
+                      <Button
+                        startIcon={<CloseIcon />}
+                        variant="text"
+                        size="small"
+                        onClick={() => setSelectedEmails([])}
+                        sx={{
+                          borderRadius: 2,
+                          fontWeight: 600,
+                          color: theme.palette.error.main,
+                          '&:hover': {
+                            backgroundColor: alpha(theme.palette.error.main, 0.05),
+                          }
+                        }}
+                      >
+                        Clear Selection
+                      </Button>
+                    </Box>
+                  </Toolbar>
+                </Paper>
+              </Grow>
+            )}
 
             {/* Enhanced Email Table with new features */}
-        <Grow in={loaded} timeout={600}>
-          <Paper 
-            elevation={0} 
-            sx={{ 
-              borderRadius: 3,
-              boxShadow: '0 8px 24px rgba(0,0,0,0.05)',
-              overflow: 'hidden'
-            }}
-          >
-                <TableContainer sx={{ maxHeight: 500 }}>
-              <Table stickyHeader>
-                <TableHead>
-                  <TableRow>
-                        <TableCell padding="checkbox">
-                      <Checkbox
-                        indeterminate={selectedEmails.length > 0 && selectedEmails.length < paginatedEmails.length}
-                        checked={paginatedEmails.length > 0 && selectedEmails.length === paginatedEmails.length}
-                        onChange={handleSelectAll}
-                      />
-                    </TableCell>
-                        <TableCell sx={{ width: 50 }}>Star</TableCell>
-                        <TableCell sx={{ fontWeight: 600 }}>From</TableCell>
-                        <TableCell sx={{ fontWeight: 600 }}>Subject</TableCell>
-                        <TableCell sx={{ fontWeight: 600 }}>Customer Type</TableCell>
-                        <TableCell sx={{ fontWeight: 600 }}>Date</TableCell>
-                        <TableCell sx={{ fontWeight: 600 }}>Due Date</TableCell>
-                        <TableCell sx={{ fontWeight: 600 }}>Actions</TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                      {paginatedEmails.map((email) => {
-                        const CustomerIcon = getCustomerCategoryIcon(email);
-                        return (
-                    <TableRow 
-                      key={email.id}
-                      selected={selectedEmails.includes(email.id)}
-                      sx={{ 
-                        cursor: 'pointer',
-                        '&:hover': { 
-                          bgcolor: alpha(theme.palette.primary.main, 0.04) 
-                        },
-                        ...(email.isRead ? {} : {
-                          bgcolor: alpha(theme.palette.info.main, 0.02),
-                          borderLeft: `4px solid ${theme.palette.info.main}`,
-                        }),
-                      }}
-                    >
-                      <TableCell padding="checkbox">
-                        <Checkbox
-                          checked={selectedEmails.includes(email.id)}
-                          onChange={() => handleSelectEmail(email.id)}
-                        />
-                      </TableCell>
-                            <TableCell>
-                              <IconButton
-                                size="small"
-                                onClick={() => handleStarEmail(email.id)}
-                                color={starredEmails.has(email.id) ? 'warning' : 'default'}
-                              >
-                                {starredEmails.has(email.id) ? <StarIcon /> : <StarBorderIcon />}
-                              </IconButton>
+            <Grow in={loaded} timeout={600}>
+              <Paper
+                elevation={0}
+                sx={{
+                  borderRadius: 3,
+                  boxShadow: '0 8px 24px rgba(0,0,0,0.05)',
+                  overflow: 'hidden'
+                }}
+              >
+                {/* Defensive scroll wrapper */}
+                <Box sx={{
+                  width: '100%',
+                  overflowX: 'auto',
+                  overflowY: 'hidden',
+                  '&::-webkit-scrollbar': { height: 10 },
+                  '&::-webkit-scrollbar-thumb': {
+                    backgroundColor: alpha(theme.palette.action.disabled, 0.6),
+                    borderRadius: 6,
+                  },
+                  scrollbarWidth: 'thin',
+                  msOverflowStyle: 'auto'
+                }}>
+                  {/* Inner content with guaranteed width — adjust minWidth as needed */}
+                  <Box sx={{ minWidth: 1400, display: 'block' }}>
+                    <TableContainer sx={{ maxHeight: 500 }}>
+                      <Table stickyHeader sx={{ minWidth: 1400 }}>
+                        <TableHead>
+                          <TableRow>
+                            <TableCell padding="checkbox" sx={{ backgroundColor: theme.palette.background.paper, zIndex: 2 }}>
+                              <Checkbox
+                                indeterminate={selectedEmails.length > 0 && selectedEmails.length < paginatedEmails.length}
+                                checked={paginatedEmails.length > 0 && selectedEmails.length === paginatedEmails.length}
+                                onChange={handleSelectAll}
+                              />
                             </TableCell>
-                      <TableCell>
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                <CustomerIcon 
-                              sx={{ 
-                                    fontSize: 16, 
-                                    color: getCustomerCategoryColor(email) === 'default' 
-                                      ? theme.palette.text.secondary 
-                                      : theme.palette[getCustomerCategoryColor(email)].main 
-                                  }} 
-                                />
-                          <Typography 
-                            variant="body2" 
-                            fontWeight={email.isRead ? 400 : 600}
-                            sx={{ 
-                              color: email.isRead ? 'text.primary' : theme.palette.info.main 
-                            }}
-                          >
-                            {email.from}
-                          </Typography>
-                                <IconButton
-                                  size="small"
-                                  onClick={() => handleSenderFilter(email.from)}
-                                  sx={{ opacity: 0.6, '&:hover': { opacity: 1 } }}
-                                >
-                                  <FilterListIcon fontSize="small" />
-                                </IconButton>
-                        </Box>
-                      </TableCell>
-                      <TableCell>
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                          <Typography 
-                            variant="body2" 
-                            fontWeight={email.isRead ? 400 : 600}
-                            sx={{ 
-                              maxWidth: 300,
-                              overflow: 'hidden',
-                              textOverflow: 'ellipsis',
-                              whiteSpace: 'nowrap'
-                            }}
-                          >
-                            {email.subject}
-                          </Typography>
-                          {email.hasAttachments && (
-                            <AttachmentIcon fontSize="small" color="action" />
-                          )}
-                                <IconButton
-                                  size="small"
-                                  onClick={() => handleFindRelatedEmails(email)}
-                                  sx={{ opacity: 0.6, '&:hover': { opacity: 1 } }}
-                                >
-                                  <FindRelatedIcon fontSize="small" />
-                                </IconButton>
-                        </Box>
-                      </TableCell>
-                      <TableCell>
-                        <Chip 
-                                label={customerCategories[email.from] || 'Normal'} 
-                                color={getCustomerCategoryColor(email)}
-                          size="small"
-                                sx={{ textTransform: 'capitalize' }}
-                        />
-                      </TableCell>
-                      <TableCell>
-                        <Typography variant="body2" color="text.secondary">
-                          {formatDate(email.dateReceived)}
-                        </Typography>
-                      </TableCell>
-                      <TableCell>
-                        {email.dueDate ? (
-                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                            <Typography 
-                              variant="body2" 
-                              color={
-                                new Date(email.dueDate) < new Date() ? 'error.main' :
-                                new Date(email.dueDate) <= new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) ? 'warning.main' :
-                                'text.secondary'
-                              }
-                              sx={{ fontWeight: new Date(email.dueDate) < new Date() ? 600 : 400 }}
-                            >
-                              {formatDate(email.dueDate)}
-                            </Typography>
-                            {new Date(email.dueDate) < new Date() && (
-                              <Chip 
-                                label="OVERDUE" 
-                                size="small" 
-                                color="error" 
-                                variant="outlined"
-                                sx={{ fontSize: '0.7rem', height: 20 }}
-                              />
-                            )}
-                            {new Date(email.dueDate) <= new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) && 
-                             new Date(email.dueDate) >= new Date() && (
-                              <Chip 
-                                label="DUE SOON" 
-                                size="small" 
-                                color="warning" 
-                                variant="outlined"
-                                sx={{ fontSize: '0.7rem', height: 20 }}
-                              />
-                            )}
-                          </Box>
-                        ) : (
-                          <Typography variant="body2" color="text.disabled">
-                            No due date
-                          </Typography>
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        <Box sx={{ display: 'flex', gap: 0.5 }}>
-                          <Tooltip title="View">
-                            <IconButton 
-                              size="small"
-                              onClick={() => handleViewEmail(email.id)}
-                            >
-                              <ViewIcon fontSize="small" />
-                            </IconButton>
-                          </Tooltip>
-                          <Tooltip title="Reply">
-                            <IconButton 
-                              size="small"
-                                    onClick={() => handleReplyWithThread(email)}
-                            >
-                              <ReplyIcon fontSize="small" />
-                            </IconButton>
-                          </Tooltip>
-                                <Tooltip title="Forward">
-                                  <IconButton 
+                            <TableCell sx={{ width: 50, backgroundColor: theme.palette.background.paper, zIndex: 2 }}>Star</TableCell>
+                            <TableCell sx={{ fontWeight: 600, backgroundColor: theme.palette.background.paper, zIndex: 2 }}>From</TableCell>
+                            <TableCell sx={{ fontWeight: 600, backgroundColor: theme.palette.background.paper, zIndex: 2 }}>Subject</TableCell>
+                            <TableCell sx={{ fontWeight: 600, backgroundColor: theme.palette.background.paper, zIndex: 2 }}>Customer Type</TableCell>
+                            <TableCell sx={{ fontWeight: 600, backgroundColor: theme.palette.background.paper, zIndex: 2 }}>Date</TableCell>
+                            <TableCell sx={{ fontWeight: 600, backgroundColor: theme.palette.background.paper, zIndex: 2 }}>Due Date</TableCell>
+                            <TableCell sx={{ fontWeight: 600, backgroundColor: theme.palette.background.paper, zIndex: 2 }}>Actions</TableCell>
+                          </TableRow>
+                        </TableHead>
+                        <TableBody>
+                          {paginatedEmails.map((email) => {
+                            const CustomerIcon = getCustomerCategoryIcon(email);
+                            return (
+                              <TableRow
+                                key={email.id}
+                                selected={selectedEmails.includes(email.id)}
+                                sx={{
+                                  cursor: 'pointer',
+                                  '&:hover': {
+                                    bgcolor: alpha(theme.palette.primary.main, 0.04)
+                                  },
+                                  ...(email.isRead ? {} : {
+                                    bgcolor: alpha(theme.palette.info.main, 0.02),
+                                    borderLeft: `4px solid ${theme.palette.info.main}`,
+                                  }),
+                                }}
+                              >
+                                <TableCell padding="checkbox">
+                                  <Checkbox
+                                    checked={selectedEmails.includes(email.id)}
+                                    onChange={() => handleSelectEmail(email.id)}
+                                  />
+                                </TableCell>
+                                <TableCell>
+                                  <IconButton
                                     size="small"
-                                    onClick={() => handleForwardWithThread(email)}
+                                    onClick={() => handleStarEmail(email.id)}
+                                    color={starredEmails.has(email.id) ? 'warning' : 'default'}
                                   >
-                                    <ForwardIcon fontSize="small" />
+                                    {starredEmails.has(email.id) ? <StarIcon /> : <StarBorderIcon />}
                                   </IconButton>
-                                </Tooltip>
-                          <Tooltip title="More Actions">
-                            <IconButton 
-                              size="small"
-                              onClick={(e) => setActionMenus({ ...actionMenus, [email.id]: e.currentTarget })}
-                            >
-                              <MoreVertIcon fontSize="small" />
-                            </IconButton>
-                          </Tooltip>
-                                
-                                {/* Enhanced Action Menu */}
-                          <Menu
-                            anchorEl={actionMenus[email.id]}
-                            open={Boolean(actionMenus[email.id])}
-                            onClose={() => setActionMenus({ ...actionMenus, [email.id]: null })}
-                          >
-                            <MenuItem onClick={() => {
-                                    handleFindRelatedEmails(email);
-                              setActionMenus({ ...actionMenus, [email.id]: null });
-                            }}>
-                                    <ListItemIcon><FindRelatedIcon fontSize="small" /></ListItemIcon>
-                                    <ListItemText>Find Related Emails</ListItemText>
-                            </MenuItem>
-                            <MenuItem onClick={() => {
-                              setActionMenus({ ...actionMenus, [email.id]: null });
-                              setTemplateForEmail(email);
-                              setTemplateManagementDialog(true);
-                            }}>
-                              <ListItemIcon><EditIcon fontSize="small" /></ListItemIcon>
-                              <ListItemText>Use Template</ListItemText>
-                            </MenuItem>
-                            <MenuItem onClick={() => {
-                                    handleMarkAsJunk([email.id]);
-                              setActionMenus({ ...actionMenus, [email.id]: null });
-                            }}>
-                                    <ListItemIcon><BlockIcon fontSize="small" /></ListItemIcon>
-                                    <ListItemText>Mark as Junk</ListItemText>
-                            </MenuItem>
-                                  <MenuItem onClick={() => {
-                                    handleMarkAsSpam([email.id]);
-                                setActionMenus({ ...actionMenus, [email.id]: null });
-                                  }}>
-                                    <ListItemIcon><SpamIcon fontSize="small" /></ListItemIcon>
-                                    <ListItemText>Mark as Spam</ListItemText>
-                            </MenuItem>
-                                  <MenuItem onClick={() => {
-                                    handleViewAuditTrail(email.id);
-                                setActionMenus({ ...actionMenus, [email.id]: null });
-                                  }}>
-                                    <ListItemIcon><HistoryIcon fontSize="small" /></ListItemIcon>
-                                    <ListItemText>View Audit Trail</ListItemText>
-                            </MenuItem>
-                                  <Divider />
-                                  <MenuItem>
-                                    <ListItemIcon><AssignmentIcon fontSize="small" /></ListItemIcon>
-                                    <ListItemText>Set Customer Category</ListItemText>
-                                  </MenuItem>
-                                  {customerCategoryOptions.map((category) => (
-                            <MenuItem 
-                                      key={category.value}
-                                      sx={{ pl: 4 }}
-                              onClick={() => {
-                                        handleSetCustomerCategory(email.id, category.value);
-                                setActionMenus({ ...actionMenus, [email.id]: null });
-                              }}
-                            >
-                              <ListItemIcon>
-                                        <category.icon fontSize="small" />
-                              </ListItemIcon>
-                                      <ListItemText>{category.label}</ListItemText>
-                            </MenuItem>
-                                  ))}
-                          </Menu>
-                        </Box>
-                      </TableCell>
-                    </TableRow>
-                        );
-                      })}
-                </TableBody>
-              </Table>
-            </TableContainer>
-            
-            {/* Pagination */}
-            <Box sx={{ display: 'flex', justifyContent: 'center', p: 2 }}>
-              <Pagination
-                count={Math.ceil(filteredEmails.length / rowsPerPage)}
-                page={page}
-                onChange={(e, value) => setPage(value)}
-                color="primary"
-              />
-            </Box>
-          </Paper>
-        </Grow>
+                                </TableCell>
+                                <TableCell>
+                                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                    <CustomerIcon
+                                      sx={{
+                                        fontSize: 16,
+                                        color: getCustomerCategoryColor(email) === 'default'
+                                          ? theme.palette.text.secondary
+                                          : theme.palette[getCustomerCategoryColor(email)].main
+                                      }}
+                                    />
+                                    <Typography
+                                      variant="body2"
+                                      fontWeight={email.isRead ? 400 : 600}
+                                      sx={{
+                                        color: email.isRead ? 'text.primary' : theme.palette.info.main
+                                      }}
+                                    >
+                                      {email.from}
+                                    </Typography>
+                                    <IconButton
+                                      size="small"
+                                      onClick={() => handleSenderFilter(email.from)}
+                                      sx={{ opacity: 0.6, '&:hover': { opacity: 1 } }}
+                                    >
+                                      <FilterListIcon fontSize="small" />
+                                    </IconButton>
+                                  </Box>
+                                </TableCell>
+                                <TableCell>
+                                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                    <Typography
+                                      variant="body2"
+                                      fontWeight={email.isRead ? 400 : 600}
+                                      sx={{
+                                        maxWidth: 300,
+                                        overflow: 'hidden',
+                                        textOverflow: 'ellipsis',
+                                        whiteSpace: 'nowrap'
+                                      }}
+                                    >
+                                      {email.subject}
+                                    </Typography>
+                                    {email.hasAttachments && (
+                                      <AttachmentIcon fontSize="small" color="action" />
+                                    )}
+                                    <IconButton
+                                      size="small"
+                                      onClick={() => handleFindRelatedEmails(email)}
+                                      sx={{ opacity: 0.6, '&:hover': { opacity: 1 } }}
+                                    >
+                                      <FindRelatedIcon fontSize="small" />
+                                    </IconButton>
+                                  </Box>
+                                </TableCell>
+                                <TableCell>
+                                  <Chip
+                                    label={customerCategories[email.from] || 'Normal'}
+                                    color={getCustomerCategoryColor(email)}
+                                    size="small"
+                                    sx={{ textTransform: 'capitalize' }}
+                                  />
+                                </TableCell>
+                                <TableCell>
+                                  <Typography variant="body2" color="text.secondary">
+                                    {formatDate(email.dateReceived)}
+                                  </Typography>
+                                </TableCell>
+                                <TableCell>
+                                  {email.dueDate ? (
+                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                      <Typography
+                                        variant="body2"
+                                        color={
+                                          new Date(email.dueDate) < new Date() ? 'error.main' :
+                                            new Date(email.dueDate) <= new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) ? 'warning.main' :
+                                              'text.secondary'
+                                        }
+                                        sx={{ fontWeight: new Date(email.dueDate) < new Date() ? 600 : 400 }}
+                                      >
+                                        {formatDate(email.dueDate)}
+                                      </Typography>
+                                      {new Date(email.dueDate) < new Date() && (
+                                        <Chip
+                                          label="OVERDUE"
+                                          size="small"
+                                          color="error"
+                                          variant="outlined"
+                                          sx={{ fontSize: '0.7rem', height: 20 }}
+                                        />
+                                      )}
+                                      {new Date(email.dueDate) <= new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) &&
+                                        new Date(email.dueDate) >= new Date() && (
+                                          <Chip
+                                            label="DUE SOON"
+                                            size="small"
+                                            color="warning"
+                                            variant="outlined"
+                                            sx={{ fontSize: '0.7rem', height: 20 }}
+                                          />
+                                        )}
+                                    </Box>
+                                  ) : (
+                                    <Typography variant="body2" color="text.disabled">
+                                      No due date
+                                    </Typography>
+                                  )}
+                                </TableCell>
+                                <TableCell>
+                                  <Box sx={{ display: 'flex', gap: 0.5 }}>
+                                    <Tooltip title="View">
+                                      <IconButton
+                                        size="small"
+                                        onClick={() => handleViewEmail(email.id)}
+                                      >
+                                        <ViewIcon fontSize="small" />
+                                      </IconButton>
+                                    </Tooltip>
+                                    <Tooltip title="Reply">
+                                      <IconButton
+                                        size="small"
+                                        onClick={() => handleReplyWithThread(email)}
+                                      >
+                                        <ReplyIcon fontSize="small" />
+                                      </IconButton>
+                                    </Tooltip>
+                                    <Tooltip title="Forward">
+                                      <IconButton
+                                        size="small"
+                                        onClick={() => handleForwardWithThread(email)}
+                                      >
+                                        <ForwardIcon fontSize="small" />
+                                      </IconButton>
+                                    </Tooltip>
+                                    <Tooltip title="More Actions">
+                                      <IconButton
+                                        size="small"
+                                        onClick={(e) => setActionMenus({ ...actionMenus, [email.id]: e.currentTarget })}
+                                      >
+                                        <MoreVertIcon fontSize="small" />
+                                      </IconButton>
+                                    </Tooltip>
 
-            {/* Floating Action Button for New Email */}
-            <SpeedDial
-              ariaLabel="Email Actions"
-              sx={{ position: 'fixed', bottom: 16, right: 16 }}
-              icon={<SpeedDialIcon />}
-            >
-              <SpeedDialAction
-                icon={<CreateIcon />}
-                tooltipTitle="New Email"
-                onClick={handleComposeNew}
-              />
-              <SpeedDialAction
-                icon={<RuleIcon />}
-                tooltipTitle="Manage Rules"
-                onClick={() => setRulesDialog({ open: true })}
-              />
-              <SpeedDialAction
-                icon={<FolderIcon />}
-                tooltipTitle="New Folder"
-                onClick={() => setNewFolderDialog({ open: true })}
-              />
-            </SpeedDial>
-                    </Box>
+                                    <Menu
+                                      anchorEl={actionMenus[email.id]}
+                                      open={Boolean(actionMenus[email.id])}
+                                      onClose={() => setActionMenus({ ...actionMenus, [email.id]: null })}
+                                    >
+                                      <MenuItem onClick={() => {
+                                        handleFindRelatedEmails(email);
+                                        setActionMenus({ ...actionMenus, [email.id]: null });
+                                      }}>
+                                        <ListItemIcon><FindRelatedIcon fontSize="small" /></ListItemIcon>
+                                        <ListItemText>Find Related Emails</ListItemText>
+                                      </MenuItem>
+                                      <MenuItem onClick={() => {
+                                        setActionMenus({ ...actionMenus, [email.id]: null });
+                                        setTemplateForEmail(email);
+                                        setTemplateManagementDialog(true);
+                                      }}>
+                                        <ListItemIcon><EditIcon fontSize="small" /></ListItemIcon>
+                                        <ListItemText>Use Template</ListItemText>
+                                      </MenuItem>
+                                      <MenuItem onClick={() => {
+                                        handleAnalyzeEmail(email);
+                                        setActionMenus({ ...actionMenus, [email.id]: null });
+                                      }}>
+                                        <ListItemIcon><PsychologyIcon fontSize="small" /></ListItemIcon>
+                                        <ListItemText>Analyze with AI</ListItemText>
+                                      </MenuItem>
+                                      <MenuItem onClick={() => {
+                                        handleGenerateSmartReply(email);
+                                        setActionMenus({ ...actionMenus, [email.id]: null });
+                                      }}>
+                                        <ListItemIcon><AutoAwesomeIcon fontSize="small" /></ListItemIcon>
+                                        <ListItemText>Smart Reply</ListItemText>
+                                      </MenuItem>
+                                      <MenuItem onClick={() => {
+                                        handleMarkAsJunk([email.id]);
+                                        setActionMenus({ ...actionMenus, [email.id]: null });
+                                      }}>
+                                        <ListItemIcon><BlockIcon fontSize="small" /></ListItemIcon>
+                                        <ListItemText>Mark as Junk</ListItemText>
+                                      </MenuItem>
+                                      <MenuItem onClick={() => {
+                                        handleMarkAsSpam([email.id]);
+                                        setActionMenus({ ...actionMenus, [email.id]: null });
+                                      }}>
+                                        <ListItemIcon><SpamIcon fontSize="small" /></ListItemIcon>
+                                        <ListItemText>Mark as Spam</ListItemText>
+                                      </MenuItem>
+                                      <MenuItem onClick={() => {
+                                        handleViewAuditTrail(email.id);
+                                        setActionMenus({ ...actionMenus, [email.id]: null });
+                                      }}>
+                                        <ListItemIcon><HistoryIcon fontSize="small" /></ListItemIcon>
+                                        <ListItemText>View Audit Trail</ListItemText>
+                                      </MenuItem>
+                                      <Divider />
+                                      <MenuItem>
+                                        <ListItemIcon><AssignmentIcon fontSize="small" /></ListItemIcon>
+                                        <ListItemText>Set Customer Category</ListItemText>
+                                      </MenuItem>
+                                      {customerCategoryOptions.map((category) => (
+                                        <MenuItem
+                                          key={category.value}
+                                          sx={{ pl: 4 }}
+                                          onClick={() => {
+                                            handleSetCustomerCategory(email.id, category.value);
+                                            setActionMenus({ ...actionMenus, [email.id]: null });
+                                          }}
+                                        >
+                                          <ListItemIcon>
+                                            <category.icon fontSize="small" />
+                                          </ListItemIcon>
+                                          <ListItemText>{category.label}</ListItemText>
+                                        </MenuItem>
+                                      ))}
+                                    </Menu>
+                                  </Box>
+                                </TableCell>
+                              </TableRow>
+                            );
+                          })}
+                        </TableBody>
+                      </Table>
+                    </TableContainer>
+                  </Box>
                 </Box>
 
-        {/* New Outlook-style Dialogs */}
-        
+                {/* Pagination */}
+                <Box sx={{ display: 'flex', justifyContent: 'center', p: 2 }}>
+                  <Pagination
+                    count={Math.ceil(filteredEmails.length / rowsPerPage)}
+                    page={page}
+                    onChange={(e, value) => setPage(value)}
+                    color="primary"
+                  />
+                </Box>
+              </Paper>
+            </Grow>
+
+            {/* Floating action moved to the header for better visibility on small screens */}
+          </Box>
+        </Box>
+
+        {/* New Outlook-style Dialogs (unchanged) */}
+
         {/* Related Emails Dialog */}
-        <Dialog 
+        <Dialog
           open={relatedEmailsDialog.open}
           onClose={() => setRelatedEmailsDialog({ open: false, email: null, relatedEmails: [] })}
           maxWidth="md"
@@ -1798,9 +1917,9 @@ Renew-iQ Insurance`,
           <DialogTitle>
             Related Emails
             {relatedEmailsDialog.email && (
-            <Typography variant="body2" color="text.secondary">
+              <Typography variant="body2" color="text.secondary">
                 Emails related to: {relatedEmailsDialog.email.from}
-            </Typography>
+              </Typography>
             )}
           </DialogTitle>
           <DialogContent>
@@ -1812,7 +1931,7 @@ Renew-iQ Insurance`,
                     secondary={`From: ${email.from} • ${formatDate(email.dateReceived)}`}
                   />
                   <Button
-                          size="small"
+                    size="small"
                     onClick={() => {
                       handleViewEmail(email.id);
                       setRelatedEmailsDialog({ open: false, email: null, relatedEmails: [] });
@@ -1837,7 +1956,7 @@ Renew-iQ Insurance`,
         </Dialog>
 
         {/* New Folder Dialog */}
-        <Dialog 
+        <Dialog
           open={newFolderDialog.open}
           onClose={() => setNewFolderDialog({ open: false })}
           maxWidth="sm"
@@ -1860,7 +1979,7 @@ Renew-iQ Insurance`,
           </DialogContent>
           <DialogActions>
             <Button onClick={() => setNewFolderDialog({ open: false })}>Cancel</Button>
-            <Button 
+            <Button
               onClick={(e) => {
                 const input = e.target.closest('.MuiDialog-root').querySelector('input');
                 if (input?.value.trim()) {
@@ -1875,7 +1994,7 @@ Renew-iQ Insurance`,
         </Dialog>
 
         {/* Rules Management Dialog */}
-        <Dialog 
+        <Dialog
           open={rulesDialog.open}
           onClose={() => setRulesDialog({ open: false })}
           maxWidth="md"
@@ -1885,7 +2004,7 @@ Renew-iQ Insurance`,
           <DialogContent>
             <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
               Manage automatic email processing rules similar to Outlook
-                </Typography>
+            </Typography>
             <List>
               {emailRules.map((rule) => (
                 <ListItem key={rule.id} divider>
@@ -1893,10 +2012,10 @@ Renew-iQ Insurance`,
                     primary={rule.name}
                     secondary={`${rule.conditions.length} condition(s) • ${rule.actions.length} action(s)`}
                   />
-                        <Switch 
+                  <Switch
                     checked={rule.enabled}
-                              onChange={(e) => {
-                      setEmailRules(prev => prev.map(r => 
+                    onChange={(e) => {
+                      setEmailRules(prev => prev.map(r =>
                         r.id === rule.id ? { ...r, enabled: e.target.checked } : r
                       ));
                     }}
@@ -1912,7 +2031,7 @@ Renew-iQ Insurance`,
         </Dialog>
 
         {/* Audit Trail Dialog */}
-        <Dialog 
+        <Dialog
           open={auditTrailDialog.open}
           onClose={() => setAuditTrailDialog({ open: false, emailId: null })}
           maxWidth="md"
@@ -1922,7 +2041,7 @@ Renew-iQ Insurance`,
           <DialogContent>
             <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
               Complete history of actions performed on this email thread
-                </Typography>
+            </Typography>
             <List>
               <ListItem>
                 <ListItemText
@@ -1950,7 +2069,7 @@ Renew-iQ Insurance`,
         </Dialog>
 
         {/* Compose Dialog */}
-        <Dialog 
+        <Dialog
           open={composeDialog.open}
           onClose={() => setComposeDialog({ open: false, mode: 'new', replyTo: null, forwardFrom: null })}
           maxWidth="lg"
@@ -1971,6 +2090,8 @@ Renew-iQ Insurance`,
                 multiline
                 rows={10}
                 placeholder="Type your message here..."
+                value={composeDialog.body || ''}
+                onChange={(e) => setComposeDialog({ ...composeDialog, body: e.target.value })}
               />
               {(composeDialog.mode === 'reply' || composeDialog.mode === 'forward') && (
                 <FormControlLabel
@@ -1984,6 +2105,14 @@ Renew-iQ Insurance`,
             <Button onClick={() => setComposeDialog({ open: false, mode: 'new', replyTo: null, forwardFrom: null })}>
               Cancel
             </Button>
+            <Button
+              variant="outlined"
+              startIcon={aiProcessing ? <CircularProgress size={20} /> : <AutoAwesomeIcon />}
+              onClick={handleEnhanceDraft}
+              disabled={aiProcessing || !composeDialog.body}
+            >
+              AI Enhance
+            </Button>
             <Button variant="contained" startIcon={<CreateIcon />}>
               Send
             </Button>
@@ -1991,15 +2120,15 @@ Renew-iQ Insurance`,
         </Dialog>
 
         {/* Template Management Dialog */}
-        <Dialog 
+        <Dialog
           open={templateManagementDialog}
           onClose={() => setTemplateManagementDialog(false)}
           maxWidth="lg"
           fullWidth
           PaperProps={{ sx: { borderRadius: 3, minHeight: '80vh' } }}
         >
-          <DialogTitle sx={{ 
-            fontWeight: 600, 
+          <DialogTitle sx={{
+            fontWeight: 600,
             pb: 1,
             display: 'flex',
             justifyContent: 'space-between',
@@ -2033,7 +2162,7 @@ Renew-iQ Insurance`,
             <Grid container spacing={2}>
               {templates.map((template) => (
                 <Grid item xs={12} md={6} key={template.id}>
-                  <Card sx={{ 
+                  <Card sx={{
                     borderRadius: 2,
                     transition: 'transform 0.2s, box-shadow 0.2s',
                     '&:hover': {
@@ -2047,58 +2176,58 @@ Renew-iQ Insurance`,
                           <Typography variant="h6" fontWeight="600" gutterBottom>
                             {template.name}
                           </Typography>
-                          <Chip 
-                            label={template.category} 
-                            size="small" 
-                            color="primary" 
+                          <Chip
+                            label={template.category}
+                            size="small"
+                            color="primary"
                             variant="outlined"
                             sx={{ mb: 1 }}
                           />
                         </Box>
-                                                 <Box sx={{ display: 'flex', gap: 0.5 }}>
-                           <Tooltip title="Use Template">
-                             <IconButton 
-                               size="small"
-                               color="primary"
-                               onClick={() => {
-                                 if (templateForEmail) {
-                                   handleUseTemplate(template, templateForEmail.id);
-                                   setTemplateManagementDialog(false);
-                                   setTemplateForEmail(null);
-                                 } else {
-                                   showNotification(`Template "${template.name}" ready to use - select an email from the action menu first`, 'info');
-                                 }
-                               }}
-                             >
-                               <CheckCircleIcon fontSize="small" />
-                             </IconButton>
-                           </Tooltip>
-                           <Tooltip title="Edit Template">
-                             <IconButton 
-                               size="small"
-                               onClick={() => handleEditTemplate(template)}
-                             >
-                               <EditIcon fontSize="small" />
-                             </IconButton>
-                           </Tooltip>
-                           <Tooltip title="Delete Template">
-                             <IconButton 
-                               size="small"
-                               color="error"
-                               onClick={() => handleDeleteTemplate(template.id)}
-                             >
-                               <DeleteIcon fontSize="small" />
-                             </IconButton>
-                           </Tooltip>
-                         </Box>
+                        <Box sx={{ display: 'flex', gap: 0.5 }}>
+                          <Tooltip title="Use Template">
+                            <IconButton
+                              size="small"
+                              color="primary"
+                              onClick={() => {
+                                if (templateForEmail) {
+                                  handleUseTemplate(template, templateForEmail.id);
+                                  setTemplateManagementDialog(false);
+                                  setTemplateForEmail(null);
+                                } else {
+                                  showNotification(`Template "${template.name}" ready to use - select an email from the action menu first`, 'info');
+                                }
+                              }}
+                            >
+                              <CheckCircleIcon fontSize="small" />
+                            </IconButton>
+                          </Tooltip>
+                          <Tooltip title="Edit Template">
+                            <IconButton
+                              size="small"
+                              onClick={() => handleEditTemplate(template)}
+                            >
+                              <EditIcon fontSize="small" />
+                            </IconButton>
+                          </Tooltip>
+                          <Tooltip title="Delete Template">
+                            <IconButton
+                              size="small"
+                              color="error"
+                              onClick={() => handleDeleteTemplate(template.id)}
+                            >
+                              <DeleteIcon fontSize="small" />
+                            </IconButton>
+                          </Tooltip>
+                        </Box>
                       </Box>
                       <Typography variant="body2" color="text.secondary" gutterBottom>
                         <strong>Subject:</strong> {template.subject}
                       </Typography>
-                      <Typography 
-                        variant="body2" 
+                      <Typography
+                        variant="body2"
                         color="text.secondary"
-                        sx={{ 
+                        sx={{
                           display: '-webkit-box',
                           WebkitLineClamp: 3,
                           WebkitBoxOrient: 'vertical',
@@ -2114,7 +2243,7 @@ Renew-iQ Insurance`,
                         </Typography>
                         <Box sx={{ display: 'flex', gap: 1 }}>
                           {template.variables.slice(0, 3).map((variable, index) => (
-                            <Chip 
+                            <Chip
                               key={index}
                               label={variable}
                               size="small"
@@ -2123,7 +2252,7 @@ Renew-iQ Insurance`,
                             />
                           ))}
                           {template.variables.length > 3 && (
-                            <Chip 
+                            <Chip
                               label={`+${template.variables.length - 3}`}
                               size="small"
                               variant="outlined"
@@ -2141,15 +2270,15 @@ Renew-iQ Insurance`,
         </Dialog>
 
         {/* Create/Edit Template Dialog */}
-        <Dialog 
+        <Dialog
           open={createTemplateDialog}
           onClose={() => setCreateTemplateDialog(false)}
           maxWidth="md"
           fullWidth
           PaperProps={{ sx: { borderRadius: 3, minHeight: '70vh' } }}
         >
-          <DialogTitle sx={{ 
-            fontWeight: 600, 
+          <DialogTitle sx={{
+            fontWeight: 600,
             pb: 1,
             display: 'flex',
             justifyContent: 'space-between',
@@ -2224,7 +2353,7 @@ Renew-iQ Insurance`,
                   </Typography>
                   <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
                     {extractVariables(newTemplate.content).map((variable, index) => (
-                      <Chip 
+                      <Chip
                         key={index}
                         label={variable}
                         size="small"
@@ -2259,17 +2388,58 @@ Renew-iQ Insurance`,
           onClose={() => setNotification({ ...notification, open: false })}
           anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
         >
-          <Alert 
-            onClose={() => setNotification({ ...notification, open: false })} 
+          <Alert
+            onClose={() => setNotification({ ...notification, open: false })}
             severity={notification.severity}
             sx={{ width: '100%' }}
           >
             {notification.message}
           </Alert>
         </Snackbar>
+        {/* AI Analysis Dialog */}
+        <Dialog
+          open={analysisDialog.open}
+          onClose={() => setAnalysisDialog({ open: false, loading: false, result: null, email: null })}
+          maxWidth="md"
+          fullWidth
+        >
+          <DialogTitle sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <PsychologyIcon color="primary" />
+            Email Analysis
+          </DialogTitle>
+          <DialogContent dividers>
+            {analysisDialog.loading ? (
+              <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', py: 4 }}>
+                <CircularProgress size={40} sx={{ mb: 2 }} />
+                <Typography color="text.secondary">Analyzing email content...</Typography>
+              </Box>
+            ) : (
+              <Box sx={{ whiteSpace: 'pre-wrap', fontFamily: 'monospace' }}>
+                {analysisDialog.result}
+              </Box>
+            )}
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => setAnalysisDialog({ open: false, loading: false, result: null, email: null })}>
+              Close
+            </Button>
+            {!analysisDialog.loading && (
+              <Button
+                variant="contained"
+                startIcon={<AutoAwesomeIcon />}
+                onClick={() => {
+                  setAnalysisDialog({ open: false, loading: false, result: null, email: null });
+                  if (analysisDialog.email) handleGenerateSmartReply(analysisDialog.email);
+                }}
+              >
+                Generate Reply
+              </Button>
+            )}
+          </DialogActions>
+        </Dialog>
       </Box>
     </Fade>
   );
 };
 
-export default EmailInbox; 
+export default EmailInbox;

@@ -259,6 +259,192 @@ const pipelineService = {
       throw error;
     }
   }
+
+  // ---------------------- New Pipeline CRUD API surface ----------------------
+  ,
+  // In-memory seeded store for pipelines (fallback when backend is unavailable)
+  _mockPipelines: [
+    {
+      id: 'PIPE-001',
+      name: 'Sales Pipeline',
+      description: 'Default sales pipeline',
+      stages: [
+        { id: 'STAGE-1', name: 'New', order: 1 },
+        { id: 'STAGE-2', name: 'Contacted', order: 2 },
+        { id: 'STAGE-3', name: 'Qualified', order: 3 },
+        { id: 'STAGE-4', name: 'Proposal', order: 4 },
+        { id: 'STAGE-5', name: 'Won', order: 5 }
+      ],
+      createdAt: new Date().toISOString()
+    }
+  ],
+
+  listPipelines: async (options = {}) => {
+    const { page = 1, limit = 10, search } = options;
+    try {
+      const params = new URLSearchParams();
+      params.set('page', page);
+      params.set('limit', limit);
+      if (search) params.set('search', search);
+
+      const resp = await api.get(`/pipelines?${params.toString()}`);
+      if (resp && resp.data && (resp.data.pipelines || resp.data.pagination)) return resp.data;
+      throw new Error('Unexpected backend response');
+    } catch (err) {
+      // Mock paginated response
+      const all = pipelineService._mockPipelines.slice();
+      const filtered = search ? all.filter(p => p.name.toLowerCase().includes(String(search).toLowerCase())) : all;
+      const total = filtered.length;
+      const start = (page - 1) * limit;
+      const pipelines = filtered.slice(start, start + limit);
+      return { pipelines, pagination: { page, limit, total } };
+    }
+  },
+
+  getPipeline: async (pipelineId) => {
+    if (!pipelineId) throw new Error('Missing pipelineId');
+    try {
+      const resp = await api.get(`/pipelines/${encodeURIComponent(pipelineId)}`);
+      if (resp && resp.data) return resp.data;
+      throw new Error('Unexpected backend response');
+    } catch (err) {
+      const found = pipelineService._mockPipelines.find(p => p.id === pipelineId);
+      if (!found) throw new Error(`Pipeline ${pipelineId} not found`);
+      return found;
+    }
+  },
+
+  createPipeline: async (payload) => {
+    if (!payload || !payload.name) throw new Error('Missing required field: name');
+    try {
+      const resp = await api.post('/pipelines', payload);
+      if (resp && resp.data) return resp.data;
+      throw new Error('Unexpected backend response');
+    } catch (err) {
+      // Mock create
+      const newPipeline = {
+        id: `PIPE-${Date.now()}`,
+        name: payload.name,
+        description: payload.description || '',
+        stages: payload.stages || [],
+        createdAt: new Date().toISOString()
+      };
+      pipelineService._mockPipelines.push(newPipeline);
+      return newPipeline;
+    }
+  },
+
+  updatePipeline: async (pipelineId, payload) => {
+    if (!pipelineId) throw new Error('Missing pipelineId');
+    try {
+      const resp = await api.put(`/pipelines/${encodeURIComponent(pipelineId)}`, payload);
+      if (resp && resp.data) return resp.data;
+      throw new Error('Unexpected backend response');
+    } catch (err) {
+      const idx = pipelineService._mockPipelines.findIndex(p => p.id === pipelineId);
+      if (idx === -1) throw new Error(`Pipeline ${pipelineId} not found`);
+      const updated = { ...pipelineService._mockPipelines[idx], ...payload };
+      pipelineService._mockPipelines[idx] = updated;
+      return updated;
+    }
+  },
+
+  deletePipeline: async (pipelineId) => {
+    if (!pipelineId) throw new Error('Missing pipelineId');
+    try {
+      const resp = await api.delete(`/pipelines/${encodeURIComponent(pipelineId)}`);
+      if (resp && resp.data) return resp.data;
+      throw new Error('Unexpected backend response');
+    } catch (err) {
+      const idx = pipelineService._mockPipelines.findIndex(p => p.id === pipelineId);
+      if (idx === -1) throw new Error(`Pipeline ${pipelineId} not found`);
+      pipelineService._mockPipelines.splice(idx, 1);
+      return { success: true, id: pipelineId };
+    }
+  },
+
+  addStage: async (pipelineId, stage) => {
+    if (!pipelineId) throw new Error('Missing pipelineId');
+    if (!stage || !stage.name) throw new Error('Missing required field: stage.name');
+    try {
+      const resp = await api.post(`/pipelines/${encodeURIComponent(pipelineId)}/stages`, stage);
+      if (resp && resp.data) return resp.data;
+      throw new Error('Unexpected backend response');
+    } catch (err) {
+      const p = pipelineService._mockPipelines.find(x => x.id === pipelineId);
+      if (!p) throw new Error(`Pipeline ${pipelineId} not found`);
+      const newStage = { id: `STAGE-${Date.now()}`, name: stage.name, order: (p.stages.length || 0) + 1 };
+      p.stages.push(newStage);
+      return newStage;
+    }
+  },
+
+  updateStage: async (pipelineId, stageId, payload) => {
+    if (!pipelineId) throw new Error('Missing pipelineId');
+    if (!stageId) throw new Error('Missing stageId');
+    try {
+      const resp = await api.put(`/pipelines/${encodeURIComponent(pipelineId)}/stages/${encodeURIComponent(stageId)}`, payload);
+      if (resp && resp.data) return resp.data;
+      throw new Error('Unexpected backend response');
+    } catch (err) {
+      const p = pipelineService._mockPipelines.find(x => x.id === pipelineId);
+      if (!p) throw new Error(`Pipeline ${pipelineId} not found`);
+      const sIdx = p.stages.findIndex(s => s.id === stageId);
+      if (sIdx === -1) throw new Error(`Stage ${stageId} not found`);
+      const updated = { ...p.stages[sIdx], ...payload };
+      p.stages[sIdx] = updated;
+      return updated;
+    }
+  },
+
+  deleteStage: async (pipelineId, stageId) => {
+    if (!pipelineId) throw new Error('Missing pipelineId');
+    if (!stageId) throw new Error('Missing stageId');
+    try {
+      const resp = await api.delete(`/pipelines/${encodeURIComponent(pipelineId)}/stages/${encodeURIComponent(stageId)}`);
+      if (resp && resp.data) return resp.data;
+      throw new Error('Unexpected backend response');
+    } catch (err) {
+      const p = pipelineService._mockPipelines.find(x => x.id === pipelineId);
+      if (!p) throw new Error(`Pipeline ${pipelineId} not found`);
+      const sIdx = p.stages.findIndex(s => s.id === stageId);
+      if (sIdx === -1) throw new Error(`Stage ${stageId} not found`);
+      const removed = p.stages.splice(sIdx, 1);
+      return removed[0] || { success: true };
+    }
+  },
+
+  reorderStages: async (pipelineId, orderPayload = []) => {
+    if (!pipelineId) throw new Error('Missing pipelineId');
+    try {
+      const resp = await api.put(`/pipelines/${encodeURIComponent(pipelineId)}/stages/reorder`, { stageOrder: orderPayload });
+      if (resp && resp.data) return resp.data;
+      throw new Error('Unexpected backend response');
+    } catch (err) {
+      const p = pipelineService._mockPipelines.find(x => x.id === pipelineId);
+      if (!p) throw new Error(`Pipeline ${pipelineId} not found`);
+      // orderPayload: [{ id, order }]
+      for (const o of orderPayload) {
+        const s = p.stages.find(st => st.id === o.id);
+        if (s) s.order = o.order;
+      }
+      p.stages.sort((a, b) => (a.order || 0) - (b.order || 0));
+      return p.stages;
+    }
+  }
 };
 
 export default pipelineService;
+
+// Named exports for convenience
+export const {
+  listPipelines,
+  getPipeline,
+  createPipeline,
+  updatePipeline,
+  deletePipeline,
+  addStage,
+  updateStage,
+  deleteStage,
+  reorderStages
+} = pipelineService;

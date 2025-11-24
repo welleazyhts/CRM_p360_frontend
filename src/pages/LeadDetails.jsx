@@ -172,10 +172,10 @@ const LeadDetails = () => {
     remarks: ''
   });
   const [documentForm, setDocumentForm] = useState({ documentName: 'Registration Certificate', file: null });
-  const [fileUploadForm, setFileUploadForm] = useState({ 
-    documentType: 'Aadhaar Card', 
-    files: [], 
-    status: 'Pending' 
+  const [fileUploadForm, setFileUploadForm] = useState({
+    documentType: 'Aadhaar Card',
+    files: [],
+    status: 'Pending'
   });
   const [fileSearchTerm, setFileSearchTerm] = useState('');
   const [fileStatusFilter, setFileStatusFilter] = useState('All');
@@ -307,7 +307,7 @@ const LeadDetails = () => {
     const mockAddOnPremium = 1500;
     const mockNetPremium = mockODPremium + mockLiabilityPremium + mockAddOnPremium;
     const mockGST = Math.floor(mockNetPremium * 0.18);
-    
+
     setPolicyDetails({
       policyNumber: `POL${Math.floor(Math.random() * 1000000)}`,
       policyType: mockLead.subProduct || 'Not Assigned',
@@ -352,40 +352,40 @@ const LeadDetails = () => {
 
     // Mock call logs with enhanced data
     setCallLogs([
-      { 
-        id: 1, 
-        date: '2024-01-15', 
-        time: '10:30 AM', 
-        duration: '15 min', 
-        type: 'Outbound', 
-        status: 'Completed', 
-        notes: 'Discussed policy options and premium calculations. Customer interested in comprehensive coverage.', 
+      {
+        id: 1,
+        date: '2024-01-15',
+        time: '10:30 AM',
+        duration: '15 min',
+        type: 'Outbound',
+        status: 'Completed',
+        notes: 'Discussed policy options and premium calculations. Customer interested in comprehensive coverage.',
         agentName: 'Sarah Johnson',
         callSummary: 'Customer inquiry about vehicle insurance premium. Provided quote for comprehensive coverage.',
         followUpRequired: true,
         callRating: 4
       },
-      { 
-        id: 2, 
-        date: '2024-01-12', 
-        time: '02:45 PM', 
-        duration: '8 min', 
-        type: 'Inbound', 
-        status: 'Completed', 
-        notes: 'Customer inquiry about premium payment options and policy renewal process.', 
+      {
+        id: 2,
+        date: '2024-01-12',
+        time: '02:45 PM',
+        duration: '8 min',
+        type: 'Inbound',
+        status: 'Completed',
+        notes: 'Customer inquiry about premium payment options and policy renewal process.',
         agentName: 'Mike Wilson',
         callSummary: 'Customer called to inquire about premium payment methods.',
         followUpRequired: false,
         callRating: 5
       },
-      { 
-        id: 3, 
-        date: '2024-01-10', 
-        time: '11:15 AM', 
-        duration: '0 min', 
-        type: 'Outbound', 
-        status: 'Missed', 
-        notes: 'Customer did not answer. Left voicemail.', 
+      {
+        id: 3,
+        date: '2024-01-10',
+        time: '11:15 AM',
+        duration: '0 min',
+        type: 'Outbound',
+        status: 'Missed',
+        notes: 'Customer did not answer. Left voicemail.',
         agentName: 'Sarah Johnson',
         callSummary: 'Attempted to contact customer for policy follow-up.',
         followUpRequired: true,
@@ -413,30 +413,30 @@ const LeadDetails = () => {
 
     // Mock uploaded files
     setUploadedFiles([
-      { 
-        id: 1, 
-        documentType: 'Aadhaar Card', 
-        fileName: 'aadhaar_rajesh_sharma.pdf', 
-        uploadedOn: '2024-01-15', 
-        status: 'Verified', 
+      {
+        id: 1,
+        documentType: 'Aadhaar Card',
+        fileName: 'aadhaar_rajesh_sharma.pdf',
+        uploadedOn: '2024-01-15',
+        status: 'Verified',
         fileType: 'pdf',
         size: '2.1 MB'
       },
-      { 
-        id: 2, 
-        documentType: 'PAN Card', 
-        fileName: 'pan_card_image.jpg', 
-        uploadedOn: '2024-01-14', 
-        status: 'Pending', 
+      {
+        id: 2,
+        documentType: 'PAN Card',
+        fileName: 'pan_card_image.jpg',
+        uploadedOn: '2024-01-14',
+        status: 'Pending',
         fileType: 'image',
         size: '1.8 MB'
       },
-      { 
-        id: 3, 
-        documentType: 'Driving License', 
-        fileName: 'driving_license.pdf', 
-        uploadedOn: '2024-01-12', 
-        status: 'Rejected', 
+      {
+        id: 3,
+        documentType: 'Driving License',
+        fileName: 'driving_license.pdf',
+        uploadedOn: '2024-01-12',
+        status: 'Rejected',
         fileType: 'pdf',
         size: '3.5 MB'
       }
@@ -643,7 +643,7 @@ const LeadDetails = () => {
 
   // Handle status update
   const handleStatusUpdate = (id, newStatus) => {
-    setUploadedFiles(uploadedFiles.map(file => 
+    setUploadedFiles(uploadedFiles.map(file =>
       file.id === id ? { ...file, status: newStatus } : file
     ));
   };
@@ -659,9 +659,9 @@ const LeadDetails = () => {
       status: 'Pending',
       createdAt: new Date().toISOString().split('T')[0]
     };
-    
+
     setTasks([...tasks, newTask]);
-    
+
     // Add to activities
     const newActivity = {
       id: activities.length + 1,
@@ -671,7 +671,7 @@ const LeadDetails = () => {
       user: lead?.assignedTo || 'System User'
     };
     setActivities([newActivity, ...activities]);
-    
+
     setFollowUpDialog(false);
     setCallDetailsDialog(false);
     setFollowUpForm({
@@ -696,7 +696,7 @@ const LeadDetails = () => {
   // Filter uploaded files
   const filteredFiles = uploadedFiles.filter(file => {
     const matchesSearch = file.fileName.toLowerCase().includes(fileSearchTerm.toLowerCase()) ||
-                         file.documentType.toLowerCase().includes(fileSearchTerm.toLowerCase());
+      file.documentType.toLowerCase().includes(fileSearchTerm.toLowerCase());
     const matchesStatus = fileStatusFilter === 'All' || file.status === fileStatusFilter;
     const matchesType = fileTypeFilter === 'All' || file.documentType === fileTypeFilter;
     return matchesSearch && matchesStatus && matchesType;
@@ -776,7 +776,7 @@ const LeadDetails = () => {
                   <Button
                     variant="contained"
                     startIcon={<MoneyIcon />}
-                    onClick={() => {/* TODO: Implement share quote functionality */}}
+                    onClick={() => {/* TODO: Implement share quote functionality */ }}
                     sx={{
                       background: `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.primary.dark} 100%)`,
                     }}
@@ -1194,7 +1194,7 @@ const LeadDetails = () => {
                         <TableCell>{policy.type}</TableCell>
                         <TableCell>
                           <Typography variant="body2">
-                            {new Date(policy.startDate).toLocaleDateString()} - 
+                            {new Date(policy.startDate).toLocaleDateString()} -
                           </Typography>
                           <Typography variant="body2">
                             {new Date(policy.endDate).toLocaleDateString()}
@@ -1205,7 +1205,7 @@ const LeadDetails = () => {
                         </TableCell>
                         <TableCell align="right">
                           <Typography variant="body2" fontWeight="600">
-                            ₹{policy.premium.toLocaleString()}
+                            ₹{policy.premium?.toLocaleString() || '0'}
                           </Typography>
                         </TableCell>
                         <TableCell>
@@ -1219,9 +1219,9 @@ const LeadDetails = () => {
                             label={policy.status}
                             size="small"
                             color={policy.status === 'Active' ? 'success' : 'default'}
-                            sx={{ 
+                            sx={{
                               borderRadius: 1,
-                              backgroundColor: policy.status === 'Active' 
+                              backgroundColor: policy.status === 'Active'
                                 ? alpha(theme.palette.success.main, 0.1)
                                 : alpha(theme.palette.grey[500], 0.1),
                               color: policy.status === 'Active'
@@ -1254,7 +1254,7 @@ const LeadDetails = () => {
           {currentTab === 3 && (
             <Box>
               <Typography variant="h6" fontWeight="600" gutterBottom>Activities</Typography>
-              
+
               {/* Activities Sub-tabs */}
               <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 3 }}>
                 <Tabs value={activitiesSubTab} onChange={(e, newValue) => setActivitiesSubTab(newValue)}>
@@ -1464,9 +1464,9 @@ const LeadDetails = () => {
                             </TableCell>
                             <TableCell>{log.agentName}</TableCell>
                             <TableCell>
-                              <Chip 
-                                label={log.type} 
-                                size="small" 
+                              <Chip
+                                label={log.type}
+                                size="small"
                                 variant="outlined"
                                 color={log.type === 'Inbound' ? 'success' : 'primary'}
                                 icon={log.type === 'Inbound' ? <CallIcon /> : <CallIcon />}
@@ -1527,7 +1527,7 @@ const LeadDetails = () => {
                             <TableCell>{claim.date}</TableCell>
                             <TableCell>
                               <Typography variant="body2" fontWeight="600" color="primary">
-                                ${claim.amount.toLocaleString()}
+                                ${claim.amount?.toLocaleString() || '0'}
                               </Typography>
                             </TableCell>
                             <TableCell>{claim.description}</TableCell>
@@ -1569,7 +1569,7 @@ const LeadDetails = () => {
                     {activities.map((activity) => (
                       <Paper key={activity.id} sx={{ p: 2 }}>
                         <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 2 }}>
-                          <Avatar sx={{ 
+                          <Avatar sx={{
                             bgcolor: (() => {
                               switch (activity.type) {
                                 case 'status_change': return alpha(theme.palette.info.main, 0.1);
@@ -1939,8 +1939,8 @@ const LeadDetails = () => {
                     No Files Found
                   </Typography>
                   <Typography variant="body2" color="text.secondary">
-                    {uploadedFiles.length === 0 
-                      ? 'No files have been uploaded yet. Click "Upload Files" to get started.' 
+                    {uploadedFiles.length === 0
+                      ? 'No files have been uploaded yet. Click "Upload Files" to get started.'
                       : 'No files match your current search criteria.'}
                   </Typography>
                 </Paper>
@@ -2246,17 +2246,17 @@ const LeadDetails = () => {
                       </Box>
                       <Box>
                         <Typography variant="caption" color="text.secondary">Call Type</Typography>
-                        <Chip 
-                          label={selectedCallLog.type} 
-                          size="small" 
+                        <Chip
+                          label={selectedCallLog.type}
+                          size="small"
                           color={selectedCallLog.type === 'Inbound' ? 'success' : 'primary'}
                         />
                       </Box>
                       <Box>
                         <Typography variant="caption" color="text.secondary">Status</Typography>
-                        <Chip 
-                          label={selectedCallLog.status} 
-                          size="small" 
+                        <Chip
+                          label={selectedCallLog.status}
+                          size="small"
                           color={selectedCallLog.status === 'Completed' ? 'success' : 'error'}
                         />
                       </Box>
@@ -2334,8 +2334,8 @@ const LeadDetails = () => {
         <DialogActions>
           <Button onClick={() => setCallDetailsDialog(false)}>Close</Button>
           {selectedCallLog?.followUpRequired && (
-            <Button 
-              variant="contained" 
+            <Button
+              variant="contained"
               startIcon={<AddIcon />}
               onClick={() => setFollowUpDialog(true)}
             >
@@ -2486,7 +2486,7 @@ const LeadDetails = () => {
                 component="label"
                 fullWidth
                 startIcon={<UploadIcon />}
-                sx={{ 
+                sx={{
                   height: 60,
                   borderStyle: 'dashed',
                   borderWidth: 2,
@@ -2538,8 +2538,8 @@ const LeadDetails = () => {
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setFileUploadDialog(false)}>Cancel</Button>
-          <Button 
-            onClick={handleFileUpload} 
+          <Button
+            onClick={handleFileUpload}
             variant="contained"
             disabled={fileUploadForm.files.length === 0}
           >
@@ -2969,8 +2969,8 @@ const LeadDetails = () => {
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setFollowUpDialog(false)}>Cancel</Button>
-          <Button 
-            onClick={handleScheduleFollowUp} 
+          <Button
+            onClick={handleScheduleFollowUp}
             variant="contained"
             disabled={!followUpForm.date}
             startIcon={<AccessTimeIcon />}

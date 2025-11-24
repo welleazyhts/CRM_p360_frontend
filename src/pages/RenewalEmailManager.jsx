@@ -13,7 +13,7 @@ import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker';
 import {
   Send as SendIcon, Inbox as InboxIcon, Outbox as OutboxIcon,
-  Reply as ReplyIcon, Delete as DeleteIcon, Archive as ArchiveIcon, Star as StarIcon, 
+  Reply as ReplyIcon, Delete as DeleteIcon, Archive as ArchiveIcon, Star as StarIcon,
   StarBorder as StarBorderIcon, Attachment as AttachmentIcon, Search as SearchIcon,
   MoreVert as MoreVertIcon, Flag as PriorityIcon, Close as CloseIcon, Add as AddIcon,
   Edit as EditIcon, Visibility as ViewIcon, Clear as ClearIcon,
@@ -33,7 +33,7 @@ const FormattedAIAnalysis = ({ text }) => {
   const theme = useTheme();
   const [debouncedText, setDebouncedText] = useState('');
   const [isStreaming, setIsStreaming] = useState(false);
-  
+
   // Debounce the text to avoid parsing incomplete streaming content
   useEffect(() => {
     setIsStreaming(true);
@@ -41,21 +41,21 @@ const FormattedAIAnalysis = ({ text }) => {
       setDebouncedText(text);
       setIsStreaming(false);
     }, 300); // Wait 300ms after last update
-    
+
     return () => clearTimeout(timer);
   }, [text]);
-  
+
   if (!text) return null;
-  
+
   // Parse the AI analysis text and format it properly
   const parseAnalysisText = (analysisText) => {
     const sections = {};
-    
+
     // Handle incomplete streaming text
     if (!analysisText || analysisText.length < 20) {
       return sections;
     }
-    
+
     // Try to extract sections using a more robust approach
     const sectionPatterns = [
       /(?:^|\n)\s*\*\*Sentiment\*\*:\s*([^\n]*(?:\n(?!\s*\*\*\w+\*\*:)[^\n]*)*)/gi,
@@ -65,15 +65,15 @@ const FormattedAIAnalysis = ({ text }) => {
       /(?:^|\n)\s*\*\*Tone\*\*:\s*([^\n]*(?:\n(?!\s*\*\*\w+\*\*:)[^\n]*)*)/gi,
       /(?:^|\n)\s*\*\*Suggested Tone\*\*:\s*([^\n]*(?:\n(?!\s*\*\*\w+\*\*:)[^\n]*)*)/gi
     ];
-    
+
     const sectionNames = ['Sentiment', 'Intent', 'Urgency', 'Key Points', 'Tone', 'Suggested Tone'];
-    
+
     sectionPatterns.forEach((pattern, index) => {
       const matches = [...analysisText.matchAll(pattern)];
       if (matches.length > 0) {
         const sectionName = sectionNames[index];
         let content = matches[0][1].trim();
-        
+
         // Clean up the content
         content = content
           .replace(/\*\*(.*?)\*\*/g, '$1') // Remove bold markers
@@ -81,26 +81,26 @@ const FormattedAIAnalysis = ({ text }) => {
           .replace(/confidence[:\s]*\d+%?/gi, '') // Remove confidence labels
           .replace(/\s+/g, ' ') // Normalize spaces
           .trim();
-        
+
         if (content) {
           sections[sectionName] = content;
         }
       }
     });
-    
+
     // Fallback to line-by-line parsing if regex approach didn't work well
     if (Object.keys(sections).length === 0) {
       const lines = analysisText.split('\n').map(line => line.trim()).filter(line => line.length > 0);
       let currentSection = null;
-      
+
       for (const line of lines) {
         // Check for section headers
         const sectionMatch = line.match(/^\*?\*?(Sentiment|Intent|Urgency|Key Points?|Tone|Emotional State|Suggested Tone)\*?\*?:\s*(.*)/i);
-        
+
         if (sectionMatch) {
           const sectionName = sectionMatch[1];
           let sectionValue = sectionMatch[2].trim();
-          
+
           // Clean up the value
           sectionValue = sectionValue
             .replace(/\*\*(.*?)\*\*/g, '$1')
@@ -108,7 +108,7 @@ const FormattedAIAnalysis = ({ text }) => {
             .replace(/confidence[:\s]*\d+%?/gi, '')
             .replace(/\s+/g, ' ')
             .trim();
-          
+
           sections[sectionName] = sectionValue;
           currentSection = sectionName;
         }
@@ -121,29 +121,29 @@ const FormattedAIAnalysis = ({ text }) => {
         }
       }
     }
-    
+
     return sections;
   };
-  
+
   // Use debounced text for parsing to avoid parsing incomplete content
   const textToParse = debouncedText || text;
   const sections = parseAnalysisText(textToParse);
   const hasValidSections = Object.keys(sections).length > 0;
-  
+
   const getSentimentColor = (sentiment) => {
     const sentimentLower = sentiment.toLowerCase();
     if (sentimentLower.includes('positive')) return theme.palette.success.main;
     if (sentimentLower.includes('negative')) return theme.palette.error.main;
     return theme.palette.info.main;
   };
-  
+
   const getUrgencyColor = (urgency) => {
     const urgencyLower = urgency.toLowerCase();
     if (urgencyLower.includes('high') || urgencyLower.includes('urgent')) return theme.palette.error.main;
     if (urgencyLower.includes('medium')) return theme.palette.warning.main;
     return theme.palette.info.main;
   };
-  
+
   // Show streaming indicator or fallback display
   if (!hasValidSections) {
     if (isStreaming || (text && text.length < 50)) {
@@ -159,12 +159,12 @@ const FormattedAIAnalysis = ({ text }) => {
         </Box>
       );
     }
-    
+
     // If we have substantial text but no parsed sections, show formatted fallback
     if (text && text.length > 50) {
       // Split text into lines and format them properly
       const lines = text.split('\n').filter(line => line.trim());
-      
+
       return (
         <Box sx={{ p: 2, backgroundColor: alpha(theme.palette.primary.main, 0.05), borderRadius: 1 }}>
           <Typography variant="body2" color="primary.main" sx={{ fontWeight: 600, mb: 1 }}>
@@ -174,26 +174,26 @@ const FormattedAIAnalysis = ({ text }) => {
             {lines.map((line, i) => {
               const trimmedLine = line.trim();
               if (!trimmedLine) return null;
-              
+
               // Check if this is a section header
-              const isSectionHeader = trimmedLine.match(/^\*\*(Sentiment|Intent|Urgency|Key Points?|Tone)\*\*:/i) || 
-                                    trimmedLine.match(/^(Sentiment|Intent|Urgency|Key Points?|Tone):/i);
-              
+              const isSectionHeader = trimmedLine.match(/^\*\*(Sentiment|Intent|Urgency|Key Points?|Tone)\*\*:/i) ||
+                trimmedLine.match(/^(Sentiment|Intent|Urgency|Key Points?|Tone):/i);
+
               // Check if this is a bullet point
               const isBullet = trimmedLine.startsWith('•') || trimmedLine.startsWith('-') || trimmedLine.startsWith('*');
-              
+
               // Clean the text
               const cleanText = trimmedLine
                 .replace(/\*\*(.*?)\*\*/g, '$1') // Remove bold markers
                 .replace(/\(confidence[:\s]*\d+%?\)/gi, '') // Remove confidence indicators
                 .replace(/confidence[:\s]*\d+%?/gi, '') // Remove confidence labels
                 .trim();
-              
+
               return (
-                <Typography 
-                  key={i} 
-                  variant="body2" 
-                  sx={{ 
+                <Typography
+                  key={i}
+                  variant="body2"
+                  sx={{
                     mb: isSectionHeader ? 1 : 0.5,
                     mt: isSectionHeader ? (i > 0 ? 1.5 : 0) : 0,
                     fontWeight: isSectionHeader ? 600 : 400,
@@ -210,29 +210,29 @@ const FormattedAIAnalysis = ({ text }) => {
         </Box>
       );
     }
-    
+
     return null;
   }
-  
+
   return (
     <Box>
       {Object.entries(sections).map(([sectionName, value], index) => {
         if (!value) return null;
-        
+
         return (
           <Box key={index} sx={{ mb: 2 }}>
-            <Typography variant="subtitle2" sx={{ 
-              fontWeight: 600, 
+            <Typography variant="subtitle2" sx={{
+              fontWeight: 600,
               color: sectionName.toLowerCase().includes('sentiment') ? getSentimentColor(value) :
-                     sectionName.toLowerCase().includes('urgency') ? getUrgencyColor(value) :
-                     'primary.main',
-              mb: 0.5 
+                sectionName.toLowerCase().includes('urgency') ? getUrgencyColor(value) :
+                  'primary.main',
+              mb: 0.5
             }}>
               {sectionName}:
             </Typography>
-            <Typography 
-              variant="body2" 
-              sx={{ 
+            <Typography
+              variant="body2"
+              sx={{
                 ml: 1,
                 color: 'text.primary',
                 whiteSpace: 'pre-line'
@@ -250,7 +250,7 @@ const FormattedAIAnalysis = ({ text }) => {
 const RenewalEmailManager = () => {
   const theme = useTheme();
   const { currentUser } = useAuth();
-  
+
   // Enhanced State Management
   const [loading, setLoading] = useState(false);
   const [currentTab, setCurrentTab] = useState(0);
@@ -258,7 +258,7 @@ const RenewalEmailManager = () => {
   const [emails, setEmails] = useState([]);
   const [filteredEmails, setFilteredEmails] = useState([]);
   const [selectedEmails, setSelectedEmails] = useState([]);
-  
+
   // Advanced Search & Filtering
   const [searchTerm, setSearchTerm] = useState('');
   const [advancedFilters] = useState({
@@ -277,7 +277,7 @@ const RenewalEmailManager = () => {
   const [dueDateFilter, setDueDateFilter] = useState('all');
   const [customDateRange, setCustomDateRange] = useState({ start: '', end: '' });
   const [sortConfig] = useState({ field: 'date', direction: 'desc' });
-  
+
   // Dialog States
   const [composeDialog, setComposeDialog] = useState(false);
   const [viewEmailDialog, setViewEmailDialog] = useState(false);
@@ -287,7 +287,7 @@ const RenewalEmailManager = () => {
   const [, setAutomationDialog] = useState(false);
   const [, setSettingsDialog] = useState(false);
   const [aiAssistantDialog, setAiAssistantDialog] = useState(false);
-  
+
   // Advanced Features State
   const [emailAnalytics, setEmailAnalytics] = useState({
     totalEmails: 0,
@@ -301,19 +301,19 @@ const RenewalEmailManager = () => {
   const [templates, setTemplates] = useState([]);
   const [scheduledEmails] = useState([]);
   const [snoozedEmails] = useState([]);
-  
+
   // AI Assistant State
   const [aiSuggestions, setAiSuggestions] = useState([]);
   const [aiAnalysis, setAiAnalysis] = useState(null);
   const [selectedAiSuggestion, setSelectedAiSuggestion] = useState('');
   const [currentAnalyzedEmail, setCurrentAnalyzedEmail] = useState(null);
   const [aiLoading, setAiLoading] = useState(false);
-  
+
   // AI Connection Status State
   const [emailBotConnected, setEmailBotConnected] = useState(false);
   const [renewiqConnected, setRenewiqConnected] = useState(false);
   const [connectionTesting, setConnectionTesting] = useState(false);
-  
+
   // Streaming State
   const [streamingAnalysis, setStreamingAnalysis] = useState('');
   const [streamingSuggestions, setStreamingSuggestions] = useState([]);
@@ -326,12 +326,12 @@ const RenewalEmailManager = () => {
     includeContext: true,
     language: 'english'
   });
-  
+
   // UI State
   const [speedDialOpen, setSpeedDialOpen] = useState(false);
   const [notification, setNotification] = useState({ open: false, message: '', severity: 'info' });
 
-  
+
   // Compose Email Enhanced State
   const [composeData, setComposeData] = useState({
     to: '',
@@ -368,35 +368,35 @@ const RenewalEmailManager = () => {
 
   // Mock Enhanced Data
   const mockEmails = useMemo(() => [
-      {
-        id: 1,
-        type: 'inbox',
-        from: 'john.doe@email.com',
-        to: 'renewals@company.com',
+    {
+      id: 1,
+      type: 'inbox',
+      from: 'john.doe@email.com',
+      to: 'renewals@company.com',
       cc: [],
       bcc: [],
       subject: 'Urgent: Policy Renewal Required - POL123456',
       body: 'Dear Team,\n\nI need immediate assistance with my policy renewal. The deadline is approaching and I haven\'t received the renewal documents.\n\nPlease expedite this process.\n\nBest regards,\nJohn Doe',
-        date: new Date(Date.now() - 2 * 60 * 60 * 1000),
-        read: false,
-        starred: false,
-        priority: 'high',
-        status: 'pending',
+      date: new Date(Date.now() - 2 * 60 * 60 * 1000),
+      read: false,
+      starred: false,
+      priority: 'high',
+      status: 'pending',
       attachments: ['policy_documents.pdf', 'id_proof.jpg'],
       size: '2.5MB',
       sentiment: 'negative',
       confidence: 0.85,
       aiIntent: 'renewal_request',
-              assignedTo: 'Priya Patel',
+      assignedTo: 'Priya Patel',
       tags: ['renewal', 'urgent', 'documents'],
       threadId: 'thread_001',
       deliveryStatus: 'delivered',
       openTracking: { opened: false, openCount: 0, lastOpened: null },
       clickTracking: { clicked: false, clickCount: 0, lastClicked: null },
-        renewalContext: {
-          policyNumber: 'POL123456',
-          customerName: 'Arjun Sharma',
-          renewalDate: '2024-02-15',
+      renewalContext: {
+        policyNumber: 'POL123456',
+        customerName: 'Arjun Sharma',
+        renewalDate: '2024-02-15',
         premiumAmount: '$1,200',
         agentName: 'Priya Patel',
         branch: 'Downtown Branch',
@@ -411,34 +411,34 @@ const RenewalEmailManager = () => {
         { type: 'quick_reply', text: 'We\'ll expedite your renewal process immediately.' },
         { type: 'template', name: 'Urgent Renewal Response' },
         { type: 'escalation', reason: 'High priority customer request' }
-        ]
-      },
-      {
-        id: 2,
-        type: 'outbox',
-        from: 'renewals@company.com',
+      ]
+    },
+    {
+      id: 2,
+      type: 'outbox',
+      from: 'renewals@company.com',
       to: 'jane.smith@email.com',
       cc: ['manager@company.com'],
       bcc: [],
       subject: 'Your Renewal Quote is Ready - POL234567',
       body: 'Dear Jane,\n\nWe\'re pleased to provide your renewal quote for policy POL234567.\n\nYour new premium: $850\nRenewal date: March 1, 2024\n\nTo accept, simply reply to this email or call us at 1-800-RENEWAL.\n\nThank you for your continued trust.',
       date: new Date(Date.now() - 6 * 60 * 60 * 1000),
-        read: true,
+      read: true,
       starred: true,
       priority: 'medium',
-        status: 'sent',
+      status: 'sent',
       attachments: ['renewal_quote.pdf'],
       size: '1.2MB',
       sentiment: 'positive',
       confidence: 0.92,
       aiIntent: 'quote_delivery',
-              assignedTo: 'Ravi Gupta',
+      assignedTo: 'Ravi Gupta',
       tags: ['renewal', 'quote', 'sent'],
       threadId: 'thread_002',
       deliveryStatus: 'delivered',
       openTracking: { opened: true, openCount: 3, lastOpened: new Date(Date.now() - 2 * 60 * 60 * 1000) },
       clickTracking: { clicked: true, clickCount: 1, lastClicked: new Date(Date.now() - 1 * 60 * 60 * 1000) },
-        renewalContext: {
+      renewalContext: {
         policyNumber: 'POL234567',
         customerName: 'Meera Kapoor',
         renewalDate: '2024-03-01',
@@ -453,32 +453,32 @@ const RenewalEmailManager = () => {
       dueDate: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000).toISOString(), // Due in 5 days
       policyExpiryDate: new Date(Date.now() + 10 * 24 * 60 * 60 * 1000).toISOString(),
       scheduledFollowUp: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000)
-      },
-      {
-        id: 3,
-        type: 'inbox',
-        from: 'mike.johnson@email.com',
-        to: 'renewals@company.com',
+    },
+    {
+      id: 3,
+      type: 'inbox',
+      from: 'mike.johnson@email.com',
+      to: 'renewals@company.com',
       subject: 'Thank You - Renewal Completed Successfully',
       body: 'Thank you for the excellent service. My renewal process was smooth and efficient. Payment has been processed successfully.',
-        date: new Date(Date.now() - 24 * 60 * 60 * 1000),
-        read: true,
-        starred: true,
-        priority: 'normal',
-        status: 'completed',
-        attachments: [],
+      date: new Date(Date.now() - 24 * 60 * 60 * 1000),
+      read: true,
+      starred: true,
+      priority: 'normal',
+      status: 'completed',
+      attachments: [],
       size: '0.5MB',
       sentiment: 'positive',
       confidence: 0.95,
       aiIntent: 'satisfaction_feedback',
-              assignedTo: 'Neha Sharma',
+      assignedTo: 'Neha Sharma',
       tags: ['renewal', 'completed', 'positive_feedback'],
       threadId: 'thread_003',
-        renewalContext: {
-          policyNumber: 'POL345678',
-          customerName: 'Vikram Singh',
-          renewalDate: '2024-01-30',
-          premiumAmount: '$1,100',
+      renewalContext: {
+        policyNumber: 'POL345678',
+        customerName: 'Vikram Singh',
+        renewalDate: '2024-01-30',
+        premiumAmount: '$1,100',
         agentName: 'Neha Sharma',
         branch: 'Central Branch',
         customerEmail: 'mike.johnson@email.com',
@@ -937,7 +937,7 @@ Best regards,
   // Load emails with enhanced data
   const loadEmails = useCallback(() => {
     setLoading(true);
-    
+
     // Initialize Email AI Agent
     const initializeAI = async () => {
       try {
@@ -947,14 +947,14 @@ Best regards,
         console.error('Failed to initialize Email AI Agent:', error);
       }
     };
-    
+
     initializeAI();
-    
+
     setTimeout(() => {
       setEmails(mockEmails);
       setFilteredEmails(mockEmails);
       setTemplates(mockTemplates);
-      
+
       // Generate analytics
       const analytics = {
         totalEmails: mockEmails.length,
@@ -981,7 +981,7 @@ Best regards,
           negative: 20
         }
       };
-      
+
       setEmailAnalytics(analytics);
       setLoading(false);
     }, 1000);
@@ -1023,21 +1023,21 @@ Best regards,
 
     // Advanced filters
     if (advancedFilters.dateRange.start && advancedFilters.dateRange.end) {
-      filtered = filtered.filter(email => 
-        email.date >= advancedFilters.dateRange.start && 
+      filtered = filtered.filter(email =>
+        email.date >= advancedFilters.dateRange.start &&
         email.date <= advancedFilters.dateRange.end
       );
     }
 
     if (advancedFilters.senderDomain) {
-      filtered = filtered.filter(email => 
+      filtered = filtered.filter(email =>
         email.from.includes(advancedFilters.senderDomain)
       );
     }
 
     if (advancedFilters.hasAttachments !== 'all') {
       const hasAttachments = advancedFilters.hasAttachments === 'yes';
-      filtered = filtered.filter(email => 
+      filtered = filtered.filter(email =>
         (email.attachments.length > 0) === hasAttachments
       );
     }
@@ -1065,7 +1065,7 @@ Best regards,
     }
 
     if (advancedFilters.tags.length > 0) {
-      filtered = filtered.filter(email => 
+      filtered = filtered.filter(email =>
         advancedFilters.tags.some(tag => email.tags.includes(tag))
       );
     }
@@ -1074,7 +1074,7 @@ Best regards,
     if (dueDateFilter !== 'all') {
       const now = new Date();
       const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-      
+
       switch (dueDateFilter) {
         case 'current':
           // Due within next 30 days
@@ -1125,12 +1125,12 @@ Best regards,
     filtered.sort((a, b) => {
       let aValue = a[sortConfig.field];
       let bValue = b[sortConfig.field];
-      
+
       if (sortConfig.field === 'date') {
         aValue = new Date(aValue);
         bValue = new Date(bValue);
       }
-      
+
       if (sortConfig.direction === 'asc') {
         return aValue > bValue ? 1 : -1;
       } else {
@@ -1147,8 +1147,8 @@ Best regards,
 
   // Email Actions
   const handleEmailSelect = (emailId) => {
-    setSelectedEmails(prev => 
-      prev.includes(emailId) 
+    setSelectedEmails(prev =>
+      prev.includes(emailId)
         ? prev.filter(id => id !== emailId)
         : [...prev, emailId]
     );
@@ -1157,17 +1157,17 @@ Best regards,
   const handleEmailView = (email) => {
     setSelectedEmail(email);
     setViewEmailDialog(true);
-    
+
     // Mark as read if it's an inbox email
     if (email.type === 'inbox' && !email.read) {
-      setEmails(prev => prev.map(e => 
+      setEmails(prev => prev.map(e =>
         e.id === email.id ? { ...e, read: true } : e
       ));
     }
   };
 
   const handleStarEmail = (emailId) => {
-    setEmails(prev => prev.map(email => 
+    setEmails(prev => prev.map(email =>
       email.id === emailId ? { ...email, starred: !email.starred } : email
     ));
   };
@@ -1179,7 +1179,7 @@ Best regards,
   };
 
   const handleArchiveEmails = () => {
-    setEmails(prev => prev.map(email => 
+    setEmails(prev => prev.map(email =>
       selectedEmails.includes(email.id) ? { ...email, status: 'archived' } : email
     ));
     setSelectedEmails([]);
@@ -1238,12 +1238,12 @@ Best regards,
       priority: 'normal', scheduledSend: false, scheduleDate: null,
       attachments: [], signature: '', trackOpens: true, trackClicks: true,
       requestReadReceipt: false,
-      renewalContext: { 
+      renewalContext: {
         policyNumber: '', customerName: '', renewalDate: '', premiumAmount: '',
         agentName: '', branch: '', customerEmail: '', customerPhone: ''
       },
       aiAssistance: {
-        tone: 'professional', language: 'english', 
+        tone: 'professional', language: 'english',
         includePersonalization: true, suggestSubject: true
       }
     });
@@ -1275,7 +1275,7 @@ Best regards,
   // Helper functions for AI processing
   const generateFallbackSuggestions = useCallback((analysis, email) => {
     const { contextualInfo } = analysis;
-    
+
     return [{
       id: 'fallback_response',
       type: 'Professional Response',
@@ -1299,16 +1299,16 @@ Customer Service Team`,
   const parseAIResponseForSuggestions = useCallback((aiResponse, analysis, email) => {
     try {
       const suggestions = [];
-      
+
       // Split response into sections based on REPLY markers
       const replySections = aiResponse.split(/REPLY\s*\d+:/i).filter(section => section.trim());
-      
+
       for (let i = 0; i < replySections.length && suggestions.length < 3; i++) {
         const replyContent = replySections[i].trim();
-        
+
         // Skip empty sections or meta-commentary
         if (!replyContent || replyContent.length < 20) continue;
-        
+
         // Clean the content - remove meta-commentary and formatting artifacts
         let cleanContent = replyContent
           .replace(/\*\*.*?Response.*?\*\*/gi, '') // Remove response type labels
@@ -1317,7 +1317,7 @@ Customer Service Team`,
           .replace(/^\s*[*\-•]\s*/gm, '') // Remove bullet points
           .replace(/\n\s*\n\s*\n/g, '\n\n') // Clean up multiple line breaks
           .trim();
-        
+
         // Extract subject if present, otherwise use default
         let subject = `Re: ${email.subject}`;
         const subjectMatch = cleanContent.match(/Subject:\s*(.+?)(?:\n|$)/i);
@@ -1325,24 +1325,24 @@ Customer Service Team`,
           subject = subjectMatch[1].trim();
           cleanContent = cleanContent.replace(/Subject:\s*(.+?)(?:\n|$)/i, '').trim();
         }
-        
+
         // Ensure proper email structure if missing greeting
         if (!cleanContent.toLowerCase().includes('dear ') && !cleanContent.toLowerCase().includes('hello ')) {
           const customerName = analysis.contextualInfo?.customerName || 'Customer';
           cleanContent = `Dear ${customerName},\n\n${cleanContent}`;
         }
-        
+
         // Ensure proper closing if missing
         if (!cleanContent.toLowerCase().includes('regards') && !cleanContent.toLowerCase().includes('sincerely')) {
           const agentName = analysis.contextualInfo?.agentName || 'Customer Service Team';
           cleanContent += `\n\nBest regards,\n${agentName}`;
         }
-        
+
         // Determine suggestion type
         let suggestionType = 'Professional Response';
         if (i === 1) suggestionType = 'Detailed Response';
         if (i === 2) suggestionType = 'Empathetic Response';
-        
+
         suggestions.push({
           id: `ai_reply_${i + 1}`,
           type: suggestionType,
@@ -1353,7 +1353,7 @@ Customer Service Team`,
           aiEnhanced: true
         });
       }
-      
+
       // If no valid replies found, create a single clean response
       if (suggestions.length === 0) {
         const cleanResponse = aiResponse
@@ -1361,7 +1361,7 @@ Customer Service Team`,
           .replace(/Complete Response Summary.*$/s, '') // Remove summary
           .replace(/Do you want me to.*$/s, '') // Remove questions
           .trim();
-          
+
         if (cleanResponse.length > 20) {
           suggestions.push({
             id: 'ai_clean_response',
@@ -1374,7 +1374,7 @@ Customer Service Team`,
           });
         }
       }
-      
+
       return suggestions.length > 0 ? suggestions : generateFallbackSuggestions(analysis, email);
     } catch (error) {
       console.error('Error parsing AI suggestions:', error);
@@ -1388,7 +1388,7 @@ Customer Service Team`,
     try {
       setAiLoading(true);
       let aiResponse = '';
-      
+
       // Call the actual AI service for smart replies with streaming
       await generateEmailAIReplies(email, analysis, (chunk, fullContent) => {
         aiResponse = fullContent;
@@ -1397,10 +1397,10 @@ Customer Service Team`,
           onChunk(chunk, fullContent);
         }
       });
-      
+
       // Parse AI response to extract suggestions
       const suggestions = parseAIResponseForSuggestions(aiResponse, analysis, email);
-      
+
       setAiSuggestions(suggestions);
       showNotification('AI-powered smart replies generated successfully', 'success');
       return aiResponse; // Return the response for further processing
@@ -1519,7 +1519,7 @@ Processing Team`,
     const extractKeyPoints = (emailBody) => {
       const points = [];
       const lowerBody = emailBody.toLowerCase();
-      
+
       if (lowerBody.includes('urgent') || lowerBody.includes('asap') || lowerBody.includes('immediately')) {
         points.push('Customer indicates urgency');
       }
@@ -1547,7 +1547,7 @@ Processing Team`,
       if (lowerBody.includes('claim') || lowerBody.includes('accident') || lowerBody.includes('damage')) {
         points.push('Claim-related inquiry');
       }
-      
+
       return points.length > 0 ? points : ['General inquiry'];
     };
 
@@ -1598,7 +1598,7 @@ Processing Team`,
       try {
         const points = [];
         const lines = response.split('\n');
-        
+
         for (const line of lines) {
           if (line.trim().startsWith('•') || line.trim().startsWith('-')) {
             const point = line.replace(/^[•-]\s*/, '').trim();
@@ -1607,12 +1607,12 @@ Processing Team`,
             }
           }
         }
-        
+
         // If no bullet points found, use basic extraction
         if (points.length === 0) {
           return extractBasicKeyPoints(originalBody);
         }
-        
+
         return points.slice(0, 5); // Limit to 5 key points
       } catch {
         return extractBasicKeyPoints(originalBody);
@@ -1622,7 +1622,7 @@ Processing Team`,
     const extractBasicKeyPoints = (emailBody) => {
       const points = [];
       const lowerBody = emailBody.toLowerCase();
-      
+
       if (lowerBody.includes('urgent') || lowerBody.includes('asap') || lowerBody.includes('immediately')) {
         points.push('Customer indicates urgency');
       }
@@ -1650,7 +1650,7 @@ Processing Team`,
       if (lowerBody.includes('claim') || lowerBody.includes('accident') || lowerBody.includes('damage')) {
         points.push('Claim-related inquiry');
       }
-      
+
       return points.length > 0 ? points : ['General inquiry'];
     };
 
@@ -1662,7 +1662,7 @@ Processing Team`,
       const urgency = extractFromAIResponse(aiResponse, ['urgency', 'priority'], 'normal');
       const keyPoints = extractKeyPointsFromAIResponse(aiResponse, email.body);
       const suggestedTone = extractFromAIResponse(aiResponse, ['tone', 'recommended tone'], 'professional');
-      
+
       return {
         sentiment,
         confidence,
@@ -1686,27 +1686,27 @@ Processing Team`,
 
   const analyzeEmailWithAI = useCallback(async (email) => {
     if (!email) return;
-    
+
     setCurrentAnalyzedEmail(email);
     setAiLoading(true);
-    
+
     // Provide immediate fallback analysis for instant response
     const quickAnalysis = generateFallbackAnalysis(email);
     setAiAnalysis(quickAnalysis);
-    
+
     // Generate quick smart replies immediately
     const quickSuggestions = generateQuickSmartReplies(quickAnalysis, email);
     setAiSuggestions(quickSuggestions);
-    
+
     // Show immediate response
     showNotification('Quick analysis ready! AI enhancement in progress...', 'info');
     setAiLoading(false);
-    
+
     // Run AI analysis and smart replies generation in parallel (background)
     setIsStreaming(true);
     setStreamingAnalysis('');
     setStreamingSuggestions([]);
-    
+
     Promise.all([
       // Parallel task 1: Enhanced analysis with streaming
       analyzeEmail(email, (chunk, fullContent) => {
@@ -1718,7 +1718,7 @@ Processing Team`,
         setStreamingAnalysis(''); // Clear streaming content once complete
         return enhancedAnalysis;
       }),
-      
+
       // Parallel task 2: Enhanced smart replies with streaming
       generateEmailSmartReplies(quickAnalysis, email, (chunk, fullContent) => {
         // Real-time streaming of suggestions
@@ -1744,7 +1744,7 @@ Processing Team`,
       setStreamingSuggestions([]);
       showNotification('Using quick analysis (AI enhancement unavailable)', 'info');
     });
-    
+
     return quickAnalysis;
   }, [generateEmailSmartReplies, parseAIAnalysisResponse, generateFallbackAnalysis, generateQuickSmartReplies, parseAIResponseForSuggestions]);
 
@@ -1759,9 +1759,9 @@ Processing Team`,
 
   const enhanceEmailWithAI = async () => {
     // AI enhancement of current email content
-    const hasMinimalContent = !composeData.body.trim() || 
-                             composeData.body.trim().length < 50 || 
-                             isOnlyGreetingAndSignature(composeData.body);
+    const hasMinimalContent = !composeData.body.trim() ||
+      composeData.body.trim().length < 50 ||
+      isOnlyGreetingAndSignature(composeData.body);
 
     if (hasMinimalContent) {
       // For minimal content, generate a complete professional email
@@ -1771,11 +1771,11 @@ Processing Team`,
         subject: enhancedEmail.subject || prev.subject,
         body: enhancedEmail.body
       }));
-      
+
       showNotification('Professional email template generated! AI optimization in progress...', 'success');
     } else {
       setAiLoading(true);
-      
+
       // Provide immediate basic enhancement for existing content
       const quickEnhancement = performQuickEnhancement(composeData);
       setComposeData(prev => ({
@@ -1783,16 +1783,16 @@ Processing Team`,
         subject: quickEnhancement.subject || prev.subject,
         body: quickEnhancement.body || prev.body
       }));
-      
+
       showNotification('Quick enhancement applied! AI optimization in progress...', 'info');
       setAiLoading(false);
     }
-    
+
     // Continue with AI enhancement in background (for both cases)
     setTimeout(async () => {
       try {
         let enhancedContent = '';
-        
+
         // Use current compose data (either enhanced or generated)
         const currentData = { ...composeData };
         if (hasMinimalContent) {
@@ -1800,29 +1800,29 @@ Processing Team`,
           const template = generateProfessionalEmailContent(composeData);
           currentData.body = template.body;
         }
-        
+
         // Call the actual AI service for enhancement with streaming
         setIsStreaming(true);
         setStreamingAnalysis('Enhancing email content...');
-        
+
         await enhanceEmailContent(currentData, (chunk, fullContent) => {
           enhancedContent = fullContent;
           // Show streaming progress for email enhancement
           setStreamingAnalysis(`Enhancing: ${fullContent.substring(0, 100)}...`);
         });
-        
+
         setIsStreaming(false);
         setStreamingAnalysis('');
-        
+
         // Parse the AI response to extract enhanced content
         const parsedEnhancement = parseAIEnhancementResponse(enhancedContent, currentData);
-        
+
         setComposeData(prev => ({
           ...prev,
           subject: parsedEnhancement.subject || prev.subject,
           body: parsedEnhancement.body || prev.body
         }));
-        
+
         showNotification('Email optimized with AI intelligence', 'success');
       } catch (error) {
         console.error('AI enhancement failed:', error);
@@ -1840,7 +1840,7 @@ Processing Team`,
     const cleanContent = content.toLowerCase().trim();
     const hasGreeting = cleanContent.includes('dear') || cleanContent.includes('hello');
     const hasSignature = cleanContent.includes('regards') || cleanContent.includes('sincerely');
-    
+
     // Remove common greeting and signature patterns
     const contentWithoutGreetingSignature = cleanContent
       .replace(/dear\s+[^,\n]+,?/gi, '')
@@ -1849,7 +1849,7 @@ Processing Team`,
       .replace(/sincerely,?\s*[^\n]*/gi, '')
       .replace(/\s+/g, ' ')
       .trim();
-    
+
     // If after removing greeting/signature, very little content remains
     return hasGreeting && hasSignature && contentWithoutGreetingSignature.length < 20;
   };
@@ -1861,10 +1861,10 @@ Processing Team`,
     const agentName = emailData.renewalContext?.agentName || currentUser.name;
     const premiumAmount = emailData.renewalContext?.premiumAmount || '';
     const renewalDate = emailData.renewalContext?.renewalDate || '';
-    
+
     // Generate contextual content based on available information
     let professionalContent = '';
-    
+
     if (policyNumber && renewalDate) {
       professionalContent = `Thank you for contacting us regarding your policy ${policyNumber}.
 
@@ -1888,7 +1888,7 @@ If you have any urgent concerns or specific questions, please don't hesitate to 
 
 I look forward to helping you with your renewal process.`;
     }
-    
+
     const fullBody = `Dear ${customerName},
 
 ${professionalContent}
@@ -1903,7 +1903,7 @@ Customer Service Team`;
     } else if (!enhancedSubject) {
       enhancedSubject = 'Re: Your Insurance Inquiry';
     }
-    
+
     return {
       subject: enhancedSubject,
       body: fullBody
@@ -1914,7 +1914,7 @@ Customer Service Team`;
     // Quick, rule-based enhancement for immediate feedback
     let enhancedBody = emailData.body;
     let enhancedSubject = emailData.subject;
-    
+
     // Basic enhancements
     if (enhancedBody) {
       // Ensure proper greeting
@@ -1922,27 +1922,27 @@ Customer Service Team`;
         const customerName = emailData.renewalContext?.customerName || 'Customer';
         enhancedBody = `Dear ${customerName},\n\n${enhancedBody}`;
       }
-      
+
       // Ensure proper closing
       if (!enhancedBody.toLowerCase().includes('regards') && !enhancedBody.toLowerCase().includes('sincerely')) {
         const agentName = emailData.renewalContext?.agentName || currentUser.name;
         enhancedBody += `\n\nBest regards,\n${agentName}`;
       }
-      
+
       // Add professional touches
       enhancedBody = enhancedBody
         .replace(/\n{3,}/g, '\n\n') // Remove excessive line breaks
         .replace(/([.!?])\s*([a-z])/g, '$1 $2') // Ensure proper spacing after punctuation
         .trim();
     }
-    
+
     // Enhance subject line
     if (enhancedSubject && !enhancedSubject.toLowerCase().startsWith('re:')) {
       if (emailData.renewalContext?.policyNumber) {
         enhancedSubject = `${enhancedSubject} - Policy ${emailData.renewalContext.policyNumber}`;
       }
     }
-    
+
     return {
       subject: enhancedSubject,
       body: enhancedBody
@@ -1964,61 +1964,61 @@ Customer Service Team`;
       let enhancedBody = '';
       let inBodySection = false;
       const bodyLines = [];
-      
+
       for (const line of lines) {
         const trimmedLine = line.trim();
-        
+
         // Extract subject line
         if (trimmedLine.toLowerCase().includes('subject:') || trimmedLine.toLowerCase().includes('subject line:')) {
           const subjectMatch = trimmedLine.match(/subject.*?:\s*(.+)/i);
           if (subjectMatch) {
             enhancedSubject = subjectMatch[1].trim().replace(/["']/g, '');
           }
-        } 
+        }
         // Look for email content markers
-        else if (trimmedLine.toLowerCase().includes('enhanced') && 
-                (trimmedLine.toLowerCase().includes('content') || trimmedLine.toLowerCase().includes('email'))) {
+        else if (trimmedLine.toLowerCase().includes('enhanced') &&
+          (trimmedLine.toLowerCase().includes('content') || trimmedLine.toLowerCase().includes('email'))) {
           inBodySection = true;
         }
         // Look for email greeting patterns
-        else if (trimmedLine.toLowerCase().startsWith('dear ') || 
-                trimmedLine.toLowerCase().startsWith('hello ')) {
+        else if (trimmedLine.toLowerCase().startsWith('dear ') ||
+          trimmedLine.toLowerCase().startsWith('hello ')) {
           inBodySection = true;
           bodyLines.push(trimmedLine);
         }
         // Collect body content
-        else if (inBodySection && trimmedLine.length > 5 && 
-                !trimmedLine.startsWith('•') && !trimmedLine.startsWith('-') && 
-                !trimmedLine.toLowerCase().includes('analysis') &&
-                !trimmedLine.toLowerCase().includes('suggestion')) {
+        else if (inBodySection && trimmedLine.length > 5 &&
+          !trimmedLine.startsWith('•') && !trimmedLine.startsWith('-') &&
+          !trimmedLine.toLowerCase().includes('analysis') &&
+          !trimmedLine.toLowerCase().includes('suggestion')) {
           bodyLines.push(trimmedLine);
         }
         // Stop at analysis sections
-        else if (trimmedLine.toLowerCase().includes('analysis') || 
-                trimmedLine.toLowerCase().includes('key points') ||
-                trimmedLine.toLowerCase().includes('suggestions')) {
+        else if (trimmedLine.toLowerCase().includes('analysis') ||
+          trimmedLine.toLowerCase().includes('key points') ||
+          trimmedLine.toLowerCase().includes('suggestions')) {
           if (bodyLines.length > 0) break;
         }
       }
-      
+
       // Reconstruct enhanced body
       if (bodyLines.length > 0) {
         enhancedBody = bodyLines.join('\n\n').trim();
       }
-      
+
       // If no enhanced body found, try to extract the main email content
       if (!enhancedBody) {
         enhancedBody = extractEmailContentFromAIResponse(aiResponse, originalData.renewalContext);
       }
-      
+
       // If enhanced body is still too short or empty, improve the original
       if (!enhancedBody || enhancedBody.length < Math.max(originalData.body.length * 0.5, 100)) {
         enhancedBody = improveOriginalContent(originalData.body, aiResponse) || originalData.body;
       }
-      
+
       // Ensure the enhanced body has proper structure
       enhancedBody = ensureProperEmailStructure(enhancedBody, originalData.renewalContext);
-      
+
       return {
         subject: enhancedSubject,
         body: enhancedBody
@@ -2036,53 +2036,53 @@ Customer Service Team`;
   const extractEmailContentFromAIResponse = (response, contextInfo) => {
     try {
       let cleaned = response;
-      
+
       // Remove AI formatting markers and metadata
       cleaned = cleaned.replace(/\*\*(.*?)\*\*/g, '$1');
       cleaned = cleaned.replace(/📧|💭|✍️|📝|🎯|🔍|💡/g, '');
       cleaned = cleaned.replace(/EMAIL ANALYSIS|CUSTOMER INSIGHTS|RESPONSE STRATEGY|ENHANCED EMAIL|AI OPTIMIZATION/gi, '');
       cleaned = cleaned.replace(/---+/g, '');
-      
+
       // Look for complete email patterns first
       const emailPatterns = [
         /(Dear\s+[^,\n]+,[\s\S]*?Best regards,[\s\S]*?)/i,
         /(Hello\s+[^,\n]*,[\s\S]*?Sincerely,[\s\S]*?)/i,
         /(Dear\s+[^,\n]+,[\s\S]*?Regards,[\s\S]*?)/i
       ];
-      
+
       for (const pattern of emailPatterns) {
         const emailMatch = cleaned.match(pattern);
         if (emailMatch && emailMatch[1].length > 100) {
           return emailMatch[1].trim();
         }
       }
-      
+
       // If no complete email found, extract meaningful paragraphs
       const lines = cleaned.split('\n')
         .map(line => line.trim())
-        .filter(line => line.length > 20 && 
-                       !line.toLowerCase().includes('analysis') &&
-                       !line.toLowerCase().includes('suggestion') &&
-                       !line.startsWith('•') && !line.startsWith('-'));
-      
+        .filter(line => line.length > 20 &&
+          !line.toLowerCase().includes('analysis') &&
+          !line.toLowerCase().includes('suggestion') &&
+          !line.startsWith('•') && !line.startsWith('-'));
+
       if (lines.length > 2) {
         let extractedContent = lines.slice(0, 6).join('\n\n');
-        
+
         // Ensure proper email structure
         if (!extractedContent.toLowerCase().includes('dear')) {
           const customerName = contextInfo?.customerName || 'Customer';
           extractedContent = `Dear ${customerName},\n\n${extractedContent}`;
         }
-        
-        if (!extractedContent.toLowerCase().includes('regards') && 
-            !extractedContent.toLowerCase().includes('sincerely')) {
+
+        if (!extractedContent.toLowerCase().includes('regards') &&
+          !extractedContent.toLowerCase().includes('sincerely')) {
           const agentName = contextInfo?.agentName || 'Customer Service Team';
           extractedContent += `\n\nBest regards,\n${agentName}`;
         }
-        
+
         return extractedContent;
       }
-      
+
       return '';
     } catch (error) {
       console.error('Error extracting email content from AI response:', error);
@@ -2093,29 +2093,29 @@ Customer Service Team`;
   // Ensure proper email structure
   const ensureProperEmailStructure = (content, contextInfo) => {
     if (!content) return content;
-    
+
     let structuredContent = content.trim();
-    
+
     // Ensure proper greeting
-    if (!structuredContent.toLowerCase().includes('dear') && 
-        !structuredContent.toLowerCase().includes('hello')) {
+    if (!structuredContent.toLowerCase().includes('dear') &&
+      !structuredContent.toLowerCase().includes('hello')) {
       const customerName = contextInfo?.customerName || 'Customer';
       structuredContent = `Dear ${customerName},\n\n${structuredContent}`;
     }
-    
+
     // Ensure proper closing
-    if (!structuredContent.toLowerCase().includes('regards') && 
-        !structuredContent.toLowerCase().includes('sincerely')) {
+    if (!structuredContent.toLowerCase().includes('regards') &&
+      !structuredContent.toLowerCase().includes('sincerely')) {
       const agentName = contextInfo?.agentName || 'Customer Service Team';
       structuredContent += `\n\nBest regards,\n${agentName}`;
     }
-    
+
     // Clean up excessive whitespace
     structuredContent = structuredContent
       .replace(/\n{3,}/g, '\n\n')
       .replace(/\s{2,}/g, ' ')
       .trim();
-    
+
     return structuredContent;
   };
 
@@ -2126,17 +2126,17 @@ Customer Service Team`;
       // Look for improvement suggestions in AI response
       const improvements = [];
       const lines = aiResponse.split('\n');
-      
+
       for (const line of lines) {
         if (line.includes('improve') || line.includes('enhance') || line.includes('better')) {
           improvements.push(line.trim());
         }
       }
-      
+
       if (improvements.length > 0) {
         return originalBody + '\n\n---\nAI Enhancement Notes:\n' + improvements.slice(0, 3).join('\n');
       }
-      
+
       return originalBody;
     } catch {
       return originalBody;
@@ -2156,28 +2156,28 @@ Customer Service Team`;
   const regenerateAISuggestions = async () => {
     // Use currentAnalyzedEmail or fall back to selectedEmail
     const emailToAnalyze = currentAnalyzedEmail || selectedEmail;
-    
+
     if (!emailToAnalyze) {
       showNotification('No email available for analysis. Please select an email first.', 'warning');
       return;
     }
-    
+
     // Set loading state
     setAiLoading(true);
-    
+
     // Clear previous suggestions but keep analysis
     setAiSuggestions([]);
     setSelectedAiSuggestion('');
-    
+
     // Show loading notification
     showNotification('Generating fresh AI suggestions...', 'info');
-    
+
     try {
       // Start streaming
       setIsStreaming(true);
       setStreamingAnalysis('');
       setStreamingSuggestions([]);
-      
+
       // Run analysis and suggestions in parallel for maximum speed with streaming
       const [aiAnalysisResponse, aiSuggestionsResponse] = await Promise.all([
         // Fast analysis with streaming
@@ -2185,7 +2185,7 @@ Customer Service Team`;
           // Real-time analysis updates
           setStreamingAnalysis(fullContent);
         }),
-        
+
         // Fast suggestions with streaming
         generateEmailSmartReplies(emailToAnalyze, aiAnalysis || generateFallbackAnalysis(emailToAnalyze), (chunk, fullContent) => {
           // Real-time suggestions updates
@@ -2195,28 +2195,28 @@ Customer Service Team`;
           }
         })
       ]);
-      
+
       // Parse results in parallel
       const [enhancedAnalysis, enhancedSuggestions] = await Promise.all([
         Promise.resolve(parseAIAnalysisResponse(aiAnalysisResponse, emailToAnalyze)),
         Promise.resolve(parseAIResponseForSuggestions(aiSuggestionsResponse, aiAnalysis || generateFallbackAnalysis(emailToAnalyze), emailToAnalyze))
       ]);
-      
+
       // Update UI and clear streaming
       setAiAnalysis(enhancedAnalysis);
       setAiSuggestions(enhancedSuggestions);
       setIsStreaming(false);
       setStreamingAnalysis('');
       setStreamingSuggestions([]);
-      
+
       showNotification('🚀 Fresh AI suggestions generated!', 'success');
     } catch (error) {
       // Fast fallback
       showNotification(`⚠️ AI service error: ${error.message}. Using intelligent fallback.`, 'warning');
-      
+
       const fallbackAnalysis = generateFallbackAnalysis(emailToAnalyze);
       setAiAnalysis(fallbackAnalysis);
-      
+
       const fallbackSuggestions = generateQuickSmartReplies(fallbackAnalysis, emailToAnalyze);
       setAiSuggestions(fallbackSuggestions);
     } finally {
@@ -2235,7 +2235,7 @@ Customer Service Team`;
       // Test Renew-iQ (General AI) - Use the same robust testing approach
       const renewiqTest = await testEmailAI(); // Use the same test function
       setRenewiqConnected(renewiqTest.connected && renewiqTest.modelAvailable);
-      
+
 
     } catch (error) {
       console.error('Connection status check failed:', error);
@@ -2249,28 +2249,28 @@ Customer Service Team`;
     setConnectionTesting(true);
     setAiLoading(true);
     showNotification('Testing AI service connection...', 'info');
-    
+
     try {
       // Import the test function
       const { testOllamaConnection } = await import('../services/emailAI');
-      
+
       // Test Ollama connection first
       const connectionTest = await testOllamaConnection();
 
-      
+
       if (!connectionTest.connected) {
         setEmailBotConnected(false);
         setRenewiqConnected(false);
         throw new Error(`Ollama server not accessible: ${connectionTest.error}`);
       }
-      
+
       if (!connectionTest.modelAvailable) {
         const availableModels = connectionTest.models?.map(m => m.name).join(', ') || 'none';
         setEmailBotConnected(false);
         setRenewiqConnected(false);
         throw new Error(`Model llama3.2:1b not available. Available models: ${availableModels}. Please run: ollama pull llama3.2:1b`);
       }
-      
+
       // Test actual AI functionality
       const testEmail = {
         from: 'test@example.com',
@@ -2282,17 +2282,17 @@ Customer Service Team`;
           agentName: currentUser.name
         }
       };
-      
+
       let testResponse = '';
-      
-      
-              await analyzeEmail(testEmail, (_chunk, _fullContent) => {
 
-          testResponse = _fullContent;
+
+      await analyzeEmail(testEmail, (_chunk, _fullContent) => {
+
+        testResponse = _fullContent;
       });
-      
 
-      
+
+
       if (testResponse && testResponse.trim().length > 10) {
         // Update connection status for both agents
         setEmailBotConnected(true);
@@ -2318,18 +2318,18 @@ Customer Service Team`;
 
   return (
     <LocalizationProvider dateAdapter={AdapterDateFns}>
-    <Box sx={{ p: 3 }}>
+      <Box sx={{ p: 3 }}>
         {/* Enhanced Header */}
         <Box sx={{ mb: 4 }}>
           <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
             <Box>
-        <Typography variant="h4" sx={{ mb: 1, fontWeight: 600 }}>
-          Email Manager
-        </Typography>
-        <Typography variant="body1" color="text.secondary">
+              <Typography variant="h4" sx={{ mb: 1, fontWeight: 600 }}>
+                Email Manager
+              </Typography>
+              <Typography variant="body1" color="text.secondary">
                 Advanced email management with AI-powered insights and automation
-        </Typography>
-      </Box>
+              </Typography>
+            </Box>
 
             {/* Quick Stats */}
             <Box sx={{ display: 'flex', gap: 2 }}>
@@ -2362,47 +2362,47 @@ Customer Service Team`;
         </Box>
 
         {/* Enhanced Action Bar */}
-      <Card sx={{ mb: 3, borderRadius: 3 }}>
-        <CardContent>
-          <Grid container spacing={2} alignItems="center">
-            <Grid item xs={12} md={3}>
-              <TextField
-                fullWidth
-                size="small"
+        <Card sx={{ mb: 3, borderRadius: 3 }}>
+          <CardContent>
+            <Grid container spacing={2} alignItems="center">
+              <Grid item xs={12} md={3}>
+                <TextField
+                  fullWidth
+                  size="small"
                   placeholder="Search emails, policies, customers, content..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                InputProps={{
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  InputProps={{
                     startAdornment: <SearchIcon sx={{ mr: 1, color: 'text.secondary' }} />,
                     endAdornment: searchTerm && (
                       <IconButton size="small" onClick={() => setSearchTerm('')}>
                         <ClearIcon />
                       </IconButton>
                     )
-                }}
-              />
-            </Grid>
-            <Grid item xs={12} md={2}>
-              <FormControl fullWidth size="small">
-                <InputLabel>Due Status</InputLabel>
-                <Select
-                  value={dueDateFilter}
-                  label="Due Status"
-                  onChange={(e) => setDueDateFilter(e.target.value)}
-                >
-                  <MenuItem value="all">All Emails</MenuItem>
-                  <MenuItem value="current">Current (30 days)</MenuItem>
-                  <MenuItem value="due">Due Soon (7 days)</MenuItem>
-                  <MenuItem value="overdue">Overdue</MenuItem>
-                  <MenuItem value="custom">Custom Range</MenuItem>
-                </Select>
-              </FormControl>
-            </Grid>
-            
-            {/* Spacer to push buttons to the right */}
-            <Grid item xs={0} md={3} />
-            
-            <Grid item xs={6} md={2}>
+                  }}
+                />
+              </Grid>
+              <Grid item xs={12} md={2}>
+                <FormControl fullWidth size="small">
+                  <InputLabel>Due Status</InputLabel>
+                  <Select
+                    value={dueDateFilter}
+                    label="Due Status"
+                    onChange={(e) => setDueDateFilter(e.target.value)}
+                  >
+                    <MenuItem value="all">All Emails</MenuItem>
+                    <MenuItem value="current">Current (30 days)</MenuItem>
+                    <MenuItem value="due">Due Soon (7 days)</MenuItem>
+                    <MenuItem value="overdue">Overdue</MenuItem>
+                    <MenuItem value="custom">Custom Range</MenuItem>
+                  </Select>
+                </FormControl>
+              </Grid>
+
+              {/* Spacer to push buttons to the right */}
+              <Grid item xs={0} md={3} />
+
+              <Grid item xs={6} md={2}>
                 <Button
                   fullWidth
                   variant="outlined"
@@ -2411,8 +2411,8 @@ Customer Service Team`;
                 >
                   Analytics
                 </Button>
-            </Grid>
-            <Grid item xs={6} md={2}>
+              </Grid>
+              <Grid item xs={6} md={2}>
                 <Button
                   fullWidth
                   variant="contained"
@@ -2421,114 +2421,114 @@ Customer Service Team`;
                 >
                   Compose
                 </Button>
-            </Grid>
-          </Grid>
-          {dueDateFilter === 'custom' && (
-            <Grid container spacing={2} sx={{ mt: 1 }}>
-              <Grid item xs={12} md={3}>
-                <TextField
-                  fullWidth
-                  size="small"
-                  type="date"
-                  label="Start Date"
-                  value={customDateRange.start}
-                  onChange={(e) => setCustomDateRange(prev => ({ ...prev, start: e.target.value }))}
-                  InputLabelProps={{ shrink: true }}
-                />
-              </Grid>
-              <Grid item xs={12} md={3}>
-                <TextField
-                  fullWidth
-                  size="small"
-                  type="date"
-                  label="End Date"
-                  value={customDateRange.end}
-                  onChange={(e) => setCustomDateRange(prev => ({ ...prev, end: e.target.value }))}
-                  InputLabelProps={{ shrink: true }}
-                />
               </Grid>
             </Grid>
-          )}
-        </CardContent>
-      </Card>
+            {dueDateFilter === 'custom' && (
+              <Grid container spacing={2} sx={{ mt: 1 }}>
+                <Grid item xs={12} md={3}>
+                  <TextField
+                    fullWidth
+                    size="small"
+                    type="date"
+                    label="Start Date"
+                    value={customDateRange.start}
+                    onChange={(e) => setCustomDateRange(prev => ({ ...prev, start: e.target.value }))}
+                    InputLabelProps={{ shrink: true }}
+                  />
+                </Grid>
+                <Grid item xs={12} md={3}>
+                  <TextField
+                    fullWidth
+                    size="small"
+                    type="date"
+                    label="End Date"
+                    value={customDateRange.end}
+                    onChange={(e) => setCustomDateRange(prev => ({ ...prev, end: e.target.value }))}
+                    InputLabelProps={{ shrink: true }}
+                  />
+                </Grid>
+              </Grid>
+            )}
+          </CardContent>
+        </Card>
 
-      {/* Bulk Actions */}
-      {selectedEmails.length > 0 && (
-        <Card sx={{ mb: 2, borderRadius: 3, backgroundColor: alpha(theme.palette.primary.main, 0.1) }}>
-          <CardContent sx={{ py: 2 }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-              <Typography variant="body2" sx={{ fontWeight: 500 }}>
-                {selectedEmails.length} email(s) selected
-              </Typography>
-              <Button size="small" startIcon={<DeleteIcon />} onClick={handleDeleteEmails}>
-                Delete
-              </Button>
-              <Button size="small" startIcon={<ArchiveIcon />} onClick={handleArchiveEmails}>
-                Archive
-              </Button>
+        {/* Bulk Actions */}
+        {selectedEmails.length > 0 && (
+          <Card sx={{ mb: 2, borderRadius: 3, backgroundColor: alpha(theme.palette.primary.main, 0.1) }}>
+            <CardContent sx={{ py: 2 }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                  {selectedEmails.length} email(s) selected
+                </Typography>
+                <Button size="small" startIcon={<DeleteIcon />} onClick={handleDeleteEmails}>
+                  Delete
+                </Button>
+                <Button size="small" startIcon={<ArchiveIcon />} onClick={handleArchiveEmails}>
+                  Archive
+                </Button>
                 <Button size="small" startIcon={<AssignmentIcon />}>
                   Assign
                 </Button>
                 <Button size="small" startIcon={<LabelIcon />}>
                   Tag
-              </Button>
-              <Button size="small" onClick={() => setSelectedEmails([])}>
-                Clear Selection
-              </Button>
-            </Box>
-          </CardContent>
-        </Card>
-      )}
+                </Button>
+                <Button size="small" onClick={() => setSelectedEmails([])}>
+                  Clear Selection
+                </Button>
+              </Box>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Enhanced Main Content */}
-      <Card sx={{ borderRadius: 3 }}>
-        <AppBar position="static" color="transparent" elevation={0} sx={{ borderRadius: '12px 12px 0 0' }}>
-          <Tabs value={currentTab} onChange={(e, newValue) => setCurrentTab(newValue)}>
-            <Tab 
-              icon={<InboxIcon />} 
+        <Card sx={{ borderRadius: 3 }}>
+          <AppBar position="static" color="transparent" elevation={0} sx={{ borderRadius: '12px 12px 0 0' }}>
+            <Tabs value={currentTab} onChange={(e, newValue) => setCurrentTab(newValue)}>
+              <Tab
+                icon={<InboxIcon />}
                 label={
                   <Badge badgeContent={emailAnalytics.unreadCount} color="error">
                     Inbox
                   </Badge>
                 }
-              iconPosition="start"
-            />
-            <Tab 
-              icon={<OutboxIcon />} 
+                iconPosition="start"
+              />
+              <Tab
+                icon={<OutboxIcon />}
                 label={`Sent (${emails.filter(e => e.type === 'outbox').length})`}
                 iconPosition="start"
               />
-              <Tab 
-                icon={<StarIcon />} 
+              <Tab
+                icon={<StarIcon />}
                 label={`Starred (${emails.filter(e => e.starred).length})`}
                 iconPosition="start"
               />
-              <Tab 
-                icon={<SnoozeIcon />} 
+              <Tab
+                icon={<SnoozeIcon />}
                 label={`Snoozed (${snoozedEmails.length})`}
                 iconPosition="start"
               />
-              <Tab 
-                icon={<ScheduleIcon />} 
+              <Tab
+                icon={<ScheduleIcon />}
                 label={`Scheduled (${scheduledEmails.length})`}
-              iconPosition="start"
-            />
-          </Tabs>
-        </AppBar>
+                iconPosition="start"
+              />
+            </Tabs>
+          </AppBar>
 
-        <CardContent sx={{ p: 0 }}>
-          {loading ? (
-            <Box sx={{ p: 4, textAlign: 'center' }}>
-              <LinearProgress sx={{ mb: 2 }} />
-              <Typography>Loading emails...</Typography>
-            </Box>
-          ) : (
-            <TableContainer>
-              <Table>
-                <TableHead>
-                  <TableRow>
-                    <TableCell padding="checkbox">
-                        <Checkbox 
+          <CardContent sx={{ p: 0 }}>
+            {loading ? (
+              <Box sx={{ p: 4, textAlign: 'center' }}>
+                <LinearProgress sx={{ mb: 2 }} />
+                <Typography>Loading emails...</Typography>
+              </Box>
+            ) : (
+              <TableContainer>
+                <Table>
+                  <TableHead>
+                    <TableRow>
+                      <TableCell padding="checkbox">
+                        <Checkbox
                           indeterminate={selectedEmails.length > 0 && selectedEmails.length < filteredEmails.length}
                           checked={filteredEmails.length > 0 && selectedEmails.length === filteredEmails.length}
                           onChange={(e) => {
@@ -2539,42 +2539,42 @@ Customer Service Team`;
                             }
                           }}
                         />
-                    </TableCell>
-                    <TableCell></TableCell>
-                    <TableCell sx={{ fontWeight: 600 }}>
-                      {currentTab === 0 ? 'From' : 'To'}
-                    </TableCell>
-                    <TableCell sx={{ fontWeight: 600 }}>Subject</TableCell>
-                    <TableCell sx={{ fontWeight: 600 }}>Policy</TableCell>
-                    <TableCell sx={{ fontWeight: 600 }}>Priority</TableCell>
-                      <TableCell sx={{ fontWeight: 600 }}>Sentiment</TableCell>
-                    <TableCell sx={{ fontWeight: 600 }}>Date</TableCell>
-                    <TableCell sx={{ fontWeight: 600 }}>Due Date</TableCell>
-                    <TableCell sx={{ fontWeight: 600 }}>Actions</TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {filteredEmails.map((email) => (
-                    <TableRow 
-                      key={email.id}
-                      hover
-                      sx={{ 
-                        backgroundColor: !email.read && email.type === 'inbox' 
-                          ? alpha(theme.palette.primary.main, 0.05) 
-                          : 'transparent'
-                      }}
-                    >
-                      <TableCell padding="checkbox">
-                        <Checkbox
-                          checked={selectedEmails.includes(email.id)}
-                          onChange={() => handleEmailSelect(email.id)}
-                        />
                       </TableCell>
-                      <TableCell>
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                          <IconButton size="small" onClick={() => handleStarEmail(email.id)}>
-                            {email.starred ? <StarIcon color="warning" /> : <StarBorderIcon />}
-                          </IconButton>
+                      <TableCell></TableCell>
+                      <TableCell sx={{ fontWeight: 600 }}>
+                        {currentTab === 0 ? 'From' : 'To'}
+                      </TableCell>
+                      <TableCell sx={{ fontWeight: 600 }}>Subject</TableCell>
+                      <TableCell sx={{ fontWeight: 600 }}>Policy</TableCell>
+                      <TableCell sx={{ fontWeight: 600 }}>Priority</TableCell>
+                      <TableCell sx={{ fontWeight: 600 }}>Sentiment</TableCell>
+                      <TableCell sx={{ fontWeight: 600 }}>Date</TableCell>
+                      <TableCell sx={{ fontWeight: 600 }}>Due Date</TableCell>
+                      <TableCell sx={{ fontWeight: 600 }}>Actions</TableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {filteredEmails.map((email) => (
+                      <TableRow
+                        key={email.id}
+                        hover
+                        sx={{
+                          backgroundColor: !email.read && email.type === 'inbox'
+                            ? alpha(theme.palette.primary.main, 0.05)
+                            : 'transparent'
+                        }}
+                      >
+                        <TableCell padding="checkbox">
+                          <Checkbox
+                            checked={selectedEmails.includes(email.id)}
+                            onChange={() => handleEmailSelect(email.id)}
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                            <IconButton size="small" onClick={() => handleStarEmail(email.id)}>
+                              {email.starred ? <StarIcon color="warning" /> : <StarBorderIcon />}
+                            </IconButton>
                             {email.attachments.length > 0 && (
                               <Tooltip title={`${email.attachments.length} attachments`}>
                                 <AttachmentIcon fontSize="small" />
@@ -2585,154 +2585,154 @@ Customer Service Team`;
                                 <SmartToyIcon fontSize="small" color="primary" />
                               </Tooltip>
                             )}
-                        </Box>
-                      </TableCell>
-                      <TableCell>
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                          <Typography 
-                            variant="body2" 
-                            sx={{ 
+                          </Box>
+                        </TableCell>
+                        <TableCell>
+                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                            <Typography
+                              variant="body2"
+                              sx={{
+                                fontWeight: !email.read && email.type === 'inbox' ? 600 : 400,
+                                cursor: 'pointer'
+                              }}
+                              onClick={() => handleEmailView(email)}
+                            >
+                              {currentTab === 0 ? email.from : email.to}
+                            </Typography>
+                            {email.type === 'outbox' && email.deliveryStatus && (
+                              <Chip
+                                size="small"
+                                label={email.deliveryStatus}
+                                color={email.deliveryStatus === 'delivered' ? 'success' : 'default'}
+                              />
+                            )}
+                          </Box>
+                        </TableCell>
+                        <TableCell>
+                          <Typography
+                            variant="body2"
+                            sx={{
                               fontWeight: !email.read && email.type === 'inbox' ? 600 : 400,
                               cursor: 'pointer'
                             }}
                             onClick={() => handleEmailView(email)}
                           >
-                            {currentTab === 0 ? email.from : email.to}
+                            {email.subject}
                           </Typography>
-                          {email.type === 'outbox' && email.deliveryStatus && (
-                            <Chip 
-                              size="small" 
-                              label={email.deliveryStatus}
-                              color={email.deliveryStatus === 'delivered' ? 'success' : 'default'}
-                            />
-                          )}
-                        </Box>
-                      </TableCell>
-                      <TableCell>
-                        <Typography 
-                          variant="body2" 
-                          sx={{ 
-                            fontWeight: !email.read && email.type === 'inbox' ? 600 : 400,
-                            cursor: 'pointer'
-                          }}
-                          onClick={() => handleEmailView(email)}
-                        >
-                          {email.subject}
-                        </Typography>
-                        <Box sx={{ display: 'flex', gap: 0.5, mt: 0.5 }}>
-                          {email.tags.map(tag => (
-                            <Chip key={tag} size="small" label={tag} variant="outlined" />
-                          ))}
-                        </Box>
-                      </TableCell>
-                      <TableCell>
-                        <Typography variant="body2" sx={{ fontWeight: 500 }}>
-                          {email.renewalContext.policyNumber}
-                        </Typography>
-                        <Typography variant="caption" color="text.secondary">
-                          {email.renewalContext.customerName}
-                        </Typography>
-                      </TableCell>
-                      <TableCell>
-                        <Chip
-                          size="small"
-                          icon={<PriorityIcon />}
-                          label={email.priority}
-                          sx={{ 
-                            color: getPriorityColor(email.priority),
-                            borderColor: getPriorityColor(email.priority)
-                          }}
-                          variant="outlined"
-                        />
-                      </TableCell>
+                          <Box sx={{ display: 'flex', gap: 0.5, mt: 0.5 }}>
+                            {email.tags.map(tag => (
+                              <Chip key={tag} size="small" label={tag} variant="outlined" />
+                            ))}
+                          </Box>
+                        </TableCell>
+                        <TableCell>
+                          <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                            {email.renewalContext.policyNumber}
+                          </Typography>
+                          <Typography variant="caption" color="text.secondary">
+                            {email.renewalContext.customerName}
+                          </Typography>
+                        </TableCell>
+                        <TableCell>
+                          <Chip
+                            size="small"
+                            icon={<PriorityIcon />}
+                            label={email.priority}
+                            sx={{
+                              color: getPriorityColor(email.priority),
+                              borderColor: getPriorityColor(email.priority)
+                            }}
+                            variant="outlined"
+                          />
+                        </TableCell>
                         <TableCell>
                           {email.sentiment && (
                             <Chip
                               size="small"
                               icon={<PsychologyIcon />}
                               label={`${email.sentiment} (${Math.round(email.confidence * 100)}%)`}
-                              sx={{ 
+                              sx={{
                                 color: getSentimentColor(email.sentiment),
                                 borderColor: getSentimentColor(email.sentiment)
                               }}
                               variant="outlined"
                             />
                           )}
-                      </TableCell>
-                      <TableCell>
-                        <Typography variant="body2">
-                          {email.date.toLocaleString()}
-                        </Typography>
-                      </TableCell>
-                      <TableCell>
-                        {email.dueDate ? (
-                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                            <Typography 
-                              variant="body2" 
-                              color={
-                                new Date(email.dueDate) < new Date() ? 'error.main' :
-                                new Date(email.dueDate) <= new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) ? 'warning.main' :
-                                'text.secondary'
-                              }
-                              sx={{ fontWeight: new Date(email.dueDate) < new Date() ? 600 : 400 }}
-                            >
-                              {new Date(email.dueDate).toLocaleDateString()}
-                            </Typography>
-                            {new Date(email.dueDate) < new Date() && (
-                              <Chip 
-                                label="OVERDUE" 
-                                size="small" 
-                                color="error" 
-                                variant="outlined"
-                                sx={{ fontSize: '0.7rem', height: 20 }}
-                              />
-                            )}
-                            {new Date(email.dueDate) <= new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) && 
-                             new Date(email.dueDate) >= new Date() && (
-                              <Chip 
-                                label="DUE SOON" 
-                                size="small" 
-                                color="warning" 
-                                variant="outlined"
-                                sx={{ fontSize: '0.7rem', height: 20 }}
-                              />
-                            )}
-                          </Box>
-                        ) : (
-                          <Typography variant="body2" color="text.disabled">
-                            No due date
+                        </TableCell>
+                        <TableCell>
+                          <Typography variant="body2">
+                            {email.date.toLocaleString()}
                           </Typography>
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        <Box sx={{ display: 'flex', gap: 0.5 }}>
-                            <Tooltip title="View Email">
-                          <IconButton size="small" onClick={() => handleEmailView(email)}>
-                            <ViewIcon />
-                          </IconButton>
-                            </Tooltip>
-                          {email.type === 'inbox' && (
-                              <Tooltip title="Reply">
-                            <IconButton size="small" onClick={() => handleReply(email)}>
-                              <ReplyIcon />
-                            </IconButton>
-                              </Tooltip>
+                        </TableCell>
+                        <TableCell>
+                          {email.dueDate ? (
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                              <Typography
+                                variant="body2"
+                                color={
+                                  new Date(email.dueDate) < new Date() ? 'error.main' :
+                                    new Date(email.dueDate) <= new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) ? 'warning.main' :
+                                      'text.secondary'
+                                }
+                                sx={{ fontWeight: new Date(email.dueDate) < new Date() ? 600 : 400 }}
+                              >
+                                {new Date(email.dueDate).toLocaleDateString()}
+                              </Typography>
+                              {new Date(email.dueDate) < new Date() && (
+                                <Chip
+                                  label="OVERDUE"
+                                  size="small"
+                                  color="error"
+                                  variant="outlined"
+                                  sx={{ fontSize: '0.7rem', height: 20 }}
+                                />
+                              )}
+                              {new Date(email.dueDate) <= new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) &&
+                                new Date(email.dueDate) >= new Date() && (
+                                  <Chip
+                                    label="DUE SOON"
+                                    size="small"
+                                    color="warning"
+                                    variant="outlined"
+                                    sx={{ fontSize: '0.7rem', height: 20 }}
+                                  />
+                                )}
+                            </Box>
+                          ) : (
+                            <Typography variant="body2" color="text.disabled">
+                              No due date
+                            </Typography>
                           )}
-                            <Tooltip title="More Actions">
-                          <IconButton size="small">
-                            <MoreVertIcon />
-                          </IconButton>
+                        </TableCell>
+                        <TableCell>
+                          <Box sx={{ display: 'flex', gap: 0.5 }}>
+                            <Tooltip title="View Email">
+                              <IconButton size="small" onClick={() => handleEmailView(email)}>
+                                <ViewIcon />
+                              </IconButton>
                             </Tooltip>
-                        </Box>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </TableContainer>
-          )}
-        </CardContent>
-      </Card>
+                            {email.type === 'inbox' && (
+                              <Tooltip title="Reply">
+                                <IconButton size="small" onClick={() => handleReply(email)}>
+                                  <ReplyIcon />
+                                </IconButton>
+                              </Tooltip>
+                            )}
+                            <Tooltip title="More Actions">
+                              <IconButton size="small">
+                                <MoreVertIcon />
+                              </IconButton>
+                            </Tooltip>
+                          </Box>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+            )}
+          </CardContent>
+        </Card>
 
         {/* Speed Dial for Quick Actions */}
         <SpeedDial
@@ -2778,25 +2778,25 @@ Customer Service Team`;
         </SpeedDial>
 
         {/* Enhanced Compose Dialog */}
-      <Dialog 
-        open={composeDialog} 
-        onClose={() => setComposeDialog(false)}
+        <Dialog
+          open={composeDialog}
+          onClose={() => setComposeDialog(false)}
           maxWidth="lg"
-        fullWidth
-      >
-        <DialogTitle>
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <Typography variant="h6">Compose Renewal Email</Typography>
-            <Box sx={{ display: 'flex', gap: 1 }}>
-              <Button 
-                size="small" 
-                onClick={() => setTemplateDialog(true)}
-                startIcon={<EditIcon />}
-              >
-                Templates
-              </Button>
-                <Button 
-                  size="small" 
+          fullWidth
+        >
+          <DialogTitle>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <Typography variant="h6">Compose Renewal Email</Typography>
+              <Box sx={{ display: 'flex', gap: 1 }}>
+                <Button
+                  size="small"
+                  onClick={() => setTemplateDialog(true)}
+                  startIcon={<EditIcon />}
+                >
+                  Templates
+                </Button>
+                <Button
+                  size="small"
                   onClick={() => {
                     // Ensure we have an email context for AI assistant
                     if (selectedEmail) {
@@ -2807,152 +2807,152 @@ Customer Service Team`;
                   startIcon={<SmartToyIcon />}
                 >
                   AI Assistant
-              </Button>
-              <IconButton onClick={() => setComposeDialog(false)}>
-                <CloseIcon />
-              </IconButton>
+                </Button>
+                <IconButton onClick={() => setComposeDialog(false)}>
+                  <CloseIcon />
+                </IconButton>
+              </Box>
             </Box>
-          </Box>
-        </DialogTitle>
-        <DialogContent>
-          <Grid container spacing={2} sx={{ mt: 0.5 }}>
+          </DialogTitle>
+          <DialogContent>
+            <Grid container spacing={2} sx={{ mt: 0.5 }}>
               {/* Email Recipients */}
-            <Grid item xs={12}>
-              <TextField
-                fullWidth
-                label="To"
-                value={composeData.to}
-                onChange={(e) => setComposeData(prev => ({ ...prev, to: e.target.value }))}
-              />
-            </Grid>
-            <Grid item xs={6}>
-              <TextField
-                fullWidth
-                label="CC"
-                value={composeData.cc}
-                onChange={(e) => setComposeData(prev => ({ ...prev, cc: e.target.value }))}
-              />
-            </Grid>
-            <Grid item xs={6}>
-              <TextField
-                fullWidth
-                label="BCC"
-                value={composeData.bcc}
-                onChange={(e) => setComposeData(prev => ({ ...prev, bcc: e.target.value }))}
-              />
-            </Grid>
-            <Grid item xs={12}>
-              <TextField
-                fullWidth
-                label="Subject"
-                value={composeData.subject}
-                onChange={(e) => setComposeData(prev => ({ ...prev, subject: e.target.value }))}
-              />
-            </Grid>
-            
-            {/* Renewal Context */}
-            <Grid item xs={12}>
-              <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 600 }}>
-                Renewal Context
-              </Typography>
-            </Grid>
-            <Grid item xs={6}>
-              <TextField
-                fullWidth
-                label="Policy Number"
-                value={composeData.renewalContext.policyNumber}
-                onChange={(e) => setComposeData(prev => ({ 
-                  ...prev, 
-                  renewalContext: { ...prev.renewalContext, policyNumber: e.target.value }
-                }))}
-              />
-            </Grid>
-            <Grid item xs={6}>
-              <TextField
-                fullWidth
-                label="Customer Name"
-                value={composeData.renewalContext.customerName}
-                onChange={(e) => setComposeData(prev => ({ 
-                  ...prev, 
-                  renewalContext: { ...prev.renewalContext, customerName: e.target.value }
-                }))}
-              />
-            </Grid>
-            <Grid item xs={6}>
-              <TextField
-                fullWidth
-                label="Renewal Date"
-                type="date"
-                value={composeData.renewalContext.renewalDate}
-                onChange={(e) => setComposeData(prev => ({ 
-                  ...prev, 
-                  renewalContext: { ...prev.renewalContext, renewalDate: e.target.value }
-                }))}
-                InputLabelProps={{ shrink: true }}
-              />
-            </Grid>
-            <Grid item xs={6}>
-              <TextField
-                fullWidth
-                label="Premium Amount"
-                value={composeData.renewalContext.premiumAmount}
-                onChange={(e) => setComposeData(prev => ({ 
-                  ...prev, 
-                  renewalContext: { ...prev.renewalContext, premiumAmount: e.target.value }
-                }))}
-              />
-            </Grid>
-            
+              <Grid item xs={12}>
+                <TextField
+                  fullWidth
+                  label="To"
+                  value={composeData.to}
+                  onChange={(e) => setComposeData(prev => ({ ...prev, to: e.target.value }))}
+                />
+              </Grid>
+              <Grid item xs={6}>
+                <TextField
+                  fullWidth
+                  label="CC"
+                  value={composeData.cc}
+                  onChange={(e) => setComposeData(prev => ({ ...prev, cc: e.target.value }))}
+                />
+              </Grid>
+              <Grid item xs={6}>
+                <TextField
+                  fullWidth
+                  label="BCC"
+                  value={composeData.bcc}
+                  onChange={(e) => setComposeData(prev => ({ ...prev, bcc: e.target.value }))}
+                />
+              </Grid>
+              <Grid item xs={12}>
+                <TextField
+                  fullWidth
+                  label="Subject"
+                  value={composeData.subject}
+                  onChange={(e) => setComposeData(prev => ({ ...prev, subject: e.target.value }))}
+                />
+              </Grid>
+
+              {/* Renewal Context */}
+              <Grid item xs={12}>
+                <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 600 }}>
+                  Renewal Context
+                </Typography>
+              </Grid>
+              <Grid item xs={6}>
+                <TextField
+                  fullWidth
+                  label="Policy Number"
+                  value={composeData.renewalContext.policyNumber}
+                  onChange={(e) => setComposeData(prev => ({
+                    ...prev,
+                    renewalContext: { ...prev.renewalContext, policyNumber: e.target.value }
+                  }))}
+                />
+              </Grid>
+              <Grid item xs={6}>
+                <TextField
+                  fullWidth
+                  label="Customer Name"
+                  value={composeData.renewalContext.customerName}
+                  onChange={(e) => setComposeData(prev => ({
+                    ...prev,
+                    renewalContext: { ...prev.renewalContext, customerName: e.target.value }
+                  }))}
+                />
+              </Grid>
+              <Grid item xs={6}>
+                <TextField
+                  fullWidth
+                  label="Renewal Date"
+                  type="date"
+                  value={composeData.renewalContext.renewalDate}
+                  onChange={(e) => setComposeData(prev => ({
+                    ...prev,
+                    renewalContext: { ...prev.renewalContext, renewalDate: e.target.value }
+                  }))}
+                  InputLabelProps={{ shrink: true }}
+                />
+              </Grid>
+              <Grid item xs={6}>
+                <TextField
+                  fullWidth
+                  label="Premium Amount"
+                  value={composeData.renewalContext.premiumAmount}
+                  onChange={(e) => setComposeData(prev => ({
+                    ...prev,
+                    renewalContext: { ...prev.renewalContext, premiumAmount: e.target.value }
+                  }))}
+                />
+              </Grid>
+
               {/* Message Body */}
-            <Grid item xs={12}>
-              <TextField
-                fullWidth
-                multiline
-                rows={8}
-                label="Message"
-                value={composeData.body}
-                onChange={(e) => setComposeData(prev => ({ ...prev, body: e.target.value }))}
-              />
-            </Grid>
-            
+              <Grid item xs={12}>
+                <TextField
+                  fullWidth
+                  multiline
+                  rows={8}
+                  label="Message"
+                  value={composeData.body}
+                  onChange={(e) => setComposeData(prev => ({ ...prev, body: e.target.value }))}
+                />
+              </Grid>
+
               {/* Email Options */}
               <Grid item xs={12}>
                 <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 600 }}>
                   Email Options
                 </Typography>
               </Grid>
-            <Grid item xs={6}>
-              <FormControl fullWidth>
-                <InputLabel>Priority</InputLabel>
-                <Select 
-                  value={composeData.priority}
-                  onChange={(e) => setComposeData(prev => ({ ...prev, priority: e.target.value }))}
-                >
-                  <MenuItem value="low">Low</MenuItem>
-                  <MenuItem value="normal">Normal</MenuItem>
-                  <MenuItem value="medium">Medium</MenuItem>
-                  <MenuItem value="high">High</MenuItem>
-                </Select>
-              </FormControl>
-            </Grid>
-            <Grid item xs={6}>
-              <FormControlLabel
-                control={
-                  <Switch 
-                    checked={composeData.scheduledSend}
-                    onChange={(e) => setComposeData(prev => ({ ...prev, scheduledSend: e.target.checked }))}
-                  />
-                }
-                label="Schedule Send"
-              />
-            </Grid>
-              
+              <Grid item xs={6}>
+                <FormControl fullWidth>
+                  <InputLabel>Priority</InputLabel>
+                  <Select
+                    value={composeData.priority}
+                    onChange={(e) => setComposeData(prev => ({ ...prev, priority: e.target.value }))}
+                  >
+                    <MenuItem value="low">Low</MenuItem>
+                    <MenuItem value="normal">Normal</MenuItem>
+                    <MenuItem value="medium">Medium</MenuItem>
+                    <MenuItem value="high">High</MenuItem>
+                  </Select>
+                </FormControl>
+              </Grid>
+              <Grid item xs={6}>
+                <FormControlLabel
+                  control={
+                    <Switch
+                      checked={composeData.scheduledSend}
+                      onChange={(e) => setComposeData(prev => ({ ...prev, scheduledSend: e.target.checked }))}
+                    />
+                  }
+                  label="Schedule Send"
+                />
+              </Grid>
+
               {/* Tracking Options */}
               <Grid item xs={12}>
                 <Box sx={{ display: 'flex', gap: 2 }}>
                   <FormControlLabel
                     control={
-                      <Switch 
+                      <Switch
                         checked={composeData.trackOpens}
                         onChange={(e) => setComposeData(prev => ({ ...prev, trackOpens: e.target.checked }))}
                       />
@@ -2961,7 +2961,7 @@ Customer Service Team`;
                   />
                   <FormControlLabel
                     control={
-                      <Switch 
+                      <Switch
                         checked={composeData.trackClicks}
                         onChange={(e) => setComposeData(prev => ({ ...prev, trackClicks: e.target.checked }))}
                       />
@@ -2970,7 +2970,7 @@ Customer Service Team`;
                   />
                   <FormControlLabel
                     control={
-                      <Switch 
+                      <Switch
                         checked={composeData.requestReadReceipt}
                         onChange={(e) => setComposeData(prev => ({ ...prev, requestReadReceipt: e.target.checked }))}
                       />
@@ -2979,7 +2979,7 @@ Customer Service Team`;
                   />
                 </Box>
               </Grid>
-              
+
               {/* Schedule Date */}
               {composeData.scheduledSend && (
                 <Grid item xs={12}>
@@ -2987,39 +2987,40 @@ Customer Service Team`;
                     label="Schedule Date & Time"
                     value={composeData.scheduleDate}
                     onChange={(newValue) => setComposeData(prev => ({ ...prev, scheduleDate: newValue }))}
-                    renderInput={(params) => <TextField {...params} fullWidth />}
+                    slots={{ textField: TextField }}
+                    slotProps={{ textField: { fullWidth: true } }}
                   />
                 </Grid>
               )}
-          </Grid>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setComposeDialog(false)}>Cancel</Button>
+            </Grid>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => setComposeDialog(false)}>Cancel</Button>
             <Button variant="outlined" startIcon={<DraftsIcon />}>
               Save Draft
             </Button>
-          <Button variant="contained" onClick={handleSendEmail} startIcon={<SendIcon />}>
+            <Button variant="contained" onClick={handleSendEmail} startIcon={<SendIcon />}>
               {composeData.scheduledSend ? 'Schedule Email' : 'Send Email'}
-          </Button>
-        </DialogActions>
-      </Dialog>
+            </Button>
+          </DialogActions>
+        </Dialog>
 
         {/* Enhanced View Email Dialog */}
-      <Dialog 
-        open={viewEmailDialog} 
-        onClose={() => setViewEmailDialog(false)}
-        maxWidth="md"
-        fullWidth
-      >
-        {selectedEmail && (
-          <>
-            <DialogTitle>
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <Typography variant="h6">{selectedEmail.subject}</Typography>
+        <Dialog
+          open={viewEmailDialog}
+          onClose={() => setViewEmailDialog(false)}
+          maxWidth="md"
+          fullWidth
+        >
+          {selectedEmail && (
+            <>
+              <DialogTitle>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <Typography variant="h6">{selectedEmail.subject}</Typography>
                   <Box sx={{ display: 'flex', gap: 1 }}>
                     {selectedEmail.aiSuggestions && selectedEmail.aiSuggestions.length > 0 && (
-                      <Button 
-                        size="small" 
+                      <Button
+                        size="small"
                         startIcon={<SmartToyIcon />}
                         onClick={() => {
                           analyzeEmailWithAI(selectedEmail);
@@ -3029,41 +3030,41 @@ Customer Service Team`;
                         AI Suggestions
                       </Button>
                     )}
-                <IconButton onClick={() => setViewEmailDialog(false)}>
-                  <CloseIcon />
-                </IconButton>
+                    <IconButton onClick={() => setViewEmailDialog(false)}>
+                      <CloseIcon />
+                    </IconButton>
                   </Box>
-              </Box>
-            </DialogTitle>
-            <DialogContent>
-              <Box sx={{ mb: 3 }}>
-                <Grid container spacing={2}>
-                  <Grid item xs={6}>
-                    <Typography variant="subtitle2" color="text.secondary">From:</Typography>
-                    <Typography variant="body2">{selectedEmail.from}</Typography>
-                  </Grid>
-                  <Grid item xs={6}>
-                    <Typography variant="subtitle2" color="text.secondary">To:</Typography>
-                    <Typography variant="body2">{selectedEmail.to}</Typography>
-                  </Grid>
-                  <Grid item xs={6}>
-                    <Typography variant="subtitle2" color="text.secondary">Date:</Typography>
-                    <Typography variant="body2">{selectedEmail.date.toLocaleString()}</Typography>
-                  </Grid>
-                  <Grid item xs={6}>
-                    <Typography variant="subtitle2" color="text.secondary">Priority:</Typography>
-                    <Chip 
-                      size="small" 
-                      label={selectedEmail.priority}
-                      sx={{ color: getPriorityColor(selectedEmail.priority) }}
-                    />
-                  </Grid>
+                </Box>
+              </DialogTitle>
+              <DialogContent>
+                <Box sx={{ mb: 3 }}>
+                  <Grid container spacing={2}>
+                    <Grid item xs={6}>
+                      <Typography variant="subtitle2" color="text.secondary">From:</Typography>
+                      <Typography variant="body2">{selectedEmail.from}</Typography>
+                    </Grid>
+                    <Grid item xs={6}>
+                      <Typography variant="subtitle2" color="text.secondary">To:</Typography>
+                      <Typography variant="body2">{selectedEmail.to}</Typography>
+                    </Grid>
+                    <Grid item xs={6}>
+                      <Typography variant="subtitle2" color="text.secondary">Date:</Typography>
+                      <Typography variant="body2">{selectedEmail.date.toLocaleString()}</Typography>
+                    </Grid>
+                    <Grid item xs={6}>
+                      <Typography variant="subtitle2" color="text.secondary">Priority:</Typography>
+                      <Chip
+                        size="small"
+                        label={selectedEmail.priority}
+                        sx={{ color: getPriorityColor(selectedEmail.priority) }}
+                      />
+                    </Grid>
                     {selectedEmail.sentiment && (
                       <>
                         <Grid item xs={6}>
                           <Typography variant="subtitle2" color="text.secondary">Sentiment:</Typography>
-                          <Chip 
-                            size="small" 
+                          <Chip
+                            size="small"
                             label={`${selectedEmail.sentiment} (${Math.round(selectedEmail.confidence * 100)}%)`}
                             sx={{ color: getSentimentColor(selectedEmail.sentiment) }}
                           />
@@ -3074,43 +3075,43 @@ Customer Service Team`;
                         </Grid>
                       </>
                     )}
-                </Grid>
-              </Box>
-
-              {/* Renewal Context */}
-              <Card sx={{ mb: 3, backgroundColor: alpha(theme.palette.primary.main, 0.05) }}>
-                <CardContent>
-                  <Typography variant="subtitle2" sx={{ mb: 2, fontWeight: 600 }}>
-                    Renewal Information
-                  </Typography>
-                  <Grid container spacing={2}>
-                    <Grid item xs={6}>
-                      <Typography variant="caption" color="text.secondary">Policy Number:</Typography>
-                      <Typography variant="body2" sx={{ fontWeight: 500 }}>
-                        {selectedEmail.renewalContext.policyNumber}
-                      </Typography>
-                    </Grid>
-                    <Grid item xs={6}>
-                      <Typography variant="caption" color="text.secondary">Customer:</Typography>
-                      <Typography variant="body2" sx={{ fontWeight: 500 }}>
-                        {selectedEmail.renewalContext.customerName}
-                      </Typography>
-                    </Grid>
-                    <Grid item xs={6}>
-                      <Typography variant="caption" color="text.secondary">Renewal Date:</Typography>
-                      <Typography variant="body2" sx={{ fontWeight: 500 }}>
-                        {selectedEmail.renewalContext.renewalDate}
-                      </Typography>
-                    </Grid>
-                    <Grid item xs={6}>
-                      <Typography variant="caption" color="text.secondary">Premium:</Typography>
-                      <Typography variant="body2" sx={{ fontWeight: 500 }}>
-                        {selectedEmail.renewalContext.premiumAmount}
-                      </Typography>
-                    </Grid>
                   </Grid>
-                </CardContent>
-              </Card>
+                </Box>
+
+                {/* Renewal Context */}
+                <Card sx={{ mb: 3, backgroundColor: alpha(theme.palette.primary.main, 0.05) }}>
+                  <CardContent>
+                    <Typography variant="subtitle2" sx={{ mb: 2, fontWeight: 600 }}>
+                      Renewal Information
+                    </Typography>
+                    <Grid container spacing={2}>
+                      <Grid item xs={6}>
+                        <Typography variant="caption" color="text.secondary">Policy Number:</Typography>
+                        <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                          {selectedEmail.renewalContext.policyNumber}
+                        </Typography>
+                      </Grid>
+                      <Grid item xs={6}>
+                        <Typography variant="caption" color="text.secondary">Customer:</Typography>
+                        <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                          {selectedEmail.renewalContext.customerName}
+                        </Typography>
+                      </Grid>
+                      <Grid item xs={6}>
+                        <Typography variant="caption" color="text.secondary">Renewal Date:</Typography>
+                        <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                          {selectedEmail.renewalContext.renewalDate}
+                        </Typography>
+                      </Grid>
+                      <Grid item xs={6}>
+                        <Typography variant="caption" color="text.secondary">Premium:</Typography>
+                        <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                          {selectedEmail.renewalContext.premiumAmount}
+                        </Typography>
+                      </Grid>
+                    </Grid>
+                  </CardContent>
+                </Card>
 
                 {/* Email Tracking */}
                 {selectedEmail.type === 'outbox' && (
@@ -3137,64 +3138,64 @@ Customer Service Team`;
                   </Card>
                 )}
 
-              <Divider sx={{ my: 2 }} />
-              
-              <Typography variant="body1" sx={{ whiteSpace: 'pre-wrap' }}>
-                {selectedEmail.body}
-              </Typography>
+                <Divider sx={{ my: 2 }} />
 
-              {selectedEmail.attachments.length > 0 && (
-                <Box sx={{ mt: 2 }}>
-                  <Typography variant="subtitle2" sx={{ mb: 1 }}>Attachments:</Typography>
-                  {selectedEmail.attachments.map((attachment, index) => (
-                    <Chip 
-                      key={index}
-                      icon={<AttachmentIcon />}
-                      label={attachment}
-                      variant="outlined"
-                      sx={{ mr: 1 }}
-                    />
-                  ))}
-                </Box>
-              )}
-            </DialogContent>
-            <DialogActions>
-              <Button onClick={() => setViewEmailDialog(false)}>Close</Button>
+                <Typography variant="body1" sx={{ whiteSpace: 'pre-wrap' }}>
+                  {selectedEmail.body}
+                </Typography>
+
+                {selectedEmail.attachments.length > 0 && (
+                  <Box sx={{ mt: 2 }}>
+                    <Typography variant="subtitle2" sx={{ mb: 1 }}>Attachments:</Typography>
+                    {selectedEmail.attachments.map((attachment, index) => (
+                      <Chip
+                        key={index}
+                        icon={<AttachmentIcon />}
+                        label={attachment}
+                        variant="outlined"
+                        sx={{ mr: 1 }}
+                      />
+                    ))}
+                  </Box>
+                )}
+              </DialogContent>
+              <DialogActions>
+                <Button onClick={() => setViewEmailDialog(false)}>Close</Button>
                 <Button startIcon={<PrintIcon />}>Print</Button>
                 <Button startIcon={<ForwardIcon />}>Forward</Button>
-              {selectedEmail.type === 'inbox' && (
-                <Button 
-                  variant="contained" 
-                  startIcon={<ReplyIcon />}
-                  onClick={() => {
-                    setViewEmailDialog(false);
-                    handleReply(selectedEmail);
-                  }}
-                >
-                  Reply
-                </Button>
-              )}
-            </DialogActions>
-          </>
-        )}
-      </Dialog>
+                {selectedEmail.type === 'inbox' && (
+                  <Button
+                    variant="contained"
+                    startIcon={<ReplyIcon />}
+                    onClick={() => {
+                      setViewEmailDialog(false);
+                      handleReply(selectedEmail);
+                    }}
+                  >
+                    Reply
+                  </Button>
+                )}
+              </DialogActions>
+            </>
+          )}
+        </Dialog>
 
-      {/* Template Selection Dialog */}
+        {/* Template Selection Dialog */}
         <Dialog open={templateDialog} onClose={() => setTemplateDialog(false)} maxWidth="md" fullWidth>
-        <DialogTitle>
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <Typography variant="h6">Email Templates</Typography>
-            <IconButton onClick={() => setTemplateDialog(false)}>
-              <CloseIcon />
-            </IconButton>
-          </Box>
-        </DialogTitle>
-        <DialogContent>
+          <DialogTitle>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <Typography variant="h6">Email Templates</Typography>
+              <IconButton onClick={() => setTemplateDialog(false)}>
+                <CloseIcon />
+              </IconButton>
+            </Box>
+          </DialogTitle>
+          <DialogContent>
             <Grid container spacing={2}>
               {templates.map((template) => (
                 <Grid item xs={12} md={6} key={template.id}>
-                  <Card 
-                    sx={{ 
+                  <Card
+                    sx={{
                       cursor: 'pointer',
                       transition: 'transform 0.2s, box-shadow 0.2s',
                       '&:hover': {
@@ -3202,18 +3203,18 @@ Customer Service Team`;
                         boxShadow: theme.shadows[4]
                       }
                     }}
-                onClick={() => {
-                  handleCompose(template);
-                  setTemplateDialog(false);
-                }}
-              >
+                    onClick={() => {
+                      handleCompose(template);
+                      setTemplateDialog(false);
+                    }}
+                  >
                     <CardContent>
                       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', mb: 1 }}>
                         <Typography variant="h6" sx={{ fontWeight: 600 }}>
                           {template.name}
                         </Typography>
-                        <Chip 
-                          size="small" 
+                        <Chip
+                          size="small"
                           label={template.category}
                           color="primary"
                           variant="outlined"
@@ -3304,13 +3305,13 @@ Customer Service Team`;
                   <List>
                     {emailAnalytics.topSenders.map((sender, index) => (
                       <ListItem key={index}>
-                <ListItemText 
+                        <ListItemText
                           primary={sender.email}
                           secondary={`${sender.count} emails`}
-                />
-              </ListItem>
-            ))}
-          </List>
+                        />
+                      </ListItem>
+                    ))}
+                  </List>
                 </Card>
               </Grid>
 
@@ -3353,14 +3354,14 @@ Customer Service Team`;
                 </Card>
               </Grid>
             </Grid>
-        </DialogContent>
-      </Dialog>
+          </DialogContent>
+        </Dialog>
 
         {/* AI Assistant Dialog */}
-        <Dialog 
-          open={aiAssistantDialog} 
-          onClose={() => setAiAssistantDialog(false)} 
-          maxWidth="lg" 
+        <Dialog
+          open={aiAssistantDialog}
+          onClose={() => setAiAssistantDialog(false)}
+          maxWidth="lg"
           fullWidth
         >
           <DialogTitle>
@@ -3368,32 +3369,32 @@ Customer Service Team`;
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
                 <SmartToyIcon color="primary" />
                 <Typography variant="h6">AI Email Assistant</Typography>
-                
+
                 {/* AI Connection Status Indicators */}
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, ml: 2 }}>
                   <Tooltip title={`EmailBot: ${emailBotConnected ? 'Connected' : 'Disconnected'}`}>
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                      <SmartToyIcon 
-                        sx={{ 
+                      <SmartToyIcon
+                        sx={{
                           fontSize: 16,
                           color: emailBotConnected ? theme.palette.info.main : theme.palette.error.main,
                           transition: 'color 0.3s ease'
-                        }} 
+                        }}
                       />
                       <Typography variant="caption" sx={{ fontSize: '0.7rem', color: 'text.secondary' }}>
                         EmailBot
                       </Typography>
                     </Box>
                   </Tooltip>
-                  
+
                   <Tooltip title={`Renew-iQ: ${renewiqConnected ? 'Connected' : 'Disconnected'}`}>
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                      <PsychologyIcon 
-                        sx={{ 
+                      <PsychologyIcon
+                        sx={{
                           fontSize: 16,
                           color: renewiqConnected ? theme.palette.info.main : theme.palette.error.main,
                           transition: 'color 0.3s ease'
-                        }} 
+                        }}
                       />
                       <Typography variant="caption" sx={{ fontSize: '0.7rem', color: 'text.secondary' }}>
                         Renew-iQ
@@ -3402,7 +3403,7 @@ Customer Service Team`;
                   </Tooltip>
                 </Box>
               </Box>
-              
+
               <IconButton onClick={() => setAiAssistantDialog(false)}>
                 <CloseIcon />
               </IconButton>
@@ -3418,42 +3419,42 @@ Customer Service Team`;
                       <PsychologyIcon color="info" />
                       Email Analysis
                     </Typography>
-                    
+
                     {aiAnalysis && (
                       <Box>
                         <Box sx={{ mb: 2 }}>
                           <Typography variant="subtitle2" color="text.secondary">Sentiment:</Typography>
-                          <Chip 
+                          <Chip
                             label={`${aiAnalysis.sentiment} (${Math.round(aiAnalysis.confidence * 100)}%)`}
                             color={aiAnalysis.sentiment === 'positive' ? 'success' : aiAnalysis.sentiment === 'negative' ? 'error' : 'info'}
                             size="small"
                             sx={{ mt: 0.5 }}
                           />
                         </Box>
-                        
+
                         <Box sx={{ mb: 2 }}>
                           <Typography variant="subtitle2" color="text.secondary">Intent:</Typography>
                           <Typography variant="body2" sx={{ mt: 0.5 }}>
                             {aiAnalysis.intent.replace('_', ' ').toUpperCase()}
                           </Typography>
                         </Box>
-                        
+
                         <Box sx={{ mb: 2 }}>
                           <Typography variant="subtitle2" color="text.secondary">Urgency:</Typography>
-                          <Chip 
+                          <Chip
                             label={aiAnalysis.urgency}
                             color={aiAnalysis.urgency === 'urgent' ? 'error' : 'default'}
                             size="small"
                             sx={{ mt: 0.5 }}
                           />
                         </Box>
-                        
+
                         <Box sx={{ mb: 2 }}>
                           <Typography variant="subtitle2" color="text.secondary">Key Points:</Typography>
                           <List dense sx={{ mt: 0.5 }}>
                             {aiAnalysis.keyPoints.map((point, index) => (
                               <ListItem key={index} sx={{ py: 0.5, px: 0 }}>
-                                <ListItemText 
+                                <ListItemText
                                   primary={point}
                                   primaryTypographyProps={{ variant: 'body2' }}
                                 />
@@ -3461,7 +3462,7 @@ Customer Service Team`;
                             ))}
                           </List>
                         </Box>
-                        
+
                         <Box>
                           <Typography variant="subtitle2" color="text.secondary">Suggested Tone:</Typography>
                           <Typography variant="body2" sx={{ mt: 0.5, fontWeight: 500 }}>
@@ -3471,11 +3472,11 @@ Customer Service Team`;
                       </Box>
                     )}
                   </Card>
-                  
+
                   {/* AI Settings */}
                   <Card sx={{ p: 2, backgroundColor: alpha(theme.palette.primary.main, 0.05) }}>
                     <Typography variant="h6" sx={{ mb: 2 }}>AI Settings</Typography>
-                    
+
                     <FormControl fullWidth sx={{ mb: 2 }}>
                       <InputLabel>Response Tone</InputLabel>
                       <Select
@@ -3489,7 +3490,7 @@ Customer Service Team`;
                         <MenuItem value="casual">Casual</MenuItem>
                       </Select>
                     </FormControl>
-                    
+
                     <FormControl fullWidth sx={{ mb: 2 }}>
                       <InputLabel>Response Style</InputLabel>
                       <Select
@@ -3502,7 +3503,7 @@ Customer Service Team`;
                         <MenuItem value="conversational">Conversational</MenuItem>
                       </Select>
                     </FormControl>
-                    
+
                     <FormControl fullWidth sx={{ mb: 2 }}>
                       <InputLabel>Response Length</InputLabel>
                       <Select
@@ -3514,7 +3515,7 @@ Customer Service Team`;
                         <MenuItem value="long">Long</MenuItem>
                       </Select>
                     </FormControl>
-                    
+
                     <FormControlLabel
                       control={
                         <Switch
@@ -3524,7 +3525,7 @@ Customer Service Team`;
                       }
                       label="Include Personalization"
                     />
-                    
+
                     <FormControlLabel
                       control={
                         <Switch
@@ -3536,138 +3537,138 @@ Customer Service Team`;
                     />
                   </Card>
                 </Grid>
-                
+
                 {/* AI Suggestions Section */}
                 <Grid item xs={12} md={8}>
                   <Typography variant="h6" sx={{ mb: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
                     <SmartToyIcon color="primary" />
                     Smart Reply Suggestions
                   </Typography>
-                  
-                                     {aiSuggestions.length === 0 && !aiLoading && (
-                     <Box sx={{ textAlign: 'center', py: 4 }}>
-                       <Button
-                         variant="contained"
-                         onClick={() => {
-                           const emailToAnalyze = currentAnalyzedEmail || selectedEmail;
-                           if (emailToAnalyze) {
-                             setAiLoading(true);
-                             setTimeout(() => {
-                               analyzeEmailWithAI(emailToAnalyze);
-                               setAiLoading(false);
-                             }, 1000);
-                           } else {
-                             showNotification('Please select an email to analyze first', 'warning');
-                           }
-                         }}
-                         startIcon={<SmartToyIcon />}
-                       >
-                         Generate AI Suggestions
-                       </Button>
-                     </Box>
-                   )}
-                   
-                   {aiLoading && (
-                     <Box sx={{ textAlign: 'center', py: 4 }}>
-                       <LinearProgress sx={{ mb: 2 }} />
-                       <Typography variant="body2" color="text.secondary">
-                         AI is analyzing the email and generating smart suggestions...
-                       </Typography>
-                     </Box>
-                   )}
 
-                   {/* Streaming Content Display */}
-                   {isStreaming && (
-                     <Box sx={{ mb: 3 }}>
-                       <Typography variant="h6" sx={{ mb: 2, color: 'primary.main', display: 'flex', alignItems: 'center', gap: 1 }}>
-                         <SmartToyIcon />
-                         AI is generating content...
-                       </Typography>
-                       
-                       {streamingAnalysis && (
-                         <Card sx={{ mb: 2, p: 2, backgroundColor: alpha(theme.palette.primary.main, 0.05) }}>
-                           <Typography variant="subtitle2" color="primary" sx={{ mb: 1 }}>
-                             📊 Analysis Stream:
-                           </Typography>
-                           <FormattedAIAnalysis text={streamingAnalysis} />
-                         </Card>
-                       )}
-                       
-                       {streamingSuggestions.length > 0 && (
-                         <Box>
-                           <Typography variant="subtitle2" color="primary" sx={{ mb: 1 }}>
-                             💡 Suggestions Stream:
-                           </Typography>
-                           {streamingSuggestions.map((suggestion, index) => (
-                             <Card key={`stream-${index}`} sx={{ mb: 1, p: 2, backgroundColor: alpha(theme.palette.success.main, 0.05), border: `1px solid ${alpha(theme.palette.success.main, 0.2)}` }}>
-                               <Box sx={{ display: 'flex', justifyContent: 'between', alignItems: 'start', mb: 1 }}>
-                                 <Typography variant="subtitle2" color="success.main" sx={{ fontWeight: 600 }}>
-                                   {suggestion.type}
-                                 </Typography>
-                                 <Chip label="Streaming..." size="small" color="success" variant="outlined" />
-                               </Box>
-                               <Typography variant="body2" sx={{ opacity: 0.9, fontStyle: 'italic' }}>
-                                 {suggestion.body?.substring(0, 200)}...
-                               </Typography>
-                             </Card>
-                           ))}
-                         </Box>
-                       )}
-                     </Box>
-                   )}
-                  
-                  {aiSuggestions.map((suggestion) => (
-                                          <Card 
-                        key={suggestion.id}
-                        sx={{ 
-                          mb: 2, 
-                          cursor: 'pointer',
-                          border: selectedAiSuggestion === suggestion.id ? `2px solid ${theme.palette.primary.main}` : '1px solid transparent',
-                          transition: 'all 0.2s',
-                          backgroundColor: suggestion.isQuick ? alpha(theme.palette.info.main, 0.05) : 'background.paper',
-                          '&:hover': {
-                            transform: 'translateY(-2px)',
-                            boxShadow: theme.shadows[4]
+                  {aiSuggestions.length === 0 && !aiLoading && (
+                    <Box sx={{ textAlign: 'center', py: 4 }}>
+                      <Button
+                        variant="contained"
+                        onClick={() => {
+                          const emailToAnalyze = currentAnalyzedEmail || selectedEmail;
+                          if (emailToAnalyze) {
+                            setAiLoading(true);
+                            setTimeout(() => {
+                              analyzeEmailWithAI(emailToAnalyze);
+                              setAiLoading(false);
+                            }, 1000);
+                          } else {
+                            showNotification('Please select an email to analyze first', 'warning');
                           }
                         }}
-                        onClick={() => handleAiSuggestionSelect(suggestion)}
+                        startIcon={<SmartToyIcon />}
                       >
-                        <CardContent>
-                          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', mb: 2 }}>
-                            <Typography variant="h6" color="primary" sx={{ fontWeight: 600 }}>
-                              {suggestion.type}
-                              {suggestion.isQuick && (
-                                <Chip 
-                                  label="Quick Response"
-                                  size="small"
-                                  color="info"
-                                  sx={{ ml: 1 }}
-                                />
-                              )}
-                            </Typography>
-                            <Box sx={{ display: 'flex', gap: 1 }}>
-                              <Chip 
-                                label={suggestion.tone}
+                        Generate AI Suggestions
+                      </Button>
+                    </Box>
+                  )}
+
+                  {aiLoading && (
+                    <Box sx={{ textAlign: 'center', py: 4 }}>
+                      <LinearProgress sx={{ mb: 2 }} />
+                      <Typography variant="body2" color="text.secondary">
+                        AI is analyzing the email and generating smart suggestions...
+                      </Typography>
+                    </Box>
+                  )}
+
+                  {/* Streaming Content Display */}
+                  {isStreaming && (
+                    <Box sx={{ mb: 3 }}>
+                      <Typography variant="h6" sx={{ mb: 2, color: 'primary.main', display: 'flex', alignItems: 'center', gap: 1 }}>
+                        <SmartToyIcon />
+                        AI is generating content...
+                      </Typography>
+
+                      {streamingAnalysis && (
+                        <Card sx={{ mb: 2, p: 2, backgroundColor: alpha(theme.palette.primary.main, 0.05) }}>
+                          <Typography variant="subtitle2" color="primary" sx={{ mb: 1 }}>
+                            📊 Analysis Stream:
+                          </Typography>
+                          <FormattedAIAnalysis text={streamingAnalysis} />
+                        </Card>
+                      )}
+
+                      {streamingSuggestions.length > 0 && (
+                        <Box>
+                          <Typography variant="subtitle2" color="primary" sx={{ mb: 1 }}>
+                            💡 Suggestions Stream:
+                          </Typography>
+                          {streamingSuggestions.map((suggestion, index) => (
+                            <Card key={`stream-${index}`} sx={{ mb: 1, p: 2, backgroundColor: alpha(theme.palette.success.main, 0.05), border: `1px solid ${alpha(theme.palette.success.main, 0.2)}` }}>
+                              <Box sx={{ display: 'flex', justifyContent: 'between', alignItems: 'start', mb: 1 }}>
+                                <Typography variant="subtitle2" color="success.main" sx={{ fontWeight: 600 }}>
+                                  {suggestion.type}
+                                </Typography>
+                                <Chip label="Streaming..." size="small" color="success" variant="outlined" />
+                              </Box>
+                              <Typography variant="body2" sx={{ opacity: 0.9, fontStyle: 'italic' }}>
+                                {suggestion.body?.substring(0, 200)}...
+                              </Typography>
+                            </Card>
+                          ))}
+                        </Box>
+                      )}
+                    </Box>
+                  )}
+
+                  {aiSuggestions.map((suggestion) => (
+                    <Card
+                      key={suggestion.id}
+                      sx={{
+                        mb: 2,
+                        cursor: 'pointer',
+                        border: selectedAiSuggestion === suggestion.id ? `2px solid ${theme.palette.primary.main}` : '1px solid transparent',
+                        transition: 'all 0.2s',
+                        backgroundColor: suggestion.isQuick ? alpha(theme.palette.info.main, 0.05) : 'background.paper',
+                        '&:hover': {
+                          transform: 'translateY(-2px)',
+                          boxShadow: theme.shadows[4]
+                        }
+                      }}
+                      onClick={() => handleAiSuggestionSelect(suggestion)}
+                    >
+                      <CardContent>
+                        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', mb: 2 }}>
+                          <Typography variant="h6" color="primary" sx={{ fontWeight: 600 }}>
+                            {suggestion.type}
+                            {suggestion.isQuick && (
+                              <Chip
+                                label="Quick Response"
                                 size="small"
-                                color="primary"
-                                variant="outlined"
+                                color="info"
+                                sx={{ ml: 1 }}
                               />
-                              <Chip 
-                                label={suggestion.urgency}
-                                size="small"
-                                color={suggestion.urgency === 'high' ? 'error' : 'default'}
-                                variant="outlined"
-                              />
-                            </Box>
+                            )}
+                          </Typography>
+                          <Box sx={{ display: 'flex', gap: 1 }}>
+                            <Chip
+                              label={suggestion.tone}
+                              size="small"
+                              color="primary"
+                              variant="outlined"
+                            />
+                            <Chip
+                              label={suggestion.urgency}
+                              size="small"
+                              color={suggestion.urgency === 'high' ? 'error' : 'default'}
+                              variant="outlined"
+                            />
                           </Box>
-                        
+                        </Box>
+
                         <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 1 }}>
                           Subject: {suggestion.subject}
                         </Typography>
-                        
-                        <Typography 
-                          variant="body2" 
-                          sx={{ 
+
+                        <Typography
+                          variant="body2"
+                          sx={{
                             whiteSpace: 'pre-wrap',
                             maxHeight: '150px',
                             overflow: 'auto',
@@ -3679,7 +3680,7 @@ Customer Service Team`;
                         >
                           {suggestion.body}
                         </Typography>
-                        
+
                         <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 2 }}>
                           <Button
                             variant="contained"
@@ -3693,8 +3694,8 @@ Customer Service Team`;
                       </CardContent>
                     </Card>
                   ))}
-                  
-                  
+
+
                 </Grid>
               </Grid>
             )}
@@ -3736,15 +3737,15 @@ Customer Service Team`;
           autoHideDuration={6000}
           onClose={() => setNotification({ ...notification, open: false })}
         >
-          <Alert 
-            onClose={() => setNotification({ ...notification, open: false })} 
+          <Alert
+            onClose={() => setNotification({ ...notification, open: false })}
             severity={notification.severity}
             sx={{ width: '100%' }}
           >
             {notification.message}
           </Alert>
         </Snackbar>
-    </Box>
+      </Box>
     </LocalizationProvider>
   );
 };

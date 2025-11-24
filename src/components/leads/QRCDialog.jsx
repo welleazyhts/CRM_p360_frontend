@@ -321,7 +321,7 @@ const QRCDialog = ({ open, onClose, onSubmit }) => {
         duration: callDuration
       });
 
-      onSubmit({...formData, callDuration});
+      onSubmit({ ...formData, callDuration });
 
       // Reset form
       setFormData({
@@ -860,7 +860,8 @@ const QRCDialog = ({ open, onClose, onSubmit }) => {
                               label="Call Date & Time"
                               value={formData.dateTime}
                               onChange={handleDateChange}
-                              renderInput={(props) => <TextField {...props} fullWidth />}
+                              slots={{ textField: TextField }}
+                              slotProps={{ textField: { fullWidth: true } }}
                             />
                           </Grid>
                         </Grid>
@@ -992,7 +993,8 @@ const QRCDialog = ({ open, onClose, onSubmit }) => {
                                 label="Follow-up Date"
                                 value={formData.followUpDate}
                                 onChange={handleFollowUpDateChange}
-                                renderInput={(props) => <TextField {...props} fullWidth />}
+                                slots={{ textField: TextField }}
+                                slotProps={{ textField: { fullWidth: true } }}
                                 minDate={new Date()}
                               />
                             </Grid>
@@ -1001,7 +1003,8 @@ const QRCDialog = ({ open, onClose, onSubmit }) => {
                                 label="Follow-up Time"
                                 value={formData.followUpTime}
                                 onChange={handleFollowUpTimeChange}
-                                renderInput={(props) => <TextField {...props} fullWidth />}
+                                slots={{ textField: TextField }}
+                                slotProps={{ textField: { fullWidth: true } }}
                               />
                             </Grid>
                             <Grid item xs={12}>

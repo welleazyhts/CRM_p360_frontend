@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Box,
   Typography,
@@ -43,6 +43,8 @@ import {
   CalendarToday as CalendarIcon,
   CheckCircle as CheckCircleIcon
 } from '@mui/icons-material';
+
+import policyService from '../services/policyService';
 
 const PolicyProposalGeneration = () => {
   const theme = useTheme();
@@ -105,22 +107,10 @@ const PolicyProposalGeneration = () => {
     setLoading(true);
     
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
-      const newProposal = {
-        id: proposals.length + 1,
-        proposalNumber: `PROP-2024-${String(proposals.length + 1).padStart(3, '0')}`,
-        customerName: proposalForm.customerName,
-        policyType: proposalForm.policyType,
-        coverageAmount: parseInt(proposalForm.coverageAmount),
-        premium: parseInt(proposalForm.premium),
-        status: 'Generated',
-        generatedDate: new Date().toISOString().split('T')[0],
-        agentName: proposalForm.agentName
-      };
-
-      setProposals([newProposal, ...proposals]);
+      // Use policyService to generate and persist proposal
+      await policyService.generateProposal(proposalForm);
+      const list = await policyService.listProposals();
+      setProposals(list);
       setProposalDialog(false);
       setProposalForm({
         customerName: '',
@@ -153,6 +143,19 @@ const PolicyProposalGeneration = () => {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    let mounted = true;
+    (async () => {
+      try {
+        const list = await policyService.listProposals();
+        if (mounted) setProposals(list);
+      } catch (e) {
+        // ignore
+      }
+    })();
+    return () => { mounted = false; };
+  }, []);
 
   const handlePreview = (proposal) => {
     setSelectedProposal(proposal);

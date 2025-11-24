@@ -1,88 +1,60 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Box, Typography, Paper, Table, TableBody, TableCell, TableContainer,
-  TableHead, TableRow, Button, Chip, Rating, TextField, Grid, Card, CardContent,
+  TableHead, TableRow, Button, Chip, Rating, Grid, Card, CardContent,
   LinearProgress, Stack, Tooltip, useTheme, alpha
 } from '@mui/material';
 import {
-  RateReview as ReviewIcon, Analytics as AnalyticsIcon, PlayArrow as PlayIcon,
+  RateReview as ReviewIcon, Analytics as AnalyticsIcon,
   CheckCircle as ExcellentIcon, Cancel as PoorIcon, Warning as NeedsImprovementIcon
 } from '@mui/icons-material';
+
+import callService from '../services/callService';
 
 const CallQualityMonitoring = () => {
   const navigate = useNavigate();
   const theme = useTheme();
 
-  const [calls] = useState([
-    {
-      id: 1,
-      customerName: 'Rajesh Kumar',
-      agent: 'Priya Sharma',
-      date: '2025-01-20',
-      duration: '05:23',
-      recordedAudio: 'call_recording_001.mp3',
-      rating: 4,
-      qaStatus: 'Reviewed',
-      qualityScore: 85,
-      feedback: 'Good communication, clear explanation of policy terms'
-    },
-    {
-      id: 2,
-      customerName: 'Anita Patel',
-      agent: 'Vikram Singh',
-      date: '2025-01-19',
-      duration: '12:45',
-      recordedAudio: 'call_recording_002.mp3',
-      rating: null,
-      qaStatus: 'Pending',
-      qualityScore: null,
-      feedback: ''
-    },
-    {
-      id: 3,
-      customerName: 'Suresh Reddy',
-      agent: 'Meera Joshi',
-      date: '2025-01-18',
-      duration: '08:12',
-      recordedAudio: 'call_recording_003.mp3',
-      rating: 5,
-      qaStatus: 'Reviewed',
-      qualityScore: 95,
-      feedback: 'Excellent customer service, resolved all queries efficiently'
-    },
-    {
-      id: 4,
-      customerName: 'Kavita Nair',
-      agent: 'Amit Patel',
-      date: '2025-01-17',
-      duration: '06:45',
-      recordedAudio: 'call_recording_004.mp3',
-      rating: 3,
-      qaStatus: 'Reviewed',
-      qualityScore: 72,
-      feedback: 'Needs improvement in handling objections'
-    },
-    {
-      id: 5,
-      customerName: 'Deepak Sharma',
-      agent: 'Priya Sharma',
-      date: '2025-01-16',
-      duration: '09:30',
-      recordedAudio: 'call_recording_005.mp3',
-      rating: 2,
-      qaStatus: 'Reviewed',
-      qualityScore: 58,
-      feedback: 'Poor product knowledge, customer seemed unsatisfied'
-    }
-  ]);
+  const [calls, setCalls] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let mounted = true;
+    const load = async () => {
+      try {
+        const res = await callService.fetchCallLogs({ page: 1, limit: 20 });
+        if (res && Array.isArray(res.calls)) {
+          const mapped = res.calls.map((c, idx) => ({
+            id: c.callId || c.id || `f-${idx}`,
+            customerName: c.customerName || c.from || 'Unknown',
+            agent: c.agent || c.agentId || 'Unassigned',
+            date: c.timestamp ? new Date(c.timestamp).toLocaleString() : '',
+            duration: typeof c.duration === 'number' ? `${c.duration} secs` : c.duration || '',
+            recordedAudio: c.recording || '',
+            rating: null,
+            qaStatus: c.status === 'completed' ? 'Reviewed' : 'Pending',
+            qualityScore: null,
+            feedback: c.notes || ''
+          }));
+          if (mounted) setCalls(mapped);
+        }
+      } catch (e) {
+        console.error('Failed to fetch call logs', e);
+      } finally {
+        if (mounted) setLoading(false);
+      }
+    };
+    load();
+    return () => { mounted = false; };
+  }, []);
 
   const stats = {
     totalCalls: calls.length,
     reviewedCalls: calls.filter(c => c.qaStatus === 'Reviewed').length,
     pendingCalls: calls.filter(c => c.qaStatus === 'Pending').length,
-    averageRating: calls.filter(c => c.rating).reduce((sum, c) => sum + c.rating, 0) / calls.filter(c => c.rating).length || 0,
-    averageQualityScore: calls.filter(c => c.qualityScore).reduce((sum, c) => sum + c.qualityScore, 0) / calls.filter(c => c.qualityScore).length || 0
+    averageRating: calls.filter(c => c.rating).reduce((sum, c) => sum + c.rating, 0) / (calls.filter(c => c.rating).length || 1),
+    averageQualityScore: calls.filter(c => c.qualityScore).reduce((sum, c) => sum + c.qualityScore, 0) / (calls.filter(c => c.qualityScore).length || 1)
   };
 
   const getStatusColor = (status) => {

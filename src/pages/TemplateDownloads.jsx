@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import templateService from '../services/templateService';
 import {
   Box,
   Typography,
@@ -37,97 +38,27 @@ const TemplateDownloads = () => {
   const [categoryFilter, setCategoryFilter] = useState('all');
   const [formatFilter, setFormatFilter] = useState('all');
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
+  const [templates, setTemplates] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  const templates = [
-    {
-      id: 1,
-      name: 'Policy Proposal Form',
-      category: 'Proposal',
-      description: 'Standard policy proposal form for new insurance applications',
-      format: 'PDF',
-      size: '2.5 MB',
-      downloads: 1250,
-      lastUpdated: '2024-01-15',
-      url: '/templates/policy-proposal-form.pdf'
-    },
-    {
-      id: 2,
-      name: 'KYC Document Form',
-      category: 'KYC',
-      description: 'Know Your Customer documentation form for identity verification',
-      format: 'PDF',
-      size: '1.8 MB',
-      downloads: 890,
-      lastUpdated: '2024-01-10',
-      url: '/templates/kyc-document-form.pdf'
-    },
-    {
-      id: 3,
-      name: 'Claim Request Form',
-      category: 'Claims',
-      description: 'Insurance claim request form for policy holders',
-      format: 'PDF',
-      size: '3.2 MB',
-      downloads: 2100,
-      lastUpdated: '2024-01-20',
-      url: '/templates/claim-request-form.pdf'
-    },
-    {
-      id: 4,
-      name: 'Policy Renewal Form',
-      category: 'Renewal',
-      description: 'Policy renewal application form for existing customers',
-      format: 'PDF',
-      size: '2.1 MB',
-      downloads: 1680,
-      lastUpdated: '2024-01-18',
-      url: '/templates/policy-renewal-form.pdf'
-    },
-    {
-      id: 5,
-      name: 'Vehicle Insurance Proposal',
-      category: 'Proposal',
-      description: 'Specialized proposal form for vehicle insurance policies',
-      format: 'DOCX',
-      size: '1.5 MB',
-      downloads: 750,
-      lastUpdated: '2024-01-12',
-      url: '/templates/vehicle-insurance-proposal.docx'
-    },
-    {
-      id: 6,
-      name: 'Health Insurance KYC',
-      category: 'KYC',
-      description: 'Health insurance specific KYC form with medical declarations',
-      format: 'PDF',
-      size: '2.8 MB',
-      downloads: 620,
-      lastUpdated: '2024-01-08',
-      url: '/templates/health-insurance-kyc.pdf'
-    },
-    {
-      id: 7,
-      name: 'Motor Claim Form',
-      category: 'Claims',
-      description: 'Motor vehicle insurance claim form with accident details',
-      format: 'PDF',
-      size: '4.1 MB',
-      downloads: 1420,
-      lastUpdated: '2024-01-22',
-      url: '/templates/motor-claim-form.pdf'
-    },
-    {
-      id: 8,
-      name: 'Life Insurance Renewal',
-      category: 'Renewal',
-      description: 'Life insurance policy renewal form with beneficiary updates',
-      format: 'DOCX',
-      size: '1.9 MB',
-      downloads: 980,
-      lastUpdated: '2024-01-16',
-      url: '/templates/life-insurance-renewal.docx'
+  // Load templates from API on component mount
+  useEffect(() => {
+    loadTemplates();
+  }, []);
+
+  const loadTemplates = async () => {
+    try {
+      setLoading(true);
+      const data = await templateService.getTemplates();
+      setTemplates(data);
+    } catch (error) {
+      console.error('Error loading templates:', error);
+      setSnackbar({ open: true, message: 'Failed to load templates', severity: 'error' });
+      setTemplates([]);
+    } finally {
+      setLoading(false);
     }
-  ];
+  };
 
   const getCategoryIcon = (category) => {
     switch (category) {
@@ -158,21 +89,30 @@ const TemplateDownloads = () => {
     }
   };
 
-  const handleDownload = (template) => {
-    // Simulate download
-    setSnackbar({
-      open: true,
-      message: `Downloading ${template.name}...`,
-      severity: 'success'
-    });
-    
-    // In real implementation, this would trigger actual file download
-    // window.open(template.url, '_blank');
+  const handleDownload = async (template) => {
+    try {
+      await templateService.downloadTemplate(template.id);
+      setSnackbar({
+        open: true,
+        message: `Downloading ${template.name}...`,
+        severity: 'success'
+      });
+
+      // In real implementation, this would trigger actual file download
+      // window.open(template.url, '_blank');
+    } catch (error) {
+      console.error('Error downloading template:', error);
+      setSnackbar({
+        open: true,
+        message: 'Failed to download template',
+        severity: 'error'
+      });
+    }
   };
 
   const filteredTemplates = templates.filter(template => {
     const matchesSearch = template.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         template.description.toLowerCase().includes(searchTerm.toLowerCase());
+      template.description.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesCategory = categoryFilter === 'all' || template.category === categoryFilter;
     const matchesFormat = formatFilter === 'all' || template.format === formatFilter;
     return matchesSearch && matchesCategory && matchesFormat;

@@ -185,6 +185,32 @@ const WorkflowBuilder = () => {
     }
   };
 
+  // open run dialog and optionally prefill sample data for known templates
+  const openRunDialogForWorkflow = (workflow) => {
+    setSelectedWorkflow(workflow);
+    // If the workflow matches the leadApproval template, prefill with sample data
+    try {
+      if (workflow?.name === WORKFLOW_TEMPLATES?.leadApproval?.name) {
+        const sample = {
+          leadId: 'L-1001',
+          leadValue: 150000,
+          agentEmail: 'agent@example.com',
+          customer: {
+            name: 'Rohit Sharma',
+            phone: '9876543210',
+            email: 'rohit@example.com'
+          }
+        };
+        setRunData(JSON.stringify(sample, null, 2));
+      } else {
+        setRunData('{}');
+      }
+    } catch (e) {
+      setRunData('{}');
+    }
+    setRunDialogOpen(true);
+  };
+
   // Handle menu
   const handleMenuOpen = (event, workflow) => {
     setMenuAnchor(event.currentTarget);
@@ -398,10 +424,7 @@ const WorkflowBuilder = () => {
                       size="small"
                       variant="contained"
                       startIcon={<RunIcon />}
-                      onClick={() => {
-                        setSelectedWorkflow(workflow);
-                        setRunDialogOpen(true);
-                      }}
+                      onClick={() => openRunDialogForWorkflow(workflow)}
                     >
                       Run Now
                     </Button>
@@ -1008,13 +1031,13 @@ const WorkflowBuilder = () => {
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setDetailsDialogOpen(false)}>Close</Button>
-          {selectedWorkflow && selectedWorkflow.status === WORKFLOW_STATUS.ACTIVE && (
+              {selectedWorkflow && selectedWorkflow.status === WORKFLOW_STATUS.ACTIVE && (
             <Button
               variant="contained"
               startIcon={<RunIcon />}
               onClick={() => {
                 setDetailsDialogOpen(false);
-                setRunDialogOpen(true);
+                openRunDialogForWorkflow(selectedWorkflow);
               }}
             >
               Run Workflow

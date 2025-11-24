@@ -22,6 +22,7 @@ import {
   Link as LinkIcon, GetApp as GetAppIcon
 } from '@mui/icons-material';
 import { alpha } from '@mui/material/styles';
+import feedbackService from '../services/feedbackserver';
 
 const SurveyDesigner = () => {
   const theme = useTheme();
@@ -87,8 +88,28 @@ const SurveyDesigner = () => {
   }, [surveyId]);
 
   const loadSurvey = (id) => {
-    // Mock loading survey data
-    // Loading survey: ${id}
+    (async () => {
+      try {
+        const survey = await feedbackService.getSurvey(id);
+        if (survey) {
+          setSurveyBuilder(prev => ({
+            ...prev,
+            surveyInfo: {
+              title: survey.title || prev.surveyInfo.title,
+              description: survey.description || prev.surveyInfo.description,
+              type: survey.type || prev.surveyInfo.type,
+              theme: survey.theme || prev.surveyInfo.theme,
+              language: survey.language || prev.surveyInfo.language
+            },
+            elements: survey.elements || [],
+            previewMode: false,
+            selectedElement: null
+          }));
+        }
+      } catch (e) {
+        // ignore - keep mock
+      }
+    })();
   };
 
   // Function to toggle category expansion
@@ -363,8 +384,27 @@ const SurveyDesigner = () => {
 
   // Survey Actions
   const handleSaveDraft = () => {
-    // Saving survey draft
-    // Implement save logic
+    (async () => {
+      try {
+        const payload = {
+          id: surveyId || undefined,
+          title: surveyBuilder.surveyInfo.title,
+          description: surveyBuilder.surveyInfo.description,
+          type: surveyBuilder.surveyInfo.type,
+          theme: surveyBuilder.surveyInfo.theme,
+          language: surveyBuilder.surveyInfo.language,
+          elements: surveyBuilder.elements,
+          status: 'draft'
+        };
+        const saved = await feedbackService.saveSurvey(payload);
+        if (saved) {
+          // Optionally show a notification or update state
+          setSurveyBuilder(prev => ({ ...prev }));
+        }
+      } catch (e) {
+        // ignore for now
+      }
+    })();
   };
 
   const handlePreview = () => {
@@ -376,8 +416,37 @@ const SurveyDesigner = () => {
   };
 
   const handleConfirmPublish = () => {
-    // Publishing survey
-    setPublishDialog(false);
+    (async () => {
+      try {
+        // Ensure survey is saved
+        let idToPublish = surveyId || (surveyBuilder.surveyInfo && surveyBuilder.surveyInfo.id);
+        if (!idToPublish) {
+          const payload = {
+            title: surveyBuilder.surveyInfo.title,
+            description: surveyBuilder.surveyInfo.description,
+            type: surveyBuilder.surveyInfo.type,
+            theme: surveyBuilder.surveyInfo.theme,
+            language: surveyBuilder.surveyInfo.language,
+            elements: surveyBuilder.elements,
+            status: 'draft'
+          };
+          const saved = await feedbackService.saveSurvey(payload);
+          idToPublish = saved && saved.id;
+        }
+
+        if (idToPublish) {
+          const published = await feedbackService.publishSurvey(idToPublish, publishForm);
+          if (published) {
+            // update local state if needed
+            setSurveyBuilder(prev => ({ ...prev }));
+          }
+        }
+      } catch (e) {
+        // ignore
+      } finally {
+        setPublishDialog(false);
+      }
+    })();
   };
 
   // Render Element in Canvas

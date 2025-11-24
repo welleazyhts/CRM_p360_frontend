@@ -129,6 +129,8 @@ const Settings = () => {
   const [tabValue, setTabValue] = useState(0);
   const [welcomeModalOpen, setWelcomeModalOpen] = useState(false);
   const theme = useTheme();
+  // Provide a safe fallback so we don't read properties off null during initial render
+  const safeSettings = settings || {};
   
   // DNC Settings State
   const [dncSettings, setDncSettings] = useState({
@@ -749,8 +751,8 @@ const Settings = () => {
   };
 
   const handleToggleMfa = () => {
-    handleSettingChange('mfaEnabled', !settings.mfaEnabled);
-    setSuccessMessage(`Multi-Factor Authentication ${!settings.mfaEnabled ? 'enabled' : 'disabled'} successfully`);
+    handleSettingChange('mfaEnabled', !safeSettings.mfaEnabled);
+    setSuccessMessage(`Multi-Factor Authentication ${!safeSettings.mfaEnabled ? 'enabled' : 'disabled'} successfully`);
   };
 
   const handleOpenWelcomeGuide = () => {
@@ -1123,8 +1125,8 @@ const Settings = () => {
 
   const getFilteredUsers = () => {
     return users.filter(user => {
-      const matchesSearch = user.name.toLowerCase().includes(userSearchTerm.toLowerCase()) ||
-                           user.email.toLowerCase().includes(userSearchTerm.toLowerCase());
+    const matchesSearch = user.name.toLowerCase().includes(userSearchTerm.toLowerCase()) ||
+             (user.email || '').toLowerCase().includes(userSearchTerm.toLowerCase());
       const matchesRole = roleFilter === 'all' || user.role === roleFilter;
       const matchesStatus = statusFilter === 'all' || user.status === statusFilter;
       return matchesSearch && matchesRole && matchesStatus;
@@ -1207,7 +1209,7 @@ const Settings = () => {
               <ListItemSecondaryAction sx={{ width: '120px' }}>
                 <FormControl fullWidth size="small">
                   <Select
-                    value={settings.language}
+                    value={safeSettings.language || 'en'}
                     onChange={(e) => handleSettingChange('language', e.target.value)}
                     sx={{ borderRadius: 2 }}
                   >
@@ -1241,7 +1243,7 @@ const Settings = () => {
               <ListItemSecondaryAction sx={{ width: '120px' }}>
                 <FormControl fullWidth size="small">
                   <Select
-                    value={settings.timezone}
+                    value={safeSettings.timezone || 'UTC+0'}
                     onChange={(e) => handleSettingChange('timezone', e.target.value)}
                     sx={{ borderRadius: 2 }}
                   >
@@ -1278,7 +1280,7 @@ const Settings = () => {
               <ListItemSecondaryAction>
                 <Switch
                   edge="end"
-                  checked={settings.emailNotifications}
+                  checked={!!safeSettings.emailNotifications}
                   onChange={(e) => handleSettingChange('emailNotifications', e.target.checked)}
                   color="primary"
                 />
@@ -1295,7 +1297,7 @@ const Settings = () => {
               <ListItemSecondaryAction>
                 <Switch
                   edge="end"
-                  checked={settings.smsNotifications}
+                  checked={!!safeSettings.smsNotifications}
                   onChange={(e) => handleSettingChange('smsNotifications', e.target.checked)}
                   color="primary"
                 />
@@ -1320,14 +1322,14 @@ const Settings = () => {
               </ListItemIcon>
               <ListItemText
                 primary={<Typography fontWeight="500">Enable MFA</Typography>}
-                secondary={settings.mfaEnabled 
+                secondary={safeSettings.mfaEnabled 
                   ? "Enabled - OTP required at login" 
                   : "Disabled - Enable for additional security"}
               />
               <ListItemSecondaryAction>
                 <Switch
                   edge="end"
-                  checked={settings.mfaEnabled === true}
+                  checked={safeSettings.mfaEnabled === true}
                   onChange={handleToggleMfa}
                   color="primary"
                 />
@@ -2131,7 +2133,7 @@ const Settings = () => {
                         )}
                       </Box>
                       <Typography variant="body2" color="text.secondary" gutterBottom>
-                        {account.email}
+                        {account?.email}
                       </Typography>
                       <Typography variant="caption" color="text.secondary">
                         Provider: {account.provider.charAt(0).toUpperCase() + account.provider.slice(1)} • 
@@ -2577,7 +2579,7 @@ const Settings = () => {
                     fullWidth
                     label="Email Address"
                     type="email"
-                    value={newAccount.email}
+                    value={newAccount?.email}
                     onChange={(e) => setNewAccount(prev => ({ ...prev, email: e.target.value }))}
                     InputProps={{ sx: { borderRadius: 2 } }}
                   />
@@ -2707,7 +2709,7 @@ const Settings = () => {
             <Button 
               variant="contained"
               onClick={handleSaveAccount}
-              disabled={!newAccount.name.trim() || !newAccount.email.trim()}
+              disabled={!newAccount.name?.trim() || !newAccount?.email?.trim()}
               sx={{ borderRadius: 2 }}
             >
               {accountDialog.mode === 'add' ? 'Add Account' : 'Save Changes'}
@@ -6335,7 +6337,7 @@ const Settings = () => {
                               {user.name}
                             </Typography>
                             <Typography variant="caption" color="text.secondary">
-                              {user.email}
+                              {user?.email}
                             </Typography>
                             {user.jobTitle && (
                               <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
@@ -6563,7 +6565,7 @@ const Settings = () => {
                   fullWidth
                   label="Email Address"
                   type="email"
-                  value={newUser.email}
+                  value={newUser?.email}
                   onChange={(e) => setNewUser({ ...newUser, email: e.target.value })}
                   required
                   helperText="Primary email for login and notifications"
@@ -6810,7 +6812,7 @@ const Settings = () => {
             <Button 
               variant="contained" 
               onClick={handleSaveUser}
-              disabled={!newUser.name || !newUser.email}
+              disabled={!newUser?.name || !newUser?.email}
               startIcon={userDialog.mode === 'add' ? <AddIcon /> : <EditIcon />}
               sx={{ borderRadius: 2, minWidth: 140 }}
             >
@@ -7742,7 +7744,7 @@ const Settings = () => {
                       <Grid item xs={12} sm={6}>
                         <Typography variant="body2" color="text.secondary">Email</Typography>
                         <Typography variant="body1" fontWeight="500">
-                          {customerVerificationDialog.customerData.email}
+                          {customerVerificationDialog.customerData?.email}
                         </Typography>
                       </Grid>
                     </Grid>
@@ -7939,8 +7941,8 @@ const Settings = () => {
       setDefaultProvider(channel, provider.id);
     };
 
-    const renderProviderCard = (provider, channel) => (
-      <Card key={provider.id} sx={{ mb: 2, borderRadius: 2 }}>
+    const renderProviderCard = (provider = {}, channel) => (
+      <Card key={(provider && provider.id) || Math.random()} sx={{ mb: 2, borderRadius: 2 }}>
         <CardContent sx={{ p: 2 }}>
           <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
@@ -7949,25 +7951,25 @@ const Settings = () => {
               </Avatar>
               <Box>
                 <Typography variant="h6" fontWeight="600">
-                  {provider.name}
-                  {provider.isDefault && (
+                  {provider?.name || 'Unnamed Provider'}
+                  {provider?.isDefault && (
                     <Chip label="Default" size="small" color="primary" sx={{ ml: 1 }} />
                   )}
                 </Typography>
                 <Typography variant="body2" color="text.secondary">
-                  {providerTemplates[channel][provider.type]?.name || provider.type}
+                  {providerTemplates?.[channel]?.[provider?.type]?.name || provider?.type || 'Custom'}
                 </Typography>
               </Box>
             </Box>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
               <Chip
-                label={provider.status}
-                color={getStatusColor(provider.status)}
+                label={provider?.status || 'unknown'}
+                color={getStatusColor(provider?.status)}
                 size="small"
-                icon={getStatusIcon(provider.status)}
+                icon={getStatusIcon(provider?.status)}
               />
               <Switch
-                checked={provider.isActive}
+                checked={!!provider?.isActive}
                 onChange={() => handleToggleActive(provider, channel)}
                 size="small"
               />
@@ -7977,23 +7979,23 @@ const Settings = () => {
           <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <Box sx={{ display: 'flex', gap: 1 }}>
               <Typography variant="body2" color="text.secondary">
-                Daily: {provider.limits.dailyLimit} | Monthly: {provider.limits.monthlyLimit}
+                Daily: {provider?.limits?.dailyLimit ?? '—'} | Monthly: {provider?.limits?.monthlyLimit ?? '—'}
               </Typography>
             </Box>
             <Box sx={{ display: 'flex', gap: 1 }}>
               <IconButton
                 size="small"
                 onClick={() => handleTestProvider(provider, channel)}
-                disabled={testingProvider === provider.id}
+                disabled={testingProvider === provider?.id}
               >
-                {testingProvider === provider.id ? <SyncIcon /> : <TestIcon />}
+                {testingProvider === provider?.id ? <SyncIcon /> : <TestIcon />}
               </IconButton>
               <IconButton
                 size="small"
                 onClick={() => handleSetDefault(provider, channel)}
-                disabled={provider.isDefault}
+                disabled={!!provider?.isDefault}
               >
-                {provider.isDefault ? <StarIcon color="primary" /> : <StarBorderIcon />}
+                {provider?.isDefault ? <StarIcon color="primary" /> : <StarBorderIcon />}
               </IconButton>
               <IconButton
                 size="small"
@@ -8003,7 +8005,7 @@ const Settings = () => {
               </IconButton>
               <IconButton
                 size="small"
-                onClick={() => handleDeleteProvider(provider.id, channel)}
+                onClick={() => handleDeleteProvider(provider?.id, channel)}
                 color="error"
               >
                 <DeleteIcon />
@@ -8087,9 +8089,18 @@ const Settings = () => {
 
             {/* Provider List */}
             <Box>
-              {providers[selectedChannel]?.length > 0 ? (
-                providers[selectedChannel].map((provider) => 
-                  renderProviderCard(provider, selectedChannel)
+              {providers?.[selectedChannel]?.length > 0 ? (
+                providers?.[selectedChannel]?.map((provider) =>
+                renderProviderCard(
+                {
+                ...provider,
+                email:
+                (provider && (provider.email || (provider.config && provider.config.email))) ||
+                (provider && (provider.senderId || provider.fromNumber || provider.phoneNumberId)) ||
+                ''
+                },
+                selectedChannel
+                )
                 )
               ) : (
                 <Box sx={{ textAlign: 'center', py: 4 }}>
@@ -8391,12 +8402,10 @@ const Settings = () => {
               Save Settings
             </Button>
           </Zoom>
-        </Box>
-        
+        </Box> 
         <WelcomeModal open={welcomeModalOpen} onClose={handleCloseWelcomeGuide} />
       </Box>
     </Fade>
   );
 };
-
 export default Settings;

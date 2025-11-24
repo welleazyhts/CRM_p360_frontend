@@ -336,7 +336,7 @@ const ContactDatabase = () => {
                   <TableCell>
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                       <Avatar sx={{ bgcolor: theme.palette.primary.main }}>
-                        {contact.name.charAt(0)}
+                        {contact.name?.charAt(0) || '?'}
                       </Avatar>
                       <Box>
                         <Typography variant="subtitle2" fontWeight="600">

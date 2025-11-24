@@ -53,6 +53,7 @@ import {
   Add as AddIcon,
   Visibility as VisibilityIcon
 } from '@mui/icons-material';
+import { generateSubjectSuggestions } from '../services/emailAI';
 
 const BulkEmail = () => {
   const [activeStep, setActiveStep] = useState(0);
@@ -347,7 +348,24 @@ Renew-iQ Insurance`
   };
 
   const handleSendCampaign = () => {
-    const campaign = {
+    (async () => {
+      try {
+        // If user hasn't provided a custom subject, attempt to generate suggestions
+        if (!customSubject && selectedTemplate && recipients.length > 0) {
+          const template = emailTemplates.find(t => t.id === selectedTemplate);
+          const sampleBody = processTemplate(template, recipients[0]).body || '';
+          const suggestions = await generateSubjectSuggestions(sampleBody, { campaignType: 'bulk' }).catch(() => null);
+          if (suggestions && typeof suggestions === 'object' && suggestions.message && suggestions.message.content) {
+            // Use the first line as a quick subject fallback
+            const firstLine = String(suggestions.message.content).split('\n')[0];
+            if (firstLine) setCustomSubject(firstLine);
+          }
+        }
+      } catch (e) {
+        console.error('Subject suggestion failed:', e);
+      }
+
+      const campaign = {
       id: Date.now(),
       name: `Campaign ${new Date().toLocaleDateString()}`,
       status: 'sending',
@@ -376,6 +394,7 @@ Renew-iQ Insurance`
     }, 500);
     
     setSendConfirmDialog({ open: false });
+    })();
   };
 
 

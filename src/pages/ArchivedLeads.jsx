@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import leadService from '../services/leadService';
 import {
   Box,
   Card,
@@ -6,32 +7,32 @@ import {
   Typography,
   Button,
   Grid,
+  TextField,
+  MenuItem,
   Table,
   TableBody,
   TableCell,
   TableContainer,
   TableHead,
   TableRow,
-  IconButton,
   Chip,
+  IconButton,
+  Tooltip,
   Stack,
-  TextField,
-  MenuItem,
   Dialog,
   DialogTitle,
   DialogContent,
   DialogActions,
-  Tooltip,
   useTheme,
   alpha
 } from '@mui/material';
 import {
-  Visibility as VisibilityIcon,
-  History as HistoryIcon,
-  FilterList as FilterIcon,
-  Search as SearchIcon,
-  Sort as SortIcon,
   Download as DownloadIcon,
+  Search as SearchIcon,
+  FilterList as FilterIcon,
+  Sort as SortIcon,
+  History as HistoryIcon,
+  Visibility as VisibilityIcon,
   Unarchive as UnarchiveIcon,
   Delete as DeleteIcon,
   DateRange as DateRangeIcon
@@ -44,127 +45,75 @@ const ArchivedLeads = () => {
   const [leads, setLeads] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('All');
+  const [selectedDateRange, setSelectedDateRange] = useState('all');
   const [sortField, setSortField] = useState('archivedDate');
   const [sortOrder, setSortOrder] = useState('desc');
-  const [selectedDateRange, setSelectedDateRange] = useState('all');
   const [confirmDialog, setConfirmDialog] = useState({ open: false, leadId: null, action: '' });
 
   useEffect(() => {
-    // Mock data for Archived Leads - Replace with API call
-    setLeads([
-      {
-        id: 201,
-        firstName: 'Vikram',
-        lastName: 'Singh',
-        phone: '+91-91234-56789',
-        email: 'vikram.singh@email.com',
-        previousStatus: 'New Lead',
-        policyType: 'Health Insurance',
-        premium: 28000,
-        archivedDate: '2025-09-20',
-        archivedBy: 'Admin User',
-        archivedReason: 'Duplicate Lead',
-        source: 'Website',
-        assignedTo: 'Priya Patel'
-      },
-      {
-        id: 202,
-        firstName: 'Kavita',
-        lastName: 'Reddy',
-        phone: '+91-92345-67890',
-        email: 'kavita.reddy@email.com',
-        previousStatus: 'Follow Up',
-        policyType: 'Motor Insurance',
-        premium: 18500,
-        archivedDate: '2025-09-18',
-        archivedBy: 'Manager',
-        archivedReason: 'Invalid Data',
-        source: 'Referral',
-        assignedTo: 'Rahul Kumar'
-      },
-      {
-        id: 203,
-        firstName: 'Manoj',
-        lastName: 'Patel',
-        phone: '+91-93456-78901',
-        email: 'manoj.patel@email.com',
-        previousStatus: 'Qualified',
-        policyType: 'Life Insurance',
-        premium: 52000,
-        archivedDate: '2025-09-15',
-        archivedBy: 'Sarah Johnson',
-        archivedReason: 'Spam Lead',
-        source: 'Direct',
-        assignedTo: 'Sarah Johnson'
+    const fetchArchived = async () => {
+      try {
+        const data = await leadService.getArchivedLeads();
+        setLeads(data);
+      } catch (error) {
+        console.error('Error fetching archived leads:', error);
       }
-    ]);
+    };
+
+    fetchArchived();
   }, []);
 
-  const statusOptions = ['New Lead', 'Contacted', 'Follow Up', 'Qualified', 'Proposal Sent'];
-  const archivedReasonOptions = [
-    'Duplicate Lead',
-    'Invalid Data',
-    'Spam Lead',
-    'Test Lead',
-    'Incomplete Information',
-    'Other'
-  ];
+const statusOptions = ['New Lead', 'Contacted', 'Follow Up', 'Qualified', 'Proposal Sent'];
 
-  const dateRangeOptions = [
-    { value: 'all', label: 'All Time' },
-    { value: 'last7', label: 'Last 7 Days' },
-    { value: 'last30', label: 'Last 30 Days' },
-    { value: 'last90', label: 'Last 90 Days' },
-    { value: 'custom', label: 'Custom Range' }
-  ];
 
-  const handleSearch = (event) => {
-    setSearchTerm(event.target.value);
+const dateRangeOptions = [
+  { value: 'all', label: 'All Time' },
+  { value: 'last7', label: 'Last 7 Days' },
+  { value: 'last30', label: 'Last 30 Days' },
+  { value: 'last90', label: 'Last 90 Days' },
+  { value: 'custom', label: 'Custom Range' }
+];
+
+const handleSearch = (event) => {
+  setSearchTerm(event.target.value);
+};
+
+const handleFilterChange = (event) => {
+  setFilterStatus(event.target.value);
+};
+
+const handleSort = (field) => {
+  if (sortField === field) {
+    setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
+  } else {
+    setSortField(field);
+    setSortOrder('asc');
+  }
+};
+
+const handleUnarchive = (leadId) => {
+  setConfirmDialog({ open: true, leadId, action: 'unarchive' });
+};
+
+const handlePermanentDelete = (leadId) => {
+  setConfirmDialog({ open: true, leadId, action: 'delete' });
+};
+
+const handleConfirmAction = () => {
+  // Handle the confirmed action
+  setConfirmDialog({ open: false, leadId: null, action: '' });
+};
+
+const getStatusColor = (status) => {
+  const colors = {
+    'New Lead': theme.palette.info.main,
+    'Contacted': theme.palette.primary.main,
+    'Follow Up': theme.palette.warning.main,
+    'Qualified': theme.palette.success.main,
+    'Proposal Sent': theme.palette.purple || theme.palette.secondary.main
   };
-
-  const handleFilterChange = (event) => {
-    setFilterStatus(event.target.value);
-  };
-
-  const handleSort = (field) => {
-    if (sortField === field) {
-      setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
-    } else {
-      setSortField(field);
-      setSortOrder('asc');
-    }
-  };
-
-  const handleUnarchive = (leadId) => {
-    setConfirmDialog({ open: true, leadId, action: 'unarchive' });
-  };
-
-  const handlePermanentDelete = (leadId) => {
-    setConfirmDialog({ open: true, leadId, action: 'delete' });
-  };
-
-  const handleConfirmAction = () => {
-    const { leadId, action } = confirmDialog;
-    if (action === 'unarchive') {
-      alert(`Lead ${leadId} has been unarchived and restored to active leads`);
-      setLeads(leads.filter(l => l.id !== leadId));
-    } else if (action === 'delete') {
-      alert(`Lead ${leadId} has been permanently deleted`);
-      setLeads(leads.filter(l => l.id !== leadId));
-    }
-    setConfirmDialog({ open: false, leadId: null, action: '' });
-  };
-
-  const getStatusColor = (status) => {
-    const colors = {
-      'New Lead': theme.palette.info.main,
-      'Contacted': theme.palette.primary.main,
-      'Follow Up': theme.palette.warning.main,
-      'Qualified': theme.palette.success.main,
-      'Proposal Sent': theme.palette.purple || theme.palette.secondary.main
-    };
-    return colors[status] || theme.palette.grey[500];
-  };
+  return colors[status] || theme.palette.grey[500];
+};
 
   return (
     <Box sx={{ p: 3 }}>

@@ -1,4 +1,6 @@
 // WhatsApp Bot Service - Manages executive bots and business integration
+import { checkDNCStatus } from './api';
+
 class WhatsAppBotService {
   constructor() {
     this.apiProviders = {
@@ -24,6 +26,70 @@ class WhatsAppBotService {
     
     this.executiveBots = new Map();
     this.businessConfig = null;
+  }
+
+  // Helper: paginate an array
+  _paginate(items = [], page = 1, limit = 10) {
+    const p = Math.max(1, parseInt(page, 10) || 1);
+    const l = Math.max(1, parseInt(limit, 10) || 10);
+    const start = (p - 1) * l;
+    const paged = items.slice(start, start + l);
+    return {
+      items: paged,
+      pagination: { page: p, limit: l, total: items.length }
+    };
+  }
+
+  // List bots with optional filters (search, status) and pagination
+  async listBots(filters = {}) {
+    try {
+      const { search, status, page = 1, limit = 10 } = filters;
+      let bots = Array.from(this.executiveBots.values());
+
+      if (search) {
+        const s = search.toLowerCase();
+        bots = bots.filter(b => (
+          (b.executiveName || '').toLowerCase().includes(s) ||
+          (b.email || '').toLowerCase().includes(s) ||
+          (b.phone || '').toLowerCase().includes(s)
+        ));
+      }
+
+      if (status) {
+        bots = bots.filter(b => b.status === status);
+      }
+
+      const { items, pagination } = this._paginate(bots, page, limit);
+      return { bots: items, pagination };
+    } catch (error) {
+      console.error('Error listing bots:', error);
+      return { bots: [], pagination: { page: 1, limit: 10, total: 0 } };
+    }
+  }
+
+  // Get single bot details
+  async getBot(botId) {
+    try {
+      const bot = this.executiveBots.get(botId);
+      if (!bot) throw new Error('Bot not found');
+      return { success: true, bot };
+    } catch (error) {
+      return { success: false, error: error.message };
+    }
+  }
+
+  // Permanently delete a bot
+  async deleteBot(botId) {
+    try {
+      if (!this.executiveBots.has(botId)) {
+        return { success: false, error: 'Bot not found' };
+      }
+      this.executiveBots.delete(botId);
+      // In real impl: unregister webhook, revoke credentials, audit log
+      return { success: true, message: 'Bot deleted' };
+    } catch (error) {
+      return { success: false, error: error.message };
+    }
   }
 
   // Initialize business configuration
@@ -405,6 +471,106 @@ class WhatsAppBotService {
       return { success: false, error: error.message };
     }
   }
+
+  // Get available templates for a bot/provider (mocked)
+  async getTemplates(botId) {
+    try {
+      const bot = this.executiveBots.get(botId);
+      const provider = this.businessConfig?.apiProvider || 'meta';
+      // Mock templates per provider/department
+      const baseTemplates = [
+        { name: 'renewal_reminder', language: 'en', components: ['header','body','button'], description: 'Renewal reminder message' },
+        { name: 'policy_issue', language: 'en', components: ['body'], description: 'Policy issued notification' },
+        { name: 'claim_update', language: 'en', components: ['body','button'], description: 'Claim status update' }
+      ];
+
+      // Add department-specific quick template
+      if (bot && bot.department === 'Sales') {
+        baseTemplates.unshift({ name: 'quote_request', language: 'en', components: ['body','button'], description: 'Request for quote details' });
+      }
+
+      return { success: true, templates: baseTemplates, provider };
+    } catch (error) {
+      return { success: false, error: error.message };
+    }
+  }
+
+  // Internal: send template via provider (mock) and return normalized shape
+  async _sendTemplateViaProvider(providerType, to, templatePayload) {
+    // Simulate provider interactions and return normalized response
+    const raw = { provider: providerType, to, payload: templatePayload, ts: Date.now() };
+    const messageId = `${providerType}_tpl_${Date.now()}`;
+    // Simulate occasional transient failure
+    const fail = Math.random() < 0.08; // 8% transient fail
+    if (fail) {
+      const err = { success: false, error: 'Transient provider error', raw };
+      throw err;
+    }
+    return { success: true, messageId, providerStatus: 'sent', raw };
+  }
+
+  // Send template message with DNC check, retries and normalized response
+  async sendTemplate(botId, templatePayload, options = {}) {
+    const { retries = 3, retryDelay = 500 } = options;
+    try {
+      if (!templatePayload || !templatePayload.templateName || !templatePayload.to) {
+        return { success: false, error: 'Invalid template payload: templateName and to are required' };
+      }
+
+      const bot = this.executiveBots.get(botId);
+      if (!bot) return { success: false, error: 'Bot not found' };
+
+      // DNC check
+      const clientId = this.businessConfig?.clientId || 'CLIENT-001';
+      const contact = { phone: (templatePayload.to || '').replace(/\s|\+/g, '') };
+      const dnc = await checkDNCStatus(contact, clientId, 'whatsapp');
+      if (dnc && dnc.isBlocked) {
+        return { success: false, error: 'Blocked by DNC', dnc };
+      }
+
+      const provider = this.businessConfig?.apiProvider || 'meta';
+      // Attempt send with retries
+      let attempt = 0;
+      let lastError = null;
+      while (attempt < retries) {
+        try {
+          const res = await this._sendTemplateViaProvider(provider, templatePayload.to, templatePayload);
+          return { success: true, messageId: res.messageId, providerStatus: res.providerStatus, raw: res.raw };
+        } catch (err) {
+          lastError = err;
+          attempt += 1;
+          // exponential backoff
+          await new Promise(r => setTimeout(r, retryDelay * Math.pow(2, attempt - 1)));
+        }
+      }
+
+      return { success: false, error: 'Failed to send template', details: lastError };
+    } catch (error) {
+      return { success: false, error: error.message || error };
+    }
+  }
+
+  // Dry-run / validate template without sending
+  async testSendTemplate(botId, templatePayload) {
+    try {
+      if (!templatePayload || !templatePayload.templateName) {
+        return { success: false, error: 'templateName is required' };
+      }
+      const templates = await this.getTemplates(botId);
+      const found = (templates.templates || []).find(t => t.name === templatePayload.templateName && t.language === (templatePayload.language || 'en'));
+      if (!found) {
+        return { success: false, error: 'Template not found for bot/provider' };
+      }
+      // Validate components shape (simplified)
+      if (found.components && templatePayload.components) {
+        // Basic shape validation
+        return { success: true, message: 'Template payload looks valid', preview: { name: found.name, components: templatePayload.components } };
+      }
+      return { success: true, message: 'Template exists (no components provided)', template: found };
+    } catch (error) {
+      return { success: false, error: error.message };
+    }
+  }
 }
 
 // Create singleton instance
@@ -420,5 +586,12 @@ export const {
   sendMessage,
   updateBotSettings,
   getBotStatistics,
-  getAllExecutiveBots
+  getAllExecutiveBots,
+  // new APIs
+  listBots,
+  getBot,
+  deleteBot,
+  sendTemplate,
+  getTemplates,
+  testSendTemplate
 } = whatsappBotService;

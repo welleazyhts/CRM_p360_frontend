@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import trainingService from '../services/trainingService';
 import {
   Box,
   Container,
@@ -80,6 +81,35 @@ const TrainingManagement = () => {
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
   const [documentDialog, setDocumentDialog] = useState(false);
   const [selectedModule, setSelectedModule] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  // Load data from API on component mount
+  useEffect(() => {
+    loadTrainingModules();
+    loadAgentProgress();
+  }, []);
+
+  const loadTrainingModules = async () => {
+    try {
+      setLoading(true);
+      const data = await trainingService.getTrainingModules();
+      setModules(data);
+    } catch (error) {
+      console.error('Error loading training modules:', error);
+      setSnackbar({ open: true, message: 'Failed to load training modules', severity: 'error' });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const loadAgentProgress = async () => {
+    try {
+      const data = await trainingService.getAgentProgress();
+      setAgentProgress(data);
+    } catch (error) {
+      console.error('Error loading agent progress:', error);
+    }
+  };
 
   // Training Modules State
   const [modules, setModules] = useState([
@@ -353,33 +383,42 @@ const TrainingManagement = () => {
     setEditingModule(null);
   };
 
-  const handleSaveModule = () => {
-    if (editingModule) {
-      setModules(modules.map(m => m.id === editingModule.id ? {
-        ...m,
-        ...moduleForm,
-      } : m));
-      setSnackbar({ open: true, message: 'Module updated successfully!', severity: 'success' });
-    } else {
-      const newModule = {
-        id: modules.length + 1,
-        ...moduleForm,
-        enrolledAgents: 0,
-        completionRate: 0,
-        documents: [],
-        assessments: 0,
-        createdBy: 'Admin',
-        createdDate: new Date().toISOString().split('T')[0],
-      };
-      setModules([...modules, newModule]);
-      setSnackbar({ open: true, message: 'Module created successfully!', severity: 'success' });
+  const handleSaveModule = async () => {
+    try {
+      if (editingModule) {
+        const updatedModule = await trainingService.updateTrainingModule(editingModule.id, moduleForm);
+        setModules(modules.map(m => m.id === editingModule.id ? {
+          ...m,
+          ...moduleForm,
+        } : m));
+        setSnackbar({ open: true, message: 'Module updated successfully!', severity: 'success' });
+      } else {
+        const newModule = await trainingService.createTrainingModule(moduleForm);
+        setModules([...modules, {
+          ...newModule,
+          enrolledAgents: 0,
+          completionRate: 0,
+          documents: [],
+          assessments: 0,
+        }]);
+        setSnackbar({ open: true, message: 'Module created successfully!', severity: 'success' });
+      }
+      handleCloseModuleDialog();
+    } catch (error) {
+      console.error('Error saving module:', error);
+      setSnackbar({ open: true, message: 'Failed to save module', severity: 'error' });
     }
-    handleCloseModuleDialog();
   };
 
-  const handleDeleteModule = (moduleId) => {
-    setModules(modules.filter(m => m.id !== moduleId));
-    setSnackbar({ open: true, message: 'Module deleted successfully!', severity: 'warning' });
+  const handleDeleteModule = async (moduleId) => {
+    try {
+      await trainingService.deleteTrainingModule(moduleId);
+      setModules(modules.filter(m => m.id !== moduleId));
+      setSnackbar({ open: true, message: 'Module deleted successfully!', severity: 'warning' });
+    } catch (error) {
+      console.error('Error deleting module:', error);
+      setSnackbar({ open: true, message: 'Failed to delete module', severity: 'error' });
+    }
   };
 
   const handleOpenDocumentDialog = (module) => {
@@ -393,32 +432,37 @@ const TrainingManagement = () => {
     setSelectedModule(null);
   };
 
-  const handleUploadDocument = () => {
+  const handleUploadDocument = async () => {
     if (selectedModule && documentForm.name) {
-      const newDocument = {
-        id: Date.now(),
-        name: documentForm.name,
-        type: documentForm.type,
-        size: documentForm.size,
-        uploadDate: new Date().toISOString().split('T')[0],
-      };
+      try {
+        const newDocument = await trainingService.uploadDocument(selectedModule.id, documentForm);
 
-      setModules(modules.map(m => m.id === selectedModule.id ? {
-        ...m,
-        documents: [...m.documents, newDocument],
-      } : m));
+        setModules(modules.map(m => m.id === selectedModule.id ? {
+          ...m,
+          documents: [...m.documents, newDocument],
+        } : m));
 
-      setSnackbar({ open: true, message: 'Document uploaded successfully!', severity: 'success' });
-      handleCloseDocumentDialog();
+        setSnackbar({ open: true, message: 'Document uploaded successfully!', severity: 'success' });
+        handleCloseDocumentDialog();
+      } catch (error) {
+        console.error('Error uploading document:', error);
+        setSnackbar({ open: true, message: 'Failed to upload document', severity: 'error' });
+      }
     }
   };
 
-  const handleDeleteDocument = (moduleId, documentId) => {
-    setModules(modules.map(m => m.id === moduleId ? {
-      ...m,
-      documents: m.documents.filter(d => d.id !== documentId),
-    } : m));
-    setSnackbar({ open: true, message: 'Document deleted successfully!', severity: 'warning' });
+  const handleDeleteDocument = async (moduleId, documentId) => {
+    try {
+      await trainingService.deleteDocument(moduleId, documentId);
+      setModules(modules.map(m => m.id === moduleId ? {
+        ...m,
+        documents: m.documents.filter(d => d.id !== documentId),
+      } : m));
+      setSnackbar({ open: true, message: 'Document deleted successfully!', severity: 'warning' });
+    } catch (error) {
+      console.error('Error deleting document:', error);
+      setSnackbar({ open: true, message: 'Failed to delete document', severity: 'error' });
+    }
   };
 
   const getCategoryColor = (category) => {

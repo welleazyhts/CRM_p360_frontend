@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import leadService from '../services/leadService';
 import {
   Box,
   Card,
@@ -52,54 +53,15 @@ const LostLeads = () => {
   const [selectedCallLead, setSelectedCallLead] = useState(null);
 
   useEffect(() => {
-    // Mock data for Lost Leads - Replace with API call
-    setLeads([
-      {
-        id: 101,
-        firstName: 'Amit',
-        lastName: 'Sharma',
-        phone: '+91-98123-45678',
-        email: 'amit.sharma@email.com',
-        status: 'Closed Lost',
-        lostReason: 'High Premium',
-        policyType: 'Health Insurance',
-        quotedPremium: 35000,
-        closedDate: '2025-10-15',
-        closedBy: 'Priya Patel',
-        remarks: 'Customer found premium too expensive, considering competitor options',
-        source: 'Website'
-      },
-      {
-        id: 102,
-        firstName: 'Sneha',
-        lastName: 'Verma',
-        phone: '+91-99876-54321',
-        email: 'sneha.verma@email.com',
-        status: 'Closed Lost',
-        lostReason: 'Not Interested',
-        policyType: 'Motor Insurance',
-        quotedPremium: 22000,
-        closedDate: '2025-10-14',
-        closedBy: 'Rahul Kumar',
-        remarks: 'Lead not interested in renewing policy',
-        source: 'Referral'
-      },
-      {
-        id: 103,
-        firstName: 'Rajesh',
-        lastName: 'Gupta',
-        phone: '+91-97654-32109',
-        email: 'rajesh.gupta@email.com',
-        status: 'Closed Lost',
-        lostReason: 'Bought from Competitor',
-        policyType: 'Life Insurance',
-        quotedPremium: 45000,
-        closedDate: '2025-10-12',
-        closedBy: 'Sarah Johnson',
-        remarks: 'Customer purchased policy from ICICI Prudential',
-        source: 'Direct'
+    const fetchLeads = async () => {
+      try {
+        const data = await leadService.getLostLeads();
+        setLeads(data);
+      } catch (error) {
+        console.error('Error fetching lost leads:', error);
       }
-    ]);
+    };
+    fetchLeads();
   }, []);
 
   const lostReasonOptions = [

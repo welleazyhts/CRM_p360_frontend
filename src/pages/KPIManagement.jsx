@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import kpiService from '../services/kpiService';
 import {
   Box,
   Card,
@@ -32,39 +33,19 @@ import {
   Pagination,
   useTheme,
   alpha,
-  Paper,
-  Divider,
   Tabs,
   Tab,
-  Stack,
-  LinearProgress,
-  Rating
+  LinearProgress
 } from '@mui/material';
 import {
   Add as AddIcon,
   Edit as EditIcon,
-  Delete as DeleteIcon,
   Visibility as ViewIcon,
   Search as SearchIcon,
-  FilterList as FilterIcon,
-  MoreVert as MoreVertIcon,
   Refresh as RefreshIcon,
   TrendingUp as TrendingUpIcon,
   TrendingDown as TrendingDownIcon,
-  Assessment as AssessmentIcon,
-  Person as PersonIcon,
-  Business as BusinessIcon,
-  Schedule as ScheduleIcon,
-  Star as StarIcon,
-  Target as TargetIcon,
-  CheckCircle as CheckCircleIcon,
-  Warning as WarningIcon,
-  Error as ErrorIcon,
-  Download as DownloadIcon,
-  Upload as UploadIcon,
-  BarChart as BarChartIcon,
-  PieChart as PieChartIcon,
-  Timeline as TimelineIcon
+  MoreVert as MoreVertIcon
 } from '@mui/icons-material';
 
 // Mock KPI data
@@ -73,6 +54,7 @@ const mockKPIData = [
     id: 1,
     employeeId: 'EMP001',
     employeeName: 'John Smith',
+    manager: 'Robert Johnson',
     department: 'Sales',
     position: 'Sales Executive',
     kpiName: 'Sales Target',
@@ -95,6 +77,7 @@ const mockKPIData = [
     id: 2,
     employeeId: 'EMP002',
     employeeName: 'Sarah Johnson',
+    manager: 'Lisa Anderson',
     department: 'Marketing',
     position: 'Marketing Manager',
     kpiName: 'Lead Generation',
@@ -117,6 +100,7 @@ const mockKPIData = [
     id: 3,
     employeeId: 'EMP003',
     employeeName: 'Mike Wilson',
+    manager: 'Alex Thompson',
     department: 'IT',
     position: 'Software Developer',
     kpiName: 'Code Quality',
@@ -139,6 +123,7 @@ const mockKPIData = [
     id: 4,
     employeeId: 'EMP004',
     employeeName: 'Emily Davis',
+    manager: 'Jennifer White',
     department: 'HR',
     position: 'HR Specialist',
     kpiName: 'Employee Satisfaction',
@@ -161,6 +146,7 @@ const mockKPIData = [
     id: 5,
     employeeId: 'EMP005',
     employeeName: 'David Brown',
+    manager: 'Michael Davis',
     department: 'Finance',
     position: 'Accountant',
     kpiName: 'Budget Accuracy',
@@ -202,6 +188,7 @@ const KPIManagement = () => {
   const [formData, setFormData] = useState({
     employeeId: '',
     employeeName: '',
+    manager: '',
     department: '',
     position: '',
     kpiName: '',
@@ -217,11 +204,11 @@ const KPIManagement = () => {
 
   // Mock employees
   const employees = [
-    { id: 'EMP001', name: 'John Smith', department: 'Sales', position: 'Sales Executive' },
-    { id: 'EMP002', name: 'Sarah Johnson', department: 'Marketing', position: 'Marketing Manager' },
-    { id: 'EMP003', name: 'Mike Wilson', department: 'IT', position: 'Software Developer' },
-    { id: 'EMP004', name: 'Emily Davis', department: 'HR', position: 'HR Specialist' },
-    { id: 'EMP005', name: 'David Brown', department: 'Finance', position: 'Accountant' }
+    { id: 'EMP001', name: 'John Smith', manager: 'Robert Johnson', department: 'Sales', position: 'Sales Executive' },
+    { id: 'EMP002', name: 'Sarah Johnson', manager: 'Lisa Anderson', department: 'Marketing', position: 'Marketing Manager' },
+    { id: 'EMP003', name: 'Mike Wilson', manager: 'Alex Thompson', department: 'IT', position: 'Software Developer' },
+    { id: 'EMP004', name: 'Emily Davis', manager: 'Jennifer White', department: 'HR', position: 'HR Specialist' },
+    { id: 'EMP005', name: 'David Brown', manager: 'Michael Davis', department: 'Finance', position: 'Accountant' }
   ];
 
   const departments = ['Sales', 'Marketing', 'IT', 'HR', 'Finance'];
@@ -230,11 +217,30 @@ const KPIManagement = () => {
   const categories = ['Sales Performance', 'Marketing Performance', 'Development Quality', 'HR Performance', 'Financial Performance', 'Customer Service'];
   const statusOptions = ['On Track', 'At Risk', 'Exceeding', 'Underperforming'];
 
+  // Load KPIs from service
+  useEffect(() => {
+    loadKPIs();
+  }, []);
+
+  const loadKPIs = async () => {
+    try {
+      setLoading(true);
+      const data = await kpiService.getKPIs();
+      setKpiData(Array.isArray(data) ? data : mockKPIData);
+    } catch (error) {
+      console.error('Error loading KPIs:', error);
+      setKpiData(mockKPIData);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // Filter data
   useEffect(() => {
+    if (!Array.isArray(kpiData)) return;
+    
     let filtered = kpiData;
 
-    // Search filter
     if (searchTerm) {
       filtered = filtered.filter(record =>
         record.employeeName.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -243,17 +249,14 @@ const KPIManagement = () => {
       );
     }
 
-    // Status filter
     if (statusFilter !== 'All') {
       filtered = filtered.filter(record => record.status === statusFilter);
     }
 
-    // Department filter
     if (departmentFilter !== 'All') {
       filtered = filtered.filter(record => record.department === departmentFilter);
     }
 
-    // Category filter
     if (categoryFilter !== 'All') {
       filtered = filtered.filter(record => record.category === categoryFilter);
     }
@@ -273,8 +276,7 @@ const KPIManagement = () => {
     onTrack: kpiData.filter(record => record.status === 'On Track').length,
     atRisk: kpiData.filter(record => record.status === 'At Risk').length,
     exceeding: kpiData.filter(record => record.status === 'Exceeding').length,
-    averageProgress: kpiData.reduce((sum, record) => sum + record.progress, 0) / kpiData.length,
-    totalEmployees: employees.length
+    averageProgress: kpiData.length > 0 ? kpiData.reduce((sum, record) => sum + record.progress, 0) / kpiData.length : 0
   };
 
   // Handle dialog operations
@@ -285,6 +287,7 @@ const KPIManagement = () => {
       setFormData({
         employeeId: kpi.employeeId,
         employeeName: kpi.employeeName,
+        manager: kpi.manager,
         department: kpi.department,
         position: kpi.position,
         kpiName: kpi.kpiName,
@@ -303,6 +306,7 @@ const KPIManagement = () => {
       setFormData({
         employeeId: '',
         employeeName: '',
+        manager: '',
         department: '',
         position: '',
         kpiName: '',
@@ -330,7 +334,6 @@ const KPIManagement = () => {
     
     setTimeout(() => {
       if (editingKPI) {
-        // Update existing KPI
         const updatedData = kpiData.map(record =>
           record.id === editingKPI.id
             ? {
@@ -338,15 +341,13 @@ const KPIManagement = () => {
                 ...formData,
                 progress: Math.round((formData.currentValue / formData.targetValue) * 100),
                 status: calculateStatus(formData.currentValue, formData.targetValue),
-                lastUpdated: new Date().toISOString().split('T')[0],
-                updatedAt: new Date().toISOString()
+                lastUpdated: new Date().toISOString().split('T')[0]
               }
             : record
         );
         setKpiData(updatedData);
         setSnackbar({ open: true, message: 'KPI updated successfully!', severity: 'success' });
       } else {
-        // Add new KPI
         const newKPI = {
           id: Math.max(...kpiData.map(r => r.id)) + 1,
           ...formData,
@@ -366,7 +367,6 @@ const KPIManagement = () => {
     }, 1000);
   };
 
-  // Calculate status based on progress
   const calculateStatus = (current, target) => {
     const progress = (current / target) * 100;
     if (progress >= 100) return 'Exceeding';
@@ -375,7 +375,6 @@ const KPIManagement = () => {
     return 'Underperforming';
   };
 
-  // Get status color
   const getStatusColor = (status) => {
     const colors = {
       'On Track': theme.palette.success.main,
@@ -386,7 +385,6 @@ const KPIManagement = () => {
     return colors[status] || theme.palette.grey[500];
   };
 
-  // Get progress color
   const getProgressColor = (progress) => {
     if (progress >= 100) return 'success';
     if (progress >= 80) return 'primary';
@@ -394,7 +392,6 @@ const KPIManagement = () => {
     return 'error';
   };
 
-  // Handle employee selection
   const handleEmployeeChange = (employeeId) => {
     const employee = employees.find(emp => emp.id === employeeId);
     if (employee) {
@@ -402,6 +399,7 @@ const KPIManagement = () => {
         ...formData,
         employeeId: employee.id,
         employeeName: employee.name,
+        manager: employee.manager,
         department: employee.department,
         position: employee.position
       });
@@ -410,7 +408,6 @@ const KPIManagement = () => {
 
   return (
     <Box sx={{ p: 3 }}>
-      {/* Header */}
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
         <Typography variant="h4" fontWeight="600" color="primary">
           KPI Management
@@ -424,7 +421,6 @@ const KPIManagement = () => {
         </Button>
       </Box>
 
-      {/* Statistics Cards */}
       <Grid container spacing={3} sx={{ mb: 3 }}>
         <Grid item xs={12} sm={6} md={2.4}>
           <Card className="healthcare-card">
@@ -488,7 +484,6 @@ const KPIManagement = () => {
         </Grid>
       </Grid>
 
-      {/* Tabs */}
       <Card className="healthcare-card" sx={{ mb: 3 }}>
         <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
           <Tabs value={selectedTab} onChange={(e, newValue) => setSelectedTab(newValue)}>
@@ -499,7 +494,6 @@ const KPIManagement = () => {
         </Box>
       </Card>
 
-      {/* Filters */}
       <Card className="healthcare-card" sx={{ mb: 3 }}>
         <CardContent>
           <Grid container spacing={2} alignItems="center">
@@ -582,7 +576,6 @@ const KPIManagement = () => {
         </CardContent>
       </Card>
 
-      {/* KPI Table */}
       <Card className="healthcare-card">
         <CardContent>
           <TableContainer>
@@ -590,6 +583,7 @@ const KPIManagement = () => {
               <TableHead>
                 <TableRow>
                   <TableCell>Employee</TableCell>
+                  <TableCell>Manager</TableCell>
                   <TableCell>KPI Name</TableCell>
                   <TableCell>Target</TableCell>
                   <TableCell>Current</TableCell>
@@ -617,6 +611,11 @@ const KPIManagement = () => {
                           </Typography>
                         </Box>
                       </Box>
+                    </TableCell>
+                    <TableCell>
+                      <Typography variant="subtitle2" fontWeight="600">
+                        {record.manager}
+                      </Typography>
                     </TableCell>
                     <TableCell>
                       <Typography variant="subtitle2" fontWeight="600">
@@ -708,7 +707,6 @@ const KPIManagement = () => {
             </Table>
           </TableContainer>
 
-          {/* Pagination */}
           {totalPages > 1 && (
             <Box sx={{ display: 'flex', justifyContent: 'center', mt: 3 }}>
               <Pagination
@@ -722,7 +720,6 @@ const KPIManagement = () => {
         </CardContent>
       </Card>
 
-      {/* Add/Edit KPI Dialog */}
       <Dialog open={openDialog} onClose={handleCloseDialog} maxWidth="md" fullWidth>
         <DialogTitle>
           {editingKPI ? 'Edit KPI' : 'Add New KPI'}
@@ -861,7 +858,6 @@ const KPIManagement = () => {
         </DialogActions>
       </Dialog>
 
-      {/* Snackbar */}
       <Snackbar
         open={snackbar.open}
         autoHideDuration={6000}

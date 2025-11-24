@@ -1,10 +1,13 @@
 // Call Service - Handles automatic caller number capture and customer lookup
 import customers from '../mock/customerMocks';
+import api from './api';
 
 class CallService {
   constructor() {
     this.activeCall = null;
     this.callHistory = [];
+    // In-memory mock store for initiated calls (fallback when backend is unavailable)
+    this._mockCalls = new Map();
   }
 
   // Simulate automatic caller number capture from telephony system
@@ -131,8 +134,6 @@ class CallService {
       // 2. Create calendar event
       // 3. Set up notification/reminder system
       
-      console.log('Follow-up scheduled:', followUpReminder);
-      
       return followUpReminder;
     } catch (error) {
       console.error('Error scheduling follow-up:', error);
@@ -183,6 +184,200 @@ class CallService {
     return this.activeCall;
   }
 
+  // Fetch paginated & filterable list of calls
+  async fetchCallLogs(filters = {}) {
+    const { page = 1, limit = 10, from, to, status, agentId, direction, search } = filters;
+    try {
+      const params = new URLSearchParams();
+      params.set('page', page);
+      params.set('limit', limit);
+      if (from) params.set('from', from);
+      if (to) params.set('to', to);
+      if (status) params.set('status', status);
+      if (agentId) params.set('agentId', agentId);
+      if (direction) params.set('direction', direction);
+      if (search) params.set('search', search);
+
+      const resp = await api.get(`/calls?${params.toString()}`);
+      // Expecting backend to return { calls, pagination }
+      if (resp && resp.data && (resp.data.calls || resp.data.pagination)) {
+        return resp.data;
+      }
+      // If backend returns empty shape, fall through to mock
+      throw new Error('Unexpected backend response');
+    } catch (err) {
+      // Deterministic mock: generate calls based on page & limit
+      const total = 137; // deterministic total
+      const calls = [];
+      const start = (page - 1) * limit;
+      for (let i = 0; i < limit; i++) {
+        const idx = start + i + 1;
+        if (idx > total) break;
+        calls.push({
+          callId: `MOCK-CALL-${String(idx).padStart(4, '0')}`,
+          timestamp: new Date(Date.now() - idx * 60000).toISOString(),
+          from: `+91 9${String(700000000 + idx).slice(-9)}`,
+          to: `+91 8${String(700000000 + idx).slice(-9)}`,
+          agentId: `agent-${(idx % 5) + 1}`,
+          direction: idx % 2 === 0 ? 'outbound' : 'inbound',
+          status: ['queued', 'in-progress', 'completed', 'failed'][idx % 4],
+          duration: `${Math.floor((idx % 7) + 1)} mins ${Math.floor((idx % 60))} secs`,
+          notes: `Mock call record #${idx}`
+        });
+      }
+
+      return {
+        calls,
+        pagination: { page, limit, total }
+      };
+    }
+  }
+
+  // Initiate an outbound call (real backend or mock)
+  async initiateCall(payload = {}) {
+    const { to, from, agentId, clientId, metadata } = payload;
+
+    // Basic validation
+    if (!to) {
+      throw new Error('Missing required field: to');
+    }
+    if (!from && !agentId) {
+      throw new Error('Either "from" or "agentId" must be provided');
+    }
+
+    try {
+      const resp = await api.post('/calls/initiate', payload);
+      // If backend responds with useful data, normalize and return
+      if (resp && resp.data) {
+        return resp.data;
+      }
+      throw new Error('Unexpected backend response');
+    } catch (err) {
+      // Fallback mock: create synthetic call and simulate lifecycle
+      const callId = `MOCK-CALL-${Date.now()}`;
+      const queuedAt = new Date().toISOString();
+      const dialerQueueId = `DQ-${Math.floor(Math.random() * 1000000)}`;
+
+      const record = {
+        callId,
+        to,
+        from: from || null,
+        agentId: agentId || null,
+        clientId: clientId || null,
+        metadata: metadata || null,
+        status: 'queued',
+        queuedAt,
+        dialerQueueId,
+        history: [{ status: 'queued', at: queuedAt }]
+      };
+
+      // Store in in-memory mock store
+      this._mockCalls.set(callId, record);
+
+      // Simulate transitions: queued -> in-progress -> completed
+      // queued -> in-progress after 2s
+      setTimeout(() => {
+        const r = this._mockCalls.get(callId);
+        if (!r) return;
+        r.status = 'in-progress';
+        r.startTime = new Date().toISOString();
+        r.history.push({ status: 'in-progress', at: r.startTime });
+        this._mockCalls.set(callId, r);
+      }, 2000);
+
+      // in-progress -> completed after additional 4s
+      setTimeout(() => {
+        const r = this._mockCalls.get(callId);
+        if (!r) return;
+        r.status = 'completed';
+        r.endTime = new Date().toISOString();
+        // duration in seconds
+        const durationSec = Math.floor((new Date(r.endTime) - new Date(r.startTime || r.queuedAt)) / 1000);
+        r.duration = durationSec;
+        r.history.push({ status: 'completed', at: r.endTime });
+        this._mockCalls.set(callId, r);
+      }, 6000);
+
+      return {
+        success: true,
+        callId,
+        status: 'queued',
+        queuedAt,
+        dialerQueueId,
+        message: 'Call queued in mock dialer'
+      };
+    }
+  }
+
+  // Get status of a call (backend or mock)
+  async getCallStatus(callId) {
+    if (!callId) throw new Error('Missing callId');
+    try {
+      const resp = await api.get(`/calls/${encodeURIComponent(callId)}/status`);
+      if (resp && resp.data) return resp.data;
+      throw new Error('Unexpected backend response');
+    } catch (err) {
+      // Fallback to in-memory store
+      const record = this._mockCalls.get(callId);
+      if (!record) {
+        return {
+          callId,
+          status: 'unknown'
+        };
+      }
+      return {
+        callId: record.callId,
+        status: record.status,
+        startTime: record.startTime,
+        endTime: record.endTime,
+        duration: record.duration,
+        agentId: record.agentId,
+        notes: record.notes || null,
+        recordingUrl: record.recordingUrl || null,
+        history: record.history || []
+      };
+    }
+  }
+
+  // Optional: hangup a call
+  async hangupCall(callId) {
+    if (!callId) throw new Error('Missing callId');
+    try {
+      const resp = await api.post(`/calls/${encodeURIComponent(callId)}/hangup`);
+      if (resp && resp.data) return resp.data;
+      throw new Error('Unexpected backend response');
+    } catch (err) {
+      const record = this._mockCalls.get(callId);
+      if (!record) throw new Error('Call not found in mock store');
+      record.status = 'hungup';
+      record.endTime = new Date().toISOString();
+      record.duration = Math.floor((new Date(record.endTime) - new Date(record.startTime || record.queuedAt)) / 1000);
+      record.history.push({ status: 'hungup', at: record.endTime });
+      this._mockCalls.set(callId, record);
+      return { success: true, callId, status: record.status };
+    }
+  }
+
+  // Optional: transfer call to another agent/target
+  async transferCall(callId, target) {
+    if (!callId) throw new Error('Missing callId');
+    if (!target) throw new Error('Missing transfer target');
+    try {
+      const resp = await api.post(`/calls/${encodeURIComponent(callId)}/transfer`, { target });
+      if (resp && resp.data) return resp.data;
+      throw new Error('Unexpected backend response');
+    } catch (err) {
+      const record = this._mockCalls.get(callId);
+      if (!record) throw new Error('Call not found in mock store');
+      record.status = 'transferred';
+      record.transferredTo = target;
+      const at = new Date().toISOString();
+      record.history.push({ status: 'transferred', at, target });
+      this._mockCalls.set(callId, record);
+      return { success: true, callId, status: record.status, transferredTo: target };
+    }
+  }
+
   // Simulate integration with different telephony systems
   integrateWithTelephonySystem(systemType) {
     const integrations = {
@@ -220,5 +415,10 @@ export const {
   scheduleFollowUp,
   endCall,
   getCallHistory,
-  getActiveCall
+  getActiveCall,
+  fetchCallLogs,
+  initiateCall,
+  getCallStatus,
+  hangupCall,
+  transferCall
 } = callService;

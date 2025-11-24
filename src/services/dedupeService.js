@@ -3,45 +3,64 @@
  * Handles duplicate detection across multiple data sources
  */
 
+import api from './api';
+
 class DedupeService {
   constructor() {
-    // Load dedupe configuration from localStorage
+    // Default configuration (in-memory fallback)
+    this.mockConfig = {
+      enabledFields: {
+        phone: true,
+        email: true,
+        address: false,
+        panNumber: true,
+        vehicleNumber: true,
+        aadhaar: false,
+        passport: false,
+        drivingLicense: false,
+        fleetCompany: true
+      },
+      customFields: [],
+      strictMode: false // If true, reject on duplicate; if false, warn only
+    };
+
+    this.config = { ...this.mockConfig };
     this.loadConfig();
   }
 
   /**
-   * Load dedupe configuration from localStorage
+   * Load dedupe configuration from API or fallback
    */
-  loadConfig() {
-    const savedConfig = localStorage.getItem('dedupe_config');
-    if (savedConfig) {
-      this.config = JSON.parse(savedConfig);
-    } else {
-      // Default configuration
-      this.config = {
-        enabledFields: {
-          phone: true,
-          email: true,
-          address: false,
-          panNumber: true,
-          vehicleNumber: true,
-          aadhaar: false,
-          passport: false,
-          drivingLicense: false,
-          fleetCompany: true
-        },
-        customFields: [],
-        strictMode: false // If true, reject on duplicate; if false, warn only
-      };
-      this.saveConfig();
+  async loadConfig() {
+    try {
+      const response = await api.get('/dedupe/config');
+      if (response.data) {
+        this.config = response.data;
+        return this.config;
+      }
+      throw new Error('No data from API');
+    } catch (error) {
+      console.error('Error loading dedupe config, using mock:', error);
+      this.config = { ...this.mockConfig };
+      return this.config;
     }
   }
 
   /**
-   * Save dedupe configuration to localStorage
+   * Save dedupe configuration to API or fallback
    */
-  saveConfig() {
-    localStorage.setItem('dedupe_config', JSON.stringify(this.config));
+  async saveConfig() {
+    try {
+      const response = await api.put('/dedupe/config', this.config);
+      if (response.data) {
+        return response.data;
+      }
+      throw new Error('No data from API');
+    } catch (error) {
+      console.error('Error saving dedupe config, using mock:', error);
+      this.mockConfig = { ...this.config };
+      return { success: true };
+    }
   }
 
   /**
@@ -117,19 +136,19 @@ class DedupeService {
    */
   checkFleetDuplicate(record, existingData) {
     const fleetDuplicates = [];
-    
+
     // Check for company + vehicle combination
     if (record.company && record.vehicleRegistrationNumber) {
       const normalizedCompany = this.normalizeGeneric(record.company);
       const normalizedVehicle = this.normalizeVehicleNumber(record.vehicleRegistrationNumber);
-      
+
       const fleetMatches = existingData.filter(existing => {
         const existingCompany = this.normalizeGeneric(existing.company);
         const existingVehicle = this.normalizeVehicleNumber(existing.vehicleRegistrationNumber);
-        
+
         return existingCompany === normalizedCompany && existingVehicle === normalizedVehicle;
       });
-      
+
       if (fleetMatches.length > 0) {
         fleetDuplicates.push({
           type: 'fleet',
@@ -147,11 +166,11 @@ class DedupeService {
         });
       }
     }
-    
+
     return {
       isFleetDuplicate: fleetDuplicates.length > 0,
       fleetDuplicates,
-      message: fleetDuplicates.length > 0 
+      message: fleetDuplicates.length > 0
         ? `Fleet duplicate detected: ${record.company} already has ${record.vehicleRegistrationNumber} in the system`
         : null
     };
@@ -167,6 +186,12 @@ class DedupeService {
   checkDuplicate(record, existingData, source = 'unknown') {
     const duplicates = [];
     const warnings = [];
+
+    // Ensure config and enabledFields exist
+    if (!this.config || !this.config.enabledFields) {
+      console.warn('Dedupe config not loaded, using defaults');
+      this.config = { ...this.mockConfig };
+    }
 
     // Check each enabled field
     for (const [field, enabled] of Object.entries(this.config.enabledFields)) {
@@ -196,7 +221,7 @@ class DedupeService {
     }
 
     // Check custom fields
-    for (const customField of this.config.customFields) {
+    for (const customField of (this.config.customFields || [])) {
       if (!customField.enabled) continue;
 
       const recordValue = this.normalizeGeneric(record[customField.fieldName]);

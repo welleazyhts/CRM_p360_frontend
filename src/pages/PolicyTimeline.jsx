@@ -66,6 +66,7 @@ import {
   HealthAndSafety as HealthAndSafetyIcon
 } from '@mui/icons-material';
 import { useLocation } from 'react-router-dom';
+import policyService from '../services/policyService';
 
 const PolicyTimeline = () => {
   const location = useLocation();
@@ -460,6 +461,32 @@ const PolicyTimeline = () => {
       
       return () => clearTimeout(timer);
     }
+  }, [policyData]);
+
+  // Merge persisted timelines (if any) from policyService into policyData
+  useEffect(() => {
+    if (!policyData || !policyData.policies) return;
+    let mounted = true;
+    (async () => {
+      try {
+        const policies = policyData.policies || [];
+        const merged = await Promise.all(policies.map(async (p) => {
+          try {
+            const events = await policyService.getPolicyTimeline(p.policyId);
+            // if service has events, prefer them; otherwise keep existing
+            return { ...p, events: (events && events.length) ? events : p.events };
+          } catch (e) {
+            return p;
+          }
+        }));
+        if (mounted) {
+          setPolicyData(prev => prev ? ({ ...prev, policies: merged }) : prev);
+        }
+      } catch (e) {
+        // ignore
+      }
+    })();
+    return () => { mounted = false; };
   }, [policyData]);
 
   useEffect(() => {

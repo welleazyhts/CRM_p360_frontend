@@ -11,6 +11,8 @@
  * - Reminders and notifications
  */
 
+import api from './api';
+
 // Task statuses
 export const TASK_STATUS = {
   TODO: 'todo',
@@ -498,7 +500,362 @@ export const getTaskStatistics = (tasks) => {
   return stats;
 };
 
-export default {
+// In-memory task store (mock)
+const _tasks = [
+  createTaskFromTemplate('followUpCall', {
+    id: 'task_mock_1',
+    assignedTo: 'sarah.johnson',
+    entityType: 'lead',
+    entityId: 'LEAD-001',
+    dueDate: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString(),
+    reminder: { minutesBefore: 60 },
+    createdAt: new Date().toISOString()
+  }),
+  createTaskFromTemplate('policyRenewal', {
+    id: 'task_mock_2',
+    assignedTo: 'mike.wilson',
+    entityType: 'policy',
+    entityId: 'POL-2025-001',
+    dueDate: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000).toISOString(),
+    reminder: { minutesBefore: 24 * 60 },
+    createdAt: new Date().toISOString()
+  })
+];
+
+// Simple reminder registry to track scheduled reminders (mock)
+const _reminders = new Map();
+
+// Utility: generate id
+const _genId = (prefix = 'task') => `${prefix}_${Date.now()}_${Math.random().toString(36).substr(2, 6)}`;
+
+/**
+ * listTasks(filters = {})
+ */
+export const listTasks = async (filters = {}) => {
+  try {
+    const response = await api.get('/tasks', { params: filters });
+    if (response.data) {
+      return response.data;
+    }
+    throw new Error('No data from API');
+  } catch (error) {
+    console.error('Error fetching tasks from API, using mock:', error);
+    // Fallback to in-memory implementation
+    // validate filters
+    if (typeof filters !== 'object') throw new Error('filters must be an object');
+
+    const { page = 1, limit = 10, search, status, priority, type, assignedTo, entityType, entityId, dueDateRange, overdue, dueSoon, sortBy = 'dueDate', order = 'asc' } = filters;
+
+    let items = [..._tasks];
+
+    // search in title/description
+    if (search) {
+      const s = String(search).toLowerCase();
+      items = items.filter(t => (t.title || '').toLowerCase().includes(s) || (t.description || '').toLowerCase().includes(s));
+    }
+
+    if (status) items = items.filter(t => t.status === status);
+    if (priority) items = items.filter(t => t.priority === priority);
+    if (type) items = items.filter(t => t.type === type);
+    if (assignedTo) items = items.filter(t => t.assignedTo === assignedTo);
+    if (entityType && entityId) items = items.filter(t => t.entityType === entityType && t.entityId === entityId);
+    if (overdue) items = items.filter(t => isTaskOverdue(t));
+    if (dueSoon) items = items.filter(t => isTaskDueSoon(t));
+    if (dueDateRange && dueDateRange.start && dueDateRange.end) {
+      const start = new Date(dueDateRange.start);
+      const end = new Date(dueDateRange.end);
+      items = items.filter(t => t.dueDate && new Date(t.dueDate) >= start && new Date(t.dueDate) <= end);
+    }
+
+    // sort
+    items = sortTasks(items, sortBy, order);
+
+    // paginate
+    const p = Math.max(1, parseInt(page, 10) || 1);
+    const l = Math.max(1, parseInt(limit, 10) || 10);
+    const start = (p - 1) * l;
+    const paged = items.slice(start, start + l);
+
+    return { tasks: paged, pagination: { page: p, limit: l, total: items.length } };
+  }
+};
+
+/**
+ * getTask(taskId)
+ */
+export const getTask = async (taskId) => {
+  try {
+    const response = await api.get(`/tasks/${taskId}`);
+    if (response.data) {
+      return response.data;
+    }
+    throw new Error('No data from API');
+  } catch (error) {
+    console.error('Error fetching task from API, using mock:', error);
+    // Fallback to in-memory
+    if (!taskId) throw new Error('taskId is required');
+    const task = _tasks.find(t => t.id === taskId);
+    if (!task) throw new Error('task not found');
+
+    // attach subtasks, dependencies info
+    const subtasks = getSubtasks(taskId, _tasks);
+    const dependencies = (task.dependencies || []).map(depId => _tasks.find(t => t.id === depId) || { id: depId });
+
+    return { ...task, subtasks, dependencies };
+  }
+};
+
+/**
+ * createTask(taskData)
+ */
+export const createTask = async (taskData = {}) => {
+  try {
+    const response = await api.post('/tasks', taskData);
+    if (response.data) {
+      return response.data;
+    }
+    throw new Error('No data from API');
+  } catch (error) {
+    console.error('Error creating task via API, using mock:', error);
+    // Fallback to in-memory
+    if (!taskData || typeof taskData !== 'object') throw new Error('taskData must be an object');
+    if (!taskData.title && !taskData.templateKey) throw new Error('title is required unless templateKey is provided');
+
+    let newTask = null;
+
+    if (taskData.templateKey) {
+      newTask = createTaskFromTemplate(taskData.templateKey, taskData);
+    } else {
+      newTask = {
+        id: taskData.id || _genId('task'),
+        title: String(taskData.title),
+        description: taskData.description || '',
+        type: taskData.type || TASK_TYPE.CUSTOM,
+        priority: taskData.priority || TASK_PRIORITY.MEDIUM,
+        status: taskData.status || TASK_STATUS.TODO,
+        assignedTo: taskData.assignedTo || null,
+        entityType: taskData.entityType || null,
+        entityId: taskData.entityId || null,
+        dueDate: taskData.dueDate || null,
+        reminder: taskData.reminder || null,
+        checklist: (taskData.checklist || []).map((c, i) => ({ id: c.id || `chk_${i}`, text: c.text || '', completed: !!c.completed })),
+        recurrence: taskData.recurrence || null,
+        parentTaskId: taskData.parentTaskId || null,
+        dependencies: taskData.dependencies || [],
+        progress: calculateTaskProgress(taskData.checklist || []),
+        createdAt: new Date().toISOString()
+      };
+    }
+
+    _tasks.push(newTask);
+
+    // schedule reminder mock
+    if (newTask.reminder && newTask.dueDate) {
+      const reminderTime = getTaskReminderTime(newTask);
+      if (reminderTime) {
+        const ms = Math.max(0, new Date(reminderTime).getTime() - Date.now());
+        const timer = setTimeout(() => {
+          // mark reminderSent (mock)
+          const t = _tasks.find(x => x.id === newTask.id);
+          if (t) t.reminderSent = true;
+        }, ms);
+        _reminders.set(newTask.id, timer);
+      }
+    }
+
+    return newTask;
+  }
+};
+
+/**
+ * updateTask(taskId, updates)
+ */
+export const updateTask = async (taskId, updates = {}) => {
+  try {
+    const response = await api.put(`/tasks/${taskId}`, updates);
+    if (response.data) {
+      return response.data;
+    }
+    throw new Error('No data from API');
+  } catch (error) {
+    console.error('Error updating task via API, using mock:', error);
+    // Fallback to in-memory
+    if (!taskId) throw new Error('taskId is required');
+    if (!updates || typeof updates !== 'object') throw new Error('updates must be an object');
+
+    const idx = _tasks.findIndex(t => t.id === taskId);
+    if (idx === -1) throw new Error('task not found');
+
+    const task = _tasks[idx];
+    const allowed = ['title', 'dueDate', 'assignedTo', 'priority', 'status', 'checklist', 'recurrence', 'description'];
+    for (const key of Object.keys(updates)) {
+      if (allowed.includes(key)) task[key] = updates[key];
+    }
+
+    // update progress from checklist if provided
+    if (updates.checklist) task.progress = calculateTaskProgress(updates.checklist);
+
+    // if status moved to completed, run completeTask
+    if (updates.status === TASK_STATUS.COMPLETED && task.status !== TASK_STATUS.COMPLETED) {
+      const res = await completeTask(taskId, { createRecurrence: true });
+      return res.task;
+    }
+
+    // update parent progress if this is a subtask
+    if (task.parentTaskId) {
+      const parentIdx = _tasks.findIndex(t => t.id === task.parentTaskId);
+      if (parentIdx !== -1) {
+        _tasks[parentIdx].progress = calculateParentProgress(task.parentTaskId, _tasks);
+      }
+    }
+
+    _tasks[idx] = task;
+    return task;
+  }
+};
+
+/**
+ * completeTask(taskId, options = { createRecurrence: true })
+ */
+export const completeTask = async (taskId, options = { createRecurrence: true }) => {
+  try {
+    const response = await api.post(`/tasks/${taskId}/complete`, options);
+    if (response.data) {
+      return response.data;
+    }
+    throw new Error('No data from API');
+  } catch (error) {
+    console.error('Error completing task via API, using mock:', error);
+    // Fallback to in-memory
+    if (!taskId) throw new Error('taskId is required');
+    const idx = _tasks.findIndex(t => t.id === taskId);
+    if (idx === -1) throw new Error('task not found');
+
+    const task = _tasks[idx];
+    task.status = TASK_STATUS.COMPLETED;
+    task.completedAt = new Date().toISOString();
+    task.progress = 100;
+
+    // clear any reminders
+    if (_reminders.has(task.id)) {
+      clearTimeout(_reminders.get(task.id));
+      _reminders.delete(task.id);
+    }
+
+    // notify (mock)
+    // In real implementation: send notification to assignee
+
+    let newRecurring = null;
+    if (options.createRecurrence && shouldCreateRecurrence(task)) {
+      newRecurring = createRecurringInstance(task);
+      _tasks.push(newRecurring);
+    }
+
+    // update parent progress
+    if (task.parentTaskId) {
+      const parentIdx = _tasks.findIndex(t => t.id === task.parentTaskId);
+      if (parentIdx !== -1) {
+        _tasks[parentIdx].progress = calculateParentProgress(task.parentTaskId, _tasks);
+        if (areAllSubtasksCompleted(task.parentTaskId, _tasks)) {
+          _tasks[parentIdx].status = TASK_STATUS.COMPLETED;
+          _tasks[parentIdx].completedAt = new Date().toISOString();
+        }
+      }
+    }
+
+    return { success: true, task, newRecurringInstance: newRecurring };
+  }
+};
+
+/**
+ * deleteTask(taskId)
+ */
+export const deleteTask = async (taskId) => {
+  try {
+    const response = await api.delete(`/tasks/${taskId}`);
+    return response.data || { success: true, id: taskId };
+  } catch (error) {
+    console.error('Error deleting task via API, using mock:', error);
+    // Fallback to in-memory
+    if (!taskId) throw new Error('taskId is required');
+    const idx = _tasks.findIndex(t => t.id === taskId);
+    if (idx === -1) throw new Error('task not found');
+
+    // cancel reminders
+    if (_reminders.has(taskId)) {
+      clearTimeout(_reminders.get(taskId));
+      _reminders.delete(taskId);
+    }
+
+    _tasks.splice(idx, 1);
+    return { success: true, id: taskId };
+  }
+};
+
+/**
+ * bulkComplete(taskIds)
+ */
+export const bulkComplete = async (taskIds = []) => {
+  if (!Array.isArray(taskIds)) throw new Error('taskIds must be an array');
+  const results = [];
+  for (const id of taskIds) {
+    try {
+      const res = await completeTask(id, { createRecurrence: true });
+      results.push({ id, success: true, task: res.task });
+    } catch (err) {
+      results.push({ id, success: false, error: err.message });
+    }
+  }
+  return { results };
+};
+
+/** Subtask utilities */
+export const addSubtask = async (parentTaskId, subtaskData = {}) => {
+  if (!parentTaskId) throw new Error('parentTaskId is required');
+  if (!subtaskData || typeof subtaskData !== 'object') throw new Error('subtaskData must be an object');
+  const parent = _tasks.find(t => t.id === parentTaskId);
+  if (!parent) throw new Error('parent task not found');
+
+  const sub = await createTask({ ...subtaskData, parentTaskId });
+  return sub;
+};
+
+export const updateSubtask = async (parentTaskId, subtaskId, updates = {}) => {
+  if (!parentTaskId || !subtaskId) throw new Error('parentTaskId and subtaskId are required');
+  const subIdx = _tasks.findIndex(t => t.id === subtaskId && t.parentTaskId === parentTaskId);
+  if (subIdx === -1) throw new Error('subtask not found');
+  return updateTask(subtaskId, updates);
+};
+
+export const deleteSubtask = async (parentTaskId, subtaskId) => {
+  if (!parentTaskId || !subtaskId) throw new Error('parentTaskId and subtaskId are required');
+  const subIdx = _tasks.findIndex(t => t.id === subtaskId && t.parentTaskId === parentTaskId);
+  if (subIdx === -1) throw new Error('subtask not found');
+  return deleteTask(subtaskId);
+};
+
+/**
+ * assignTask(taskId, userId)
+ */
+export const assignTask = async (taskId, userId) => {
+  if (!taskId || !userId) throw new Error('taskId and userId are required');
+  const idx = _tasks.findIndex(t => t.id === taskId);
+  if (idx === -1) throw new Error('task not found');
+  _tasks[idx].assignedTo = userId;
+  // mock notify
+  return { success: true, task: _tasks[idx] };
+};
+
+/**
+ * getTasksForEntity(entityType, entityId, filters)
+ */
+export const getTasksForEntity = async (entityType, entityId, filters = {}) => {
+  if (!entityType || !entityId) throw new Error('entityType and entityId are required');
+  const mergedFilters = { ...filters, entityType, entityId };
+  return listTasks(mergedFilters);
+};
+
+const taskService = {
   TASK_STATUS,
   TASK_PRIORITY,
   TASK_TYPE,
@@ -520,5 +877,20 @@ export default {
   shouldTriggerReminder,
   filterTasks,
   sortTasks,
-  getTaskStatistics
+  getTaskStatistics,
+  // CRUD + helpers
+  listTasks,
+  getTask,
+  createTask,
+  updateTask,
+  completeTask,
+  deleteTask,
+  bulkComplete,
+  addSubtask,
+  updateSubtask,
+  deleteSubtask,
+  assignTask,
+  getTasksForEntity
 };
+
+export default taskService;

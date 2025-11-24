@@ -6,7 +6,7 @@ export const leadService = {
   getLeads: async (filters = {}) => {
     try {
       const params = new URLSearchParams();
-      
+
       if (filters.status) params.append('status', filters.status);
       if (filters.priority) params.append('priority', filters.priority);
       if (filters.assignedTo) params.append('assignedTo', filters.assignedTo);
@@ -139,7 +139,7 @@ export const leadService = {
   getLeadAnalytics: async (filters = {}) => {
     try {
       const params = new URLSearchParams();
-      
+
       if (filters.dateRange) params.append('dateRange', filters.dateRange);
       if (filters.assignedTo) params.append('assignedTo', filters.assignedTo);
       if (filters.source) params.append('source', filters.source);
@@ -172,7 +172,7 @@ export const leadService = {
     try {
       const formData = new FormData();
       formData.append('file', fileData);
-      
+
       const response = await api.post('/leads/import', formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
@@ -188,7 +188,7 @@ export const leadService = {
   exportLeads: async (filters = {}) => {
     try {
       const params = new URLSearchParams();
-      
+
       if (filters.status) params.append('status', filters.status);
       if (filters.priority) params.append('priority', filters.priority);
       if (filters.assignedTo) params.append('assignedTo', filters.assignedTo);
@@ -378,6 +378,138 @@ export const leadService = {
     } catch (error) {
       console.error('Error bulk updating lead notes:', error);
       throw error;
+    }
+  },
+
+  // --- Merged from leadServices.js ---
+
+  getAssignedLeads: async (params = {}) => {
+    try {
+      const res = await api.get('/leads/assigned', { params });
+      if (res && res.data && Array.isArray(res.data)) return res.data;
+    } catch (e) {
+      // ignore and fall through to mock
+    }
+
+    // Mock fallback
+    return [
+      {
+        id: 1,
+        firstName: 'Rahul',
+        lastName: 'Sharma',
+        phone: '+91-98765-43210',
+        email: 'rahul.sharma@email.com',
+        status: 'New',
+        priority: 'High',
+        createdAt: '2025-10-08',
+        assignedTo: 'Sarah Johnson',
+        lastContact: '2025-10-09',
+        policyType: 'Motor Insurance',
+        policyNumber: 'POL123456',
+        vehicleNumber: 'MH01AB1234'
+      }
+    ];
+  },
+
+  getLostLeads: async (params = {}) => {
+    try {
+      const res = await api.get('/leads/lost', { params });
+      if (res && res.data && Array.isArray(res.data)) return res.data;
+    } catch (e) { }
+
+    return [
+      {
+        id: 101,
+        firstName: 'Amit',
+        lastName: 'Sharma',
+        phone: '+91-98123-45678',
+        email: 'amit.sharma@email.com',
+        status: 'Closed Lost',
+        lostReason: 'High Premium',
+        policyType: 'Health Insurance',
+        quotedPremium: 35000,
+        closedDate: '2025-10-15',
+        closedBy: 'Priya Patel',
+        remarks: 'Customer found premium too expensive, considering competitor options',
+        source: 'Website'
+      }
+    ];
+  },
+
+  getArchivedLeads: async (params = {}) => {
+    try {
+      const res = await api.get('/leads/archived', { params });
+      if (res && res.data && Array.isArray(res.data)) return res.data;
+    } catch (e) { }
+
+    return [
+      {
+        id: 201,
+        firstName: 'Vikram',
+        lastName: 'Singh',
+        phone: '+91-91234-56789',
+        email: 'vikram.singh@email.com',
+        previousStatus: 'New Lead',
+        policyType: 'Health Insurance',
+        premium: 28000,
+        archivedDate: '2025-09-20',
+        archivedBy: 'Admin User',
+        archivedReason: 'Duplicate Lead',
+        source: 'Website',
+        assignedTo: 'Priya Patel'
+      }
+    ];
+  },
+
+  getClosedLeads: async (params = {}) => {
+    try {
+      const res = await api.get('/leads/closed', { params });
+      if (res && res.data && Array.isArray(res.data)) return res.data;
+    } catch (e) { }
+
+    return [
+      {
+        id: 1,
+        firstName: 'Rohit',
+        lastName: 'Kumar',
+        phone: '+91-98765-43210',
+        email: 'rohit.kumar@email.com',
+        status: 'Closed Won',
+        result: 'Policy Issued',
+        policyType: 'Motor Insurance',
+        policyNumber: 'POL789012',
+        premium: 25000,
+        closedDate: '2025-10-01',
+        closedBy: 'Sarah Johnson',
+        remarks: 'Customer satisfied with premium and coverage'
+      }
+    ];
+  },
+
+  closeLead: async (leadId, payload = {}) => {
+    try {
+      const res = await api.post(`/leads/${leadId}/close`, payload);
+      return res.data;
+    } catch (e) {
+      throw e;
+    }
+  },
+
+  archiveLead: async (leadId) => {
+    try {
+      const res = await api.post(`/leads/${leadId}/archive`);
+      return res.data;
+    } catch (e) {
+      throw e;
+    }
+  },
+
+  restoreLead: async (leadId) => {
+    try {
+      const res = await api.post(`/leads/${leadId}/restore`);
+      return res.data;
+    } catch (e) {
+      throw e;
     }
   }
 };
