@@ -83,6 +83,10 @@ const TrainingManagement = () => {
   const [selectedModule, setSelectedModule] = useState(null);
   const [loading, setLoading] = useState(true);
 
+  // Process Training states
+  const [processDetailDialog, setProcessDetailDialog] = useState(false);
+  const [selectedProcessModule, setSelectedProcessModule] = useState(null);
+
   // Load data from API on component mount
   useEffect(() => {
     loadTrainingModules();
@@ -464,6 +468,57 @@ const TrainingManagement = () => {
       setSnackbar({ open: true, message: 'Failed to delete document', severity: 'error' });
     }
   };
+
+  // Process Training Handlers
+  const handleViewDetails = (module) => {
+    setSelectedProcessModule(module);
+    setProcessDetailDialog(true);
+  };
+
+  const handleStartModule = (module) => {
+    setSnackbar({
+      open: true,
+      message: `Starting module: ${module.title}. Redirecting to training portal...`,
+      severity: 'info'
+    });
+    // TODO: Implement actual module start logic (e.g., navigate to training portal)
+    console.log('Starting module:', module);
+  };
+
+  const handleDownloadMaterials = (module) => {
+    setSnackbar({
+      open: true,
+      message: `Downloading materials for: ${module.title}`,
+      severity: 'success'
+    });
+    // TODO: Implement actual download logic
+    console.log('Downloading materials for module:', module);
+
+    // Simulate download
+    const materials = {
+      moduleName: module.title,
+      topics: module.topics,
+      duration: module.duration,
+      description: module.description
+    };
+
+    // Create a blob and download as JSON (placeholder for actual materials)
+    const blob = new Blob([JSON.stringify(materials, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `${module.title.replace(/\s+/g, '_')}_Materials.json`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
+  const handleCloseProcessDetailDialog = () => {
+    setProcessDetailDialog(false);
+    setSelectedProcessModule(null);
+  };
+
 
   const getCategoryColor = (category) => {
     const colors = {
@@ -861,13 +916,13 @@ const TrainingManagement = () => {
                   </CardContent>
 
                   <CardActions>
-                    <Button size="small" startIcon={<PlayIcon />}>
+                    <Button size="small" startIcon={<PlayIcon />} onClick={() => handleStartModule(module)}>
                       Start Module
                     </Button>
-                    <Button size="small" startIcon={<ViewIcon />}>
+                    <Button size="small" startIcon={<ViewIcon />} onClick={() => handleViewDetails(module)}>
                       View Details
                     </Button>
-                    <Button size="small" startIcon={<DownloadIcon />}>
+                    <Button size="small" startIcon={<DownloadIcon />} onClick={() => handleDownloadMaterials(module)}>
                       Download Materials
                     </Button>
                   </CardActions>
@@ -957,13 +1012,13 @@ const TrainingManagement = () => {
                   </CardContent>
 
                   <CardActions>
-                    <Button size="small" startIcon={<PlayIcon />}>
+                    <Button size="small" startIcon={<PlayIcon />} onClick={() => handleStartModule(module)}>
                       Start Module
                     </Button>
-                    <Button size="small" startIcon={<ViewIcon />}>
+                    <Button size="small" startIcon={<ViewIcon />} onClick={() => handleViewDetails(module)}>
                       View Details
                     </Button>
-                    <Button size="small" startIcon={<DownloadIcon />}>
+                    <Button size="small" startIcon={<DownloadIcon />} onClick={() => handleDownloadMaterials(module)}>
                       Download Materials
                     </Button>
                   </CardActions>
@@ -1289,6 +1344,165 @@ const TrainingManagement = () => {
           <Button onClick={handleCloseDocumentDialog}>Cancel</Button>
           <Button onClick={handleUploadDocument} variant="contained" startIcon={<UploadIcon />}>
             Upload Document
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Process Training Detail Dialog */}
+      <Dialog
+        open={processDetailDialog}
+        onClose={handleCloseProcessDetailDialog}
+        maxWidth="md"
+        fullWidth
+      >
+        <DialogTitle>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+            <Avatar sx={{ bgcolor: 'success.main' }}>
+              <CodeIcon />
+            </Avatar>
+            <Box>
+              <Typography variant="h6" fontWeight="600">
+                {selectedProcessModule?.title}
+              </Typography>
+              <Typography variant="caption" color="text.secondary">
+                Process Training Module
+              </Typography>
+            </Box>
+          </Box>
+        </DialogTitle>
+        <DialogContent dividers>
+          {selectedProcessModule && (
+            <Grid container spacing={3}>
+              {/* Module Description */}
+              <Grid item xs={12}>
+                <Typography variant="body1" color="text.secondary">
+                  {selectedProcessModule.description}
+                </Typography>
+              </Grid>
+
+              {/* Module Stats */}
+              <Grid item xs={12}>
+                <Grid container spacing={2}>
+                  <Grid item xs={6} sm={3}>
+                    <Paper sx={{ p: 2, textAlign: 'center' }}>
+                      <TimerIcon color="action" />
+                      <Typography variant="h6" fontWeight="600" sx={{ mt: 1 }}>
+                        {selectedProcessModule.duration}
+                      </Typography>
+                      <Typography variant="caption" color="text.secondary">
+                        Duration
+                      </Typography>
+                    </Paper>
+                  </Grid>
+                  <Grid item xs={6} sm={3}>
+                    <Paper sx={{ p: 2, textAlign: 'center' }}>
+                      <GroupIcon color="action" />
+                      <Typography variant="h6" fontWeight="600" sx={{ mt: 1 }}>
+                        {selectedProcessModule.enrolled}
+                      </Typography>
+                      <Typography variant="caption" color="text.secondary">
+                        Enrolled
+                      </Typography>
+                    </Paper>
+                  </Grid>
+                  <Grid item xs={6} sm={3}>
+                    <Paper sx={{ p: 2, textAlign: 'center' }}>
+                      <TrendingUpIcon color="action" />
+                      <Typography variant="h6" fontWeight="600" sx={{ mt: 1 }}>
+                        {selectedProcessModule.completionRate}%
+                      </Typography>
+                      <Typography variant="caption" color="text.secondary">
+                        Completion
+                      </Typography>
+                    </Paper>
+                  </Grid>
+                  <Grid item xs={6} sm={3}>
+                    <Paper sx={{ p: 2, textAlign: 'center' }}>
+                      <StarIcon color="warning" />
+                      <Typography variant="h6" fontWeight="600" sx={{ mt: 1 }}>
+                        4.5
+                      </Typography>
+                      <Typography variant="caption" color="text.secondary">
+                        Rating
+                      </Typography>
+                    </Paper>
+                  </Grid>
+                </Grid>
+              </Grid>
+
+              {/* Topics Covered */}
+              <Grid item xs={12}>
+                <Typography variant="h6" fontWeight="600" gutterBottom>
+                  Topics Covered
+                </Typography>
+                <List>
+                  {selectedProcessModule.topics.map((topic, index) => (
+                    <ListItem key={index}>
+                      <ListItemIcon>
+                        <CheckCircleIcon color="success" />
+                      </ListItemIcon>
+                      <ListItemText primary={topic} />
+                    </ListItem>
+                  ))}
+                </List>
+              </Grid>
+
+              {/* Completion Progress */}
+              <Grid item xs={12}>
+                <Typography variant="h6" fontWeight="600" gutterBottom>
+                  Overall Progress
+                </Typography>
+                <Box sx={{ mt: 2 }}>
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
+                    <Typography variant="body2" color="text.secondary">
+                      Completion Rate
+                    </Typography>
+                    <Typography variant="body2" fontWeight="600">
+                      {selectedProcessModule.completionRate}%
+                    </Typography>
+                  </Box>
+                  <LinearProgress
+                    variant="determinate"
+                    value={selectedProcessModule.completionRate}
+                    sx={{ height: 8, borderRadius: 4 }}
+                  />
+                </Box>
+              </Grid>
+
+              {/* Additional Info */}
+              <Grid item xs={12}>
+                <Alert severity="info">
+                  <Typography variant="body2">
+                    This module is part of the Process Training curriculum. Complete all topics to earn your certification.
+                  </Typography>
+                </Alert>
+              </Grid>
+            </Grid>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseProcessDetailDialog}>
+            Close
+          </Button>
+          <Button
+            variant="outlined"
+            startIcon={<DownloadIcon />}
+            onClick={() => {
+              handleDownloadMaterials(selectedProcessModule);
+              handleCloseProcessDetailDialog();
+            }}
+          >
+            Download Materials
+          </Button>
+          <Button
+            variant="contained"
+            startIcon={<PlayIcon />}
+            onClick={() => {
+              handleStartModule(selectedProcessModule);
+              handleCloseProcessDetailDialog();
+            }}
+          >
+            Start Module
           </Button>
         </DialogActions>
       </Dialog>

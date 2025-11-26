@@ -23,12 +23,12 @@ const TemplateManager = () => {
   const [loaded, setLoaded] = useState(false);
   const [templates, setTemplates] = useState([]);
   const [filteredTemplates, setFilteredTemplates] = useState([]);
-  
+
   // Dialog states
   const [createTemplateDialog, setCreateTemplateDialog] = useState(false);
   const [editTemplateDialog, setEditTemplateDialog] = useState(false);
   const [previewDialog, setPreviewDialog] = useState(false);
-  
+
   // Template editor states
   const [selectedTemplate, setSelectedTemplate] = useState(null);
   const [templateStep, setTemplateStep] = useState(0);
@@ -45,22 +45,22 @@ const TemplateManager = () => {
     status: 'draft',
     language: 'english'
   });
-  
+
   // Language states
   const [selectedLanguage, setSelectedLanguage] = useState('english');
   const [languagePreview, setLanguagePreview] = useState(false);
-  
+
   // Filter and search states
   const [searchTerm, setSearchTerm] = useState('');
   const [typeFilter, setTypeFilter] = useState('all');
   const [categoryFilter, setCategoryFilter] = useState('all');
   const [statusFilter, setStatusFilter] = useState('all');
   const [languageFilter, setLanguageFilter] = useState('all');
-  
+
   // Editor states
   const [editorMode, setEditorMode] = useState('visual');
   const [previewData, setPreviewData] = useState({});
-  
+
   useEffect(() => {
     loadTemplates();
     setTimeout(() => setLoaded(true), 100);
@@ -357,8 +357,8 @@ Thank you for choosing us! 🙏`,
 
   const TemplateCard = ({ template }) => (
     <Grow in={loaded} timeout={300}>
-      <Card sx={{ 
-        mb: 2, 
+      <Card sx={{
+        mb: 2,
         borderRadius: 3,
         boxShadow: '0 4px 12px rgba(0,0,0,0.05)',
         transition: 'transform 0.2s, box-shadow 0.2s',
@@ -371,10 +371,10 @@ Thank you for choosing us! 🙏`,
           <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
             <Box sx={{ flex: 1 }}>
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 1 }}>
-                <Avatar 
-                  sx={{ 
-                    width: 40, 
-                    height: 40, 
+                <Avatar
+                  sx={{
+                    width: 40,
+                    height: 40,
                     bgcolor: getChannelColor(template.type)
                   }}
                 >
@@ -389,15 +389,15 @@ Thank you for choosing us! 🙏`,
                   </Typography>
                 </Box>
               </Box>
-              
+
               <Box sx={{ display: 'flex', gap: 1, mb: 2 }}>
-                <Chip 
+                <Chip
                   label={template.status?.toUpperCase()}
                   color={getStatusColor(template.status)}
                   size="small"
                 />
                 {template.dltApproved && (
-                  <Chip 
+                  <Chip
                     icon={<VerifiedIcon />}
                     label="DLT Approved"
                     color="success"
@@ -405,24 +405,24 @@ Thank you for choosing us! 🙏`,
                     variant="outlined"
                   />
                 )}
-                <Chip 
+                <Chip
                   label={`Used ${template.usage} times`}
                   size="small"
                   variant="outlined"
                 />
               </Box>
-              
+
               <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
                 {template.subject || 'No subject'}
               </Typography>
-              
+
               <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
                 {template.tags.map((tag, index) => (
                   <Chip key={index} label={tag} size="small" variant="outlined" />
                 ))}
               </Box>
             </Box>
-            
+
             <Box sx={{ display: 'flex', gap: 1 }}>
               <Tooltip title="Preview Template">
                 <IconButton size="small" onClick={() => handlePreviewTemplate(template)}>
@@ -446,7 +446,7 @@ Thank you for choosing us! 🙏`,
               </Tooltip>
             </Box>
           </Box>
-          
+
           <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', pt: 2, borderTop: `1px solid ${theme.palette.divider}` }}>
             <Typography variant="caption" color="text.secondary">
               Modified: {new Date(template.lastModified).toLocaleDateString()}
@@ -461,8 +461,8 @@ Thank you for choosing us! 🙏`,
   );
 
   const CreateTemplateDialog = () => (
-    <Dialog 
-      open={createTemplateDialog || editTemplateDialog} 
+    <Dialog
+      open={createTemplateDialog || editTemplateDialog}
       onClose={() => {
         setCreateTemplateDialog(false);
         setEditTemplateDialog(false);
@@ -473,8 +473,8 @@ Thank you for choosing us! 🙏`,
         sx: { borderRadius: 3, minHeight: '80vh' }
       }}
     >
-      <DialogTitle sx={{ 
-        fontWeight: 600, 
+      <DialogTitle sx={{
+        fontWeight: 600,
         pb: 1,
         display: 'flex',
         justifyContent: 'space-between',
@@ -489,7 +489,7 @@ Thank you for choosing us! 🙏`,
             Step {templateStep + 1} of 3 - {['Basic Information', 'Content Editor', 'Review & Save'][templateStep]}
           </Typography>
         </Box>
-        <IconButton 
+        <IconButton
           onClick={() => {
             setCreateTemplateDialog(false);
             setEditTemplateDialog(false);
@@ -621,11 +621,11 @@ Thank you for choosing us! 🙏`,
                   <Tab label="Code Editor" value="code" />
                 </Tabs>
               </Box>
-              
+
               <Alert severity="info" sx={{ mb: 2 }}>
                 Use double curly braces for variables: {`{{VariableName}}`}
               </Alert>
-              
+
               <TextField
                 fullWidth
                 multiline
@@ -634,12 +634,12 @@ Thank you for choosing us! 🙏`,
                 value={newTemplate.content}
                 onChange={(e) => setNewTemplate(prev => ({ ...prev, content: e.target.value }))}
                 placeholder={
-                  newTemplate.type === 'email' 
+                  newTemplate.type === 'email'
                     ? 'Enter your email template content with HTML...'
                     : 'Enter your message template content...'
                 }
               />
-              
+
               <Box sx={{ mt: 2 }}>
                 <Typography variant="subtitle2" gutterBottom>
                   Detected Variables:
@@ -650,7 +650,7 @@ Thank you for choosing us! 🙏`,
                   ))}
                 </Box>
               </Box>
-              
+
               <Box sx={{ mt: 3, display: 'flex', gap: 1 }}>
                 <Button onClick={() => setTemplateStep(0)}>
                   Back
@@ -691,7 +691,7 @@ Thank you for choosing us! 🙏`,
                   </Grid>
                 </Grid>
               </Paper>
-              
+
               <FormControlLabel
                 control={
                   <Switch
@@ -701,7 +701,7 @@ Thank you for choosing us! 🙏`,
                 }
                 label="Mark as DLT Approved"
               />
-              
+
               <Box sx={{ mt: 3, display: 'flex', gap: 1 }}>
                 <Button onClick={() => setTemplateStep(1)}>
                   Back
@@ -722,8 +722,8 @@ Thank you for choosing us! 🙏`,
   );
 
   const PreviewDialog = () => (
-    <Dialog 
-      open={previewDialog} 
+    <Dialog
+      open={previewDialog}
       onClose={() => setPreviewDialog(false)}
       maxWidth="md"
       fullWidth
@@ -742,16 +742,16 @@ Thank you for choosing us! 🙏`,
             )}
             <Paper sx={{ p: 2, mt: 2, bgcolor: 'background.default' }}>
               {selectedTemplate.type === 'email' ? (
-                <div dangerouslySetInnerHTML={{ 
-                  __html: processTemplate(selectedTemplate.content, previewData) 
-                }} 
-                style={{ 
-                  maxWidth: '100%', 
-                  wordWrap: 'break-word',
-                  /* Add basic security styling */
-                  '& script': { display: 'none' },
-                  '& iframe': { display: 'none' }
-                }} />
+                <div dangerouslySetInnerHTML={{
+                  __html: processTemplate(selectedTemplate.content, previewData)
+                }}
+                  style={{
+                    maxWidth: '100%',
+                    wordWrap: 'break-word',
+                    /* Add basic security styling */
+                    '& script': { display: 'none' },
+                    '& iframe': { display: 'none' }
+                  }} />
               ) : (
                 <Typography variant="body1" sx={{ whiteSpace: 'pre-wrap' }}>
                   {processTemplate(selectedTemplate.content, previewData)}
@@ -771,10 +771,10 @@ Thank you for choosing us! 🙏`,
     <Fade in timeout={800}>
       <Box sx={{ px: 1 }}>
         {/* Header */}
-        <Box sx={{ 
-          display: 'flex', 
+        <Box sx={{
+          display: 'flex',
           justifyContent: 'space-between',
-          alignItems: 'center', 
+          alignItems: 'center',
           mb: 4
         }}>
           <Box>
@@ -1028,12 +1028,12 @@ Thank you for choosing us! 🙏`,
         </Box>
 
         {/* Dialogs */}
-        <CreateTemplateDialog />
+        {CreateTemplateDialog()}
         <PreviewDialog />
-        
+
         {/* Language Preview Dialog */}
-        <Dialog 
-          open={languagePreview} 
+        <Dialog
+          open={languagePreview}
           onClose={() => setLanguagePreview(false)}
           maxWidth="lg"
           fullWidth

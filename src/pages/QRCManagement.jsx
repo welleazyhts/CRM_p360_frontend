@@ -264,12 +264,20 @@ const QRCManagement = () => {
   };
 
   const handleDelete = async (id) => {
+    // Add confirmation dialog
+    if (!window.confirm('Are you sure you want to delete this entry?')) {
+      return;
+    }
+
     try {
       await qrcService.destroy(id);
       setEntries(entries.filter(entry => entry.id !== id));
     } catch (err) {
-      console.error('Failed to delete entry:', err);
-      // optionally show feedback to user
+      console.error('Failed to delete entry via API:', err);
+      // Fallback: delete locally even if API fails
+      setEntries(entries.filter(entry => entry.id !== id));
+      // Optionally show a warning that it was deleted locally but may not persist
+      alert('Entry deleted locally. Note: Server may not have been updated due to connection issues.');
     }
   };
 
@@ -556,8 +564,7 @@ const QRCManagement = () => {
                   label="Call Date and Time"
                   value={formData.callDateTime}
                   onChange={(newValue) => setFormData({ ...formData, callDateTime: newValue })}
-                  slots={{ textField: TextField }}
-                  slotProps={{ textField: { fullWidth: true } }}
+                  renderInput={(params) => <TextField {...params} fullWidth />}
                 />
               </LocalizationProvider>
             </Grid>

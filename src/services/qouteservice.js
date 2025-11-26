@@ -84,8 +84,9 @@ const QuoteService = {
         id: newId,
         ...payload,
         status: payload.status || 'Draft',
-        raisedDate: payload.raisedDate || (new Date().toISOString().split('T')[0]),
-        lastUpdated: (new Date()).toISOString().split('T')[0],
+        raisedDate: payload.raisedDate || (new Date().toLocaleDateString('en-GB')),
+        conversionProbability: payload.conversionProbability || 50,
+        lastUpdated: (new Date()).toLocaleDateString('en-GB'),
         timeline: payload.timeline || [{ action: 'Quote Created', user: 'System', timestamp: (new Date()).toLocaleString(), details: 'Created (mock)' }]
       };
       mockQuotes = [created, ...mockQuotes];

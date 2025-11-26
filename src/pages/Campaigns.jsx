@@ -796,9 +796,15 @@ const CampaignManager = () => {
                       fullWidth
                       label="Campaign Name"
                       value={newCampaign.name}
-                      onChange={(e) => {
-                        e.preventDefault();
-                        setNewCampaign(prev => ({ ...prev, name: e.target.value }));
+                      onChange={(e) => setNewCampaign(prev => ({ ...prev, name: e.target.value }))}
+                      sx={{
+                        '& .MuiOutlinedInput-root': {
+                          bgcolor: 'background.paper',
+                          '& input': {
+                            padding: '16.5px 14px',
+                            zIndex: 1
+                          }
+                        }
                       }}
                     />
                   </Grid>
@@ -809,9 +815,15 @@ const CampaignManager = () => {
                       rows={3}
                       label="Description"
                       value={newCampaign.description}
-                      onChange={(e) => {
-                        e.preventDefault();
-                        setNewCampaign(prev => ({ ...prev, description: e.target.value }));
+                      onChange={(e) => setNewCampaign(prev => ({ ...prev, description: e.target.value }))}
+                      sx={{
+                        '& .MuiOutlinedInput-root': {
+                          bgcolor: 'background.paper',
+                          '& textarea': {
+                            padding: '16.5px 14px',
+                            zIndex: 1
+                          }
+                        }
                       }}
                     />
                   </Grid>
@@ -820,9 +832,13 @@ const CampaignManager = () => {
                       <InputLabel>Campaign Type</InputLabel>
                       <Select
                         value={newCampaign.type}
-                        onChange={(e) => {
-                          e.preventDefault();
-                          setNewCampaign(prev => ({ ...prev, type: e.target.value }));
+                        onChange={(e) => setNewCampaign(prev => ({ ...prev, type: e.target.value }))}
+                        sx={{
+                          bgcolor: 'background.paper',
+                          '& .MuiSelect-select': {
+                            padding: '16.5px 14px',
+                            zIndex: 1
+                          }
                         }}
                       >
                         <MenuItem value="promotional">Promotional</MenuItem>
@@ -838,11 +854,17 @@ const CampaignManager = () => {
                       type="datetime-local"
                       label="Scheduled Date"
                       value={newCampaign.scheduledDate}
-                      onChange={(e) => {
-                        e.preventDefault();
-                        setNewCampaign(prev => ({ ...prev, scheduledDate: e.target.value }));
-                      }}
+                      onChange={(e) => setNewCampaign(prev => ({ ...prev, scheduledDate: e.target.value }))}
                       InputLabelProps={{ shrink: true }}
+                      sx={{
+                        '& .MuiOutlinedInput-root': {
+                          bgcolor: 'background.paper',
+                          '& input': {
+                            padding: '16.5px 14px',
+                            zIndex: 1
+                          }
+                        }
+                      }}
                     />
                   </Grid>
                 </Grid>
@@ -997,10 +1019,7 @@ const CampaignManager = () => {
                   <InputLabel>Target Audience</InputLabel>
                   <Select
                     value={newCampaign.audience}
-                    onChange={(e) => {
-                      e.preventDefault();
-                      setNewCampaign(prev => ({ ...prev, audience: e.target.value }));
-                    }}
+                    onChange={(e) => setNewCampaign(prev => ({ ...prev, audience: e.target.value }))}
                   >
                     {audiences.map((audience) => (
                       <MenuItem key={audience.id} value={audience.name}>
@@ -1514,6 +1533,14 @@ const CampaignManager = () => {
                 <Select
                   value={statusFilter}
                   onChange={(e) => setStatusFilter(e.target.value)}
+                  label="Status"
+                  sx={{
+                    bgcolor: 'background.paper',
+                    '& .MuiSelect-select': {
+                      padding: '16.5px 14px',
+                      zIndex: 1
+                    }
+                  }}
                 >
                   <MenuItem value="all">All Status</MenuItem>
                   <MenuItem value="active">Active</MenuItem>
@@ -1530,6 +1557,14 @@ const CampaignManager = () => {
                 <Select
                   value={channelFilter}
                   onChange={(e) => setChannelFilter(e.target.value)}
+                  label="Channel"
+                  sx={{
+                    bgcolor: 'background.paper',
+                    '& .MuiSelect-select': {
+                      padding: '16.5px 14px',
+                      zIndex: 1
+                    }
+                  }}
                 >
                   <MenuItem value="all">All Channels</MenuItem>
                   <MenuItem value="email">Email</MenuItem>
@@ -1598,7 +1633,7 @@ const CampaignManager = () => {
         </Box>
 
         {/* Dialogs */}
-        <CreateCampaignDialog />
+        {CreateCampaignDialog()}
         <TemplateDialog
           open={templateDialog}
           onClose={() => setTemplateDialog(false)}

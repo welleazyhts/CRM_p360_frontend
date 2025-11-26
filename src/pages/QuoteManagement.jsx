@@ -183,21 +183,30 @@ const QuoteManagement = () => {
 
   // submit with QuoteService.createQuote
   const handleSubmit = async () => {
+    // Validate required fields
+    if (!formData.customerName || !formData.customerEmail || !formData.customerPhone ||
+      !formData.productType || !formData.productPlan || !formData.quoteAmount) {
+      setError('Please fill in all required fields');
+      return;
+    }
+
     const payload = {
-      leadId: formData.leadId || undefined,
+      leadId: formData.leadId || `L${Date.now()}`,
       customerName: formData.customerName,
       customerEmail: formData.customerEmail,
       customerPhone: formData.customerPhone,
       productType: formData.productType,
       productPlan: formData.productPlan,
-      coverageAmount: formData.coverageAmount,
-      premium: formData.premium,
-      sumInsured: formData.sumInsured,
-      tenure: formData.tenure,
+      coverageAmount: formData.coverageAmount || '₹0',
+      premium: formData.premium || '₹0',
+      sumInsured: formData.sumInsured || '₹0',
+      tenure: formData.tenure || '1 Year',
       quoteAmount: formData.quoteAmount && formData.quoteAmount.toString().startsWith('₹') ? formData.quoteAmount : `₹${formData.quoteAmount}`,
       status: 'Draft',
       validUntil: '',
       raisedBy: 'Current User',
+      raisedDate: new Date().toLocaleDateString('en-GB'), // Add raised date
+      conversionProbability: 50, // Default conversion probability for new quotes
       attachments: [],
       timeline: [
         {
@@ -209,10 +218,13 @@ const QuoteManagement = () => {
       ]
     };
 
+    console.log('Creating quote with payload:', payload);
+
     setLoading(true);
     setError(null);
     try {
       const created = await QuoteService.createQuote(payload);
+      console.log('Quote created successfully:', created);
       // QuoteService mock returns created item; prepend to local list
       setQuotes(prev => [created, ...prev]);
       // reset form
@@ -466,10 +478,10 @@ const QuoteManagement = () => {
                     quote.status === 'Converted'
                       ? theme.palette.info.main
                       : quote.status === 'Approved'
-                      ? theme.palette.success.main
-                      : quote.status === 'Rejected' || quote.status === 'Lost'
-                      ? theme.palette.error.main
-                      : theme.palette.grey[300],
+                        ? theme.palette.success.main
+                        : quote.status === 'Rejected' || quote.status === 'Lost'
+                          ? theme.palette.error.main
+                          : theme.palette.grey[300],
                     0.3
                   )}`,
                   transition: 'all 0.3s ease',
@@ -487,16 +499,16 @@ const QuoteManagement = () => {
                           quote.status === 'Converted'
                             ? theme.palette.info.main
                             : quote.status === 'Approved'
-                            ? theme.palette.success.main
-                            : theme.palette.primary.main,
+                              ? theme.palette.success.main
+                              : theme.palette.primary.main,
                           0.1
                         ),
                         color:
                           quote.status === 'Converted'
                             ? 'info.main'
                             : quote.status === 'Approved'
-                            ? 'success.main'
-                            : 'primary.main',
+                              ? 'success.main'
+                              : 'primary.main',
                       }}
                     >
                       {getStatusIcon(quote.status)}
@@ -586,12 +598,12 @@ const QuoteManagement = () => {
                             Conversion Probability
                           </Typography>
                           <Typography variant="caption" fontWeight="600">
-                            {quote.conversionProbability}%
+                            {quote.conversionProbability || 0}%
                           </Typography>
                         </Stack>
                         <LinearProgress
                           variant="determinate"
-                          value={quote.conversionProbability}
+                          value={quote.conversionProbability || 0}
                           sx={{
                             height: 6,
                             borderRadius: 3,
@@ -1013,15 +1025,15 @@ const QuoteManagement = () => {
                     entry.action.includes('Created') || entry.action.includes('Issued')
                       ? 'success'
                       : entry.action.includes('Rejected')
-                      ? 'error'
-                      : 'primary'
+                        ? 'error'
+                        : 'primary'
                   }
                 >
                   {entry.action.includes('Created') ? <AddIcon fontSize="small" /> :
-                   entry.action.includes('Changed') ? <EditIcon fontSize="small" /> :
-                   entry.action.includes('Rejected') ? <RejectedIcon fontSize="small" /> :
-                   entry.action.includes('Issued') ? <ConvertedIcon fontSize="small" /> :
-                   <QuoteIcon fontSize="small" />}
+                    entry.action.includes('Changed') ? <EditIcon fontSize="small" /> :
+                      entry.action.includes('Rejected') ? <RejectedIcon fontSize="small" /> :
+                        entry.action.includes('Issued') ? <ConvertedIcon fontSize="small" /> :
+                          <QuoteIcon fontSize="small" />}
                 </TimelineDot>
                 {index < mockHistory.length - 1 && <TimelineConnector />}
               </TimelineSeparator>

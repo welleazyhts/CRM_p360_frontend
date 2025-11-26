@@ -278,7 +278,7 @@ const SalesPipeline = () => {
               const mapped = p.stages.map((s, idx) => ({
                 id: s.id,
                 name: s.name,
-                color: ['#A4D7E1','#B3EBD5','#F2C94C','#E0F7FA','#6B8E23','#4CAF50','#F44336'][idx % 7],
+                color: ['#A4D7E1', '#B3EBD5', '#F2C94C', '#E0F7FA', '#6B8E23', '#4CAF50', '#F44336'][idx % 7],
                 order: s.order || idx + 1
               }));
               setPipelineStages(mapped);
@@ -350,7 +350,7 @@ const SalesPipeline = () => {
     try {
       const p = await getPipeline(id);
       if (p && p.stages) {
-        const mapped = p.stages.map((s, idx) => ({ id: s.id, name: s.name, color: ['#A4D7E1','#B3EBD5','#F2C94C','#E0F7FA','#6B8E23','#4CAF50','#F44336'][idx % 7], order: s.order || idx + 1 }));
+        const mapped = p.stages.map((s, idx) => ({ id: s.id, name: s.name, color: ['#A4D7E1', '#B3EBD5', '#F2C94C', '#E0F7FA', '#6B8E23', '#4CAF50', '#F44336'][idx % 7], order: s.order || idx + 1 }));
         setPipelineStages(mapped);
       }
     } catch (e) {
@@ -443,7 +443,7 @@ const SalesPipeline = () => {
   };
 
   // Get stage info
-  
+
 
   // Calculate stage totals
   const getStageTotal = (stageId) => {
@@ -459,20 +459,26 @@ const SalesPipeline = () => {
   const handleDragOver = (e) => {
     e.preventDefault();
     const element = e.currentTarget;
-    element.style.backgroundColor = alpha(theme.palette.primary.main, 0.05);
+    if (element && element.style) {
+      element.style.backgroundColor = alpha(theme.palette.primary.main, 0.05);
+    }
   };
 
   const handleDragLeave = (e) => {
     e.preventDefault();
     const element = e.currentTarget;
-    element.style.backgroundColor = 'transparent';
+    if (element && element.style) {
+      element.style.backgroundColor = 'transparent';
+    }
   };
 
   const handleDrop = (e, newStage) => {
     e.preventDefault();
     const element = e.currentTarget;
-    element.style.backgroundColor = 'transparent';
-    
+    if (element && element.style) {
+      element.style.backgroundColor = 'transparent';
+    }
+
     try {
       const lead = JSON.parse(e.dataTransfer.getData('text/plain'));
       if (lead.stage !== newStage) {
@@ -521,7 +527,7 @@ const SalesPipeline = () => {
   // Handle save lead
   const handleSaveLead = () => {
     setLoading(true);
-    
+
     setTimeout(() => {
       if (editingLead) {
         // Update existing lead
@@ -544,7 +550,7 @@ const SalesPipeline = () => {
         setLeads([...leads, newLead]);
         setSnackbar({ open: true, message: 'Lead added successfully!', severity: 'success' });
       }
-      
+
       setLoading(false);
       handleCloseDialog();
     }, 1000);
@@ -756,7 +762,7 @@ const SalesPipeline = () => {
         {pipelineStages.map((stage) => {
           const stageLeads = getLeadsByStage(stage.id);
           const stageTotal = getStageTotal(stage.id);
-          
+
           return (
             <Paper
               key={stage.id}
@@ -797,7 +803,7 @@ const SalesPipeline = () => {
               </Box>
 
               {/* Stage Leads */}
-              <Box 
+              <Box
                 sx={{ p: 1, minHeight: 400 }}
                 onDragOver={handleDragOver}
                 onDragLeave={handleDragLeave}
@@ -852,7 +858,7 @@ const SalesPipeline = () => {
                           </IconButton>
                         </Box>
                       </Box>
-                      
+
                       <Box sx={{ mt: 2 }}>
                         <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
                           <BusinessIcon fontSize="small" sx={{ mr: 1, color: 'text.secondary' }} />
@@ -864,7 +870,7 @@ const SalesPipeline = () => {
                           {lead.position}
                         </Typography>
                       </Box>
-                      
+
                       <Box sx={{ mt: 2, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                         <Chip
                           label={lead.priority}
@@ -915,9 +921,9 @@ const SalesPipeline = () => {
                               key={nextStage.id}
                               size="small"
                               variant="outlined"
-                              sx={{ 
-                                minWidth: 'auto', 
-                                px: 1, 
+                              sx={{
+                                minWidth: 'auto',
+                                px: 1,
                                 fontSize: '0.7rem',
                                 borderColor: alpha(nextStage.color, 0.3),
                                 color: nextStage.color,
@@ -929,7 +935,7 @@ const SalesPipeline = () => {
                               onClick={(e) => {
                                 e.stopPropagation();
                                 const mockDragEvent = {
-                                  preventDefault: () => {},
+                                  preventDefault: () => { },
                                   dataTransfer: {
                                     getData: () => JSON.stringify(lead)
                                   }
@@ -970,10 +976,10 @@ const SalesPipeline = () => {
           </Button>
         </DialogActions>
       </Dialog>
-      <Dialog 
-        open={openDialog} 
-        onClose={handleCloseDialog} 
-        maxWidth="md" 
+      <Dialog
+        open={openDialog}
+        onClose={handleCloseDialog}
+        maxWidth="md"
         fullWidth
         PaperProps={{
           sx: {
@@ -982,9 +988,9 @@ const SalesPipeline = () => {
           }
         }}
       >
-        <DialogTitle sx={{ 
-          display: 'flex', 
-          justifyContent: 'space-between', 
+        <DialogTitle sx={{
+          display: 'flex',
+          justifyContent: 'space-between',
           alignItems: 'center',
           bgcolor: 'background.paper',
           borderBottom: `1px solid ${theme.palette.divider}`
@@ -1120,8 +1126,8 @@ const SalesPipeline = () => {
                   label="Assigned To"
                   onChange={(e) => {
                     const user = users.find(u => u.id === e.target.value);
-                    setFormData({ 
-                      ...formData, 
+                    setFormData({
+                      ...formData,
                       assignedToId: e.target.value,
                       assignedTo: user?.name || ''
                     });
@@ -1189,7 +1195,7 @@ const SalesPipeline = () => {
                             </TableCell>
                             <TableCell>
                               <Typography variant="body2">
-                                {new Date(policy.startDate).toLocaleDateString()} - 
+                                {new Date(policy.startDate).toLocaleDateString()} -
                                 {new Date(policy.endDate).toLocaleDateString()}
                               </Typography>
                             </TableCell>
@@ -1216,10 +1222,10 @@ const SalesPipeline = () => {
                       </TableBody>
                     </Table>
                   </TableContainer>
-                  
+
                   {/* Summary Box */}
-                  <Box 
-                    sx={{ 
+                  <Box
+                    sx={{
                       mt: 2,
                       p: 2,
                       borderRadius: 2,
