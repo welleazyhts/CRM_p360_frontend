@@ -93,7 +93,7 @@ const AutoQuoteSharingSettings = () => {
     enableAnalytics: true,
     requireApproval: false
   });
-  
+
   const [customers, setCustomers] = useState([]);
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
   const [loading, setLoading] = useState(false);
@@ -153,12 +153,12 @@ const AutoQuoteSharingSettings = () => {
     setLoading(true);
     // Simulate API delay
     await new Promise(resolve => setTimeout(resolve, 1500));
-    
+
     // Mock 5% failure rate
     if (Math.random() < 0.05) {
       throw new Error('Network error');
     }
-    
+
     setLoading(false);
     return { success: true, message: 'Settings updated successfully' };
   };
@@ -169,7 +169,7 @@ const AutoQuoteSharingSettings = () => {
       setSettings(newSettings);
 
       await mockApiCall('/api/quotes/auto-share/settings', newSettings);
-      
+
       setSnackbar({
         open: true,
         message: `Auto-quote ${field} updated successfully!`,
@@ -187,9 +187,9 @@ const AutoQuoteSharingSettings = () => {
   const handleCustomerStatusToggle = async (customerId, currentStatus) => {
     try {
       const newStatus = currentStatus === 'Active' ? 'Paused' : 'Active';
-      
-      setCustomers(prev => prev.map(customer => 
-        customer.id === customerId 
+
+      setCustomers(prev => prev.map(customer =>
+        customer.id === customerId
           ? { ...customer, status: newStatus }
           : customer
       ));
@@ -216,15 +216,15 @@ const AutoQuoteSharingSettings = () => {
   const handleSendQuoteNow = async (customerId, customerName) => {
     try {
       await mockApiCall('/api/quotes/send-now', { customerId });
-      
+
       // Update last sent date
-      setCustomers(prev => prev.map(customer => 
-        customer.id === customerId 
-          ? { 
-              ...customer, 
-              lastQuoteSent: new Date().toISOString().split('T')[0],
-              nextScheduled: getNextScheduledDate(settings.frequency)
-            }
+      setCustomers(prev => prev.map(customer =>
+        customer.id === customerId
+          ? {
+            ...customer,
+            lastQuoteSent: new Date().toISOString().split('T')[0],
+            nextScheduled: getNextScheduledDate(settings.frequency)
+          }
           : customer
       ));
 
@@ -308,7 +308,7 @@ const AutoQuoteSharingSettings = () => {
                     Basic Configuration
                   </Typography>
                 </Box>
-                
+
                 <Grid container spacing={3}>
                   <Grid item xs={12} md={6}>
                     <FormControlLabel
@@ -331,7 +331,7 @@ const AutoQuoteSharingSettings = () => {
                       }
                     />
                   </Grid>
-                  
+
                   <Grid item xs={12} md={6}>
                     <FormControl fullWidth disabled={!settings.enabled}>
                       <InputLabel>Sharing Frequency</InputLabel>
@@ -346,7 +346,7 @@ const AutoQuoteSharingSettings = () => {
                       </Select>
                     </FormControl>
                   </Grid>
-                  
+
                   <Grid item xs={12} md={6}>
                     <TextField
                       fullWidth
@@ -358,7 +358,7 @@ const AutoQuoteSharingSettings = () => {
                       InputLabelProps={{ shrink: true }}
                     />
                   </Grid>
-                  
+
                   <Grid item xs={12} md={6}>
                     <TextField
                       fullWidth
@@ -371,13 +371,13 @@ const AutoQuoteSharingSettings = () => {
                     />
                   </Grid>
                 </Grid>
-                
+
                 <Divider sx={{ my: 3 }} />
-                
+
                 <Typography variant="subtitle1" fontWeight="600" gutterBottom>
                   Advanced Options
                 </Typography>
-                
+
                 <Grid container spacing={2}>
                   <Grid item xs={12} sm={6}>
                     <FormControlLabel
@@ -391,7 +391,7 @@ const AutoQuoteSharingSettings = () => {
                       label="Include Weekends"
                     />
                   </Grid>
-                  
+
                   <Grid item xs={12} sm={6}>
                     <FormControlLabel
                       control={
@@ -404,7 +404,7 @@ const AutoQuoteSharingSettings = () => {
                       label="Retry Failed Quotes"
                     />
                   </Grid>
-                  
+
                   <Grid item xs={12} sm={6}>
                     <FormControlLabel
                       control={
@@ -417,7 +417,7 @@ const AutoQuoteSharingSettings = () => {
                       label="Enable Analytics"
                     />
                   </Grid>
-                  
+
                   <Grid item xs={12} sm={6}>
                     <FormControlLabel
                       control={
@@ -497,14 +497,14 @@ const AutoQuoteSharingSettings = () => {
             <TableContainer component={Paper} elevation={0}>
               <Table>
                 <TableHead>
-                  <TableRow sx={{ backgroundColor: theme.palette.grey[100] }}>
-                    <TableCell>Customer</TableCell>
-                    <TableCell>Contact Info</TableCell>
-                    <TableCell>Product Type</TableCell>
-                    <TableCell>Last Quote Sent</TableCell>
-                    <TableCell>Next Scheduled</TableCell>
-                    <TableCell>Status</TableCell>
-                    <TableCell align="center">Actions</TableCell>
+                  <TableRow sx={{ backgroundColor: theme.palette.grey[100], '&:hover': { backgroundColor: theme.palette.grey[100] } }}>
+                    <TableCell sx={{ fontWeight: 600, color: 'black' }}>Customer</TableCell>
+                    <TableCell sx={{ fontWeight: 600, color: 'black' }}>Contact Info</TableCell>
+                    <TableCell sx={{ fontWeight: 600, color: 'black' }}>Product Type</TableCell>
+                    <TableCell sx={{ fontWeight: 600, color: 'black' }}>Last Quote Sent</TableCell>
+                    <TableCell sx={{ fontWeight: 600, color: 'black' }}>Next Scheduled</TableCell>
+                    <TableCell sx={{ fontWeight: 600, color: 'black' }}>Status</TableCell>
+                    <TableCell align="center" sx={{ fontWeight: 600, color: 'black' }}>Actions</TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
@@ -538,11 +538,11 @@ const AutoQuoteSharingSettings = () => {
                         </Box>
                       </TableCell>
                       <TableCell>
-                        <Chip 
-                          label={customer.productType} 
-                          size="small" 
-                          color="primary" 
-                          variant="outlined" 
+                        <Chip
+                          label={customer.productType}
+                          size="small"
+                          color="primary"
+                          variant="outlined"
                         />
                       </TableCell>
                       <TableCell>
@@ -624,7 +624,7 @@ const AutoQuoteSharingSettings = () => {
               </CardContent>
             </Card>
           </Grid>
-          
+
           <Grid item xs={12} md={6}>
             <Card>
               <CardContent>
@@ -667,7 +667,7 @@ const AutoQuoteSharingSettings = () => {
             <Typography variant="h6" fontWeight="600" gutterBottom>
               🔔 Notification Settings
             </Typography>
-            
+
             <List>
               <ListItem>
                 <ListItemText
@@ -678,7 +678,7 @@ const AutoQuoteSharingSettings = () => {
                   <Switch defaultChecked color="primary" />
                 </ListItemSecondaryAction>
               </ListItem>
-              
+
               <ListItem>
                 <ListItemText
                   primary="SMS Notifications"
@@ -688,7 +688,7 @@ const AutoQuoteSharingSettings = () => {
                   <Switch color="primary" />
                 </ListItemSecondaryAction>
               </ListItem>
-              
+
               <ListItem>
                 <ListItemText
                   primary="Daily Summary"
@@ -698,7 +698,7 @@ const AutoQuoteSharingSettings = () => {
                   <Switch defaultChecked color="primary" />
                 </ListItemSecondaryAction>
               </ListItem>
-              
+
               <ListItem>
                 <ListItemText
                   primary="Failure Alerts"

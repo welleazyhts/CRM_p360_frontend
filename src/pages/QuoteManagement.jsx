@@ -218,13 +218,10 @@ const QuoteManagement = () => {
       ]
     };
 
-    console.log('Creating quote with payload:', payload);
-
     setLoading(true);
     setError(null);
     try {
       const created = await QuoteService.createQuote(payload);
-      console.log('Quote created successfully:', created);
       // QuoteService mock returns created item; prepend to local list
       setQuotes(prev => [created, ...prev]);
       // reset form

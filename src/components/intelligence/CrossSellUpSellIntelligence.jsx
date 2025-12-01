@@ -207,11 +207,11 @@ const CrossSellUpSellIntelligence = ({ customer, onRecommendationSelect }) => {
           <Grid container spacing={2}>
             {customerPolicies.map((policy, index) => (
               <Grid item xs={12} sm={6} key={index}>
-                <Box sx={{ 
-                  p: 2, 
+                <Box sx={{
+                  p: 2,
                   border: `1px solid ${alpha(theme.palette.info.main, 0.2)}`,
                   borderRadius: 2,
-                  bgcolor: 'white'
+                  bgcolor: theme.palette.background.paper
                 }}>
                   <Typography variant="body2" fontWeight="600">
                     {policy.type}
@@ -230,7 +230,7 @@ const CrossSellUpSellIntelligence = ({ customer, onRecommendationSelect }) => {
       <Grid container spacing={3}>
         {allRecommendations.map((recommendation) => (
           <Grid item xs={12} md={6} key={recommendation.id}>
-            <Card sx={{ 
+            <Card sx={{
               height: '100%',
               border: `2px solid ${alpha(getTypeColor(recommendation.type), 0.2)}`,
               transition: 'all 0.2s ease',
@@ -243,7 +243,7 @@ const CrossSellUpSellIntelligence = ({ customer, onRecommendationSelect }) => {
               <CardContent sx={{ p: 3 }}>
                 {/* Header */}
                 <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 2, mb: 2 }}>
-                  <Avatar sx={{ 
+                  <Avatar sx={{
                     bgcolor: alpha(getTypeColor(recommendation.type), 0.1),
                     color: getTypeColor(recommendation.type)
                   }}>
@@ -308,8 +308,8 @@ const CrossSellUpSellIntelligence = ({ customer, onRecommendationSelect }) => {
                 </Box>
 
                 {/* Revenue Impact */}
-                <Box sx={{ 
-                  p: 2, 
+                <Box sx={{
+                  p: 2,
                   bgcolor: alpha(theme.palette.success.main, 0.05),
                   borderRadius: 2,
                   mb: 3
@@ -420,8 +420,8 @@ const CrossSellUpSellIntelligence = ({ customer, onRecommendationSelect }) => {
             </Grid>
           </Grid>
           <Divider sx={{ my: 2 }} />
-          <Box sx={{ 
-            p: 2, 
+          <Box sx={{
+            p: 2,
             bgcolor: alpha(theme.palette.info.main, 0.05),
             borderRadius: 2
           }}>

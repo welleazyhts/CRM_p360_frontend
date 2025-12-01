@@ -87,6 +87,8 @@ const QuoteService = {
         raisedDate: payload.raisedDate || (new Date().toLocaleDateString('en-GB')),
         conversionProbability: payload.conversionProbability || 50,
         lastUpdated: (new Date()).toLocaleDateString('en-GB'),
+        version: 1,
+        attachments: payload.attachments || [],
         timeline: payload.timeline || [{ action: 'Quote Created', user: 'System', timestamp: (new Date()).toLocaleString(), details: 'Created (mock)' }]
       };
       mockQuotes = [created, ...mockQuotes];

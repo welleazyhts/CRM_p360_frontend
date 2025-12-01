@@ -65,7 +65,7 @@ const BulkUpload = ({
   const [validRecords, setValidRecords] = useState([]);
   const [failedRecords, setFailedRecords] = useState([]);
   const [tabValue, setTabValue] = useState(0);
-  const [showValidDetails, setShowValidDetails] = useState(false);
+  const [showValidDetails, setShowValidDetails] = useState(true);
   const [showFailedDetails, setShowFailedDetails] = useState(true);
 
   const steps = ['Upload File', 'Review & Validate', 'Confirm Upload'];
@@ -88,26 +88,86 @@ const BulkUpload = ({
       try {
         const data = new Uint8Array(e.target.result);
         const workbook = XLSX.read(data, { type: 'array' });
+
+        console.log('📚 Workbook Info:', {
+          sheetNames: workbook.SheetNames,
+          numberOfSheets: workbook.SheetNames.length
+        });
+
         const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+        console.log('📄 First Sheet Name:', workbook.SheetNames[0]);
+        console.log('📄 Sheet Range:', firstSheet['!ref']);
+        console.log('📄 Raw Sheet Data:', firstSheet);
+
+        // Try to get JSON data
         const jsonData = XLSX.utils.sheet_to_json(firstSheet);
 
+        console.log('📄 Parsed JSON Data:', jsonData);
+        console.log('📄 Number of rows parsed:', jsonData.length);
+
+        // If no data, try with header option
+        if (jsonData.length === 0) {
+          console.warn('⚠️ No data found with default parsing, trying alternative methods...');
+
+          // Try getting raw data including headers
+          const rawData = XLSX.utils.sheet_to_json(firstSheet, { header: 1 });
+          console.log('📄 Raw data (with header: 1):', rawData);
+
+          // Try without header
+          const dataWithoutHeader = XLSX.utils.sheet_to_json(firstSheet, { defval: '' });
+          console.log('📄 Data without header:', dataWithoutHeader);
+
+          if (rawData.length === 0) {
+            alert('The uploaded file appears to be empty. Please ensure:\n\n1. The file contains data\n2. Data starts from row 1 (headers) and row 2 (first data row)\n3. The file is a valid CSV or Excel file\n\nCheck the console (F12) for more details.');
+            setParsing(false);
+            return;
+          }
+        }
+
+        console.log('🗺️ Field Mapping:', fieldMapping);
+
         // Map fields if mapping provided
-        const mappedData = jsonData.map(row => {
+        const mappedData = jsonData.map((row, index) => {
           if (Object.keys(fieldMapping).length > 0) {
             const mappedRow = {};
-            Object.keys(fieldMapping).forEach(key => {
-              mappedRow[key] = row[fieldMapping[key]] || row[key];
+            // fieldMapping has keys as display names (e.g., "Name") and values as internal names (e.g., "name")
+            Object.keys(fieldMapping).forEach(displayName => {
+              const internalName = fieldMapping[displayName];
+
+              // Try exact match first
+              if (row.hasOwnProperty(displayName)) {
+                mappedRow[internalName] = row[displayName];
+              }
+              // Try case-insensitive match
+              else {
+                const rowKeys = Object.keys(row);
+                const matchingKey = rowKeys.find(key =>
+                  key.toLowerCase().trim() === displayName.toLowerCase().trim()
+                );
+                if (matchingKey) {
+                  mappedRow[internalName] = row[matchingKey];
+                } else if (row.hasOwnProperty(internalName)) {
+                  // Fallback: if the file already uses internal names
+                  mappedRow[internalName] = row[internalName];
+                }
+              }
             });
+
+            console.log(`Row ${index + 1} mapped:`, mappedRow);
             return mappedRow;
           }
           return row;
         });
 
+        console.log('✅ Mapped Data:', mappedData);
+        console.log('✅ Number of mapped records:', mappedData.length);
+
         setParsedData(mappedData);
         validateData(mappedData);
         setActiveStep(1);
       } catch (error) {
-        alert('Failed to parse file: ' + error.message);
+        console.error('❌ Parse Error:', error);
+        alert('Failed to parse file: ' + error.message + '\n\nPlease ensure you are uploading a valid CSV or Excel file.');
       } finally {
         setParsing(false);
       }
@@ -118,20 +178,33 @@ const BulkUpload = ({
 
   // Validate data
   const validateData = (data) => {
+    console.log('🔍 Starting validation for', data.length, 'records');
+    console.log('📋 Required fields:', requiredFields);
+
     const valid = [];
     const failed = [];
 
     data.forEach((row, index) => {
       const errors = [];
 
-      // Check required fields
-      requiredFields.forEach(field => {
-        if (!row[field] || row[field].toString().trim() === '') {
-          errors.push(`Missing required field: ${field}`);
-        }
-      });
+      // Check if row is completely empty
+      const hasAnyData = Object.values(row).some(value =>
+        value !== null && value !== undefined && value.toString().trim() !== ''
+      );
+
+      if (!hasAnyData) {
+        errors.push('Empty row - no data found');
+      } else {
+        // Check required fields
+        requiredFields.forEach(field => {
+          if (!row[field] || row[field].toString().trim() === '') {
+            errors.push(`Missing required field: ${field}`);
+          }
+        });
+      }
 
       if (errors.length > 0) {
+        console.log(`❌ Row ${index + 1} failed:`, errors, row);
         failed.push({
           rowNumber: index + 1,
           record: row,
@@ -139,6 +212,7 @@ const BulkUpload = ({
           type: 'validation'
         });
       } else {
+        console.log(`✅ Row ${index + 1} valid:`, row);
         valid.push({
           rowNumber: index + 1,
           record: row
@@ -146,10 +220,22 @@ const BulkUpload = ({
       }
     });
 
+    console.log('📊 Validation Summary:', {
+      total: data.length,
+      valid: valid.length,
+      failed: failed.length
+    });
+
     // Check for duplicates
     if (valid.length > 0) {
       const validData = valid.map(v => v.record);
+      console.log('🔄 Checking for duplicates...');
       const dedupeResult = batchCheckDuplicates(validData, existingData, source);
+
+      console.log('🔄 Dedupe Result:', {
+        valid: dedupeResult.valid.length,
+        duplicates: dedupeResult.duplicates.length
+      });
 
       setValidRecords(dedupeResult.valid);
       setFailedRecords([
@@ -160,9 +246,15 @@ const BulkUpload = ({
         }))
       ]);
     } else {
+      console.log('⚠️ No valid records found, only failed records');
       setValidRecords([]);
       setFailedRecords(failed);
     }
+
+    console.log('✨ Final state set:', {
+      validRecords: valid.length > 0 ? 'from dedupe' : 0,
+      failedRecords: failed.length
+    });
   };
 
   // Handle upload
@@ -209,7 +301,7 @@ const BulkUpload = ({
 
       // Call completion callback
       if (onUploadComplete) {
-        onUploadComplete(recordsToUpload, failedRecords);
+        onUploadComplete(validRecords, failedRecords);
       }
 
       // Show success and close
@@ -223,7 +315,16 @@ const BulkUpload = ({
 
   // Download template
   const downloadTemplate = () => {
-    const headers = requiredFields.length > 0 ? requiredFields : ['name', 'email', 'phone'];
+    // Use fieldMapping keys if available, otherwise fall back to requiredFields
+    let headers;
+    if (Object.keys(fieldMapping).length > 0) {
+      headers = Object.keys(fieldMapping);
+    } else if (requiredFields.length > 0) {
+      headers = requiredFields;
+    } else {
+      headers = ['name', 'email', 'phone'];
+    }
+
     const template = [headers];
     const ws = XLSX.utils.aoa_to_sheet(template);
     const wb = XLSX.utils.book_new();
@@ -261,8 +362,16 @@ const BulkUpload = ({
 
   // Get first N fields for preview
   const getPreviewFields = (record) => {
+    if (!record || typeof record !== 'object') return [];
+
+    // If we have fieldMapping, use those internal field names in order
+    if (Object.keys(fieldMapping).length > 0) {
+      return Object.values(fieldMapping);
+    }
+
+    // Otherwise return all fields from the record
     const fields = Object.keys(record);
-    return fields.slice(0, 5); // Show first 5 fields
+    return fields;
   };
 
   return (
@@ -400,148 +509,163 @@ const BulkUpload = ({
               </Paper>
             </Box>
 
-            {/* Tabs */}
-            <Tabs value={tabValue} onChange={(e, newValue) => setTabValue(newValue)} sx={{ mb: 2 }}>
-              <Tab
-                label={`Valid Records (${validRecords.length})`}
-                icon={<CheckCircleIcon />}
-                iconPosition="start"
-              />
-              <Tab
-                label={`Failed Records (${failedRecords.length})`}
-                icon={<ErrorIcon />}
-                iconPosition="start"
-              />
-            </Tabs>
-
-            {/* Valid Records Tab */}
-            {tabValue === 0 && (
-              <Box>
-                {validRecords.length > 0 ? (
-                  <>
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
-                      <Typography variant="subtitle2">
-                        These records will be uploaded
-                      </Typography>
-                      <Button
-                        size="small"
-                        onClick={() => setShowValidDetails(!showValidDetails)}
-                        endIcon={showValidDetails ? <ExpandLessIcon /> : <ExpandMoreIcon />}
-                      >
-                        {showValidDetails ? 'Hide' : 'Show'} Details
-                      </Button>
-                    </Box>
-
-                    <Collapse in={showValidDetails}>
-                      <TableContainer component={Paper} variant="outlined" sx={{ maxHeight: 400 }}>
-                        <Table size="small" stickyHeader>
-                          <TableHead>
-                            <TableRow>
-                              <TableCell>Row #</TableCell>
-                              {validRecords.length > 0 &&
-                                getPreviewFields(validRecords[0].record).map((field) => (
-                                  <TableCell key={field}>{field}</TableCell>
-                                ))}
-                            </TableRow>
-                          </TableHead>
-                          <TableBody>
-                            {validRecords.map((item) => (
-                              <TableRow key={item.rowNumber}>
-                                <TableCell>{item.rowNumber}</TableCell>
-                                {getPreviewFields(item.record).map((field) => (
-                                  <TableCell key={field}>
-                                    {item.record[field]?.toString().slice(0, 50) || '-'}
-                                  </TableCell>
-                                ))}
-                              </TableRow>
-                            ))}
-                          </TableBody>
-                        </Table>
-                      </TableContainer>
-                    </Collapse>
-                  </>
-                ) : (
-                  <Alert severity="warning">No valid records found</Alert>
-                )}
-              </Box>
+            {/* Warning if no records found */}
+            {parsedData.length === 0 && (
+              <Alert severity="error" sx={{ mb: 3 }}>
+                <strong>No records found in the uploaded file!</strong>
+                <br />
+                Please ensure your file contains data and the first row has column headers.
+                <br />
+                Check the browser console (F12) for detailed parsing information.
+              </Alert>
             )}
 
-            {/* Failed Records Tab */}
-            {tabValue === 1 && (
-              <Box>
-                {failedRecords.length > 0 ? (
-                  <>
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
-                      <Typography variant="subtitle2">
-                        These records have errors and will not be uploaded
-                      </Typography>
-                      <Box>
-                        <Button
-                          size="small"
-                          startIcon={<DownloadIcon />}
-                          onClick={downloadFailedRecords}
-                          sx={{ mr: 1 }}
-                        >
-                          Export
-                        </Button>
-                        <Button
-                          size="small"
-                          onClick={() => setShowFailedDetails(!showFailedDetails)}
-                          endIcon={showFailedDetails ? <ExpandLessIcon /> : <ExpandMoreIcon />}
-                        >
-                          {showFailedDetails ? 'Hide' : 'Show'} Details
-                        </Button>
-                      </Box>
-                    </Box>
+            {/* Tabs - Only show if we have parsed data */}
+            {parsedData.length > 0 && (
+              <>
+                <Tabs value={tabValue} onChange={(e, newValue) => setTabValue(newValue)} sx={{ mb: 2 }}>
+                  <Tab
+                    label={`Valid Records (${validRecords.length})`}
+                    icon={<CheckCircleIcon />}
+                    iconPosition="start"
+                  />
+                  <Tab
+                    label={`Failed Records (${failedRecords.length})`}
+                    icon={<ErrorIcon />}
+                    iconPosition="start"
+                  />
+                </Tabs>
 
-                    <Collapse in={showFailedDetails}>
-                      <TableContainer component={Paper} variant="outlined" sx={{ maxHeight: 400 }}>
-                        <Table size="small" stickyHeader>
-                          <TableHead>
-                            <TableRow>
-                              <TableCell>Row #</TableCell>
-                              <TableCell>Type</TableCell>
-                              <TableCell>Reason</TableCell>
-                              {failedRecords.length > 0 &&
-                                getPreviewFields(failedRecords[0].record).map((field) => (
-                                  <TableCell key={field}>{field}</TableCell>
+                {/* Valid Records Tab */}
+                {tabValue === 0 && (
+                  <Box>
+                    {validRecords.length > 0 ? (
+                      <>
+                        <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
+                          <Typography variant="subtitle2">
+                            These records will be uploaded
+                          </Typography>
+                          <Button
+                            size="small"
+                            onClick={() => setShowValidDetails(!showValidDetails)}
+                            endIcon={showValidDetails ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+                          >
+                            {showValidDetails ? 'Hide' : 'Show'} Details
+                          </Button>
+                        </Box>
+
+                        <Collapse in={showValidDetails}>
+                          <TableContainer component={Paper} variant="outlined" sx={{ maxHeight: 400 }}>
+                            <Table size="small" stickyHeader>
+                              <TableHead>
+                                <TableRow>
+                                  <TableCell>Row #</TableCell>
+                                  {validRecords.length > 0 &&
+                                    getPreviewFields(validRecords[0].record).map((field) => (
+                                      <TableCell key={field}>{field}</TableCell>
+                                    ))}
+                                </TableRow>
+                              </TableHead>
+                              <TableBody>
+                                {validRecords.map((item) => (
+                                  <TableRow key={item.rowNumber}>
+                                    <TableCell>{item.rowNumber}</TableCell>
+                                    {getPreviewFields(item.record).map((field) => (
+                                      <TableCell key={field}>
+                                        {item.record[field]?.toString().slice(0, 50) || '-'}
+                                      </TableCell>
+                                    ))}
+                                  </TableRow>
                                 ))}
-                            </TableRow>
-                          </TableHead>
-                          <TableBody>
-                            {failedRecords.map((item) => (
-                              <TableRow key={item.rowNumber}>
-                                <TableCell>{item.rowNumber}</TableCell>
-                                <TableCell>
-                                  <Chip
-                                    label={item.type}
-                                    size="small"
-                                    color={item.type === 'duplicate' ? 'warning' : 'error'}
-                                  />
-                                </TableCell>
-                                <TableCell>
-                                  <Tooltip title={item.reason}>
-                                    <Typography variant="caption" noWrap sx={{ maxWidth: 200, display: 'block' }}>
-                                      {item.reason}
-                                    </Typography>
-                                  </Tooltip>
-                                </TableCell>
-                                {getPreviewFields(item.record).map((field) => (
-                                  <TableCell key={field}>
-                                    {item.record[field]?.toString().slice(0, 50) || '-'}
-                                  </TableCell>
-                                ))}
-                              </TableRow>
-                            ))}
-                          </TableBody>
-                        </Table>
-                      </TableContainer>
-                    </Collapse>
-                  </>
-                ) : (
-                  <Alert severity="success">All records are valid!</Alert>
+                              </TableBody>
+                            </Table>
+                          </TableContainer>
+                        </Collapse>
+                      </>
+                    ) : (
+                      <Alert severity="warning">No valid records found</Alert>
+                    )}
+                  </Box>
                 )}
-              </Box>
+
+                {/* Failed Records Tab */}
+                {tabValue === 1 && (
+                  <Box>
+                    {failedRecords.length > 0 ? (
+                      <>
+                        <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
+                          <Typography variant="subtitle2">
+                            These records have errors and will not be uploaded
+                          </Typography>
+                          <Box>
+                            <Button
+                              size="small"
+                              startIcon={<DownloadIcon />}
+                              onClick={downloadFailedRecords}
+                              sx={{ mr: 1 }}
+                            >
+                              Export
+                            </Button>
+                            <Button
+                              size="small"
+                              onClick={() => setShowFailedDetails(!showFailedDetails)}
+                              endIcon={showFailedDetails ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+                            >
+                              {showFailedDetails ? 'Hide' : 'Show'} Details
+                            </Button>
+                          </Box>
+                        </Box>
+
+                        <Collapse in={showFailedDetails}>
+                          <TableContainer component={Paper} variant="outlined" sx={{ maxHeight: 400 }}>
+                            <Table size="small" stickyHeader>
+                              <TableHead>
+                                <TableRow>
+                                  <TableCell>Row #</TableCell>
+                                  <TableCell>Type</TableCell>
+                                  <TableCell>Reason</TableCell>
+                                  {failedRecords.length > 0 &&
+                                    getPreviewFields(failedRecords[0].record).map((field) => (
+                                      <TableCell key={field}>{field}</TableCell>
+                                    ))}
+                                </TableRow>
+                              </TableHead>
+                              <TableBody>
+                                {failedRecords.map((item) => (
+                                  <TableRow key={item.rowNumber}>
+                                    <TableCell>{item.rowNumber}</TableCell>
+                                    <TableCell>
+                                      <Chip
+                                        label={item.type}
+                                        size="small"
+                                        color={item.type === 'duplicate' ? 'warning' : 'error'}
+                                      />
+                                    </TableCell>
+                                    <TableCell>
+                                      <Tooltip title={item.reason}>
+                                        <Typography variant="caption" noWrap sx={{ maxWidth: 200, display: 'block' }}>
+                                          {item.reason}
+                                        </Typography>
+                                      </Tooltip>
+                                    </TableCell>
+                                    {getPreviewFields(item.record).map((field) => (
+                                      <TableCell key={field}>
+                                        {item.record[field]?.toString().slice(0, 50) || '-'}
+                                      </TableCell>
+                                    ))}
+                                  </TableRow>
+                                ))}
+                              </TableBody>
+                            </Table>
+                          </TableContainer>
+                        </Collapse>
+                      </>
+                    ) : (
+                      <Alert severity="success">All records are valid!</Alert>
+                    )}
+                  </Box>
+                )}
+              </>
             )}
           </Box>
         )}

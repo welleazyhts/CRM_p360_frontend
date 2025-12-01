@@ -241,7 +241,12 @@ const ComplaintsManagement = () => {
         <TableContainer component={Paper}>
           <Table>
             <TableHead>
-              <TableRow sx={{ backgroundColor: theme.palette.grey[100] }}>
+              <TableRow sx={{
+                backgroundColor: theme.palette.grey.main,
+                '&:hover': {
+                  backgroundColor: theme.palette.grey.main,
+                }
+              }}>
                 <TableCell>Complaint ID</TableCell>
                 <TableCell>Customer</TableCell>
                 <TableCell>Subject</TableCell>

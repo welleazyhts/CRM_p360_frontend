@@ -365,7 +365,12 @@ const CustomerDatabase = () => {
         <TableContainer component={Paper}>
           <Table>
             <TableHead>
-              <TableRow sx={{ backgroundColor: theme.palette.grey[100] }}>
+              <TableRow sx={{
+                backgroundColor: theme.palette.grey.main,
+                '&:hover': {
+                  backgroundColor: theme.palette.grey.main,
+                }
+              }}>
                 <TableCell>Customer</TableCell>
                 <TableCell>Contact Info</TableCell>
                 <TableCell>Age/Gender</TableCell>
@@ -480,7 +485,7 @@ const CustomerDatabase = () => {
           onPageChange={handleChangePage}
           rowsPerPage={rowsPerPage}
           onRowsPerPageChange={handleChangeRowsPerPage}
-          rowsPerPageOptions={[5,10,25,50]}
+          rowsPerPageOptions={[5, 10, 25, 50]}
         />
 
         {/* Action Menu */}

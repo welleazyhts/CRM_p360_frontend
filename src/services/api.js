@@ -7,38 +7,38 @@
 // Create a default API client
 const api = {
   get: async (url, config = {}) => {
-    // Mock implementation - in real app, this would make actual HTTP requests
-    return new Promise((resolve) => {
+    // Mock implementation - throw error to trigger service fallback to mock data
+    return new Promise((resolve, reject) => {
       setTimeout(() => {
-        resolve({ data: {} });
-      }, 500);
+        reject(new Error('API not configured - using mock data'));
+      }, 100);
     });
   },
 
   post: async (url, data, config = {}) => {
-    // Mock implementation
-    return new Promise((resolve) => {
+    // Mock implementation - throw error to trigger service fallback to mock data
+    return new Promise((resolve, reject) => {
       setTimeout(() => {
-        resolve({ data: {} });
-      }, 500);
+        reject(new Error('API not configured - using mock data'));
+      }, 100);
     });
   },
 
   put: async (url, data, config = {}) => {
-    // Mock implementation
-    return new Promise((resolve) => {
+    // Mock implementation - throw error to trigger service fallback to mock data
+    return new Promise((resolve, reject) => {
       setTimeout(() => {
-        resolve({ data: {} });
-      }, 500);
+        reject(new Error('API not configured - using mock data'));
+      }, 100);
     });
   },
 
   delete: async (url, config = {}) => {
-    // Mock implementation
-    return new Promise((resolve) => {
+    // Mock implementation - throw error to trigger service fallback to mock data
+    return new Promise((resolve, reject) => {
       setTimeout(() => {
-        resolve({ data: {} });
-      }, 500);
+        reject(new Error('API not configured - using mock data'));
+      }, 100);
     });
   }
 };

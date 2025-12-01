@@ -319,7 +319,12 @@ const ContactDatabase = () => {
         <TableContainer component={Paper}>
           <Table>
             <TableHead>
-              <TableRow sx={{ backgroundColor: theme.palette.grey[100] }}>
+              <TableRow sx={{
+                backgroundColor: theme.palette.grey.main,
+                '&:hover': {
+                  backgroundColor: theme.palette.grey.main,
+                }
+              }}>
                 <TableCell>Contact</TableCell>
                 <TableCell>Company</TableCell>
                 <TableCell>Contact Info</TableCell>

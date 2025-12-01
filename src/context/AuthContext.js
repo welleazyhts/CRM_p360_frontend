@@ -123,7 +123,7 @@ export const AuthProvider = ({ children }) => {
         ]
       }
     };
-    
+
     return mockUsers[email] || {
       id: '1',
       name: 'Demo User',
@@ -139,20 +139,20 @@ export const AuthProvider = ({ children }) => {
       try {
         // In a real app, this would verify the token with your backend
         const token = localStorage.getItem('authToken');
-        
+
         if (token) {
           // In a real app, you would decode the token to get user email/id
           // For demo, we'll use a stored email or default
           const storedEmail = localStorage.getItem('userEmail') || 'admin@client.com';
           const userData = getUserData(storedEmail);
-          
+
           // Check if account is expired
           if (isAccountExpired(userData)) {
             localStorage.removeItem('authToken');
             localStorage.removeItem('userEmail');
             return;
           }
-          
+
           setCurrentUser(userData);
           applyUserLanguage(userData);
         }
@@ -164,7 +164,7 @@ export const AuthProvider = ({ children }) => {
         setLoading(false);
       }
     };
-    
+
     checkAuthStatus();
   }, [applyUserLanguage]);
 
@@ -176,34 +176,34 @@ export const AuthProvider = ({ children }) => {
     //   body: JSON.stringify({ email, password })
     // });
     // const data = await response.json();
-    
+
     // Mock successful login - just validate credentials
     return new Promise((resolve) => {
       setTimeout(() => {
         // In a real app, you would validate credentials here
         // For demo, we'll just consider any login attempt successful
-        
+
         const userData = getUserData(email);
-        
+
         // Check if account is expired
         if (isAccountExpired(userData)) {
           resolve({ success: false, message: 'Your account has expired. Please contact administrator.' });
           return;
         }
-        
+
         // For non-MFA logins, we need to set the token and user here
         const savedSettings = localStorage.getItem('userSettings');
         let mfaEnabled = false;
-        
+
         if (savedSettings) {
           try {
             const settings = JSON.parse(savedSettings);
             mfaEnabled = settings.mfaEnabled;
-                  } catch (error) {
-          // Failed to parse saved settings, using defaults
+          } catch (error) {
+            // Failed to parse saved settings, using defaults
+          }
         }
-        }
-        
+
         // If MFA is not enabled, log the user in directly
         if (!mfaEnabled) {
           const mockToken = 'mock-jwt-token-' + Math.random().toString(36).substring(2);
@@ -212,7 +212,7 @@ export const AuthProvider = ({ children }) => {
           setCurrentUser(userData);
           applyUserLanguage(userData);
         }
-        
+
         resolve({ success: true, user: userData });
       }, 1000);
     });
@@ -228,12 +228,12 @@ export const AuthProvider = ({ children }) => {
           // OTP is valid, log the user in now
           const mockToken = 'mock-jwt-token-' + Math.random().toString(36).substring(2);
           localStorage.setItem('authToken', mockToken);
-          
+
           // Note: userData would come from your backend in a real app
           // Here we'll get it from the stored email
           const storedEmail = localStorage.getItem('userEmail') || 'admin@client.com';
           const userData = getUserData(storedEmail);
-          
+
           setCurrentUser(userData);
           applyUserLanguage(userData);
           resolve({ success: true, user: userData });

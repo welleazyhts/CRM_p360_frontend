@@ -12,7 +12,7 @@ import {
   Add as AddIcon, Search as SearchIcon, Refresh as RefreshIcon,
   Assignment as TicketIcon, Person as PersonIcon, AccessTime as TimeIcon,
   CheckCircle as ResolvedIcon, Error as OpenIcon, Schedule as PendingIcon,
-  Phone as PhoneIcon, CallReceived as IncomingCallIcon, 
+  Phone as PhoneIcon, CallReceived as IncomingCallIcon,
   Schedule as FollowUpIcon, Event as EventIcon
 } from '@mui/icons-material';
 
@@ -92,13 +92,13 @@ const InboundCustomerService = () => {
 
   const handleAddTicket = async () => {
     setSelectedTicket(null);
-    
+
     // Capture incoming call automatically
     const incomingCall = callService.captureIncomingCall();
-    
+
     // Look up customer by phone number
     const customerLookup = await callService.lookupCustomerByPhone(incomingCall.callerNumber);
-    
+
     setFormData({
       customerName: customerLookup.found ? customerLookup.customer.name : '',
       email: customerLookup.found ? customerLookup.customer.email : '',
@@ -117,7 +117,7 @@ const InboundCustomerService = () => {
       callNotes: '',
       customerId: customerLookup.found ? customerLookup.customer.id : null
     });
-    
+
     setTicketDialogOpen(true);
   };
 
@@ -301,7 +301,12 @@ const InboundCustomerService = () => {
         <TableContainer component={Paper}>
           <Table>
             <TableHead>
-              <TableRow sx={{ backgroundColor: theme.palette.grey[100] }}>
+              <TableRow sx={{
+                backgroundColor: theme.palette.grey.main,
+                '&:hover': {
+                  backgroundColor: theme.palette.grey.main,
+                }
+              }}>
                 <TableCell>Ticket ID</TableCell>
                 <TableCell>Customer</TableCell>
                 <TableCell>Call Reason</TableCell>
@@ -382,7 +387,7 @@ const InboundCustomerService = () => {
                 </Paper>
               </Box>
             )}
-            
+
             <Grid container spacing={2} sx={{ mt: 1 }}>
               {/* Customer Information */}
               <Grid item xs={12} md={6}>
@@ -429,7 +434,7 @@ const InboundCustomerService = () => {
                   }}
                 />
               </Grid>
-              
+
               {/* Call Details */}
               <Grid item xs={12} md={6}>
                 <FormControl fullWidth>
@@ -464,7 +469,7 @@ const InboundCustomerService = () => {
                   </Select>
                 </FormControl>
               </Grid>
-              
+
               {/* Call Notes */}
               <Grid item xs={12}>
                 <TextField
@@ -477,7 +482,7 @@ const InboundCustomerService = () => {
                   placeholder="Notes about the conversation..."
                 />
               </Grid>
-              
+
               {/* Follow-up Section */}
               <Grid item xs={12}>
                 <Paper sx={{ p: 2, bgcolor: 'background.default', border: '1px solid', borderColor: 'divider' }}>
@@ -485,7 +490,7 @@ const InboundCustomerService = () => {
                     <FollowUpIcon color="primary" />
                     Follow-up Required
                   </Typography>
-                  
+
                   <Grid container spacing={2}>
                     <Grid item xs={12}>
                       <FormControl component="fieldset">
@@ -500,7 +505,7 @@ const InboundCustomerService = () => {
                         </Box>
                       </FormControl>
                     </Grid>
-                    
+
                     {formData.followUpRequired && (
                       <>
                         <Grid item xs={12} md={6}>
@@ -529,7 +534,7 @@ const InboundCustomerService = () => {
                   </Grid>
                 </Paper>
               </Grid>
-              
+
               {/* Status and Priority */}
               <Grid item xs={12} md={4}>
                 <FormControl fullWidth>

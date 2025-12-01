@@ -61,6 +61,9 @@ const LeaveManagementCalendar = () => {
   const [selectedDate, setSelectedDate] = useState(null);
   const [openDialog, setOpenDialog] = useState(false);
   const [openRegularizationDialog, setOpenRegularizationDialog] = useState(false);
+  const [openDetailsDialog, setOpenDetailsDialog] = useState(false);
+  const [selectedItem, setSelectedItem] = useState(null);
+  const [detailsType, setDetailsType] = useState('leave'); // 'leave' or 'regularization'
   const [activeTab, setActiveTab] = useState(0);
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
   const [leaveForm, setLeaveForm] = useState({
@@ -276,6 +279,24 @@ const LeaveManagementCalendar = () => {
       console.error('Error rejecting regularization:', error);
       setSnackbar({ open: true, message: 'Failed to reject regularization request.', severity: 'error' });
     }
+  };
+
+  // Handle view details
+  const handleViewLeaveDetails = (leave) => {
+    setSelectedItem(leave);
+    setDetailsType('leave');
+    setOpenDetailsDialog(true);
+  };
+
+  const handleViewRegularizationDetails = (reg) => {
+    setSelectedItem(reg);
+    setDetailsType('regularization');
+    setOpenDetailsDialog(true);
+  };
+
+  const handleCloseDetailsDialog = () => {
+    setOpenDetailsDialog(false);
+    setSelectedItem(null);
   };
 
   const calculateDays = (start, end) => {
@@ -751,7 +772,14 @@ const LeaveManagementCalendar = () => {
                             </Stack>
                           ) : (
                             <Tooltip title="View Details">
-                              <IconButton size="small">
+                              <IconButton
+                                size="small"
+                                onClick={() => handleViewLeaveDetails(leave)}
+                                sx={{
+                                  bgcolor: alpha(theme.palette.primary.main, 0.1),
+                                  '&:hover': { bgcolor: alpha(theme.palette.primary.main, 0.2) }
+                                }}
+                              >
                                 <ViewIcon fontSize="small" />
                               </IconButton>
                             </Tooltip>
@@ -899,7 +927,14 @@ const LeaveManagementCalendar = () => {
                           </Stack>
                         ) : (
                           <Tooltip title="View Details">
-                            <IconButton size="small">
+                            <IconButton
+                              size="small"
+                              onClick={() => handleViewRegularizationDetails(reg)}
+                              sx={{
+                                bgcolor: alpha(theme.palette.primary.main, 0.1),
+                                '&:hover': { bgcolor: alpha(theme.palette.primary.main, 0.2) }
+                              }}
+                            >
                               <ViewIcon fontSize="small" />
                             </IconButton>
                           </Tooltip>
@@ -1022,6 +1057,279 @@ const LeaveManagementCalendar = () => {
           <Button onClick={handleCloseRegularizationDialog}>Cancel</Button>
           <Button variant="contained" onClick={handleSubmitRegularization}>
             Submit Request
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Details Dialog */}
+      <Dialog open={openDetailsDialog} onClose={handleCloseDetailsDialog} maxWidth="md" fullWidth>
+        <DialogTitle>
+          {detailsType === 'leave' ? 'Leave Request Details' : 'Regularization Request Details'}
+        </DialogTitle>
+        <DialogContent>
+          {selectedItem && (
+            <Box sx={{ pt: 2 }}>
+              {detailsType === 'leave' ? (
+                // Leave Details
+                <Grid container spacing={3}>
+                  <Grid item xs={12}>
+                    <Paper sx={{ p: 2, bgcolor: alpha(theme.palette.primary.main, 0.05) }}>
+                      <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                        Employee Information
+                      </Typography>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mt: 1 }}>
+                        <Avatar sx={{ width: 56, height: 56, bgcolor: alpha(theme.palette.primary.main, 0.1), color: 'primary.main' }}>
+                          <PersonIcon />
+                        </Avatar>
+                        <Box>
+                          <Typography variant="h6" fontWeight="600">
+                            {selectedItem.employee}
+                          </Typography>
+                          <Typography variant="body2" color="text.secondary">
+                            Employee ID: {selectedItem.employeeId}
+                          </Typography>
+                        </Box>
+                      </Box>
+                    </Paper>
+                  </Grid>
+
+                  <Grid item xs={12} sm={6}>
+                    <Box>
+                      <Typography variant="caption" color="text.secondary" display="block">
+                        Leave Type
+                      </Typography>
+                      <Chip
+                        icon={React.createElement(leaveTypes[selectedItem.type].icon)}
+                        label={selectedItem.type}
+                        sx={{
+                          mt: 1,
+                          bgcolor: alpha(leaveTypes[selectedItem.type].color, 0.1),
+                          color: leaveTypes[selectedItem.type].color,
+                          '& .MuiChip-icon': { color: leaveTypes[selectedItem.type].color },
+                        }}
+                      />
+                    </Box>
+                  </Grid>
+
+                  <Grid item xs={12} sm={6}>
+                    <Box>
+                      <Typography variant="caption" color="text.secondary" display="block">
+                        Status
+                      </Typography>
+                      <Chip
+                        icon={getStatusIcon(selectedItem.status)}
+                        label={selectedItem.status}
+                        color={getStatusColor(selectedItem.status)}
+                        sx={{ mt: 1 }}
+                      />
+                    </Box>
+                  </Grid>
+
+                  <Grid item xs={12} sm={6}>
+                    <Box>
+                      <Typography variant="caption" color="text.secondary" display="block">
+                        Start Date
+                      </Typography>
+                      <Typography variant="body1" fontWeight="600" sx={{ mt: 0.5 }}>
+                        {selectedItem.startDate}
+                      </Typography>
+                    </Box>
+                  </Grid>
+
+                  <Grid item xs={12} sm={6}>
+                    <Box>
+                      <Typography variant="caption" color="text.secondary" display="block">
+                        End Date
+                      </Typography>
+                      <Typography variant="body1" fontWeight="600" sx={{ mt: 0.5 }}>
+                        {selectedItem.endDate}
+                      </Typography>
+                    </Box>
+                  </Grid>
+
+                  <Grid item xs={12} sm={6}>
+                    <Box>
+                      <Typography variant="caption" color="text.secondary" display="block">
+                        Number of Days
+                      </Typography>
+                      <Typography variant="body1" fontWeight="600" sx={{ mt: 0.5 }}>
+                        {selectedItem.days} day{selectedItem.days > 1 ? 's' : ''}
+                      </Typography>
+                    </Box>
+                  </Grid>
+
+                  <Grid item xs={12} sm={6}>
+                    <Box>
+                      <Typography variant="caption" color="text.secondary" display="block">
+                        Applied On
+                      </Typography>
+                      <Typography variant="body1" fontWeight="600" sx={{ mt: 0.5 }}>
+                        {selectedItem.appliedDate}
+                      </Typography>
+                    </Box>
+                  </Grid>
+
+                  <Grid item xs={12}>
+                    <Divider />
+                  </Grid>
+
+                  <Grid item xs={12}>
+                    <Box>
+                      <Typography variant="caption" color="text.secondary" display="block" gutterBottom>
+                        Reason for Leave
+                      </Typography>
+                      <Paper sx={{ p: 2, bgcolor: 'background.default' }}>
+                        <Typography variant="body2">
+                          {selectedItem.reason}
+                        </Typography>
+                      </Paper>
+                    </Box>
+                  </Grid>
+                </Grid>
+              ) : (
+                // Regularization Details
+                <Grid container spacing={3}>
+                  <Grid item xs={12}>
+                    <Paper sx={{ p: 2, bgcolor: alpha(theme.palette.warning.main, 0.05) }}>
+                      <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                        Employee Information
+                      </Typography>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mt: 1 }}>
+                        <Avatar sx={{ width: 56, height: 56, bgcolor: alpha(theme.palette.warning.main, 0.1), color: 'warning.main' }}>
+                          <RegularizationIcon />
+                        </Avatar>
+                        <Box>
+                          <Typography variant="h6" fontWeight="600">
+                            {selectedItem.employee}
+                          </Typography>
+                          <Typography variant="body2" color="text.secondary">
+                            Employee ID: {selectedItem.employeeId}
+                          </Typography>
+                        </Box>
+                      </Box>
+                    </Paper>
+                  </Grid>
+
+                  <Grid item xs={12} sm={6}>
+                    <Box>
+                      <Typography variant="caption" color="text.secondary" display="block">
+                        Date
+                      </Typography>
+                      <Typography variant="body1" fontWeight="600" sx={{ mt: 0.5 }}>
+                        {selectedItem.date}
+                      </Typography>
+                    </Box>
+                  </Grid>
+
+                  <Grid item xs={12} sm={6}>
+                    <Box>
+                      <Typography variant="caption" color="text.secondary" display="block">
+                        Status
+                      </Typography>
+                      <Chip
+                        icon={getStatusIcon(selectedItem.status)}
+                        label={selectedItem.status}
+                        color={getStatusColor(selectedItem.status)}
+                        sx={{ mt: 1 }}
+                      />
+                    </Box>
+                  </Grid>
+
+                  <Grid item xs={12}>
+                    <Divider />
+                  </Grid>
+
+                  <Grid item xs={12} sm={6}>
+                    <Paper sx={{ p: 2, bgcolor: 'background.default' }}>
+                      <Typography variant="subtitle2" fontWeight="600" gutterBottom>
+                        Check-In Time
+                      </Typography>
+                      <Box sx={{ mt: 1 }}>
+                        <Typography variant="caption" color="text.secondary" display="block">
+                          Scheduled
+                        </Typography>
+                        <Typography variant="body1" fontWeight="600">
+                          {selectedItem.scheduledCheckIn}
+                        </Typography>
+                      </Box>
+                      <Box sx={{ mt: 1.5 }}>
+                        <Typography variant="caption" color="text.secondary" display="block">
+                          Actual
+                        </Typography>
+                        <Typography
+                          variant="body1"
+                          fontWeight="600"
+                          color={selectedItem.actualCheckIn > selectedItem.scheduledCheckIn ? 'error.main' : 'success.main'}
+                        >
+                          {selectedItem.actualCheckIn}
+                        </Typography>
+                      </Box>
+                    </Paper>
+                  </Grid>
+
+                  <Grid item xs={12} sm={6}>
+                    <Paper sx={{ p: 2, bgcolor: 'background.default' }}>
+                      <Typography variant="subtitle2" fontWeight="600" gutterBottom>
+                        Check-Out Time
+                      </Typography>
+                      <Box sx={{ mt: 1 }}>
+                        <Typography variant="caption" color="text.secondary" display="block">
+                          Scheduled
+                        </Typography>
+                        <Typography variant="body1" fontWeight="600">
+                          {selectedItem.scheduledCheckOut}
+                        </Typography>
+                      </Box>
+                      <Box sx={{ mt: 1.5 }}>
+                        <Typography variant="caption" color="text.secondary" display="block">
+                          Actual
+                        </Typography>
+                        <Typography
+                          variant="body1"
+                          fontWeight="600"
+                          color={selectedItem.actualCheckOut < selectedItem.scheduledCheckOut ? 'error.main' : 'success.main'}
+                        >
+                          {selectedItem.actualCheckOut}
+                        </Typography>
+                      </Box>
+                    </Paper>
+                  </Grid>
+
+                  <Grid item xs={12}>
+                    <Box>
+                      <Typography variant="caption" color="text.secondary" display="block">
+                        Applied On
+                      </Typography>
+                      <Typography variant="body1" fontWeight="600" sx={{ mt: 0.5 }}>
+                        {selectedItem.appliedDate}
+                      </Typography>
+                    </Box>
+                  </Grid>
+
+                  <Grid item xs={12}>
+                    <Divider />
+                  </Grid>
+
+                  <Grid item xs={12}>
+                    <Box>
+                      <Typography variant="caption" color="text.secondary" display="block" gutterBottom>
+                        Reason for Regularization
+                      </Typography>
+                      <Paper sx={{ p: 2, bgcolor: 'background.default' }}>
+                        <Typography variant="body2">
+                          {selectedItem.reason}
+                        </Typography>
+                      </Paper>
+                    </Box>
+                  </Grid>
+                </Grid>
+              )}
+            </Box>
+          )}
+        </DialogContent>
+        <DialogActions sx={{ p: 2.5 }}>
+          <Button onClick={handleCloseDetailsDialog} variant="contained">
+            Close
           </Button>
         </DialogActions>
       </Dialog>

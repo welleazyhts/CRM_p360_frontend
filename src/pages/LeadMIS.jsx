@@ -147,14 +147,14 @@ const LeadMIS = () => {
   ];
 
   const lostLeadsDetails = [
-    { id: 'L001', customerName: 'Rajesh Kumar', policyType: 'Health', agent: 'Priya Patel', lostDate: '2024-01-15', reason: 'High Premium', premium: 25000, competitor: 'Star Health', notes: 'Customer found 20% cheaper option' },
-    { id: 'L002', customerName: 'Sunita Sharma', policyType: 'Motor', agent: 'Rahul Kumar', lostDate: '2024-01-18', reason: 'Better Competitor Offer', premium: 18000, competitor: 'HDFC ERGO', notes: 'Competitor offered additional benefits' },
-    { id: 'L003', customerName: 'Amit Patel', policyType: 'Life', agent: 'Sarah Johnson', lostDate: '2024-01-20', reason: 'Poor Service Experience', premium: 45000, competitor: 'LIC', notes: 'Unhappy with claim settlement process' },
-    { id: 'L004', customerName: 'Kavita Reddy', policyType: 'Health', agent: 'Amit Sharma', lostDate: '2024-01-22', reason: 'Coverage Issues', premium: 32000, competitor: 'Max Bupa', notes: 'Required specific coverage not available' },
-    { id: 'L005', customerName: 'Deepak Singh', policyType: 'Motor', agent: 'Kavita Reddy', lostDate: '2024-01-25', reason: 'Financial Constraints', premium: 22000, competitor: 'None', notes: 'Customer postponed purchase due to budget' },
-    { id: 'L006', customerName: 'Meera Gupta', policyType: 'Travel', agent: 'Priya Patel', lostDate: '2024-01-28', reason: 'High Premium', premium: 8500, competitor: 'Bajaj Allianz', notes: 'Found 30% cheaper alternative' },
-    { id: 'L007', customerName: 'Vikram Joshi', policyType: 'Home', agent: 'Rahul Kumar', lostDate: '2024-02-01', reason: 'Better Competitor Offer', premium: 35000, competitor: 'ICICI Lombard', notes: 'Competitor offered better terms' },
-    { id: 'L008', customerName: 'Anita Desai', policyType: 'Health', agent: 'Sarah Johnson', lostDate: '2024-02-03', reason: 'Poor Service Experience', premium: 28000, competitor: 'Care Health', notes: 'Dissatisfied with response time' }
+    { id: 'L001', customerName: 'Rajesh Kumar', policyType: 'Health', agent: 'Priya Patel', lostDate: '2024-01-15', reason: 'High Premium', premium: 25000, notes: 'Customer found 20% cheaper option' },
+    { id: 'L002', customerName: 'Sunita Sharma', policyType: 'Motor', agent: 'Rahul Kumar', lostDate: '2024-01-18', reason: 'Better Competitor Offer', premium: 18000, notes: 'Competitor offered additional benefits' },
+    { id: 'L003', customerName: 'Amit Patel', policyType: 'Life', agent: 'Sarah Johnson', lostDate: '2024-01-20', reason: 'Poor Service Experience', premium: 45000, notes: 'Unhappy with claim settlement process' },
+    { id: 'L004', customerName: 'Kavita Reddy', policyType: 'Health', agent: 'Amit Sharma', lostDate: '2024-01-22', reason: 'Coverage Issues', premium: 32000, notes: 'Required specific coverage not available' },
+    { id: 'L005', customerName: 'Deepak Singh', policyType: 'Motor', agent: 'Kavita Reddy', lostDate: '2024-01-25', reason: 'Financial Constraints', premium: 22000, notes: 'Customer postponed purchase due to budget' },
+    { id: 'L006', customerName: 'Meera Gupta', policyType: 'Travel', agent: 'Priya Patel', lostDate: '2024-01-28', reason: 'High Premium', premium: 8500, notes: 'Found 30% cheaper alternative' },
+    { id: 'L007', customerName: 'Vikram Joshi', policyType: 'Home', agent: 'Rahul Kumar', lostDate: '2024-02-01', reason: 'Better Competitor Offer', premium: 35000, notes: 'Competitor offered better terms' },
+    { id: 'L008', customerName: 'Anita Desai', policyType: 'Health', agent: 'Sarah Johnson', lostDate: '2024-02-03', reason: 'Poor Service Experience', premium: 28000, notes: 'Dissatisfied with response time' }
   ];
 
   const [lostReasonFilter, setLostReasonFilter] = useState('all');
@@ -1765,7 +1765,7 @@ const LeadMIS = () => {
                           <TableCell align="center">Lost Date</TableCell>
                           <TableCell>Lost Reason</TableCell>
                           <TableCell align="right">Premium</TableCell>
-                          <TableCell>Competitor</TableCell>
+
                           <TableCell>Notes</TableCell>
                         </TableRow>
                       </TableHead>
@@ -1811,11 +1811,6 @@ const LeadMIS = () => {
                               <TableCell align="right">
                                 <Typography variant="body2" fontWeight="600">
                                   ₹{lead.premium.toLocaleString()}
-                                </Typography>
-                              </TableCell>
-                              <TableCell>
-                                <Typography variant="body2" color={lead.competitor === 'None' ? 'text.secondary' : 'text.primary'}>
-                                  {lead.competitor}
                                 </Typography>
                               </TableCell>
                               <TableCell>
