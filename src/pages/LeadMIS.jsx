@@ -69,6 +69,28 @@ const LeadMIS = () => {
   const [selectedSources, setSelectedSources] = useState([]);
   const [selectedStatuses, setSelectedStatuses] = useState([]);
 
+  // CSC Load Tracking Filters
+  const [cscSelectedMonth, setCscSelectedMonth] = useState(new Date().toISOString().slice(0, 7));
+  const [cscSelectedRegion, setCscSelectedRegion] = useState('all');
+
+  // Daily Insurer MIS Filters
+  const [dailyMISSelectedInsurer, setDailyMISSelectedInsurer] = useState('all');
+  const [dailyMISSelectedDate, setDailyMISSelectedDate] = useState('all');
+
+  // Premium Registers Filters
+  const [premiumSelectedInsurer, setPremiumSelectedInsurer] = useState('all');
+  const [premiumSelectedPolicyType, setPremiumSelectedPolicyType] = useState('all');
+  const [premiumSelectedTenure, setPremiumSelectedTenure] = useState('all');
+
+  // Capacity Planning CSC Filters
+  const [capacitySelectedMonth, setCapacitySelectedMonth] = useState(new Date().toISOString().slice(0, 7));
+  const [capacitySelectedRegion, setCapacitySelectedRegion] = useState('all');
+
+  // Workload Distribution Filters
+  const [workloadSelectedDateRange, setWorkloadSelectedDateRange] = useState('thisMonth');
+  const [workloadSelectedRegion, setWorkloadSelectedRegion] = useState('all');
+  const [workloadSelectedTeam, setWorkloadSelectedTeam] = useState('all');
+
   // API Data States
   const [leadsByStatusData, setLeadsByStatusData] = useState([]);
   const [leadsBySourceData, setLeadsBySourceData] = useState([]);
@@ -198,26 +220,26 @@ const LeadMIS = () => {
 
   // Pivot Reports data
   const pivotByInsurer = [
-    { insurer: 'HDFC ERGO', policies: 145, premium: 6500000, claims: 12, claimRatio: 8.3, marketShare: 28.5 },
-    { insurer: 'ICICI Lombard', policies: 132, premium: 5800000, claims: 8, claimRatio: 6.1, marketShare: 25.9 },
-    { insurer: 'Bajaj Allianz', policies: 98, premium: 4200000, claims: 15, claimRatio: 15.3, marketShare: 19.2 },
-    { insurer: 'Star Health', policies: 87, premium: 3900000, claims: 6, claimRatio: 6.9, marketShare: 17.1 },
-    { insurer: 'Max Bupa', policies: 48, premium: 2100000, claims: 4, claimRatio: 8.3, marketShare: 9.4 }
+    { insurer: 'HDFC ERGO', policies: 145, premium: 6500000, claims: 12, claimRatio: 8.3, marketShare: 28.5, product: 'Health', date: '2025-01-15' },
+    { insurer: 'ICICI Lombard', policies: 132, premium: 5800000, claims: 8, claimRatio: 6.1, marketShare: 25.9, product: 'Motor', date: '2025-01-20' },
+    { insurer: 'Bajaj Allianz', policies: 98, premium: 4200000, claims: 15, claimRatio: 15.3, marketShare: 19.2, product: 'Life', date: '2025-01-18' },
+    { insurer: 'Star Health', policies: 87, premium: 3900000, claims: 6, claimRatio: 6.9, marketShare: 17.1, product: 'Health', date: '2025-01-22' },
+    { insurer: 'Max Bupa', policies: 48, premium: 2100000, claims: 4, claimRatio: 8.3, marketShare: 9.4, product: 'Travel', date: '2025-01-25' }
   ];
 
   const pivotByCSC = [
-    { csc: 'Mumbai Central', policies: 185, premium: 8200000, agents: 12, avgPerAgent: 15.4, efficiency: 92.3 },
-    { csc: 'Delhi North', policies: 165, premium: 7400000, agents: 10, avgPerAgent: 16.5, efficiency: 88.7 },
-    { csc: 'Bangalore Tech', policies: 142, premium: 6800000, agents: 9, avgPerAgent: 15.8, efficiency: 94.1 },
-    { csc: 'Chennai Express', policies: 128, premium: 5900000, agents: 8, avgPerAgent: 16.0, efficiency: 85.2 },
-    { csc: 'Hyderabad Hub', policies: 95, premium: 4300000, agents: 6, avgPerAgent: 15.8, efficiency: 89.6 }
+    { csc: 'Mumbai Central', policies: 185, premium: 8200000, agents: 12, avgPerAgent: 15.4, efficiency: 92.3, product: 'Health', date: '2025-01-15' },
+    { csc: 'Delhi North', policies: 165, premium: 7400000, agents: 10, avgPerAgent: 16.5, efficiency: 88.7, product: 'Motor', date: '2025-01-20' },
+    { csc: 'Bangalore Tech', policies: 142, premium: 6800000, agents: 9, avgPerAgent: 15.8, efficiency: 94.1, product: 'Life', date: '2025-01-18' },
+    { csc: 'Chennai Express', policies: 128, premium: 5900000, agents: 8, avgPerAgent: 16.0, efficiency: 85.2, product: 'Health', date: '2025-01-22' },
+    { csc: 'Hyderabad Hub', policies: 95, premium: 4300000, agents: 6, avgPerAgent: 15.8, efficiency: 89.6, product: 'Motor', date: '2025-01-25' }
   ];
 
   const pivotByTenure = [
-    { tenure: '1 Year', policies: 285, premium: 8500000, renewalRate: 78.2, avgPremium: 29825, satisfaction: 4.2 },
-    { tenure: '2 Years', policies: 198, premium: 7200000, renewalRate: 85.4, avgPremium: 36364, satisfaction: 4.5 },
-    { tenure: '3 Years', policies: 142, premium: 6800000, renewalRate: 91.5, avgPremium: 47887, satisfaction: 4.7 },
-    { tenure: '5 Years', policies: 85, premium: 5100000, renewalRate: 94.1, avgPremium: 60000, satisfaction: 4.8 }
+    { tenure: '1 Year', policies: 285, premium: 8500000, renewalRate: 78.2, avgPremium: 29825, satisfaction: 4.2, product: 'Health', date: '2025-01-15' },
+    { tenure: '2 Years', policies: 198, premium: 7200000, renewalRate: 85.4, avgPremium: 36364, satisfaction: 4.5, product: 'Motor', date: '2025-01-20' },
+    { tenure: '3 Years', policies: 142, premium: 6800000, renewalRate: 91.5, avgPremium: 47887, satisfaction: 4.7, product: 'Life', date: '2025-01-18' },
+    { tenure: '5 Years', policies: 85, premium: 5100000, renewalRate: 94.1, avgPremium: 60000, satisfaction: 4.8, product: 'Health', date: '2025-01-22' }
   ];
 
   const [pivotGroupBy, setPivotGroupBy] = useState('insurer');
@@ -2121,60 +2143,62 @@ const LeadMIS = () => {
                         </TableRow>
                       </TableHead>
                       <TableBody>
-                        {productWiseConversion.map((product) => (
-                          <TableRow key={product.product} hover>
-                            <TableCell>
-                              <Typography variant="body2" fontWeight="600">
-                                {product.product} Insurance
-                              </Typography>
-                            </TableCell>
-                            <TableCell align="center">{product.totalLeads}</TableCell>
-                            <TableCell align="center">
-                              <Typography variant="body2" fontWeight="600" color="primary.main">
-                                {product.convertedLeads}
-                              </Typography>
-                            </TableCell>
-                            <TableCell align="center">
-                              <Chip
-                                label={`${product.conversionRate}%`}
-                                size="small"
-                                color={product.conversionRate >= 35 ? 'success' : product.conversionRate >= 30 ? 'primary' : 'warning'}
-                              />
-                            </TableCell>
-                            <TableCell align="right">
-                              <Typography variant="body2" fontWeight="600">
-                                ₹{product.avgDealValue.toLocaleString()}
-                              </Typography>
-                            </TableCell>
-                            <TableCell>
-                              <Box sx={{ width: '100%', display: 'flex', alignItems: 'center', gap: 1 }}>
-                                <Box
-                                  sx={{
-                                    flex: 1,
-                                    height: 8,
-                                    bgcolor: alpha(theme.palette.grey[500], 0.1),
-                                    borderRadius: 1,
-                                    overflow: 'hidden'
-                                  }}
-                                >
+                        {productWiseConversion
+                          .filter(product => conversionProductFilter === 'all' || product.product === conversionProductFilter)
+                          .map((product) => (
+                            <TableRow key={product.product} hover>
+                              <TableCell>
+                                <Typography variant="body2" fontWeight="600">
+                                  {product.product} Insurance
+                                </Typography>
+                              </TableCell>
+                              <TableCell align="center">{product.totalLeads}</TableCell>
+                              <TableCell align="center">
+                                <Typography variant="body2" fontWeight="600" color="primary.main">
+                                  {product.convertedLeads}
+                                </Typography>
+                              </TableCell>
+                              <TableCell align="center">
+                                <Chip
+                                  label={`${product.conversionRate}%`}
+                                  size="small"
+                                  color={product.conversionRate >= 35 ? 'success' : product.conversionRate >= 30 ? 'primary' : 'warning'}
+                                />
+                              </TableCell>
+                              <TableCell align="right">
+                                <Typography variant="body2" fontWeight="600">
+                                  ₹{product.avgDealValue.toLocaleString()}
+                                </Typography>
+                              </TableCell>
+                              <TableCell>
+                                <Box sx={{ width: '100%', display: 'flex', alignItems: 'center', gap: 1 }}>
                                   <Box
                                     sx={{
-                                      width: `${product.conversionRate}%`,
-                                      height: '100%',
-                                      bgcolor: product.conversionRate >= 35 ? theme.palette.success.main :
-                                        product.conversionRate >= 30 ? theme.palette.primary.main :
-                                          theme.palette.warning.main,
-                                      borderRadius: 1
+                                      flex: 1,
+                                      height: 8,
+                                      bgcolor: alpha(theme.palette.grey[500], 0.1),
+                                      borderRadius: 1,
+                                      overflow: 'hidden'
                                     }}
-                                  />
+                                  >
+                                    <Box
+                                      sx={{
+                                        width: `${product.conversionRate}%`,
+                                        height: '100%',
+                                        bgcolor: product.conversionRate >= 35 ? theme.palette.success.main :
+                                          product.conversionRate >= 30 ? theme.palette.primary.main :
+                                            theme.palette.warning.main,
+                                        borderRadius: 1
+                                      }}
+                                    />
+                                  </Box>
+                                  <Typography variant="caption" fontWeight="600">
+                                    {product.conversionRate}%
+                                  </Typography>
                                 </Box>
-                                <Typography variant="caption" fontWeight="600">
-                                  {product.conversionRate}%
-                                </Typography>
-                              </Box>
-                            </TableCell>
-                          </TableRow>
-                        ))}
+                              </TableCell>
+                            </TableRow>
+                          ))}
                       </TableBody>
                     </Table>
                   </TableContainer>
@@ -2375,6 +2399,8 @@ const LeadMIS = () => {
                       <TableHead>
                         <TableRow>
                           <TableCell>{pivotGroupBy === 'insurer' ? 'Insurer Name' : pivotGroupBy === 'csc' ? 'CSC Location' : 'Policy Tenure'}</TableCell>
+                          <TableCell>Product</TableCell>
+                          <TableCell>Date</TableCell>
                           <TableCell align="center">Policies</TableCell>
                           <TableCell align="right">Premium Amount</TableCell>
                           <TableCell align="center">
@@ -2390,98 +2416,111 @@ const LeadMIS = () => {
                         </TableRow>
                       </TableHead>
                       <TableBody>
-                        {getPivotData().map((item, index) => (
-                          <TableRow key={index} hover>
-                            <TableCell>
-                              <Typography variant="body2" fontWeight="600">
-                                {item.insurer || item.csc || item.tenure}
-                              </Typography>
-                            </TableCell>
-                            <TableCell align="center">
-                              <Typography variant="body2" fontWeight="600" color="primary.main">
-                                {item.policies}
-                              </Typography>
-                            </TableCell>
-                            <TableCell align="right">
-                              <Typography variant="body2" fontWeight="600" color="success.main">
-                                ₹{(item.premium / 100000).toFixed(1)}L
-                              </Typography>
-                            </TableCell>
-                            <TableCell align="center">
-                              {pivotGroupBy === 'insurer' && (
-                                <Typography variant="body2">{item.claims}</Typography>
-                              )}
-                              {pivotGroupBy === 'csc' && (
-                                <Typography variant="body2">{item.agents}</Typography>
-                              )}
-                              {pivotGroupBy === 'tenure' && (
-                                <Chip label={`${item.renewalRate}%`} size="small" color="success" />
-                              )}
-                            </TableCell>
-                            <TableCell align="center">
-                              {pivotGroupBy === 'insurer' && (
-                                <Chip
-                                  label={`${item.claimRatio}%`}
-                                  size="small"
-                                  color={item.claimRatio <= 8 ? 'success' : item.claimRatio <= 12 ? 'warning' : 'error'}
-                                />
-                              )}
-                              {pivotGroupBy === 'csc' && (
-                                <Typography variant="body2" fontWeight="600">{item.avgPerAgent}</Typography>
-                              )}
-                              {pivotGroupBy === 'tenure' && (
-                                <Typography variant="body2" fontWeight="600">₹{item.avgPremium.toLocaleString()}</Typography>
-                              )}
-                            </TableCell>
-                            <TableCell align="center">
-                              {pivotGroupBy === 'insurer' && (
-                                <Chip
-                                  label={`${item.marketShare}%`}
-                                  size="small"
-                                  color={item.marketShare >= 25 ? 'success' : item.marketShare >= 15 ? 'primary' : 'warning'}
-                                />
-                              )}
-                              {pivotGroupBy === 'csc' && (
-                                <Chip
-                                  label={`${item.efficiency}%`}
-                                  size="small"
-                                  color={item.efficiency >= 90 ? 'success' : item.efficiency >= 85 ? 'primary' : 'warning'}
-                                />
-                              )}
-                              {pivotGroupBy === 'tenure' && (
-                                <Stack direction="row" alignItems="center" justifyContent="center" spacing={0.5}>
-                                  <Typography variant="body2" fontWeight="600">{item.satisfaction}</Typography>
-                                  <StarIcon fontSize="small" sx={{ color: theme.palette.warning.main }} />
-                                </Stack>
-                              )}
-                            </TableCell>
-                            <TableCell>
-                              <Box sx={{ width: '100%', display: 'flex', alignItems: 'center', gap: 1 }}>
-                                <Box
-                                  sx={{
-                                    flex: 1,
-                                    height: 8,
-                                    bgcolor: alpha(theme.palette.grey[500], 0.1),
-                                    borderRadius: 1,
-                                    overflow: 'hidden'
-                                  }}
-                                >
+                        {getPivotData()
+                          .filter(item => {
+                            const matchesProduct = pivotProductFilter === 'all' || item.product === pivotProductFilter;
+                            return matchesProduct;
+                          })
+                          .map((item, index) => (
+                            <TableRow key={index} hover>
+                              <TableCell>
+                                <Typography variant="body2" fontWeight="600">
+                                  {item.insurer || item.csc || item.tenure}
+                                </Typography>
+                              </TableCell>
+                              <TableCell>
+                                <Chip label={item.product} size="small" variant="outlined" />
+                              </TableCell>
+                              <TableCell>
+                                <Typography variant="body2">
+                                  {new Date(item.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                                </Typography>
+                              </TableCell>
+                              <TableCell align="center">
+                                <Typography variant="body2" fontWeight="600" color="primary.main">
+                                  {item.policies}
+                                </Typography>
+                              </TableCell>
+                              <TableCell align="right">
+                                <Typography variant="body2" fontWeight="600" color="success.main">
+                                  ₹{(item.premium / 100000).toFixed(1)}L
+                                </Typography>
+                              </TableCell>
+                              <TableCell align="center">
+                                {pivotGroupBy === 'insurer' && (
+                                  <Typography variant="body2">{item.claims}</Typography>
+                                )}
+                                {pivotGroupBy === 'csc' && (
+                                  <Typography variant="body2">{item.agents}</Typography>
+                                )}
+                                {pivotGroupBy === 'tenure' && (
+                                  <Chip label={`${item.renewalRate}%`} size="small" color="success" />
+                                )}
+                              </TableCell>
+                              <TableCell align="center">
+                                {pivotGroupBy === 'insurer' && (
+                                  <Chip
+                                    label={`${item.claimRatio}%`}
+                                    size="small"
+                                    color={item.claimRatio <= 8 ? 'success' : item.claimRatio <= 12 ? 'warning' : 'error'}
+                                  />
+                                )}
+                                {pivotGroupBy === 'csc' && (
+                                  <Typography variant="body2" fontWeight="600">{item.avgPerAgent}</Typography>
+                                )}
+                                {pivotGroupBy === 'tenure' && (
+                                  <Typography variant="body2" fontWeight="600">₹{item.avgPremium.toLocaleString()}</Typography>
+                                )}
+                              </TableCell>
+                              <TableCell align="center">
+                                {pivotGroupBy === 'insurer' && (
+                                  <Chip
+                                    label={`${item.marketShare}%`}
+                                    size="small"
+                                    color={item.marketShare >= 25 ? 'success' : item.marketShare >= 15 ? 'primary' : 'warning'}
+                                  />
+                                )}
+                                {pivotGroupBy === 'csc' && (
+                                  <Chip
+                                    label={`${item.efficiency}%`}
+                                    size="small"
+                                    color={item.efficiency >= 90 ? 'success' : item.efficiency >= 85 ? 'primary' : 'warning'}
+                                  />
+                                )}
+                                {pivotGroupBy === 'tenure' && (
+                                  <Stack direction="row" alignItems="center" justifyContent="center" spacing={0.5}>
+                                    <Typography variant="body2" fontWeight="600">{item.satisfaction}</Typography>
+                                    <StarIcon fontSize="small" sx={{ color: theme.palette.warning.main }} />
+                                  </Stack>
+                                )}
+                              </TableCell>
+                              <TableCell>
+                                <Box sx={{ width: '100%', display: 'flex', alignItems: 'center', gap: 1 }}>
                                   <Box
                                     sx={{
-                                      width: `${pivotGroupBy === 'insurer' ? item.marketShare * 2 : pivotGroupBy === 'csc' ? item.efficiency : item.renewalRate}%`,
-                                      height: '100%',
-                                      bgcolor: theme.palette.primary.main,
-                                      borderRadius: 1
+                                      flex: 1,
+                                      height: 8,
+                                      bgcolor: alpha(theme.palette.grey[500], 0.1),
+                                      borderRadius: 1,
+                                      overflow: 'hidden'
                                     }}
-                                  />
+                                  >
+                                    <Box
+                                      sx={{
+                                        width: `${pivotGroupBy === 'insurer' ? item.marketShare * 2 : pivotGroupBy === 'csc' ? item.efficiency : item.renewalRate}%`,
+                                        height: '100%',
+                                        bgcolor: theme.palette.primary.main,
+                                        borderRadius: 1
+                                      }}
+                                    />
+                                  </Box>
+                                  <Typography variant="caption" fontWeight="600">
+                                    {pivotGroupBy === 'insurer' ? `${item.marketShare}%` : pivotGroupBy === 'csc' ? `${item.efficiency}%` : `${item.renewalRate}%`}
+                                  </Typography>
                                 </Box>
-                                <Typography variant="caption" fontWeight="600">
-                                  {pivotGroupBy === 'insurer' ? `${item.marketShare}%` : pivotGroupBy === 'csc' ? `${item.efficiency}%` : `${item.renewalRate}%`}
-                                </Typography>
-                              </Box>
-                            </TableCell>
-                          </TableRow>
-                        ))}
+                              </TableCell>
+                            </TableRow>
+                          ))}
                       </TableBody>
                     </Table>
                   </TableContainer>
@@ -2500,52 +2539,62 @@ const LeadMIS = () => {
               <Card sx={{ mb: 2 }}>
                 <CardContent>
                   <Grid container spacing={2} alignItems="center">
-                    <Grid item xs={12} sm={6} md={3}>
+                    <Grid item xs={12} sm={6} md={2.5}>
                       <TextField
                         fullWidth
                         select
                         label="Insurer"
-                        defaultValue="all"
+                        value={premiumSelectedInsurer}
+                        onChange={(e) => setPremiumSelectedInsurer(e.target.value)}
                       >
                         <MenuItem value="all">All Insurers</MenuItem>
-                        <MenuItem value="hdfc">HDFC ERGO</MenuItem>
-                        <MenuItem value="icici">ICICI Lombard</MenuItem>
-                        <MenuItem value="bajaj">Bajaj Allianz</MenuItem>
+                        <MenuItem value="HDFC ERGO">HDFC ERGO</MenuItem>
+                        <MenuItem value="ICICI Lombard">ICICI Lombard</MenuItem>
+                        <MenuItem value="Bajaj Allianz">Bajaj Allianz</MenuItem>
+                        <MenuItem value="TATA AIG">TATA AIG</MenuItem>
+                        <MenuItem value="Reliance General">Reliance General</MenuItem>
                       </TextField>
                     </Grid>
-                    <Grid item xs={12} sm={6} md={3}>
+                    <Grid item xs={12} sm={6} md={2.5}>
                       <TextField
                         fullWidth
                         select
                         label="Policy Type"
-                        defaultValue="all"
+                        value={premiumSelectedPolicyType}
+                        onChange={(e) => setPremiumSelectedPolicyType(e.target.value)}
                       >
                         <MenuItem value="all">All Types</MenuItem>
-                        <MenuItem value="health">Health</MenuItem>
-                        <MenuItem value="motor">Motor</MenuItem>
-                        <MenuItem value="life">Life</MenuItem>
+                        <MenuItem value="Health">Health</MenuItem>
+                        <MenuItem value="Motor">Motor</MenuItem>
+                        <MenuItem value="Life">Life</MenuItem>
                       </TextField>
                     </Grid>
-                    <Grid item xs={12} sm={6} md={3}>
+                    <Grid item xs={12} sm={6} md={2.5}>
                       <TextField
                         fullWidth
                         select
                         label="Tenure"
-                        defaultValue="all"
+                        value={premiumSelectedTenure}
+                        onChange={(e) => setPremiumSelectedTenure(e.target.value)}
                       >
                         <MenuItem value="all">All Tenures</MenuItem>
-                        <MenuItem value="3m">3 Months</MenuItem>
-                        <MenuItem value="6m">6 Months</MenuItem>
-                        <MenuItem value="12m">12 Months</MenuItem>
+                        <MenuItem value="3 Months">3 Months</MenuItem>
+                        <MenuItem value="6 Months">6 Months</MenuItem>
+                        <MenuItem value="12 Months">12 Months</MenuItem>
                       </TextField>
                     </Grid>
-                    <Grid item xs={12} sm={6} md={3}>
+                    <Grid item xs={12} sm={6} md={2.5}>
                       <Button
-                        variant="contained"
+                        variant="outlined"
                         fullWidth
                         sx={{ height: '56px' }}
+                        onClick={() => {
+                          setPremiumSelectedInsurer('all');
+                          setPremiumSelectedPolicyType('all');
+                          setPremiumSelectedTenure('all');
+                        }}
                       >
-                        Generate Report
+                        Reset Filters
                       </Button>
                     </Grid>
                   </Grid>
@@ -2564,6 +2613,8 @@ const LeadMIS = () => {
                     <Table>
                       <TableHead>
                         <TableRow>
+                          <TableCell>Insurer</TableCell>
+                          <TableCell>Policy Type</TableCell>
                           <TableCell>Tenure</TableCell>
                           <TableCell align="center">Total Policies</TableCell>
                           <TableCell align="right">Total Premium</TableCell>
@@ -2571,24 +2622,53 @@ const LeadMIS = () => {
                         </TableRow>
                       </TableHead>
                       <TableBody>
-                        <TableRow hover>
-                          <TableCell><Typography fontWeight="600">3 Months</Typography></TableCell>
-                          <TableCell align="center">145</TableCell>
-                          <TableCell align="right">₹12,50,000</TableCell>
-                          <TableCell align="right">₹8,621</TableCell>
-                        </TableRow>
-                        <TableRow hover>
-                          <TableCell><Typography fontWeight="600">6 Months</Typography></TableCell>
-                          <TableCell align="center">298</TableCell>
-                          <TableCell align="right">₹35,80,000</TableCell>
-                          <TableCell align="right">₹12,013</TableCell>
-                        </TableRow>
-                        <TableRow hover>
-                          <TableCell><Typography fontWeight="600">12 Months</Typography></TableCell>
-                          <TableCell align="center">567</TableCell>
-                          <TableCell align="right">₹89,40,000</TableCell>
-                          <TableCell align="right">₹15,767</TableCell>
-                        </TableRow>
+                        {[
+                          { insurer: 'HDFC ERGO', type: 'Health', tenure: '3 Months', policies: 45, premium: '₹4,50,000', avg: '₹10,000' },
+                          { insurer: 'ICICI Lombard', type: 'Motor', tenure: '6 Months', policies: 120, premium: '₹14,40,000', avg: '₹12,000' },
+                          { insurer: 'Bajaj Allianz', type: 'Life', tenure: '12 Months', policies: 200, premium: '₹30,000,000', avg: '₹150,000' },
+                          { insurer: 'TATA AIG', type: 'Health', tenure: '12 Months', policies: 150, premium: '₹22,50,000', avg: '₹15,000' },
+                          { insurer: 'Reliance General', type: 'Motor', tenure: '3 Months', policies: 80, premium: '₹6,40,000', avg: '₹8,000' },
+                          { insurer: 'HDFC ERGO', type: 'Life', tenure: '6 Months', policies: 50, premium: '₹5,000,000', avg: '₹100,000' },
+                          { insurer: 'ICICI Lombard', type: 'Health', tenure: '12 Months', policies: 180, premium: '₹27,00,000', avg: '₹15,000' },
+                          { insurer: 'Bajaj Allianz', type: 'Motor', tenure: '3 Months', policies: 60, premium: '₹4,80,000', avg: '₹8,000' }
+                        ].filter(row => {
+                          const matchesInsurer = premiumSelectedInsurer === 'all' || row.insurer === premiumSelectedInsurer;
+                          const matchesType = premiumSelectedPolicyType === 'all' || row.type === premiumSelectedPolicyType;
+                          const matchesTenure = premiumSelectedTenure === 'all' || row.tenure === premiumSelectedTenure;
+                          return matchesInsurer && matchesType && matchesTenure;
+                        }).map((row, index) => (
+                          <TableRow key={index} hover>
+                            <TableCell><Typography fontWeight="600">{row.insurer}</Typography></TableCell>
+                            <TableCell>{row.type}</TableCell>
+                            <TableCell>{row.tenure}</TableCell>
+                            <TableCell align="center">{row.policies}</TableCell>
+                            <TableCell align="right">{row.premium}</TableCell>
+                            <TableCell align="right">{row.avg}</TableCell>
+                          </TableRow>
+                        ))}
+                        {[
+                          { insurer: 'HDFC ERGO', type: 'Health', tenure: '3 Months', policies: 45, premium: '₹4,50,000', avg: '₹10,000' },
+                          { insurer: 'ICICI Lombard', type: 'Motor', tenure: '6 Months', policies: 120, premium: '₹14,40,000', avg: '₹12,000' },
+                          { insurer: 'Bajaj Allianz', type: 'Life', tenure: '12 Months', policies: 200, premium: '₹30,000,000', avg: '₹150,000' },
+                          { insurer: 'TATA AIG', type: 'Health', tenure: '12 Months', policies: 150, premium: '₹22,50,000', avg: '₹15,000' },
+                          { insurer: 'Reliance General', type: 'Motor', tenure: '3 Months', policies: 80, premium: '₹6,40,000', avg: '₹8,000' },
+                          { insurer: 'HDFC ERGO', type: 'Life', tenure: '6 Months', policies: 50, premium: '₹5,000,000', avg: '₹100,000' },
+                          { insurer: 'ICICI Lombard', type: 'Health', tenure: '12 Months', policies: 180, premium: '₹27,00,000', avg: '₹15,000' },
+                          { insurer: 'Bajaj Allianz', type: 'Motor', tenure: '3 Months', policies: 60, premium: '₹4,80,000', avg: '₹8,000' }
+                        ].filter(row => {
+                          const matchesInsurer = premiumSelectedInsurer === 'all' || row.insurer === premiumSelectedInsurer;
+                          const matchesType = premiumSelectedPolicyType === 'all' || row.type === premiumSelectedPolicyType;
+                          const matchesTenure = premiumSelectedTenure === 'all' || row.tenure === premiumSelectedTenure;
+                          return matchesInsurer && matchesType && matchesTenure;
+                        }).length === 0 && (
+                            <TableRow>
+                              <TableCell colSpan={6} align="center" sx={{ py: 3 }}>
+                                <Typography variant="body1" color="text.secondary">
+                                  No records found for the selected filters.
+                                </Typography>
+                              </TableCell>
+                            </TableRow>
+                          )}
                       </TableBody>
                     </Table>
                   </TableContainer>
@@ -2677,28 +2757,44 @@ const LeadMIS = () => {
                         fullWidth
                         select
                         label="Select Insurer"
-                        defaultValue="tata"
+                        value={dailyMISSelectedInsurer}
+                        onChange={(e) => setDailyMISSelectedInsurer(e.target.value)}
                       >
-                        <MenuItem value="tata">TATA AIG</MenuItem>
-                        <MenuItem value="reliance">Reliance General</MenuItem>
+                        <MenuItem value="all">All Insurers</MenuItem>
+                        <MenuItem value="TATA AIG">TATA AIG</MenuItem>
+                        <MenuItem value="Reliance General">Reliance General</MenuItem>
+                        <MenuItem value="HDFC ERGO">HDFC ERGO</MenuItem>
+                        <MenuItem value="ICICI Lombard">ICICI Lombard</MenuItem>
+                        <MenuItem value="Bajaj Allianz">Bajaj Allianz</MenuItem>
                       </TextField>
                     </Grid>
                     <Grid item xs={12} sm={6} md={3}>
                       <TextField
                         fullWidth
-                        type="date"
+                        select
                         label="Select Date"
-                        defaultValue={new Date().toISOString().split('T')[0]}
-                        InputLabelProps={{ shrink: true }}
-                      />
+                        value={dailyMISSelectedDate}
+                        onChange={(e) => setDailyMISSelectedDate(e.target.value)}
+                      >
+                        <MenuItem value="all">All Dates</MenuItem>
+                        <MenuItem value="Jan 31, 2025">Jan 31, 2025</MenuItem>
+                        <MenuItem value="Jan 30, 2025">Jan 30, 2025</MenuItem>
+                        <MenuItem value="Jan 29, 2025">Jan 29, 2025</MenuItem>
+                        <MenuItem value="Jan 28, 2025">Jan 28, 2025</MenuItem>
+                        <MenuItem value="Jan 27, 2025">Jan 27, 2025</MenuItem>
+                      </TextField>
                     </Grid>
                     <Grid item xs={12} sm={6} md={3}>
                       <Button
-                        variant="contained"
+                        variant="outlined"
                         fullWidth
                         sx={{ height: '56px' }}
+                        onClick={() => {
+                          setDailyMISSelectedInsurer('all');
+                          setDailyMISSelectedDate('all');
+                        }}
                       >
-                        Generate Report
+                        Reset Filters
                       </Button>
                     </Grid>
                   </Grid>
@@ -2776,6 +2872,7 @@ const LeadMIS = () => {
                       <TableHead>
                         <TableRow>
                           <TableCell>Date</TableCell>
+                          <TableCell>Insurer</TableCell>
                           <TableCell align="center">Leads</TableCell>
                           <TableCell align="center">Policies</TableCell>
                           <TableCell align="right">Premium</TableCell>
@@ -2783,51 +2880,51 @@ const LeadMIS = () => {
                         </TableRow>
                       </TableHead>
                       <TableBody>
-                        <TableRow hover>
-                          <TableCell>Jan 31, 2025</TableCell>
-                          <TableCell align="center">128</TableCell>
-                          <TableCell align="center">42</TableCell>
-                          <TableCell align="right">₹8,50,000</TableCell>
-                          <TableCell align="center">
-                            <Chip label="32.8%" size="small" color="success" />
-                          </TableCell>
-                        </TableRow>
-                        <TableRow hover>
-                          <TableCell>Jan 30, 2025</TableCell>
-                          <TableCell align="center">115</TableCell>
-                          <TableCell align="center">38</TableCell>
-                          <TableCell align="right">₹7,20,000</TableCell>
-                          <TableCell align="center">
-                            <Chip label="33.0%" size="small" color="success" />
-                          </TableCell>
-                        </TableRow>
-                        <TableRow hover>
-                          <TableCell>Jan 29, 2025</TableCell>
-                          <TableCell align="center">142</TableCell>
-                          <TableCell align="center">45</TableCell>
-                          <TableCell align="right">₹9,80,000</TableCell>
-                          <TableCell align="center">
-                            <Chip label="31.7%" size="small" color="success" />
-                          </TableCell>
-                        </TableRow>
-                        <TableRow hover>
-                          <TableCell>Jan 28, 2025</TableCell>
-                          <TableCell align="center">98</TableCell>
-                          <TableCell align="center">28</TableCell>
-                          <TableCell align="right">₹6,40,000</TableCell>
-                          <TableCell align="center">
-                            <Chip label="28.6%" size="small" color="warning" />
-                          </TableCell>
-                        </TableRow>
-                        <TableRow hover>
-                          <TableCell>Jan 27, 2025</TableCell>
-                          <TableCell align="center">156</TableCell>
-                          <TableCell align="center">52</TableCell>
-                          <TableCell align="right">₹11,20,000</TableCell>
-                          <TableCell align="center">
-                            <Chip label="33.3%" size="small" color="success" />
-                          </TableCell>
-                        </TableRow>
+                        {[
+                          { date: 'Jan 31, 2025', insurer: 'TATA AIG', leads: 128, policies: 42, premium: '₹8,50,000', conversion: 32.8, color: 'success' },
+                          { date: 'Jan 30, 2025', insurer: 'Reliance General', leads: 115, policies: 38, premium: '₹7,20,000', conversion: 33.0, color: 'success' },
+                          { date: 'Jan 29, 2025', insurer: 'HDFC ERGO', leads: 142, policies: 45, premium: '₹9,80,000', conversion: 31.7, color: 'success' },
+                          { date: 'Jan 28, 2025', insurer: 'ICICI Lombard', leads: 98, policies: 28, premium: '₹6,40,000', conversion: 28.6, color: 'warning' },
+                          { date: 'Jan 27, 2025', insurer: 'Bajaj Allianz', leads: 156, policies: 52, premium: '₹11,20,000', conversion: 33.3, color: 'success' },
+                          { date: 'Jan 31, 2025', insurer: 'Reliance General', leads: 95, policies: 30, premium: '₹5,50,000', conversion: 31.5, color: 'success' },
+                          { date: 'Jan 30, 2025', insurer: 'TATA AIG', leads: 110, policies: 35, premium: '₹6,80,000', conversion: 31.8, color: 'success' }
+                        ].filter(row => {
+                          const matchesInsurer = dailyMISSelectedInsurer === 'all' || row.insurer === dailyMISSelectedInsurer;
+                          const matchesDate = dailyMISSelectedDate === 'all' || row.date === dailyMISSelectedDate;
+                          return matchesInsurer && matchesDate;
+                        }).map((row, index) => (
+                          <TableRow key={index} hover>
+                            <TableCell>{row.date}</TableCell>
+                            <TableCell>{row.insurer}</TableCell>
+                            <TableCell align="center">{row.leads}</TableCell>
+                            <TableCell align="center">{row.policies}</TableCell>
+                            <TableCell align="right">{row.premium}</TableCell>
+                            <TableCell align="center">
+                              <Chip label={`${row.conversion}%`} size="small" color={row.color} />
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                        {[
+                          { date: 'Jan 31, 2025', insurer: 'TATA AIG', leads: 128, policies: 42, premium: '₹8,50,000', conversion: 32.8, color: 'success' },
+                          { date: 'Jan 30, 2025', insurer: 'Reliance General', leads: 115, policies: 38, premium: '₹7,20,000', conversion: 33.0, color: 'success' },
+                          { date: 'Jan 29, 2025', insurer: 'HDFC ERGO', leads: 142, policies: 45, premium: '₹9,80,000', conversion: 31.7, color: 'success' },
+                          { date: 'Jan 28, 2025', insurer: 'ICICI Lombard', leads: 98, policies: 28, premium: '₹6,40,000', conversion: 28.6, color: 'warning' },
+                          { date: 'Jan 27, 2025', insurer: 'Bajaj Allianz', leads: 156, policies: 52, premium: '₹11,20,000', conversion: 33.3, color: 'success' },
+                          { date: 'Jan 31, 2025', insurer: 'Reliance General', leads: 95, policies: 30, premium: '₹5,50,000', conversion: 31.5, color: 'success' },
+                          { date: 'Jan 30, 2025', insurer: 'TATA AIG', leads: 110, policies: 35, premium: '₹6,80,000', conversion: 31.8, color: 'success' }
+                        ].filter(row => {
+                          const matchesInsurer = dailyMISSelectedInsurer === 'all' || row.insurer === dailyMISSelectedInsurer;
+                          const matchesDate = dailyMISSelectedDate === 'all' || row.date === dailyMISSelectedDate;
+                          return matchesInsurer && matchesDate;
+                        }).length === 0 && (
+                            <TableRow>
+                              <TableCell colSpan={6} align="center" sx={{ py: 3 }}>
+                                <Typography variant="body1" color="text.secondary">
+                                  No records found for the selected filters.
+                                </Typography>
+                              </TableCell>
+                            </TableRow>
+                          )}
                       </TableBody>
                     </Table>
                   </TableContainer>
@@ -2891,279 +2988,7 @@ const LeadMIS = () => {
         )
       }
 
-      {
-        currentTab === 11 && (
-          <Grid container spacing={3}>
-            {/* CSC Load Tracking Filters */}
-            <Grid item xs={12}>
-              <Card sx={{ mb: 2 }}>
-                <CardContent>
-                  <Grid container spacing={2} alignItems="center">
-                    <Grid item xs={12} sm={6} md={3}>
-                      <TextField
-                        fullWidth
-                        type="month"
-                        label="Select Month"
-                        defaultValue={new Date().toISOString().slice(0, 7)}
-                        InputLabelProps={{ shrink: true }}
-                      />
-                    </Grid>
-                    <Grid item xs={12} sm={6} md={3}>
-                      <TextField
-                        fullWidth
-                        select
-                        label="CSC/Region Filter"
-                        defaultValue="all"
-                      >
-                        <MenuItem value="all">All CSCs</MenuItem>
-                        <MenuItem value="mumbai">Mumbai Region</MenuItem>
-                        <MenuItem value="delhi">Delhi Region</MenuItem>
-                        <MenuItem value="bangalore">Bangalore Region</MenuItem>
-                      </TextField>
-                    </Grid>
-                    <Grid item xs={12} sm={6} md={3}>
-                      <Button
-                        variant="contained"
-                        fullWidth
-                        sx={{ height: '56px' }}
-                      >
-                        Generate Report
-                      </Button>
-                    </Grid>
-                  </Grid>
-                </CardContent>
-              </Card>
-            </Grid>
 
-            {/* Summary Cards */}
-            <Grid item xs={12}>
-              <Grid container spacing={2} sx={{ mb: 3 }}>
-                <Grid item xs={12} sm={6} md={4}>
-                  <Card sx={{ background: `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.primary.dark} 100%)`, color: 'white' }}>
-                    <CardContent>
-                      <Stack direction="row" alignItems="center" justifyContent="space-between">
-                        <Box>
-                          <Typography variant="body2" sx={{ opacity: 0.9 }}>Total CSCs</Typography>
-                          <Typography variant="h3" fontWeight="700">8</Typography>
-                        </Box>
-                        <PeopleIcon sx={{ fontSize: 40, opacity: 0.3 }} />
-                      </Stack>
-                    </CardContent>
-                  </Card>
-                </Grid>
-                <Grid item xs={12} sm={6} md={4}>
-                  <Card sx={{ background: `linear-gradient(135deg, ${theme.palette.info.main} 0%, ${theme.palette.info.dark} 100%)`, color: 'white' }}>
-                    <CardContent>
-                      <Stack direction="row" alignItems="center" justifyContent="space-between">
-                        <Box>
-                          <Typography variant="body2" sx={{ opacity: 0.9 }}>Average Calls per CSC</Typography>
-                          <Typography variant="h3" fontWeight="700">578</Typography>
-                        </Box>
-                        <PhoneIcon sx={{ fontSize: 40, opacity: 0.3 }} />
-                      </Stack>
-                    </CardContent>
-                  </Card>
-                </Grid>
-                <Grid item xs={12} sm={6} md={4}>
-                  <Card sx={{ background: `linear-gradient(135deg, ${theme.palette.success.main} 0%, ${theme.palette.success.dark} 100%)`, color: 'white' }}>
-                    <CardContent>
-                      <Stack direction="row" alignItems="center" justifyContent="space-between">
-                        <Box>
-                          <Typography variant="body2" sx={{ opacity: 0.9 }}>% Meeting Target</Typography>
-                          <Typography variant="h3" fontWeight="700">62.5%</Typography>
-                        </Box>
-                        <CheckCircleIcon sx={{ fontSize: 40, opacity: 0.3 }} />
-                      </Stack>
-                    </CardContent>
-                  </Card>
-                </Grid>
-              </Grid>
-            </Grid>
-
-            {/* CSC Load Tracking Table */}
-            <Grid item xs={12} md={8}>
-              <Card>
-                <CardContent>
-                  <Typography variant="h6" fontWeight="600" gutterBottom>
-                    CSC Outbound Call Tracking
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-                    Monthly target: 600 outbound calls per CSC
-                  </Typography>
-                  <TableContainer>
-                    <Table>
-                      <TableHead>
-                        <TableRow>
-                          <TableCell>CSC Name</TableCell>
-                          <TableCell align="center">Outbound Calls</TableCell>
-                          <TableCell align="center">Achievement %</TableCell>
-                          <TableCell align="center">Status</TableCell>
-                        </TableRow>
-                      </TableHead>
-                      <TableBody>
-                        {[
-                          { name: 'Priya Patel', calls: 645, achievement: 107.5, status: 'achieved' },
-                          { name: 'Rahul Kumar', calls: 598, achievement: 99.7, status: 'below' },
-                          { name: 'Sarah Johnson', calls: 672, achievement: 112.0, status: 'achieved' },
-                          { name: 'Amit Sharma', calls: 523, achievement: 87.2, status: 'below' },
-                          { name: 'Kavita Reddy', calls: 611, achievement: 101.8, status: 'achieved' },
-                          { name: 'Deepak Singh', calls: 456, achievement: 76.0, status: 'below' },
-                          { name: 'Meera Gupta', calls: 634, achievement: 105.7, status: 'achieved' },
-                          { name: 'Vikram Joshi', calls: 487, achievement: 81.2, status: 'below' }
-                        ].map((csc) => (
-                          <TableRow
-                            key={csc.name}
-                            hover
-                            sx={{
-                              backgroundColor: csc.status === 'achieved'
-                                ? alpha(theme.palette.success.main, 0.1)
-                                : alpha(theme.palette.error.main, 0.1)
-                            }}
-                          >
-                            <TableCell>
-                              <Stack direction="row" alignItems="center" spacing={1}>
-                                {csc.status === 'achieved' ? (
-                                  <CheckCircleIcon sx={{ color: theme.palette.success.main, fontSize: 20 }} />
-                                ) : (
-                                  <CancelIcon sx={{ color: theme.palette.error.main, fontSize: 20 }} />
-                                )}
-                                <Typography variant="body2" fontWeight="600">
-                                  {csc.name}
-                                </Typography>
-                              </Stack>
-                            </TableCell>
-                            <TableCell align="center">
-                              <Typography
-                                variant="body2"
-                                fontWeight="600"
-                                color={csc.status === 'achieved' ? 'success.main' : 'error.main'}
-                              >
-                                {csc.calls}
-                              </Typography>
-                            </TableCell>
-                            <TableCell align="center">
-                              <Chip
-                                label={`${csc.achievement}%`}
-                                size="small"
-                                color={csc.status === 'achieved' ? 'success' : 'error'}
-                              />
-                            </TableCell>
-                            <TableCell align="center">
-                              <Chip
-                                label={csc.status === 'achieved' ? 'Achieved ✅' : 'Below Target 🔴'}
-                                size="small"
-                                color={csc.status === 'achieved' ? 'success' : 'error'}
-                                variant={csc.status === 'achieved' ? 'filled' : 'outlined'}
-                              />
-                            </TableCell>
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
-                  </TableContainer>
-                </CardContent>
-              </Card>
-            </Grid>
-
-            {/* Bar Chart with Target Line */}
-            <Grid item xs={12} md={4}>
-              <Card>
-                <CardContent>
-                  <Typography variant="h6" fontWeight="600" gutterBottom>
-                    Outbound Calls vs Target
-                  </Typography>
-                  <ResponsiveContainer width="100%" height={400}>
-                    <BarChart
-                      data={[
-                        { name: 'Priya', calls: 645 },
-                        { name: 'Rahul', calls: 598 },
-                        { name: 'Sarah', calls: 672 },
-                        { name: 'Amit', calls: 523 },
-                        { name: 'Kavita', calls: 611 },
-                        { name: 'Deepak', calls: 456 },
-                        { name: 'Meera', calls: 634 },
-                        { name: 'Vikram', calls: 487 }
-                      ]}
-                      margin={{ top: 20, right: 30, left: 20, bottom: 60 }}
-                    >
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis
-                        dataKey="name"
-                        angle={-45}
-                        textAnchor="end"
-                        height={80}
-                        fontSize={12}
-                      />
-                      <YAxis />
-                      <RechartsTooltip formatter={(value) => [value, 'Calls']} />
-                      <Bar
-                        dataKey="calls"
-                        fill={(entry) => entry >= 600 ? theme.palette.success.main : theme.palette.error.main}
-                      >
-                        {[
-                          { name: 'Priya', calls: 645 },
-                          { name: 'Rahul', calls: 598 },
-                          { name: 'Sarah', calls: 672 },
-                          { name: 'Amit', calls: 523 },
-                          { name: 'Kavita', calls: 611 },
-                          { name: 'Deepak', calls: 456 },
-                          { name: 'Meera', calls: 634 },
-                          { name: 'Vikram', calls: 487 }
-                        ].map((entry, index) => (
-                          <Cell
-                            key={`cell-${index}`}
-                            fill={entry.calls >= 600 ? theme.palette.success.main : theme.palette.error.main}
-                          />
-                        ))}
-                      </Bar>
-                      {/* Target Line at 600 */}
-                      <Line
-                        type="monotone"
-                        dataKey={() => 600}
-                        stroke={theme.palette.warning.main}
-                        strokeWidth={3}
-                        strokeDasharray="5 5"
-                        dot={false}
-                        name="Target (600)"
-                      />
-                    </BarChart>
-                  </ResponsiveContainer>
-                  <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block', textAlign: 'center' }}>
-                    Dashed line shows target of 600 calls/month
-                  </Typography>
-                </CardContent>
-              </Card>
-            </Grid>
-
-            {/* Export Options */}
-            <Grid item xs={12}>
-              <Card>
-                <CardContent>
-                  <Typography variant="h6" fontWeight="600" gutterBottom>
-                    Export Options
-                  </Typography>
-                  <Stack direction="row" spacing={2}>
-                    <Button
-                      variant="outlined"
-                      startIcon={<DownloadIcon />}
-                      onClick={handleExportExcel}
-                    >
-                      Download as Excel
-                    </Button>
-                    <Button
-                      variant="outlined"
-                      startIcon={<PdfIcon />}
-                      onClick={handleExportPDF}
-                    >
-                      Download as PDF
-                    </Button>
-                  </Stack>
-                </CardContent>
-              </Card>
-            </Grid>
-          </Grid>
-        )
-      }
 
       {
         currentTab === 12 && (
@@ -3178,7 +3003,8 @@ const LeadMIS = () => {
                         fullWidth
                         type="month"
                         label="Select Month"
-                        defaultValue={new Date().toISOString().slice(0, 7)}
+                        value={capacitySelectedMonth}
+                        onChange={(e) => setCapacitySelectedMonth(e.target.value)}
                         InputLabelProps={{ shrink: true }}
                       />
                     </Grid>
@@ -3187,22 +3013,27 @@ const LeadMIS = () => {
                         fullWidth
                         select
                         label="Region/Team Filter"
-                        defaultValue="all"
+                        value={capacitySelectedRegion}
+                        onChange={(e) => setCapacitySelectedRegion(e.target.value)}
                       >
                         <MenuItem value="all">All Regions</MenuItem>
-                        <MenuItem value="north">North Region</MenuItem>
-                        <MenuItem value="south">South Region</MenuItem>
-                        <MenuItem value="east">East Region</MenuItem>
-                        <MenuItem value="west">West Region</MenuItem>
+                        <MenuItem value="North">North Region</MenuItem>
+                        <MenuItem value="South">South Region</MenuItem>
+                        <MenuItem value="East">East Region</MenuItem>
+                        <MenuItem value="West">West Region</MenuItem>
                       </TextField>
                     </Grid>
                     <Grid item xs={12} sm={6} md={3}>
                       <Button
-                        variant="contained"
+                        variant="outlined"
                         fullWidth
                         sx={{ height: '56px' }}
+                        onClick={() => {
+                          setCapacitySelectedMonth(new Date().toISOString().slice(0, 7));
+                          setCapacitySelectedRegion('all');
+                        }}
                       >
-                        Generate Plan
+                        Reset Filters
                       </Button>
                     </Grid>
                   </Grid>
@@ -3335,6 +3166,8 @@ const LeadMIS = () => {
               </Card>
             </Grid>
 
+
+
             {/* Table View */}
             <Grid item xs={12}>
               <Card>
@@ -3347,6 +3180,8 @@ const LeadMIS = () => {
                       <TableHead>
                         <TableRow>
                           <TableCell>CSC</TableCell>
+                          <TableCell>Month</TableCell>
+                          <TableCell>Region</TableCell>
                           <TableCell align="center">Assigned Leads</TableCell>
                           <TableCell align="center">Capacity</TableCell>
                           <TableCell align="center">Utilization %</TableCell>
@@ -3355,51 +3190,95 @@ const LeadMIS = () => {
                       </TableHead>
                       <TableBody>
                         {[
-                          { csc: 'North Team A', leads: 180, capacity: 150, utilization: 120.0, status: 'overloaded' },
-                          { csc: 'North Team B', leads: 145, capacity: 150, utilization: 96.7, status: 'optimal' },
-                          { csc: 'South Team A', leads: 165, capacity: 150, utilization: 110.0, status: 'overloaded' },
-                          { csc: 'South Team B', leads: 125, capacity: 150, utilization: 83.3, status: 'underutilized' },
-                          { csc: 'East Team A', calls: 130, capacity: 150, utilization: 86.7, status: 'optimal' },
-                          { csc: 'West Team A', calls: 95, capacity: 150, utilization: 63.3, status: 'underutilized' }
-                        ].map((team) => (
-                          <TableRow key={team.csc} hover>
-                            <TableCell>
-                              <Typography variant="body2" fontWeight="600">
-                                {team.csc}
-                              </Typography>
-                            </TableCell>
-                            <TableCell align="center">
-                              <Typography variant="body2" fontWeight="600">
-                                {team.leads || team.calls}
-                              </Typography>
-                            </TableCell>
-                            <TableCell align="center">{team.capacity}</TableCell>
-                            <TableCell align="center">
-                              <Chip
-                                label={`${team.utilization}%`}
-                                size="small"
-                                color={
-                                  team.status === 'overloaded' ? 'error' :
-                                    team.status === 'optimal' ? 'success' : 'warning'
-                                }
-                              />
-                            </TableCell>
-                            <TableCell align="center">
-                              <Chip
-                                label={
-                                  team.status === 'overloaded' ? 'Overloaded' :
-                                    team.status === 'optimal' ? 'Optimal' : 'Under-utilized'
-                                }
-                                size="small"
-                                color={
-                                  team.status === 'overloaded' ? 'error' :
-                                    team.status === 'optimal' ? 'success' : 'warning'
-                                }
-                                variant="outlined"
-                              />
-                            </TableCell>
-                          </TableRow>
-                        ))}
+                          { csc: 'North Team A', month: '2025-12', region: 'North', leads: 180, capacity: 150, utilization: 120.0, status: 'overloaded' },
+                          { csc: 'North Team B', month: '2025-12', region: 'North', leads: 145, capacity: 150, utilization: 96.7, status: 'optimal' },
+                          { csc: 'South Team A', month: '2025-12', region: 'South', leads: 165, capacity: 150, utilization: 110.0, status: 'overloaded' },
+                          { csc: 'South Team B', month: '2025-12', region: 'South', leads: 125, capacity: 150, utilization: 83.3, status: 'underutilized' },
+                          { csc: 'East Team A', month: '2025-12', region: 'East', leads: 130, capacity: 150, utilization: 86.7, status: 'optimal' },
+                          { csc: 'West Team A', month: '2025-12', region: 'West', leads: 95, capacity: 150, utilization: 63.3, status: 'underutilized' },
+                          { csc: 'North Team A', month: '2025-11', region: 'North', leads: 175, capacity: 150, utilization: 116.7, status: 'overloaded' },
+                          { csc: 'South Team A', month: '2025-11', region: 'South', leads: 160, capacity: 150, utilization: 106.7, status: 'overloaded' }
+                        ]
+                          .filter(team => {
+                            const matchesMonth = team.month === capacitySelectedMonth;
+                            const matchesRegion = capacitySelectedRegion === 'all' || team.region === capacitySelectedRegion;
+                            return matchesMonth && matchesRegion;
+                          })
+                          .map((team, index) => (
+                            <TableRow key={index} hover>
+                              <TableCell>
+                                <Typography variant="body2" fontWeight="600">
+                                  {team.csc}
+                                </Typography>
+                              </TableCell>
+                              <TableCell>
+                                {new Date(team.month + '-01').toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}
+                              </TableCell>
+                              <TableCell>
+                                <Chip
+                                  label={team.region}
+                                  size="small"
+                                  color="primary"
+                                  variant="outlined"
+                                />
+                              </TableCell>
+                              <TableCell align="center">
+                                <Typography variant="body2" fontWeight="600">
+                                  {team.leads}
+                                </Typography>
+                              </TableCell>
+                              <TableCell align="center">{team.capacity}</TableCell>
+                              <TableCell align="center">
+                                <Chip
+                                  label={`${team.utilization}%`}
+                                  size="small"
+                                  color={
+                                    team.status === 'overloaded' ? 'error' :
+                                      team.status === 'optimal' ? 'success' : 'warning'
+                                  }
+                                />
+                              </TableCell>
+                              <TableCell align="center">
+                                <Chip
+                                  label={
+                                    team.status === 'overloaded' ? 'Overloaded' :
+                                      team.status === 'optimal' ? 'Optimal' : 'Under-utilized'
+                                  }
+                                  size="small"
+                                  color={
+                                    team.status === 'overloaded' ? 'error' :
+                                      team.status === 'optimal' ? 'success' : 'warning'
+                                  }
+                                  variant="outlined"
+                                />
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                        {[
+                          { csc: 'North Team A', month: '2025-12', region: 'North', leads: 180, capacity: 150, utilization: 120.0, status: 'overloaded' },
+                          { csc: 'North Team B', month: '2025-12', region: 'North', leads: 145, capacity: 150, utilization: 96.7, status: 'optimal' },
+                          { csc: 'South Team A', month: '2025-12', region: 'South', leads: 165, capacity: 150, utilization: 110.0, status: 'overloaded' },
+                          { csc: 'South Team B', month: '2025-12', region: 'South', leads: 125, capacity: 150, utilization: 83.3, status: 'underutilized' },
+                          { csc: 'East Team A', month: '2025-12', region: 'East', leads: 130, capacity: 150, utilization: 86.7, status: 'optimal' },
+                          { csc: 'West Team A', month: '2025-12', region: 'West', leads: 95, capacity: 150, utilization: 63.3, status: 'underutilized' },
+                          { csc: 'North Team A', month: '2025-11', region: 'North', leads: 175, capacity: 150, utilization: 116.7, status: 'overloaded' },
+                          { csc: 'South Team A', month: '2025-11', region: 'South', leads: 160, capacity: 150, utilization: 106.7, status: 'overloaded' }
+                        ].filter(team => {
+                          const matchesMonth = team.month === capacitySelectedMonth;
+                          const matchesRegion = capacitySelectedRegion === 'all' || team.region === capacitySelectedRegion;
+                          return matchesMonth && matchesRegion;
+                        }).length === 0 && (
+                            <TableRow>
+                              <TableCell colSpan={7} align="center" sx={{ py: 4 }}>
+                                <Typography variant="body1" color="text.secondary">
+                                  No CSC capacity records found for the selected filters.
+                                </Typography>
+                                <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+                                  Try selecting a different month or region.
+                                </Typography>
+                              </TableCell>
+                            </TableRow>
+                          )}
                       </TableBody>
                     </Table>
                   </TableContainer>
@@ -3508,7 +3387,8 @@ const LeadMIS = () => {
                         fullWidth
                         select
                         label="Date Range"
-                        defaultValue="thisMonth"
+                        value={workloadSelectedDateRange}
+                        onChange={(e) => setWorkloadSelectedDateRange(e.target.value)}
                       >
                         <MenuItem value="thisMonth">This Month</MenuItem>
                         <MenuItem value="lastMonth">Last Month</MenuItem>
@@ -3520,13 +3400,14 @@ const LeadMIS = () => {
                         fullWidth
                         select
                         label="Region"
-                        defaultValue="all"
+                        value={workloadSelectedRegion}
+                        onChange={(e) => setWorkloadSelectedRegion(e.target.value)}
                       >
                         <MenuItem value="all">All Regions</MenuItem>
-                        <MenuItem value="north">North</MenuItem>
-                        <MenuItem value="south">South</MenuItem>
-                        <MenuItem value="east">East</MenuItem>
-                        <MenuItem value="west">West</MenuItem>
+                        <MenuItem value="North">North</MenuItem>
+                        <MenuItem value="South">South</MenuItem>
+                        <MenuItem value="East">East</MenuItem>
+                        <MenuItem value="West">West</MenuItem>
                       </TextField>
                     </Grid>
                     <Grid item xs={12} sm={6} md={3}>
@@ -3534,22 +3415,27 @@ const LeadMIS = () => {
                         fullWidth
                         select
                         label="Team Filter"
-                        defaultValue="all"
+                        value={workloadSelectedTeam}
+                        onChange={(e) => setWorkloadSelectedTeam(e.target.value)}
                       >
                         <MenuItem value="all">All Teams</MenuItem>
-                        <MenuItem value="team1">Team Alpha</MenuItem>
-                        <MenuItem value="team2">Team Beta</MenuItem>
-                        <MenuItem value="team3">Team Gamma</MenuItem>
+                        <MenuItem value="Team Alpha">Team Alpha</MenuItem>
+                        <MenuItem value="Team Beta">Team Beta</MenuItem>
+                        <MenuItem value="Team Gamma">Team Gamma</MenuItem>
                       </TextField>
                     </Grid>
                     <Grid item xs={12} sm={6} md={3}>
                       <Button
-                        variant="contained"
-                        startIcon={<DownloadIcon />}
-                        onClick={handleExportExcel}
+                        variant="outlined"
                         fullWidth
+                        sx={{ height: '56px' }}
+                        onClick={() => {
+                          setWorkloadSelectedDateRange('thisMonth');
+                          setWorkloadSelectedRegion('all');
+                          setWorkloadSelectedTeam('all');
+                        }}
                       >
-                        Export
+                        Reset Filters
                       </Button>
                     </Grid>
                   </Grid>
@@ -3637,6 +3523,9 @@ const LeadMIS = () => {
                       <TableHead>
                         <TableRow>
                           <TableCell>CSC</TableCell>
+                          <TableCell>Month</TableCell>
+                          <TableCell>Region</TableCell>
+                          <TableCell>Team</TableCell>
                           <TableCell align="right">Assigned</TableCell>
                           <TableCell align="right">Completed</TableCell>
                           <TableCell align="right">Utilization %</TableCell>
@@ -3645,42 +3534,96 @@ const LeadMIS = () => {
                       </TableHead>
                       <TableBody>
                         {[
-                          { name: 'Rajesh Kumar', assigned: 65, completed: 58, utilization: 89.2, status: 'balanced' },
-                          { name: 'Priya Sharma', assigned: 72, completed: 75, utilization: 104.2, status: 'overloaded' },
-                          { name: 'Amit Singh', assigned: 45, completed: 38, utilization: 84.4, status: 'underutilized' },
-                          { name: 'Sneha Patel', assigned: 58, completed: 52, utilization: 89.7, status: 'balanced' },
-                          { name: 'Vikram Reddy', assigned: 68, completed: 71, utilization: 104.4, status: 'overloaded' },
-                          { name: 'Anita Desai', assigned: 52, completed: 48, utilization: 92.3, status: 'balanced' },
-                          { name: 'Ravi Nair', assigned: 38, completed: 32, utilization: 84.2, status: 'underutilized' },
-                          { name: 'Pooja Agarwal', assigned: 61, completed: 65, utilization: 106.6, status: 'overloaded' }
-                        ].map((row, index) => (
-                          <TableRow key={index} hover>
-                            <TableCell>
-                              <Typography variant="body2" fontWeight="600">
-                                {row.name}
-                              </Typography>
-                            </TableCell>
-                            <TableCell align="right">{row.assigned}</TableCell>
-                            <TableCell align="right">{row.completed}</TableCell>
-                            <TableCell align="right">{row.utilization}%</TableCell>
-                            <TableCell align="center">
-                              <Chip
-                                label={`${row.status === 'overloaded' ? '🔴' : row.status === 'balanced' ? '🟢' : '🟡'} ${row.status}`}
-                                size="small"
-                                sx={{
-                                  backgroundColor: alpha(
-                                    row.status === 'overloaded' ? theme.palette.error.main :
+                          { name: 'Rajesh Kumar', month: 'thisMonth', region: 'North', team: 'Team Alpha', assigned: 65, completed: 58, utilization: 89.2, status: 'balanced' },
+                          { name: 'Priya Sharma', month: 'thisMonth', region: 'South', team: 'Team Beta', assigned: 72, completed: 75, utilization: 104.2, status: 'overloaded' },
+                          { name: 'Amit Singh', month: 'thisMonth', region: 'East', team: 'Team Gamma', assigned: 45, completed: 38, utilization: 84.4, status: 'underutilized' },
+                          { name: 'Sneha Patel', month: 'thisMonth', region: 'West', team: 'Team Alpha', assigned: 58, completed: 52, utilization: 89.7, status: 'balanced' },
+                          { name: 'Vikram Reddy', month: 'thisMonth', region: 'North', team: 'Team Beta', assigned: 68, completed: 71, utilization: 104.4, status: 'overloaded' },
+                          { name: 'Anita Desai', month: 'lastMonth', region: 'South', team: 'Team Gamma', assigned: 52, completed: 48, utilization: 92.3, status: 'balanced' },
+                          { name: 'Ravi Nair', month: 'lastMonth', region: 'East', team: 'Team Alpha', assigned: 38, completed: 32, utilization: 84.2, status: 'underutilized' },
+                          { name: 'Pooja Agarwal', month: 'lastMonth', region: 'West', team: 'Team Beta', assigned: 61, completed: 65, utilization: 106.6, status: 'overloaded' }
+                        ]
+                          .filter(row => {
+                            const matchesDateRange = workloadSelectedDateRange === 'last3Months' || row.month === workloadSelectedDateRange;
+                            const matchesRegion = workloadSelectedRegion === 'all' || row.region === workloadSelectedRegion;
+                            const matchesTeam = workloadSelectedTeam === 'all' || row.team === workloadSelectedTeam;
+                            return matchesDateRange && matchesRegion && matchesTeam;
+                          })
+                          .map((row, index) => (
+                            <TableRow key={index} hover>
+                              <TableCell>
+                                <Typography variant="body2" fontWeight="600">
+                                  {row.name}
+                                </Typography>
+                              </TableCell>
+                              <TableCell>
+                                <Typography variant="body2">
+                                  {row.month === 'thisMonth' ? 'This Month' : row.month === 'lastMonth' ? 'Last Month' : 'Last 3 Months'}
+                                </Typography>
+                              </TableCell>
+                              <TableCell>
+                                <Chip
+                                  label={row.region}
+                                  size="small"
+                                  color="primary"
+                                  variant="outlined"
+                                />
+                              </TableCell>
+                              <TableCell>
+                                <Chip
+                                  label={row.team}
+                                  size="small"
+                                  color="info"
+                                  variant="outlined"
+                                />
+                              </TableCell>
+                              <TableCell align="right">{row.assigned}</TableCell>
+                              <TableCell align="right">{row.completed}</TableCell>
+                              <TableCell align="right">{row.utilization}%</TableCell>
+                              <TableCell align="center">
+                                <Chip
+                                  label={`${row.status === 'overloaded' ? '🔴' : row.status === 'balanced' ? '🟢' : '🟡'} ${row.status}`}
+                                  size="small"
+                                  sx={{
+                                    backgroundColor: alpha(
+                                      row.status === 'overloaded' ? theme.palette.error.main :
+                                        row.status === 'balanced' ? theme.palette.success.main :
+                                          theme.palette.warning.main, 0.1
+                                    ),
+                                    color: row.status === 'overloaded' ? theme.palette.error.main :
                                       row.status === 'balanced' ? theme.palette.success.main :
-                                        theme.palette.warning.main, 0.1
-                                  ),
-                                  color: row.status === 'overloaded' ? theme.palette.error.main :
-                                    row.status === 'balanced' ? theme.palette.success.main :
-                                      theme.palette.warning.main
-                                }}
-                              />
-                            </TableCell>
-                          </TableRow>
-                        ))}
+                                        theme.palette.warning.main
+                                  }}
+                                />
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                        {[
+                          { name: 'Rajesh Kumar', month: 'thisMonth', region: 'North', team: 'Team Alpha', assigned: 65, completed: 58, utilization: 89.2, status: 'balanced' },
+                          { name: 'Priya Sharma', month: 'thisMonth', region: 'South', team: 'Team Beta', assigned: 72, completed: 75, utilization: 104.2, status: 'overloaded' },
+                          { name: 'Amit Singh', month: 'thisMonth', region: 'East', team: 'Team Gamma', assigned: 45, completed: 38, utilization: 84.4, status: 'underutilized' },
+                          { name: 'Sneha Patel', month: 'thisMonth', region: 'West', team: 'Team Alpha', assigned: 58, completed: 52, utilization: 89.7, status: 'balanced' },
+                          { name: 'Vikram Reddy', month: 'thisMonth', region: 'North', team: 'Team Beta', assigned: 68, completed: 71, utilization: 104.4, status: 'overloaded' },
+                          { name: 'Anita Desai', month: 'lastMonth', region: 'South', team: 'Team Gamma', assigned: 52, completed: 48, utilization: 92.3, status: 'balanced' },
+                          { name: 'Ravi Nair', month: 'lastMonth', region: 'East', team: 'Team Alpha', assigned: 38, completed: 32, utilization: 84.2, status: 'underutilized' },
+                          { name: 'Pooja Agarwal', month: 'lastMonth', region: 'West', team: 'Team Beta', assigned: 61, completed: 65, utilization: 106.6, status: 'overloaded' }
+                        ].filter(row => {
+                          const matchesDateRange = workloadSelectedDateRange === 'last3Months' || row.month === workloadSelectedDateRange;
+                          const matchesRegion = workloadSelectedRegion === 'all' || row.region === workloadSelectedRegion;
+                          const matchesTeam = workloadSelectedTeam === 'all' || row.team === workloadSelectedTeam;
+                          return matchesDateRange && matchesRegion && matchesTeam;
+                        }).length === 0 && (
+                            <TableRow>
+                              <TableCell colSpan={8} align="center" sx={{ py: 4 }}>
+                                <Typography variant="body1" color="text.secondary">
+                                  No CSC performance records found for the selected filters.
+                                </Typography>
+                                <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+                                  Try selecting different date range, region, or team filters.
+                                </Typography>
+                              </TableCell>
+                            </TableRow>
+                          )}
                       </TableBody>
                     </Table>
                   </TableContainer>
@@ -3727,8 +3670,220 @@ const LeadMIS = () => {
           </Grid>
         )
       }
+
+      {
+        currentTab === 11 && (
+          <Grid container spacing={3}>
+            {/* CSC Load Tracking Filters */}
+            <Grid item xs={12}>
+              <Card sx={{ mb: 2 }}>
+                <CardContent>
+                  <Grid container spacing={2} alignItems="center">
+                    <Grid item xs={12} sm={6} md={3}>
+                      <TextField
+                        fullWidth
+                        type="month"
+                        label="Select Month"
+                        value={cscSelectedMonth}
+                        onChange={(e) => setCscSelectedMonth(e.target.value)}
+                        InputLabelProps={{ shrink: true }}
+                      />
+                    </Grid>
+                    <Grid item xs={12} sm={6} md={3}>
+                      <TextField
+                        fullWidth
+                        select
+                        label="Select Region"
+                        value={cscSelectedRegion}
+                        onChange={(e) => setCscSelectedRegion(e.target.value)}
+                      >
+                        <MenuItem value="all">All Regions</MenuItem>
+                        <MenuItem value="Mumbai">Mumbai</MenuItem>
+                        <MenuItem value="Delhi">Delhi</MenuItem>
+                        <MenuItem value="Bangalore">Bangalore</MenuItem>
+                        <MenuItem value="Chennai">Chennai</MenuItem>
+                        <MenuItem value="Hyderabad">Hyderabad</MenuItem>
+                        <MenuItem value="Pune">Pune</MenuItem>
+                        <MenuItem value="Kolkata">Kolkata</MenuItem>
+                        <MenuItem value="Ahmedabad">Ahmedabad</MenuItem>
+                      </TextField>
+                    </Grid>
+                    <Grid item xs={12} sm={6} md={2}>
+                      <Button
+                        variant="outlined"
+                        fullWidth
+                        sx={{ height: '56px' }}
+                        onClick={() => {
+                          setCscSelectedMonth(new Date().toISOString().slice(0, 7));
+                          setCscSelectedRegion('all');
+                        }}
+                      >
+                        Reset Filters
+                      </Button>
+                    </Grid>
+                  </Grid>
+                </CardContent>
+              </Card>
+            </Grid>
+
+            {/* Summary Cards */}
+            <Grid item xs={12}>
+              <Grid container spacing={2} sx={{ mb: 3 }}>
+                <Grid item xs={12} sm={6} md={4}>
+                  <Card sx={{ background: `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.primary.dark} 100%)`, color: 'white' }}>
+                    <CardContent>
+                      <Stack direction="row" alignItems="center" justifyContent="space-between">
+                        <Box>
+                          <Typography variant="body2" sx={{ opacity: 0.9 }}>Total CSCs</Typography>
+                          <Typography variant="h3" fontWeight="700">8</Typography>
+                        </Box>
+                        <PeopleIcon sx={{ fontSize: 40, opacity: 0.3 }} />
+                      </Stack>
+                    </CardContent>
+                  </Card>
+                </Grid>
+                <Grid item xs={12} sm={6} md={4}>
+                  <Card sx={{ background: `linear-gradient(135deg, ${theme.palette.info.main} 0%, ${theme.palette.info.dark} 100%)`, color: 'white' }}>
+                    <CardContent>
+                      <Stack direction="row" alignItems="center" justifyContent="space-between">
+                        <Box>
+                          <Typography variant="body2" sx={{ opacity: 0.9 }}>Average Calls per CSC</Typography>
+                          <Typography variant="h3" fontWeight="700">578</Typography>
+                        </Box>
+                        <PhoneIcon sx={{ fontSize: 40, opacity: 0.3 }} />
+                      </Stack>
+                    </CardContent>
+                  </Card>
+                </Grid>
+                <Grid item xs={12} sm={6} md={4}>
+                  <Card sx={{ background: `linear-gradient(135deg, ${theme.palette.success.main} 0%, ${theme.palette.success.dark} 100%)`, color: 'white' }}>
+                    <CardContent>
+                      <Stack direction="row" alignItems="center" justifyContent="space-between">
+                        <Box>
+                          <Typography variant="body2" sx={{ opacity: 0.9 }}>% Meeting Target</Typography>
+                          <Typography variant="h3" fontWeight="700">62.5%</Typography>
+                        </Box>
+                        <CheckCircleIcon sx={{ fontSize: 40, opacity: 0.3 }} />
+                      </Stack>
+                    </CardContent>
+                  </Card>
+                </Grid>
+              </Grid>
+            </Grid>
+
+            {/* CSC Load Tracking Table */}
+            <Grid item xs={12}>
+              <Card>
+                <CardContent>
+                  <Typography variant="h6" fontWeight="600" gutterBottom>
+                    CSC Load Tracking Data
+                  </Typography>
+                  <TableContainer>
+                    <Table>
+                      <TableHead>
+                        <TableRow>
+                          <TableCell>CSC Name</TableCell>
+                          <TableCell>Month</TableCell>
+                          <TableCell>Region</TableCell>
+                          <TableCell align="center">Total Calls</TableCell>
+                          <TableCell align="center">Policies Sold</TableCell>
+                          <TableCell align="center">Conversion %</TableCell>
+                          <TableCell align="center">Performance</TableCell>
+                        </TableRow>
+                      </TableHead>
+                      <TableBody>
+                        {[
+                          { cscName: 'Priya Patel', month: '2025-12', region: 'Mumbai', calls: 145, policies: 28, conversion: 19.3, performance: 'Excellent' },
+                          { cscName: 'Rahul Kumar', month: '2025-12', region: 'Delhi', calls: 132, policies: 24, conversion: 18.2, performance: 'Good' },
+                          { cscName: 'Sarah Johnson', month: '2025-12', region: 'Bangalore', calls: 158, policies: 35, conversion: 22.2, performance: 'Excellent' },
+                          { cscName: 'Amit Sharma', month: '2025-12', region: 'Chennai', calls: 118, policies: 18, conversion: 15.3, performance: 'Average' },
+                          { cscName: 'Kavita Reddy', month: '2025-12', region: 'Hyderabad', calls: 125, policies: 22, conversion: 17.6, performance: 'Good' },
+                          { cscName: 'Deepak Singh', month: '2025-12', region: 'Pune', calls: 98, policies: 12, conversion: 12.2, performance: 'Needs Improvement' },
+                          { cscName: 'Meera Gupta', month: '2025-12', region: 'Kolkata', calls: 142, policies: 31, conversion: 21.8, performance: 'Excellent' },
+                          { cscName: 'Vikram Joshi', month: '2025-12', region: 'Ahmedabad', calls: 108, policies: 15, conversion: 13.9, performance: 'Average' },
+                          { cscName: 'Priya Patel', month: '2025-11', region: 'Mumbai', calls: 138, policies: 26, conversion: 18.8, performance: 'Good' },
+                          { cscName: 'Rahul Kumar', month: '2025-11', region: 'Delhi', calls: 125, policies: 22, conversion: 17.6, performance: 'Good' }
+                        ]
+                          .filter((record) => {
+                            const matchesMonth = record.month === cscSelectedMonth;
+                            const matchesRegion = cscSelectedRegion === 'all' || record.region === cscSelectedRegion;
+                            return matchesMonth && matchesRegion;
+                          })
+                          .map((record, index) => (
+                            <TableRow key={index} hover>
+                              <TableCell>
+                                <Typography fontWeight="600">{record.cscName}</Typography>
+                              </TableCell>
+                              <TableCell>
+                                {new Date(record.month + '-01').toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}
+                              </TableCell>
+                              <TableCell>
+                                <Chip
+                                  label={record.region}
+                                  size="small"
+                                  color="primary"
+                                  variant="outlined"
+                                />
+                              </TableCell>
+                              <TableCell align="center">{record.calls}</TableCell>
+                              <TableCell align="center">{record.policies}</TableCell>
+                              <TableCell align="center">
+                                <Chip
+                                  label={`${record.conversion}%`}
+                                  size="small"
+                                  color={record.conversion >= 18 ? 'success' : 'warning'}
+                                />
+                              </TableCell>
+                              <TableCell align="center">
+                                <Chip
+                                  label={record.performance}
+                                  size="small"
+                                  color={
+                                    record.performance === 'Excellent' ? 'success' :
+                                      record.performance === 'Good' ? 'info' :
+                                        record.performance === 'Average' ? 'warning' : 'error'
+                                  }
+                                />
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                        {[
+                          { cscName: 'Priya Patel', month: '2025-12', region: 'Mumbai', calls: 145, policies: 28, conversion: 19.3, performance: 'Excellent' },
+                          { cscName: 'Rahul Kumar', month: '2025-12', region: 'Delhi', calls: 132, policies: 24, conversion: 18.2, performance: 'Good' },
+                          { cscName: 'Sarah Johnson', month: '2025-12', region: 'Bangalore', calls: 158, policies: 35, conversion: 22.2, performance: 'Excellent' },
+                          { cscName: 'Amit Sharma', month: '2025-12', region: 'Chennai', calls: 118, policies: 18, conversion: 15.3, performance: 'Average' },
+                          { cscName: 'Kavita Reddy', month: '2025-12', region: 'Hyderabad', calls: 125, policies: 22, conversion: 17.6, performance: 'Good' },
+                          { cscName: 'Deepak Singh', month: '2025-12', region: 'Pune', calls: 98, policies: 12, conversion: 12.2, performance: 'Needs Improvement' },
+                          { cscName: 'Meera Gupta', month: '2025-12', region: 'Kolkata', calls: 142, policies: 31, conversion: 21.8, performance: 'Excellent' },
+                          { cscName: 'Vikram Joshi', month: '2025-12', region: 'Ahmedabad', calls: 108, policies: 15, conversion: 13.9, performance: 'Average' },
+                          { cscName: 'Priya Patel', month: '2025-11', region: 'Mumbai', calls: 138, policies: 26, conversion: 18.8, performance: 'Good' },
+                          { cscName: 'Rahul Kumar', month: '2025-11', region: 'Delhi', calls: 125, policies: 22, conversion: 17.6, performance: 'Good' }
+                        ].filter((record) => {
+                          const matchesMonth = record.month === cscSelectedMonth;
+                          const matchesRegion = cscSelectedRegion === 'all' || record.region === cscSelectedRegion;
+                          return matchesMonth && matchesRegion;
+                        }).length === 0 && (
+                            <TableRow>
+                              <TableCell colSpan={7} align="center" sx={{ py: 4 }}>
+                                <Typography variant="body1" color="text.secondary">
+                                  No CSC records found for the selected filters.
+                                </Typography>
+                                <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+                                  Try selecting a different month or region.
+                                </Typography>
+                              </TableCell>
+                            </TableRow>
+                          )}
+                      </TableBody>
+                    </Table>
+                  </TableContainer>
+                </CardContent>
+              </Card>
+            </Grid>
+          </Grid>
+        )
+      }
     </Box >
   );
 };
-
 export default LeadMIS;
