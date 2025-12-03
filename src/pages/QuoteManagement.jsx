@@ -7,7 +7,7 @@ import {
   useTheme, alpha, Stack, Divider, Avatar, IconButton, Badge,
   Tooltip, LinearProgress, CardHeader, CardActions, Alert,
   List, ListItem, ListItemText, ListItemAvatar, ListItemIcon, InputAdornment,
-  Menu, Collapse, Stepper, Step, StepLabel
+  Menu, Collapse, Stepper, Step, StepLabel, Snackbar
 } from '@mui/material';
 import {
   Timeline,
@@ -63,6 +63,7 @@ const QuoteManagement = () => {
   const [statusFilter, setStatusFilter] = useState('all');
   const [expandedCards, setExpandedCards] = useState({});
   const [deleteConfirmDialog, setDeleteConfirmDialog] = useState(false);
+  const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
 
   const [formData, setFormData] = useState({
     customerName: '',
@@ -224,9 +225,49 @@ const QuoteManagement = () => {
     setLoading(true);
     setError(null);
     try {
-      const created = await QuoteService.createQuote(payload);
-      // QuoteService mock returns created item; prepend to local list
-      setQuotes(prev => [created, ...prev]);
+      // Check if we're editing an existing quote
+      if (selectedQuote && selectedQuote.id) {
+        // UPDATE existing quote
+        const updatePayload = {
+          ...selectedQuote,
+          customerName: formData.customerName,
+          customerEmail: formData.customerEmail,
+          customerPhone: formData.customerPhone,
+          productType: formData.productType,
+          productPlan: formData.productPlan,
+          coverageAmount: formData.coverageAmount || '₹0',
+          premium: formData.premium || '₹0',
+          sumInsured: formData.sumInsured || '₹0',
+          tenure: formData.tenure || '1 Year',
+          quoteAmount: formData.quoteAmount && formData.quoteAmount.toString().startsWith('₹') ? formData.quoteAmount : `₹${formData.quoteAmount}`,
+          remarks: formData.remarks,
+          ageOfInsured: formData.ageOfInsured,
+          medicalHistory: formData.medicalHistory,
+          vehicleDetails: formData.vehicleDetails,
+          previousInsurance: formData.previousInsurance,
+          timeline: [
+            ...(selectedQuote.timeline || []),
+            {
+              action: 'Quote Updated',
+              user: 'Current User',
+              timestamp: new Date().toLocaleString(),
+              details: 'Quote details modified'
+            }
+          ]
+        };
+
+        // Update the quote in the list
+        setQuotes(prev => prev.map(q => q.id === selectedQuote.id ? updatePayload : q));
+
+        // Clear selected quote
+        setSelectedQuote(null);
+      } else {
+        // CREATE new quote
+        const created = await QuoteService.createQuote(payload);
+        // QuoteService mock returns created item; prepend to local list
+        setQuotes(prev => [created, ...prev]);
+      }
+
       // reset form
       setFormData({
         customerName: '',
@@ -249,8 +290,8 @@ const QuoteManagement = () => {
       });
       setCurrentTab(0);
     } catch (err) {
-      console.error('createQuote error', err);
-      setError(err.message || 'Failed to create quote');
+      console.error('Quote operation error', err);
+      setError(err.message || 'Failed to process quote');
     } finally {
       setLoading(false);
     }
@@ -347,35 +388,189 @@ const QuoteManagement = () => {
     }
   };
 
-  // helper: download PDF (not wired in UI automatically)
+  // helper: download PDF (generates HTML for now since we don't have a real PDF service)
   const handleDownloadPDF = async (quoteId) => {
     setError(null);
     try {
-      const blob = await QuoteService.downloadQuotePDF(quoteId);
-      if (!(blob instanceof Blob)) {
-        // if service returned text, create blob
-        const b = new Blob([JSON.stringify(blob)], { type: 'application/pdf' });
-        const url = URL.createObjectURL(b);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `${quoteId}.pdf`;
-        document.body.appendChild(a);
-        a.click();
-        a.remove();
-        URL.revokeObjectURL(url);
+      // Since we don't have a real PDF service, generate an HTML document
+      // that can be opened in browser and printed as PDF
+      const quote = quotes.find(q => q.id === quoteId) || selectedQuote;
+
+      if (!quote) {
+        setError('Quote not found');
         return;
       }
+
+      // Generate HTML content for the quote
+      const htmlContent = `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Quote ${quote.id}</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 800px;
+      margin: 40px auto;
+      padding: 20px;
+      line-height: 1.6;
+    }
+    .header {
+      text-align: center;
+      border-bottom: 3px solid #1976d2;
+      padding-bottom: 20px;
+      margin-bottom: 30px;
+    }
+    .header h1 {
+      color: #1976d2;
+      margin: 0;
+    }
+    .section {
+      margin-bottom: 25px;
+    }
+    .section-title {
+      background: #f5f5f5;
+      padding: 10px;
+      font-weight: bold;
+      border-left: 4px solid #1976d2;
+      margin-bottom: 15px;
+    }
+    .info-row {
+      display: flex;
+      padding: 8px 0;
+      border-bottom: 1px solid #eee;
+    }
+    .info-label {
+      font-weight: bold;
+      width: 200px;
+      color: #555;
+    }
+    .info-value {
+      flex: 1;
+    }
+    .footer {
+      margin-top: 40px;
+      padding-top: 20px;
+      border-top: 2px solid #1976d2;
+      text-align: center;
+      color: #666;
+      font-size: 12px;
+    }
+    @media print {
+      body {
+        margin: 0;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>Insurance Quote</h1>
+    <p>Quote ID: ${quote.id}</p>
+    <p>Generated on: ${new Date().toLocaleDateString()}</p>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Customer Information</div>
+    <div class="info-row">
+      <div class="info-label">Customer Name:</div>
+      <div class="info-value">${quote.customerName || 'N/A'}</div>
+    </div>
+    <div class="info-row">
+      <div class="info-label">Email:</div>
+      <div class="info-value">${quote.customerEmail || 'N/A'}</div>
+    </div>
+    <div class="info-row">
+      <div class="info-label">Phone:</div>
+      <div class="info-value">${quote.customerPhone || 'N/A'}</div>
+    </div>
+    <div class="info-row">
+      <div class="info-label">Lead ID:</div>
+      <div class="info-value">${quote.leadId || 'N/A'}</div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Product Details</div>
+    <div class="info-row">
+      <div class="info-label">Product Type:</div>
+      <div class="info-value">${quote.productType || 'N/A'}</div>
+    </div>
+    <div class="info-row">
+      <div class="info-label">Plan:</div>
+      <div class="info-value">${quote.productPlan || 'N/A'}</div>
+    </div>
+    <div class="info-row">
+      <div class="info-label">Tenure:</div>
+      <div class="info-value">${quote.tenure || 'N/A'}</div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Financial Details</div>
+    <div class="info-row">
+      <div class="info-label">Coverage Amount:</div>
+      <div class="info-value">${quote.coverageAmount || 'N/A'}</div>
+    </div>
+    <div class="info-row">
+      <div class="info-label">Sum Insured:</div>
+      <div class="info-value">${quote.sumInsured || 'N/A'}</div>
+    </div>
+    <div class="info-row">
+      <div class="info-label">Premium (Annual):</div>
+      <div class="info-value">${quote.premium || 'N/A'}</div>
+    </div>
+    <div class="info-row">
+      <div class="info-label">Total Quote Amount:</div>
+      <div class="info-value"><strong>${quote.quoteAmount || 'N/A'}</strong></div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Quote Status</div>
+    <div class="info-row">
+      <div class="info-label">Status:</div>
+      <div class="info-value">${quote.status || 'N/A'}</div>
+    </div>
+    <div class="info-row">
+      <div class="info-label">Raised Date:</div>
+      <div class="info-value">${quote.raisedDate || 'N/A'}</div>
+    </div>
+    <div class="info-row">
+      <div class="info-label">Raised By:</div>
+      <div class="info-value">${quote.raisedBy || 'N/A'}</div>
+    </div>
+  </div>
+
+  ${quote.remarks ? `
+  <div class="section">
+    <div class="section-title">Remarks</div>
+    <p>${quote.remarks}</p>
+  </div>
+  ` : ''}
+
+  <div class="footer">
+    <p>This is a system-generated quote document.</p>
+    <p>For any queries, please contact our support team.</p>
+  </div>
+</body>
+</html>
+      `;
+
+      // Create blob with HTML content
+      const blob = new Blob([htmlContent], { type: 'text/html' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `${quoteId}.pdf`;
+      a.download = `Quote_${quoteId}.html`;
       document.body.appendChild(a);
       a.click();
       a.remove();
       URL.revokeObjectURL(url);
     } catch (err) {
       console.error('downloadPDF error', err);
-      setError(err.message || 'Failed to download PDF');
+      setError(err.message || 'Failed to download quote');
     }
   };
 
@@ -436,12 +631,16 @@ const QuoteManagement = () => {
   const handleDuplicateQuote = async (quote) => {
     if (!quote) return;
 
+    // Calculate valid until date (30 days from now)
+    const validUntilDate = new Date();
+    validUntilDate.setDate(validUntilDate.getDate() + 30);
+
     const duplicatedQuote = {
       ...quote,
-      id: `Q${Date.now()}`, // New ID
+      id: `${quote.id}-duplicated`, // Use original ID with -duplicated suffix
       status: 'Draft',
       raisedDate: new Date().toLocaleDateString('en-GB'),
-      validUntil: '',
+      validUntil: validUntilDate.toLocaleDateString('en-GB'),
       policyNumber: undefined,
       timeline: [
         {
@@ -504,9 +703,20 @@ const QuoteManagement = () => {
 
     try {
       await handleSendQuote(selectedQuote.id, { channel: 'email' });
+      // Show success message
+      setSnackbar({
+        open: true,
+        message: `Quote ${selectedQuote.id} sent successfully to ${selectedQuote.customerEmail}`,
+        severity: 'success'
+      });
       handleMenuClose();
     } catch (err) {
       // Error already handled in handleSendQuote
+      setSnackbar({
+        open: true,
+        message: 'Failed to send quote. Please try again.',
+        severity: 'error'
+      });
     }
   };
 
@@ -772,12 +982,28 @@ const QuoteManagement = () => {
                   </Button>
                   <Stack direction="row" spacing={0.5}>
                     <Tooltip title="Send Email">
-                      <IconButton size="small" color="primary">
+                      <IconButton
+                        size="small"
+                        color="primary"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setSelectedQuote(quote);
+                          handleSendQuoteFromMenu();
+                        }}
+                      >
                         <SendIcon fontSize="small" />
                       </IconButton>
                     </Tooltip>
                     <Tooltip title="Download PDF">
-                      <IconButton size="small" color="primary">
+                      <IconButton
+                        size="small"
+                        color="primary"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setSelectedQuote(quote);
+                          handleDownloadPDFFromMenu();
+                        }}
+                      >
                         <DownloadIcon fontSize="small" />
                       </IconButton>
                     </Tooltip>
@@ -1112,10 +1338,10 @@ const QuoteManagement = () => {
               <Button
                 variant="contained"
                 size="large"
-                startIcon={<AddIcon />}
+                startIcon={selectedQuote ? <EditIcon /> : <AddIcon />}
                 onClick={handleSubmit}
               >
-                Create Quote
+                {selectedQuote ? 'Update Quote' : 'Create Quote'}
               </Button>
             </Stack>
           </Grid>
@@ -1626,13 +1852,25 @@ const QuoteManagement = () => {
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setOpenDetailsDialog(false)}>Close</Button>
-          <Button variant="outlined" startIcon={<PrintIcon />}>
+          <Button
+            variant="outlined"
+            startIcon={<PrintIcon />}
+            onClick={() => handlePrintQuote(selectedQuote)}
+          >
             Print
           </Button>
-          <Button variant="outlined" startIcon={<DownloadIcon />}>
+          <Button
+            variant="outlined"
+            startIcon={<DownloadIcon />}
+            onClick={handleDownloadPDFFromMenu}
+          >
             Download PDF
           </Button>
-          <Button variant="contained" startIcon={<SendIcon />}>
+          <Button
+            variant="contained"
+            startIcon={<SendIcon />}
+            onClick={handleSendQuoteFromMenu}
+          >
             Send to Customer
           </Button>
         </DialogActions>
@@ -1787,6 +2025,22 @@ const QuoteManagement = () => {
           </Button>
         </DialogActions>
       </Dialog>
+
+      {/* Snackbar for notifications */}
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={4000}
+        onClose={() => setSnackbar({ ...snackbar, open: false })}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      >
+        <Alert
+          onClose={() => setSnackbar({ ...snackbar, open: false })}
+          severity={snackbar.severity}
+          sx={{ width: '100%' }}
+        >
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
     </Box>
   );
 };
