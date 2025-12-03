@@ -57,7 +57,7 @@ import { generateSubjectSuggestions } from '../services/emailAI';
 
 const BulkEmail = () => {
   const [activeStep, setActiveStep] = useState(0);
-  
+
   // Main states
   const [recipients, setRecipients] = useState([]);
   const [selectedTemplate, setSelectedTemplate] = useState('');
@@ -68,22 +68,23 @@ const BulkEmail = () => {
   const [scheduledTime, setScheduledTime] = useState('');
   const [mailMergeEnabled, setMailMergeEnabled] = useState(false);
   const [selectedMergeTemplate, setSelectedMergeTemplate] = useState('');
-  
+
   // Dialog states
   const [recipientDialog, setRecipientDialog] = useState({ open: false });
   const [templatePreviewDialog, setTemplatePreviewDialog] = useState({ open: false, template: null });
 
   const [mergeConfigDialog, setMergeConfigDialog] = useState({ open: false });
   const [sendConfirmDialog, setSendConfirmDialog] = useState({ open: false });
-  
+
   // Campaign states
   const [campaigns, setCampaigns] = useState([]);
   const [activeCampaign, setActiveCampaign] = useState(null);
   const [campaignProgress, setCampaignProgress] = useState(0);
-  
+
   // Form states
   const [newRecipient, setNewRecipient] = useState({ email: '', name: '', company: '' });
   const [bulkRecipientText, setBulkRecipientText] = useState('');
+  const [configSaved, setConfigSaved] = useState(false);
 
   useEffect(() => {
     loadCampaigns();
@@ -302,7 +303,7 @@ Renew-iQ Insurance`
         company: parts[2] || ''
       };
     }).filter(recipient => recipient.email);
-    
+
     setRecipients([...recipients, ...newRecipients]);
     setBulkRecipientText('');
   };
@@ -314,7 +315,7 @@ Renew-iQ Insurance`
   const processTemplate = (template, recipient) => {
     let processedSubject = template.subject;
     let processedBody = template.body;
-    
+
     const variables = {
       customerName: recipient.name || 'Valued Customer',
       policyNumber: 'POL-2024-' + Math.random().toString(36).substr(2, 6).toUpperCase(),
@@ -337,13 +338,13 @@ Renew-iQ Insurance`
       adjusterPhone: '(555) 123-4567',
       adjusterEmail: 'mike.wilson@renewiq.com'
     };
-    
+
     Object.entries(variables).forEach(([key, value]) => {
       const regex = new RegExp(`{{${key}}}`, 'g');
       processedSubject = processedSubject.replace(regex, value);
       processedBody = processedBody.replace(regex, value);
     });
-    
+
     return { subject: processedSubject, body: processedBody };
   };
 
@@ -366,47 +367,63 @@ Renew-iQ Insurance`
       }
 
       const campaign = {
-      id: Date.now(),
-      name: `Campaign ${new Date().toLocaleDateString()}`,
-      status: 'sending',
-      recipients: recipients.length,
-      sent: 0,
-      delivered: 0,
-      opened: 0,
-      clicked: 0,
-      createdDate: new Date().toISOString().split('T')[0],
-      scheduledDate: isScheduled ? `${scheduledDate} ${scheduledTime}` : new Date().toISOString().split('T')[0]
-    };
-    
-    setActiveCampaign(campaign);
-    setCampaigns([campaign, ...campaigns]);
-    
-    // Simulate sending progress
-    let progress = 0;
-    const interval = setInterval(() => {
-      progress += Math.random() * 20;
-      if (progress >= 100) {
-        progress = 100;
-        clearInterval(interval);
-        setActiveCampaign({ ...campaign, status: 'completed', sent: recipients.length });
-      }
-      setCampaignProgress(progress);
-    }, 500);
-    
-    setSendConfirmDialog({ open: false });
+        id: Date.now(),
+        name: `Campaign ${new Date().toLocaleDateString()}`,
+        status: 'sending',
+        recipients: recipients.length,
+        sent: 0,
+        delivered: 0,
+        opened: 0,
+        clicked: 0,
+        createdDate: new Date().toISOString().split('T')[0],
+        scheduledDate: isScheduled ? `${scheduledDate} ${scheduledTime}` : new Date().toISOString().split('T')[0]
+      };
+
+      setActiveCampaign(campaign);
+      setCampaigns([campaign, ...campaigns]);
+
+      // Simulate sending progress
+      let progress = 0;
+      const interval = setInterval(() => {
+        progress += Math.random() * 20;
+        if (progress >= 100) {
+          progress = 100;
+          clearInterval(interval);
+          setActiveCampaign({ ...campaign, status: 'completed', sent: recipients.length });
+        }
+        setCampaignProgress(progress);
+      }, 500);
+
+      setSendConfirmDialog({ open: false });
     })();
   };
 
+  const handleSaveConfiguration = () => {
+    const config = {
+      mailMergeEnabled,
+      selectedMergeTemplate,
+      templates: mailMergeTemplates,
+      savedAt: new Date().toISOString()
+    };
+
+    localStorage.setItem('mailMergeConfig', JSON.stringify(config));
+    setConfigSaved(true);
+
+    setTimeout(() => {
+      setMergeConfigDialog({ open: false });
+      setConfigSaved(false);
+    }, 1500);
+  };
 
 
   return (
     <Fade in={true} timeout={800}>
       <Box sx={{ px: 1 }}>
         {/* Header */}
-        <Box sx={{ 
-          display: 'flex', 
-          justifyContent: 'space-between', 
-          alignItems: 'center', 
+        <Box sx={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
           mb: 4
         }}>
           <Box>
@@ -441,8 +458,8 @@ Renew-iQ Insurance`
         {/* Campaign Progress */}
         {activeCampaign && activeCampaign.status === 'sending' && (
           <Grow in={true}>
-            <Alert 
-              severity="info" 
+            <Alert
+              severity="info"
               sx={{ mb: 3, borderRadius: 2 }}
               action={
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
@@ -460,9 +477,9 @@ Renew-iQ Insurance`
                 <Typography variant="subtitle2" gutterBottom>
                   Sending Campaign: {activeCampaign.name}
                 </Typography>
-                <LinearProgress 
-                  variant="determinate" 
-                  value={campaignProgress} 
+                <LinearProgress
+                  variant="determinate"
+                  value={campaignProgress}
                   sx={{ mt: 1, borderRadius: 1 }}
                 />
               </Box>
@@ -526,7 +543,7 @@ Renew-iQ Insurance`
                           </Button>
                         </Grid>
                       </Grid>
-                      
+
                       <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
                         <Button
                           startIcon={<UploadIcon />}
@@ -563,8 +580,8 @@ Renew-iQ Insurance`
                                   <TableCell>{recipient.name}</TableCell>
                                   <TableCell>{recipient.company}</TableCell>
                                   <TableCell>
-                                    <IconButton 
-                                      size="small" 
+                                    <IconButton
+                                      size="small"
                                       onClick={() => handleRemoveRecipient(recipient.id)}
                                       color="error"
                                     >
@@ -602,8 +619,8 @@ Renew-iQ Insurance`
                     <Grid container spacing={2} sx={{ mb: 2 }}>
                       {emailTemplates.map((template) => (
                         <Grid item xs={12} sm={6} key={template.id}>
-                          <Card 
-                            sx={{ 
+                          <Card
+                            sx={{
                               cursor: 'pointer',
                               border: selectedTemplate === template.id ? 2 : 1,
                               borderColor: selectedTemplate === template.id ? 'primary.main' : 'divider',
@@ -633,17 +650,17 @@ Renew-iQ Insurance`
                                   <VisibilityIcon fontSize="small" />
                                 </IconButton>
                               </Box>
-                              <Chip 
-                                label={template.category} 
-                                size="small" 
-                                color="primary" 
+                              <Chip
+                                label={template.category}
+                                size="small"
+                                color="primary"
                                 variant="outlined"
                                 sx={{ mb: 1 }}
                               />
-                              <Typography 
-                                variant="caption" 
+                              <Typography
+                                variant="caption"
                                 color="text.secondary"
-                                sx={{ 
+                                sx={{
                                   display: '-webkit-box',
                                   WebkitLineClamp: 2,
                                   WebkitBoxOrient: 'vertical',
@@ -657,7 +674,7 @@ Renew-iQ Insurance`
                         </Grid>
                       ))}
                     </Grid>
-                    
+
                     <Box sx={{ mb: 2 }}>
                       <TextField
                         fullWidth
@@ -675,7 +692,7 @@ Renew-iQ Insurance`
                         onChange={(e) => setCustomMessage(e.target.value)}
                       />
                     </Box>
-                    
+
                     <Box sx={{ mb: 1 }}>
                       <Button
                         variant="contained"
@@ -711,7 +728,7 @@ Renew-iQ Insurance`
                           </Typography>
                           <FormControlLabel
                             control={
-                              <Switch 
+                              <Switch
                                 checked={isScheduled}
                                 onChange={(e) => setIsScheduled(e.target.checked)}
                               />
@@ -719,7 +736,7 @@ Renew-iQ Insurance`
                             label="Schedule for later"
                             sx={{ mb: 2 }}
                           />
-                          
+
                           {isScheduled && (
                             <Box sx={{ display: 'flex', gap: 2 }}>
                               <TextField
@@ -742,7 +759,7 @@ Renew-iQ Insurance`
                           )}
                         </Paper>
                       </Grid>
-                      
+
                       <Grid item xs={12} md={6}>
                         <Paper sx={{ p: 2, borderRadius: 2 }}>
                           <Typography variant="subtitle1" fontWeight={600} gutterBottom>
@@ -750,7 +767,7 @@ Renew-iQ Insurance`
                           </Typography>
                           <FormControlLabel
                             control={
-                              <Switch 
+                              <Switch
                                 checked={mailMergeEnabled}
                                 onChange={(e) => setMailMergeEnabled(e.target.checked)}
                               />
@@ -758,7 +775,7 @@ Renew-iQ Insurance`
                             label="Enable mail merge documents"
                             sx={{ mb: 2 }}
                           />
-                          
+
                           {mailMergeEnabled && (
                             <FormControl fullWidth size="small">
                               <InputLabel>Merge Template</InputLabel>
@@ -778,7 +795,7 @@ Renew-iQ Insurance`
                         </Paper>
                       </Grid>
                     </Grid>
-                    
+
                     <Box sx={{ mb: 1 }}>
                       <Button
                         variant="contained"
@@ -833,7 +850,7 @@ Renew-iQ Insurance`
                           </List>
                         </Paper>
                       </Grid>
-                      
+
                       <Grid item xs={12} md={6}>
                         <Paper sx={{ p: 2, borderRadius: 2, bgcolor: 'background.default' }}>
                           <Typography variant="subtitle2" gutterBottom>
@@ -848,9 +865,9 @@ Renew-iQ Insurance`
                                 <Typography variant="body2" fontWeight={600}>
                                   {processTemplate(emailTemplates.find(t => t.id === selectedTemplate), recipients[0]).subject}
                                 </Typography>
-                                <Typography 
-                                  variant="caption" 
-                                  sx={{ 
+                                <Typography
+                                  variant="caption"
+                                  sx={{
                                     display: '-webkit-box',
                                     WebkitLineClamp: 4,
                                     WebkitBoxOrient: 'vertical',
@@ -866,7 +883,7 @@ Renew-iQ Insurance`
                         </Paper>
                       </Grid>
                     </Grid>
-                    
+
                     <Box sx={{ mb: 1 }}>
                       <Button
                         variant="contained"
@@ -895,7 +912,7 @@ Renew-iQ Insurance`
               <Typography variant="h6" fontWeight={600} gutterBottom>
                 Recent Campaigns
               </Typography>
-              
+
               {campaigns.map((campaign) => (
                 <Card key={campaign.id} sx={{ mb: 2, borderRadius: 2 }}>
                   <CardContent sx={{ p: 2 }}>
@@ -903,29 +920,29 @@ Renew-iQ Insurance`
                       <Typography variant="subtitle2" fontWeight={600}>
                         {campaign.name}
                       </Typography>
-                      <Chip 
-                        label={campaign.status} 
-                        size="small" 
+                      <Chip
+                        label={campaign.status}
+                        size="small"
                         color={campaign.status === 'completed' ? 'success' : campaign.status === 'in_progress' ? 'primary' : 'default'}
                       />
                     </Box>
-                    
+
                     <Typography variant="caption" color="text.secondary" gutterBottom>
                       {campaign.recipients} recipients • {campaign.createdDate}
                     </Typography>
-                    
+
                     <Box sx={{ mt: 1 }}>
                       <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>
                         <Typography variant="caption">Delivered</Typography>
                         <Typography variant="caption">{campaign.delivered}/{campaign.recipients}</Typography>
                       </Box>
-                      <LinearProgress 
-                        variant="determinate" 
-                        value={(campaign.delivered / campaign.recipients) * 100} 
+                      <LinearProgress
+                        variant="determinate"
+                        value={(campaign.delivered / campaign.recipients) * 100}
                         sx={{ height: 4, borderRadius: 2 }}
                       />
                     </Box>
-                    
+
                     <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 1 }}>
                       <Typography variant="caption" color="text.secondary">
                         Opened: {campaign.opened}
@@ -942,10 +959,10 @@ Renew-iQ Insurance`
         </Grid>
 
         {/* Dialogs */}
-        
+
         {/* Bulk Recipients Dialog */}
-        <Dialog 
-          open={recipientDialog.open} 
+        <Dialog
+          open={recipientDialog.open}
           onClose={() => setRecipientDialog({ open: false })}
           maxWidth="md"
           fullWidth
@@ -968,7 +985,7 @@ Renew-iQ Insurance`
             <Button onClick={() => setRecipientDialog({ open: false })}>
               Cancel
             </Button>
-            <Button 
+            <Button
               onClick={() => {
                 handleBulkAddRecipients();
                 setRecipientDialog({ open: false });
@@ -981,8 +998,8 @@ Renew-iQ Insurance`
         </Dialog>
 
         {/* Template Preview Dialog */}
-        <Dialog 
-          open={templatePreviewDialog.open} 
+        <Dialog
+          open={templatePreviewDialog.open}
           onClose={() => setTemplatePreviewDialog({ open: false, template: null })}
           maxWidth="md"
           fullWidth
@@ -1001,13 +1018,13 @@ Renew-iQ Insurance`
                     {processTemplate(templatePreviewDialog.template, recipients[0]).subject}
                   </Typography>
                 </Paper>
-                
+
                 <Typography variant="subtitle2" gutterBottom>
                   Message Body:
                 </Typography>
                 <Paper sx={{ p: 2, bgcolor: 'background.default' }}>
-                  <Typography 
-                    variant="body2" 
+                  <Typography
+                    variant="body2"
                     sx={{ whiteSpace: 'pre-line' }}
                   >
                     {processTemplate(templatePreviewDialog.template, recipients[0]).body}
@@ -1020,7 +1037,7 @@ Renew-iQ Insurance`
             <Button onClick={() => setTemplatePreviewDialog({ open: false, template: null })}>
               Close
             </Button>
-            <Button 
+            <Button
               onClick={() => {
                 setSelectedTemplate(templatePreviewDialog.template.id);
                 setTemplatePreviewDialog({ open: false, template: null });
@@ -1033,8 +1050,8 @@ Renew-iQ Insurance`
         </Dialog>
 
         {/* Send Confirmation Dialog */}
-        <Dialog 
-          open={sendConfirmDialog.open} 
+        <Dialog
+          open={sendConfirmDialog.open}
           onClose={() => setSendConfirmDialog({ open: false })}
           maxWidth="sm"
           fullWidth
@@ -1065,7 +1082,7 @@ Renew-iQ Insurance`
             <Button onClick={() => setSendConfirmDialog({ open: false })}>
               Cancel
             </Button>
-            <Button 
+            <Button
               onClick={handleSendCampaign}
               variant="contained"
               color="primary"
@@ -1076,8 +1093,8 @@ Renew-iQ Insurance`
         </Dialog>
 
         {/* Mail Merge Configuration Dialog */}
-        <Dialog 
-          open={mergeConfigDialog.open} 
+        <Dialog
+          open={mergeConfigDialog.open}
           onClose={() => setMergeConfigDialog({ open: false })}
           maxWidth="md"
           fullWidth
@@ -1087,7 +1104,7 @@ Renew-iQ Insurance`
             <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
               Configure mail merge templates for automated document generation
             </Typography>
-            
+
             {mailMergeTemplates.map((template) => (
               <Card key={template.id} sx={{ mb: 2, borderRadius: 2 }}>
                 <CardContent>
@@ -1116,8 +1133,12 @@ Renew-iQ Insurance`
             <Button onClick={() => setMergeConfigDialog({ open: false })}>
               Close
             </Button>
-            <Button variant="contained">
-              Save Configuration
+            <Button
+              variant="contained"
+              onClick={handleSaveConfiguration}
+              disabled={configSaved}
+            >
+              {configSaved ? 'Configuration Saved!' : 'Save Configuration'}
             </Button>
           </DialogActions>
         </Dialog>

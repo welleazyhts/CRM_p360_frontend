@@ -33,6 +33,15 @@ const api = {
     });
   },
 
+  patch: async (url, data, config = {}) => {
+    // Mock implementation - throw error to trigger service fallback to mock data
+    return new Promise((resolve, reject) => {
+      setTimeout(() => {
+        reject(new Error('API not configured - using mock data'));
+      }, 100);
+    });
+  },
+
   delete: async (url, config = {}) => {
     // Mock implementation - throw error to trigger service fallback to mock data
     return new Promise((resolve, reject) => {

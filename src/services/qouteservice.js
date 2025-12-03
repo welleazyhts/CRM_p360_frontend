@@ -1,4 +1,5 @@
 import api from './api';
+import quoteEmailService from './quoteEmailService';
 
 // In-memory fallback storage
 let mockQuotes = [
@@ -159,8 +160,44 @@ const QuoteService = {
       const now = (new Date()).toLocaleString();
       const idx = mockQuotes.findIndex(q => q.id === quoteId);
       if (idx === -1) throw new Error('Quote not found (mock)');
+
+      const quote = mockQuotes[idx];
+      const recipientEmail = to || quote.customerEmail;
+
+      // Use email service to generate and send formatted email
+      if (channel === 'email') {
+        try {
+          const emailResult = await quoteEmailService.sendQuoteEmail(quoteId, quote, recipientEmail);
+
+          // Update quote timeline
+          mockQuotes[idx].timeline = mockQuotes[idx].timeline || [];
+          mockQuotes[idx].timeline.push({
+            action: 'Quote Sent via Email',
+            user: 'System',
+            timestamp: now,
+            details: `Sent to: ${recipientEmail}`
+          });
+
+          return {
+            success: true,
+            message: `Quote sent successfully to ${recipientEmail}`,
+            emailPreview: emailResult.emailPreview,
+            sentAt: emailResult.sentAt
+          };
+        } catch (emailError) {
+          console.error('Email service error:', emailError);
+          throw emailError;
+        }
+      }
+
+      // Fallback for other channels
       mockQuotes[idx].timeline = mockQuotes[idx].timeline || [];
-      mockQuotes[idx].timeline.push({ action: `Sent via ${channel}`, user: 'System', timestamp: now, details: `To: ${to || mockQuotes[idx].customerEmail}` });
+      mockQuotes[idx].timeline.push({
+        action: `Sent via ${channel}`,
+        user: 'System',
+        timestamp: now,
+        details: `To: ${recipientEmail}`
+      });
 
       return { success: true, message: `Mock sent via ${channel}` };
     }

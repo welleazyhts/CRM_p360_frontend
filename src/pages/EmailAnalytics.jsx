@@ -92,47 +92,47 @@ const EmailAnalytics = () => {
       { category: 'Uncategorized', count: 409, percentage: 14.4, avgResolutionTime: '2.7 hours', trend: 'down' }
     ],
     agentPerformance: [
-      { 
-        name: 'Priya Patel', 
+      {
+        name: 'Priya Patel',
         avatar: 'AJ',
-        emailsHandled: 342, 
-        avgResponseTime: '1.8 hours', 
+        emailsHandled: 342,
+        avgResponseTime: '1.8 hours',
         resolutionRate: 94.2,
         customerRating: 4.8,
         efficiency: 'excellent'
       },
-      { 
-        name: 'Bob Smith', 
+      {
+        name: 'Bob Smith',
         avatar: 'BS',
-        emailsHandled: 298, 
-        avgResponseTime: '2.1 hours', 
+        emailsHandled: 298,
+        avgResponseTime: '2.1 hours',
         resolutionRate: 91.7,
         customerRating: 4.6,
         efficiency: 'excellent'
       },
-      { 
-        name: 'Charlie Brown', 
+      {
+        name: 'Charlie Brown',
         avatar: 'CB',
-        emailsHandled: 276, 
-        avgResponseTime: '2.4 hours', 
+        emailsHandled: 276,
+        avgResponseTime: '2.4 hours',
         resolutionRate: 89.3,
         customerRating: 4.5,
         efficiency: 'good'
       },
-      { 
-        name: 'Diana Wilson', 
+      {
+        name: 'Diana Wilson',
         avatar: 'DW',
-        emailsHandled: 254, 
-        avgResponseTime: '2.7 hours', 
+        emailsHandled: 254,
+        avgResponseTime: '2.7 hours',
         resolutionRate: 87.1,
         customerRating: 4.3,
         efficiency: 'good'
       },
-      { 
-        name: 'Eric Thompson', 
+      {
+        name: 'Eric Thompson',
         avatar: 'ET',
-        emailsHandled: 231, 
-        avgResponseTime: '3.1 hours', 
+        emailsHandled: 231,
+        avgResponseTime: '3.1 hours',
         resolutionRate: 84.6,
         customerRating: 4.1,
         efficiency: 'average'
@@ -248,6 +248,72 @@ const EmailAnalytics = () => {
     setTimeout(() => setRefreshing(false), 2000);
   };
 
+  const handleExportReport = () => {
+    // Generate CSV content from analytics data
+    const csvContent = [];
+
+    // Header
+    csvContent.push('Email Analytics Report');
+    csvContent.push(`Generated: ${new Date().toLocaleString()}`);
+    csvContent.push(`Date Range: ${dateRange}`);
+    csvContent.push('');
+
+    // Overview Metrics
+    csvContent.push('OVERVIEW METRICS');
+    csvContent.push('Metric,Value,Change (%)');
+    csvContent.push(`Total Emails,${analyticsData.overview.totalEmails},${analyticsData.overview.totalEmailsChange}`);
+    csvContent.push(`Resolved Emails,${analyticsData.overview.resolvedEmails},${analyticsData.overview.resolvedEmailsChange}`);
+    csvContent.push(`Avg Response Time,${analyticsData.overview.avgResponseTime},${analyticsData.overview.avgResponseTimeChange}`);
+    csvContent.push(`Customer Satisfaction,${analyticsData.overview.customerSatisfaction},${analyticsData.overview.customerSatisfactionChange}`);
+    csvContent.push('');
+
+    // Category Breakdown
+    csvContent.push('CATEGORY BREAKDOWN');
+    csvContent.push('Category,Count,Percentage,Avg Resolution Time,Trend');
+    analyticsData.categoryBreakdown.forEach(cat => {
+      csvContent.push(`${cat.category},${cat.count},${cat.percentage}%,${cat.avgResolutionTime},${cat.trend}`);
+    });
+    csvContent.push('');
+
+    // Agent Performance
+    csvContent.push('AGENT PERFORMANCE');
+    csvContent.push('Agent,Emails Handled,Avg Response Time,Resolution Rate,Customer Rating,Efficiency');
+    analyticsData.agentPerformance.forEach(agent => {
+      csvContent.push(`${agent.name},${agent.emailsHandled},${agent.avgResponseTime},${agent.resolutionRate}%,${agent.customerRating},${agent.efficiency}`);
+    });
+    csvContent.push('');
+
+    // SLA Metrics
+    csvContent.push('SLA COMPLIANCE');
+    csvContent.push('Metric,Percentage');
+    csvContent.push(`Within SLA,${analyticsData.slaMetrics.withinSLA}%`);
+    csvContent.push(`Nearing SLA,${analyticsData.slaMetrics.nearingSLA}%`);
+    csvContent.push(`Breached SLA,${analyticsData.slaMetrics.breachedSLA}%`);
+    csvContent.push(`Overall Compliance,${analyticsData.slaMetrics.avgSLACompliance}%`);
+    csvContent.push('');
+
+    // Bulk Email Metrics
+    csvContent.push('BULK EMAIL CAMPAIGN METRICS');
+    csvContent.push('Metric,Value');
+    csvContent.push(`Total Campaigns,${analyticsData.bulkEmailMetrics.totalCampaigns}`);
+    csvContent.push(`Total Recipients,${analyticsData.bulkEmailMetrics.totalRecipients}`);
+    csvContent.push(`Avg Delivery Rate,${analyticsData.bulkEmailMetrics.avgDeliveryRate}%`);
+    csvContent.push(`Avg Open Rate,${analyticsData.bulkEmailMetrics.avgOpenRate}%`);
+    csvContent.push(`Avg Click Rate,${analyticsData.bulkEmailMetrics.avgClickRate}%`);
+
+    // Create and download CSV file
+    const csv = csvContent.join('\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `Email_Analytics_Report_${new Date().toISOString().split('T')[0]}.csv`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
   const getEfficiencyColor = (efficiency) => {
     switch (efficiency) {
       case 'excellent': return 'success';
@@ -274,8 +340,8 @@ const EmailAnalytics = () => {
         ) : (
           <TrendingDownIcon fontSize="small" color="error" />
         )}
-        <Typography 
-          variant="body2" 
+        <Typography
+          variant="body2"
           color={isPositive ? 'success.main' : 'error.main'}
           fontWeight={600}
         >
@@ -289,10 +355,10 @@ const EmailAnalytics = () => {
     <Fade in={true} timeout={800}>
       <Box sx={{ px: 1 }}>
         {/* Header */}
-        <Box sx={{ 
-          display: 'flex', 
-          justifyContent: 'space-between', 
-          alignItems: 'center', 
+        <Box sx={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
           mb: 4
         }}>
           <Box>
@@ -330,6 +396,7 @@ const EmailAnalytics = () => {
             <Button
               startIcon={<DownloadIcon />}
               variant="contained"
+              onClick={handleExportReport}
               sx={{ borderRadius: 2 }}
             >
               Export Report
@@ -341,7 +408,7 @@ const EmailAnalytics = () => {
         <Grid container spacing={3} sx={{ mb: 4 }}>
           <Grid item xs={12} sm={6} md={3}>
             <Grow in={loaded} timeout={400}>
-              <Card sx={{ 
+              <Card sx={{
                 borderRadius: 3,
                 boxShadow: '0 8px 24px rgba(0,0,0,0.05)',
                 transition: 'transform 0.2s',
@@ -367,7 +434,7 @@ const EmailAnalytics = () => {
 
           <Grid item xs={12} sm={6} md={3}>
             <Grow in={loaded} timeout={600}>
-              <Card sx={{ 
+              <Card sx={{
                 borderRadius: 3,
                 boxShadow: '0 8px 24px rgba(0,0,0,0.05)',
                 transition: 'transform 0.2s',
@@ -393,7 +460,7 @@ const EmailAnalytics = () => {
 
           <Grid item xs={12} sm={6} md={3}>
             <Grow in={loaded} timeout={800}>
-              <Card sx={{ 
+              <Card sx={{
                 borderRadius: 3,
                 boxShadow: '0 8px 24px rgba(0,0,0,0.05)',
                 transition: 'transform 0.2s',
@@ -419,7 +486,7 @@ const EmailAnalytics = () => {
 
           <Grid item xs={12} sm={6} md={3}>
             <Grow in={loaded} timeout={1000}>
-              <Card sx={{ 
+              <Card sx={{
                 borderRadius: 3,
                 boxShadow: '0 8px 24px rgba(0,0,0,0.05)',
                 transition: 'transform 0.2s',
@@ -470,9 +537,9 @@ const EmailAnalytics = () => {
                       {analyticsData.categoryBreakdown.map((category) => (
                         <TableRow key={category.category}>
                           <TableCell>
-                            <Chip 
-                              label={category.category} 
-                              color="primary" 
+                            <Chip
+                              label={category.category}
+                              color="primary"
                               variant="outlined"
                               size="small"
                             />
@@ -527,9 +594,9 @@ const EmailAnalytics = () => {
                       {analyticsData.slaMetrics.withinSLA}%
                     </Typography>
                   </Box>
-                  <LinearProgress 
-                    variant="determinate" 
-                    value={analyticsData.slaMetrics.withinSLA} 
+                  <LinearProgress
+                    variant="determinate"
+                    value={analyticsData.slaMetrics.withinSLA}
                     color="success"
                     sx={{ mb: 2 }}
                   />
@@ -541,9 +608,9 @@ const EmailAnalytics = () => {
                       {analyticsData.slaMetrics.nearingSLA}%
                     </Typography>
                   </Box>
-                  <LinearProgress 
-                    variant="determinate" 
-                    value={analyticsData.slaMetrics.nearingSLA} 
+                  <LinearProgress
+                    variant="determinate"
+                    value={analyticsData.slaMetrics.nearingSLA}
                     color="warning"
                     sx={{ mb: 2 }}
                   />
@@ -555,9 +622,9 @@ const EmailAnalytics = () => {
                       {analyticsData.slaMetrics.breachedSLA}%
                     </Typography>
                   </Box>
-                  <LinearProgress 
-                    variant="determinate" 
-                    value={analyticsData.slaMetrics.breachedSLA} 
+                  <LinearProgress
+                    variant="determinate"
+                    value={analyticsData.slaMetrics.breachedSLA}
                     color="error"
                   />
                 </Box>
@@ -683,8 +750,8 @@ const EmailAnalytics = () => {
                         </Box>
                       </TableCell>
                       <TableCell align="right">
-                        <Chip 
-                          label={agent.efficiency} 
+                        <Chip
+                          label={agent.efficiency}
                           color={getEfficiencyColor(agent.efficiency)}
                           size="small"
                           sx={{ textTransform: 'capitalize' }}
@@ -709,11 +776,11 @@ const EmailAnalytics = () => {
                     Bulk Email Campaign Performance
                   </Typography>
                 </Box>
-                
+
                 {/* Campaign Overview Cards */}
                 <Grid container spacing={3} sx={{ mb: 4 }}>
                   <Grid item xs={12} sm={6} md={3}>
-                    <Card sx={{ 
+                    <Card sx={{
                       borderRadius: 2,
                       boxShadow: '0 4px 12px rgba(0,0,0,0.05)',
                       transition: 'transform 0.2s',
@@ -735,9 +802,9 @@ const EmailAnalytics = () => {
                       </CardContent>
                     </Card>
                   </Grid>
-                  
+
                   <Grid item xs={12} sm={6} md={3}>
-                    <Card sx={{ 
+                    <Card sx={{
                       borderRadius: 2,
                       boxShadow: '0 4px 12px rgba(0,0,0,0.05)',
                       transition: 'transform 0.2s',
@@ -759,9 +826,9 @@ const EmailAnalytics = () => {
                       </CardContent>
                     </Card>
                   </Grid>
-                  
+
                   <Grid item xs={12} sm={6} md={3}>
-                    <Card sx={{ 
+                    <Card sx={{
                       borderRadius: 2,
                       boxShadow: '0 4px 12px rgba(0,0,0,0.05)',
                       transition: 'transform 0.2s',
@@ -783,9 +850,9 @@ const EmailAnalytics = () => {
                       </CardContent>
                     </Card>
                   </Grid>
-                  
+
                   <Grid item xs={12} sm={6} md={3}>
-                    <Card sx={{ 
+                    <Card sx={{
                       borderRadius: 2,
                       boxShadow: '0 4px 12px rgba(0,0,0,0.05)',
                       transition: 'transform 0.2s',
@@ -902,7 +969,7 @@ const EmailAnalytics = () => {
                   <Grid container spacing={2}>
                     {analyticsData.bulkEmailMetrics.templatePerformance.map((template, index) => (
                       <Grid item xs={12} sm={6} md={4} key={index}>
-                        <Card sx={{ 
+                        <Card sx={{
                           borderRadius: 2,
                           boxShadow: '0 2px 8px rgba(0,0,0,0.05)',
                           height: '100%'
@@ -977,9 +1044,9 @@ const EmailAnalytics = () => {
                   <Typography variant="h6" color="text.secondary">
                     Positive
                   </Typography>
-                  <LinearProgress 
-                    variant="determinate" 
-                    value={analyticsData.sentimentAnalysis.positive} 
+                  <LinearProgress
+                    variant="determinate"
+                    value={analyticsData.sentimentAnalysis.positive}
                     color="success"
                     sx={{ mt: 1 }}
                   />
@@ -993,9 +1060,9 @@ const EmailAnalytics = () => {
                   <Typography variant="h6" color="text.secondary">
                     Neutral
                   </Typography>
-                  <LinearProgress 
-                    variant="determinate" 
-                    value={analyticsData.sentimentAnalysis.neutral} 
+                  <LinearProgress
+                    variant="determinate"
+                    value={analyticsData.sentimentAnalysis.neutral}
                     color="info"
                     sx={{ mt: 1 }}
                   />
@@ -1009,9 +1076,9 @@ const EmailAnalytics = () => {
                   <Typography variant="h6" color="text.secondary">
                     Negative
                   </Typography>
-                  <LinearProgress 
-                    variant="determinate" 
-                    value={analyticsData.sentimentAnalysis.negative} 
+                  <LinearProgress
+                    variant="determinate"
+                    value={analyticsData.sentimentAnalysis.negative}
                     color="error"
                     sx={{ mt: 1 }}
                   />

@@ -64,6 +64,8 @@ const QuoteManagement = () => {
   const [expandedCards, setExpandedCards] = useState({});
   const [deleteConfirmDialog, setDeleteConfirmDialog] = useState(false);
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
+  const [emailPreviewDialog, setEmailPreviewDialog] = useState(false);
+  const [emailPreviewData, setEmailPreviewData] = useState(null);
 
   const [formData, setFormData] = useState({
     customerName: '',
@@ -697,26 +699,50 @@ const QuoteManagement = () => {
     setSelectedQuote(null);
   };
 
-  // Send Quote via Menu
+  // Send Quote via Menu - Show preview first
   const handleSendQuoteFromMenu = async () => {
     if (!selectedQuote) return;
 
-    try {
-      await handleSendQuote(selectedQuote.id, { channel: 'email' });
-      // Show success message
+    // Validate customer email
+    if (!selectedQuote.customerEmail) {
       setSnackbar({
         open: true,
-        message: `Quote ${selectedQuote.id} sent successfully to ${selectedQuote.customerEmail}`,
-        severity: 'success'
-      });
-      handleMenuClose();
-    } catch (err) {
-      // Error already handled in handleSendQuote
-      setSnackbar({
-        open: true,
-        message: 'Failed to send quote. Please try again.',
+        message: 'Customer email is missing. Please update the quote with a valid email address.',
         severity: 'error'
       });
+      handleMenuClose();
+      return;
+    }
+
+    try {
+      setLoading(true);
+      // Get email preview from service
+      const result = await handleSendQuote(selectedQuote.id, {
+        channel: 'email',
+        to: selectedQuote.customerEmail
+      });
+
+      if (result && result.emailPreview) {
+        // Show email preview dialog
+        setEmailPreviewData({
+          quote: selectedQuote,
+          preview: result.emailPreview,
+          result: result
+        });
+        setEmailPreviewDialog(true);
+      }
+
+      handleMenuClose();
+    } catch (err) {
+      console.error('Error preparing email:', err);
+      setSnackbar({
+        open: true,
+        message: err.message || 'Failed to prepare email. Please try again.',
+        severity: 'error'
+      });
+      handleMenuClose();
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -2025,6 +2051,126 @@ const QuoteManagement = () => {
           </Button>
         </DialogActions>
       </Dialog>
+
+      {/* Email Preview Dialog */}
+      <Dialog
+        open={emailPreviewDialog}
+        onClose={() => setEmailPreviewDialog(false)}
+        maxWidth="md"
+        fullWidth
+        PaperProps={{
+          sx: {
+            borderRadius: 3,
+            maxHeight: '90vh'
+          }
+        }}
+      >
+        <DialogTitle>
+          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <EmailIcon color="primary" />
+              <Typography variant="h6">Email Preview</Typography>
+            </Box>
+            <IconButton onClick={() => setEmailPreviewDialog(false)} size="small">
+              <CloseIcon />
+            </IconButton>
+          </Box>
+        </DialogTitle>
+        <DialogContent dividers>
+          {emailPreviewData && (
+            <Box>
+              {/* Email Metadata */}
+              <Paper sx={{ p: 2, mb: 2, bgcolor: 'background.default', borderRadius: 2 }}>
+                <Grid container spacing={2}>
+                  <Grid item xs={12}>
+                    <Typography variant="caption" color="text.secondary">From</Typography>
+                    <Typography variant="body2" fontWeight="600">
+                      {emailPreviewData.preview.from}
+                    </Typography>
+                  </Grid>
+                  <Grid item xs={12}>
+                    <Typography variant="caption" color="text.secondary">To</Typography>
+                    <Typography variant="body2" fontWeight="600">
+                      {emailPreviewData.preview.to}
+                    </Typography>
+                  </Grid>
+                  <Grid item xs={12}>
+                    <Typography variant="caption" color="text.secondary">Subject</Typography>
+                    <Typography variant="body2" fontWeight="600">
+                      {emailPreviewData.preview.subject}
+                    </Typography>
+                  </Grid>
+                </Grid>
+              </Paper>
+
+              {/* Email Content Preview */}
+              <Box sx={{
+                border: '1px solid',
+                borderColor: 'divider',
+                borderRadius: 2,
+                overflow: 'hidden',
+                bgcolor: '#f5f5f5'
+              }}>
+                <Box sx={{
+                  p: 1.5,
+                  bgcolor: 'background.paper',
+                  borderBottom: '1px solid',
+                  borderColor: 'divider',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 1
+                }}>
+                  <Typography variant="caption" fontWeight="600" color="text.secondary">
+                    EMAIL PREVIEW
+                  </Typography>
+                </Box>
+                <Box
+                  sx={{
+                    p: 2,
+                    maxHeight: '400px',
+                    overflow: 'auto',
+                    bgcolor: 'white'
+                  }}
+                  dangerouslySetInnerHTML={{ __html: emailPreviewData.preview.html }}
+                />
+              </Box>
+
+              {/* Success Info */}
+              <Alert severity="success" sx={{ mt: 2 }}>
+                <Typography variant="body2">
+                  Email is ready to be sent to <strong>{emailPreviewData.preview.to}</strong>
+                </Typography>
+              </Alert>
+            </Box>
+          )}
+        </DialogContent>
+        <DialogActions sx={{ p: 2.5 }}>
+          <Button
+            onClick={() => setEmailPreviewDialog(false)}
+            variant="outlined"
+          >
+            Close
+          </Button>
+          <Button
+            onClick={() => {
+              // Show success notification
+              setSnackbar({
+                open: true,
+                message: `Quote email sent successfully to ${emailPreviewData?.preview?.to}`,
+                severity: 'success'
+              });
+              setEmailPreviewDialog(false);
+              setEmailPreviewData(null);
+            }}
+            variant="contained"
+            startIcon={<SendIcon />}
+            color="primary"
+          >
+            Confirm & Send Email
+          </Button>
+        </DialogActions>
+      </Dialog>
+
 
       {/* Snackbar for notifications */}
       <Snackbar

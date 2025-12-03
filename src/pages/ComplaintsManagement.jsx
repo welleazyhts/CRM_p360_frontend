@@ -106,10 +106,12 @@ const ComplaintsManagement = () => {
         setComplaints(complaints.map(c => c.id === selectedComplaint.id ? updated : c));
       } else {
         const newComplaint = await createComplaint(formData);
-        setComplaints([...complaints, newComplaint]);
+        setComplaints([newComplaint, ...complaints]); // Add new complaint at the beginning
       }
       setComplaintDialogOpen(false);
-      loadComplaints(); // Refresh stats
+      // Refresh only stats, not the entire complaints list
+      const statsData = await getComplaintStats();
+      setStats(statsData);
     } catch (error) {
       console.error('Failed to save complaint:', error);
     }

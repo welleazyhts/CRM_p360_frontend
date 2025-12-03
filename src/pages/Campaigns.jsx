@@ -479,6 +479,34 @@ const CampaignManager = () => {
     setCampaigns(prev => prev.map(campaign =>
       campaign.id === campaignId ? { ...campaign, status: 'paused' } : campaign
     ));
+    alert('Campaign paused successfully!');
+  };
+
+  const handleExportCampaign = (campaign) => {
+    const headers = ['Name', 'Type', 'Status', 'Audience Size', 'Sent', 'Delivered', 'Opened', 'Clicked'];
+    const row = [
+      `"${campaign.name}"`,
+      campaign.type,
+      campaign.status,
+      campaign.audienceSize,
+      campaign.metrics.sent,
+      campaign.metrics.delivered,
+      campaign.metrics.opened,
+      campaign.metrics.clicked
+    ];
+
+    const csvContent = [
+      headers.join(','),
+      row.join(',')
+    ].join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${campaign.name.replace(/\s+/g, '_')}_Report.csv`;
+    a.click();
+    window.URL.revokeObjectURL(url);
   };
 
   const handleViewDetails = (campaignId) => {
@@ -802,6 +830,18 @@ const CampaignManager = () => {
                   <EditIcon />
                 </IconButton>
               </Tooltip>
+
+              <Tooltip title="Export Report">
+                <IconButton
+                  size="small"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleExportCampaign(campaign);
+                  }}
+                >
+                  <GetAppIcon />
+                </IconButton>
+              </Tooltip>
             </Box>
           </Box>
 
@@ -840,8 +880,8 @@ const CampaignManager = () => {
             </Box>
           )}
         </CardContent>
-      </Card>
-    </Grow>
+      </Card >
+    </Grow >
   );
 
   const CreateCampaignDialog = () => (

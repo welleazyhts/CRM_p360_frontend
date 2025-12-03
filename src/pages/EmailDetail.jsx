@@ -92,6 +92,7 @@ const EmailDetail = () => {
   const [replyText, setReplyText] = useState('');
   const [forwardText, setForwardText] = useState('');
   const [includeThread, setIncludeThread] = useState(true);
+  const [selectedAgent, setSelectedAgent] = useState('');
 
   // Mock data will be defined inside useEffect to avoid dependency issues
 
@@ -138,7 +139,7 @@ const EmailDetail = () => {
           status: 'resolved'
         },
         {
-          id: 'thread-2', 
+          id: 'thread-2',
           from: 'support@renewiq.com',
           subject: 'Re: Initial policy renewal query',
           date: '2024-12-25T16:45:00',
@@ -225,7 +226,7 @@ Phone: +1 (555) 123-4567`
       },
       {
         id: 2,
-        author: 'Ravi Gupta', 
+        author: 'Ravi Gupta',
         timestamp: '2024-12-28T11:45:00',
         content: 'Contacted customer via phone. Explained the verification process. Customer documents are being reviewed by compliance team.'
       }
@@ -245,11 +246,11 @@ Phone: +1 (555) 123-4567`
 
     // Simulate real-time viewing updates
     const interval = setInterval(() => {
-      setViewingAgents(prev => 
+      setViewingAgents(prev =>
         prev.map(agent => ({
           ...agent,
-          lastActive: agent.name === 'Priya Patel' ? 'now' : 
-                     Math.random() > 0.7 ? 'now' : `${Math.floor(Math.random() * 5) + 1} min ago`
+          lastActive: agent.name === 'Priya Patel' ? 'now' :
+            Math.random() > 0.7 ? 'now' : `${Math.floor(Math.random() * 5) + 1} min ago`
         }))
       );
     }, 30000); // Update every 30 seconds
@@ -330,15 +331,15 @@ Phone: +1 (555) 123-4567`
 
   const handleAddNote = () => {
     if (newNote.trim()) {
-    const note = {
-      id: notes.length + 1,
-      author: 'Current User',
+      const note = {
+        id: notes.length + 1,
+        author: 'Current User',
         content: newNote,
         timestamp: new Date().toISOString()
-    };
+      };
       setNotes([...notes, note]);
-    setNewNote('');
-    setNoteDialog(false);
+      setNewNote('');
+      setNoteDialog(false);
     }
   };
 
@@ -354,7 +355,7 @@ Phone: +1 (555) 123-4567`
         escalatedAt: new Date().toISOString(),
         escalationReason: escalationReason
       }));
-      
+
       // Add an internal note about the escalation
       const escalationNote = {
         id: notes.length + 1,
@@ -363,19 +364,46 @@ Phone: +1 (555) 123-4567`
         timestamp: new Date().toISOString()
       };
       setNotes([...notes, escalationNote]);
-      
+
       setEscalationReason('');
       setEscalateDialog(false);
-      
+
       // Show success message (in a real app, this might be a toast notification)
       alert('Email successfully escalated to supervisor');
     }
   };
 
+  // Handle Assign
+  const handleAssign = () => {
+    if (selectedAgent) {
+      // Update email with assigned agent
+      setEmail(prev => ({
+        ...prev,
+        assignedTo: selectedAgent,
+        status: prev.status === 'new' ? 'in_progress' : prev.status
+      }));
+
+      // Add an internal note about the assignment
+      const assignmentNote = {
+        id: notes.length + 1,
+        author: 'System',
+        content: `Email assigned to ${selectedAgent}`,
+        timestamp: new Date().toISOString()
+      };
+      setNotes([...notes, assignmentNote]);
+
+      setSelectedAgent('');
+      setAssignDialog(false);
+
+      // Show success message
+      alert(`Email successfully assigned to ${selectedAgent}`);
+    }
+  };
+
   // AI Intent Tagging Component
   const AIIntentTagging = ({ aiIntent }) => (
-    <Card sx={{ 
-      mb: 3, 
+    <Card sx={{
+      mb: 3,
       borderRadius: 3,
       boxShadow: '0 8px 24px rgba(0,0,0,0.05)',
       border: `1px solid ${alpha(theme.palette.primary.main, 0.2)}`
@@ -386,29 +414,29 @@ Phone: +1 (555) 123-4567`
           <Typography variant="h6" fontWeight="600">
             AI Intent Analysis
           </Typography>
-          <Chip 
-            label="BETA" 
-            size="small" 
-            color="primary" 
+          <Chip
+            label="BETA"
+            size="small"
+            color="primary"
             variant="outlined"
             sx={{ fontSize: '0.7rem', height: 20 }}
           />
         </Box>
-        
+
         <Box sx={{ mb: 2 }}>
           <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
             <Typography variant="body2" fontWeight="600">
               Primary Intent: {aiIntent.category.toUpperCase()}
             </Typography>
-            <Chip 
+            <Chip
               label={formatConfidence(aiIntent.confidence)}
               color={getConfidenceColor(aiIntent.confidence)}
               size="small"
             />
           </Box>
-          <LinearProgress 
-            variant="determinate" 
-            value={aiIntent.confidence} 
+          <LinearProgress
+            variant="determinate"
+            value={aiIntent.confidence}
             color={getConfidenceColor(aiIntent.confidence)}
             sx={{ height: 6, borderRadius: 3 }}
           />
@@ -420,7 +448,7 @@ Phone: +1 (555) 123-4567`
         <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
           {aiIntent.subcategories.map((sub, index) => (
             <Tooltip key={index} title={`Confidence: ${formatConfidence(sub.confidence)}`}>
-              <Chip 
+              <Chip
                 label={sub.name.replace('_', ' ')}
                 size="small"
                 variant="outlined"
@@ -436,12 +464,12 @@ Phone: +1 (555) 123-4567`
 
   // Sentiment Indicator Component
   const SentimentIndicator = ({ sentiment }) => (
-    <Card sx={{ 
-      mb: 3, 
+    <Card sx={{
+      mb: 3,
       borderRadius: 3,
       boxShadow: '0 8px 24px rgba(0,0,0,0.05)',
-      border: sentiment.overall === 'negative' ? 
-        `2px solid ${alpha(theme.palette.error.main, 0.3)}` : 
+      border: sentiment.overall === 'negative' ?
+        `2px solid ${alpha(theme.palette.error.main, 0.3)}` :
         `1px solid ${alpha(theme.palette.divider, 0.5)}`
     }}>
       <CardContent sx={{ p: 3 }}>
@@ -463,23 +491,23 @@ Phone: +1 (555) 123-4567`
               <Typography variant="body2" fontWeight="600">
                 {sentiment.overall.toUpperCase()} Sentiment
               </Typography>
-              <Chip 
+              <Chip
                 label={formatConfidence(sentiment.confidence)}
                 color={getSentimentColor(sentiment.overall)}
                 size="small"
               />
             </Box>
-            <LinearProgress 
-              variant="determinate" 
-              value={Math.abs(sentiment.score) * 100} 
+            <LinearProgress
+              variant="determinate"
+              value={Math.abs(sentiment.score) * 100}
               color={getSentimentColor(sentiment.overall)}
               sx={{ height: 6, borderRadius: 3 }}
             />
           </Box>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            {sentiment.score > 0 ? <TrendingUpIcon color="success" /> : 
-             sentiment.score < 0 ? <TrendingDownIcon color="error" /> : 
-             <RemoveIcon color="info" />}
+            {sentiment.score > 0 ? <TrendingUpIcon color="success" /> :
+              sentiment.score < 0 ? <TrendingDownIcon color="error" /> :
+                <RemoveIcon color="info" />}
             <Typography variant="body2" fontWeight="500">
               {sentiment.score.toFixed(2)}
             </Typography>
@@ -499,7 +527,7 @@ Phone: +1 (555) 123-4567`
         </Typography>
         <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
           {sentiment.emotions.map((emotion, index) => (
-            <Chip 
+            <Chip
               key={index}
               label={`${emotion.emotion} (${(emotion.intensity * 100).toFixed(0)}%)`}
               size="small"
@@ -515,8 +543,8 @@ Phone: +1 (555) 123-4567`
 
   // Real-time Collaboration Component
   const RealTimeCollaboration = ({ viewingAgents }) => (
-    <Card sx={{ 
-      mb: 3, 
+    <Card sx={{
+      mb: 3,
       borderRadius: 3,
       boxShadow: '0 8px 24px rgba(0,0,0,0.05)'
     }}>
@@ -530,15 +558,15 @@ Phone: +1 (555) 123-4567`
             <CircularProgress size={16} thickness={4} />
           </Badge>
         </Box>
-        
+
         {viewingAgents.length > 0 ? (
           <Box>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
               <AvatarGroup max={4} sx={{ '& .MuiAvatar-root': { width: 28, height: 28, fontSize: 12 } }}>
                 {viewingAgents.map((agent, index) => (
-                  <Avatar 
+                  <Avatar
                     key={index}
-                    sx={{ 
+                    sx={{
                       bgcolor: agent.color,
                       border: agent.lastActive === 'now' ? `2px solid ${theme.palette.success.main}` : 'none'
                     }}
@@ -551,15 +579,15 @@ Phone: +1 (555) 123-4567`
                 {viewingAgents.length} agent{viewingAgents.length > 1 ? 's' : ''} viewing
               </Typography>
             </Box>
-            
+
             <List sx={{ p: 0 }}>
               {viewingAgents.map((agent, index) => (
                 <ListItem key={index} sx={{ px: 0, py: 0.5 }}>
                   <ListItemAvatar>
-                    <Avatar 
-                      sx={{ 
-                        width: 24, 
-                        height: 24, 
+                    <Avatar
+                      sx={{
+                        width: 24,
+                        height: 24,
                         fontSize: 11,
                         bgcolor: agent.color,
                         border: agent.lastActive === 'now' ? `2px solid ${theme.palette.success.main}` : 'none'
@@ -575,8 +603,8 @@ Phone: +1 (555) 123-4567`
                       </Typography>
                     }
                     secondary={
-                      <Typography 
-                        variant="caption" 
+                      <Typography
+                        variant="caption"
                         color={agent.lastActive === 'now' ? 'success.main' : 'text.secondary'}
                       >
                         {agent.lastActive === 'now' ? '● Active now' : `Last seen ${agent.lastActive}`}
@@ -598,8 +626,8 @@ Phone: +1 (555) 123-4567`
 
   // Email Thread Preview Component
   const EmailThreadPreview = ({ threadHistory, expanded, onToggle }) => (
-    <Card sx={{ 
-      mb: 3, 
+    <Card sx={{
+      mb: 3,
       borderRadius: 3,
       boxShadow: '0 8px 24px rgba(0,0,0,0.05)'
     }}>
@@ -610,7 +638,7 @@ Phone: +1 (555) 123-4567`
             <Typography variant="h6" fontWeight="600">
               Email Thread History
             </Typography>
-            <Chip 
+            <Chip
               label={`${threadHistory.length} emails`}
               size="small"
               color="primary"
@@ -630,12 +658,12 @@ Phone: +1 (555) 123-4567`
         <Collapse in={expanded}>
           <List sx={{ p: 0 }}>
             {threadHistory.map((thread, index) => (
-              <ListItem 
-                key={thread.id} 
-                sx={{ 
-                  px: 0, 
+              <ListItem
+                key={thread.id}
+                sx={{
+                  px: 0,
                   py: 1,
-                  borderLeft: index === threadHistory.length - 1 ? 'none' : 
+                  borderLeft: index === threadHistory.length - 1 ? 'none' :
                     `2px solid ${alpha(theme.palette.primary.main, 0.2)}`,
                   ml: 1,
                   pl: 2,
@@ -658,7 +686,7 @@ Phone: +1 (555) 123-4567`
                       <Typography variant="body2" fontWeight="600">
                         {thread.subject}
                       </Typography>
-                      <Chip 
+                      <Chip
                         label={thread.status}
                         size="small"
                         color={thread.status === 'resolved' ? 'success' : 'info'}
@@ -681,7 +709,7 @@ Phone: +1 (555) 123-4567`
             ))}
           </List>
         </Collapse>
-        
+
         {!expanded && (
           <Box sx={{ mt: 1 }}>
             <Typography variant="body2" color="text.secondary">
@@ -705,16 +733,16 @@ Phone: +1 (555) 123-4567`
     <Fade in={true} timeout={800}>
       <Box sx={{ px: 1 }}>
         {/* Header */}
-        <Box sx={{ 
-          display: 'flex', 
-          justifyContent: 'space-between', 
-          alignItems: 'center', 
+        <Box sx={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
           mb: 4
         }}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-            <IconButton 
+            <IconButton
               onClick={() => navigate('/emails')}
-              sx={{ 
+              sx={{
                 bgcolor: alpha(theme.palette.primary.main, 0.1),
                 '&:hover': { bgcolor: alpha(theme.palette.primary.main, 0.2) }
               }}
@@ -730,7 +758,7 @@ Phone: +1 (555) 123-4567`
               </Typography>
             </Box>
           </Box>
-          
+
           <Box sx={{ display: 'flex', gap: 1 }}>
             <Button
               startIcon={<ReplyIcon />}
@@ -795,8 +823,8 @@ Phone: +1 (555) 123-4567`
 
             <Grow in={loaded} timeout={350}>
               <Box>
-                <EmailThreadPreview 
-                  threadHistory={email.threadHistory} 
+                <EmailThreadPreview
+                  threadHistory={email.threadHistory}
                   expanded={threadExpanded}
                   onToggle={() => setThreadExpanded(!threadExpanded)}
                 />
@@ -805,8 +833,8 @@ Phone: +1 (555) 123-4567`
 
             {/* Email Header */}
             <Grow in={loaded} timeout={400}>
-              <Card sx={{ 
-                mb: 3, 
+              <Card sx={{
+                mb: 3,
                 borderRadius: 3,
                 boxShadow: '0 8px 24px rgba(0,0,0,0.05)'
               }}>
@@ -816,7 +844,7 @@ Phone: +1 (555) 123-4567`
                       <Typography variant="h5" fontWeight="600" gutterBottom>
                         {email.subject}
                       </Typography>
-                      
+
                       <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2, mb: 2 }}>
                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                           <Typography variant="body2" color="text.secondary">From:</Typography>
@@ -857,7 +885,7 @@ Phone: +1 (555) 123-4567`
                             </Box>
                           ) : (
                             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                              <Chip 
+                              <Chip
                                 label={email.category.charAt(0).toUpperCase() + email.category.slice(1)}
                                 color={getCategoryColor(email.category)}
                                 size="small"
@@ -892,7 +920,7 @@ Phone: +1 (555) 123-4567`
                             </Box>
                           ) : (
                             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                              <Chip 
+                              <Chip
                                 label={email.status.replace('_', ' ').toUpperCase()}
                                 color={getStatusColor(email.status)}
                                 size="small"
@@ -904,7 +932,7 @@ Phone: +1 (555) 123-4567`
                           )}
                         </Box>
 
-                        <Chip 
+                        <Chip
                           label={`${email.priority.toUpperCase()} PRIORITY`}
                           color={getPriorityColor(email.priority)}
                           size="small"
@@ -938,7 +966,7 @@ Phone: +1 (555) 123-4567`
                   <Divider sx={{ my: 3 }} />
 
                   {/* Email Body */}
-                  <Box sx={{ 
+                  <Box sx={{
                     bgcolor: alpha(theme.palette.background.default, 0.5),
                     p: 3,
                     borderRadius: 2,
@@ -964,10 +992,10 @@ Phone: +1 (555) 123-4567`
                       lineHeight: 1.6
                     }
                   }}>
-                    <div 
-                      dangerouslySetInnerHTML={{ __html: email.body }} 
-                      style={{ 
-                        maxWidth: '100%', 
+                    <div
+                      dangerouslySetInnerHTML={{ __html: email.body }}
+                      style={{
+                        maxWidth: '100%',
                         wordWrap: 'break-word',
                         /* Basic security styling */
                         '& script': { display: 'none !important' },
@@ -993,8 +1021,8 @@ Phone: +1 (555) 123-4567`
 
             {/* Assignment Info */}
             <Grow in={loaded} timeout={600}>
-              <Card sx={{ 
-                mb: 3, 
+              <Card sx={{
+                mb: 3,
                 borderRadius: 3,
                 boxShadow: '0 8px 24px rgba(0,0,0,0.05)'
               }}>
@@ -1021,7 +1049,7 @@ Phone: +1 (555) 123-4567`
 
             {/* Internal Notes */}
             <Grow in={loaded} timeout={800}>
-              <Card sx={{ 
+              <Card sx={{
                 borderRadius: 3,
                 boxShadow: '0 8px 24px rgba(0,0,0,0.05)'
               }}>
@@ -1040,7 +1068,7 @@ Phone: +1 (555) 123-4567`
                       Add Note
                     </Button>
                   </Box>
-                  
+
                   <List sx={{ p: 0 }}>
                     {notes.map((note) => (
                       <ListItem key={note.id} sx={{ px: 0, py: 1 }}>
@@ -1081,16 +1109,26 @@ Phone: +1 (555) 123-4567`
           <DialogContent>
             <FormControl fullWidth sx={{ mt: 2 }}>
               <InputLabel>Team Member</InputLabel>
-              <Select label="Team Member">
+              <Select
+                label="Team Member"
+                value={selectedAgent}
+                onChange={(e) => setSelectedAgent(e.target.value)}
+              >
                 <MenuItem value="priya">Priya Patel</MenuItem>
-                                  <MenuItem value="ravi">Ravi Gupta</MenuItem>
-                                  <MenuItem value="vikram">Vikram Singh</MenuItem>
+                <MenuItem value="ravi">Ravi Gupta</MenuItem>
+                <MenuItem value="vikram">Vikram Singh</MenuItem>
               </Select>
             </FormControl>
           </DialogContent>
           <DialogActions>
             <Button onClick={() => setAssignDialog(false)}>Cancel</Button>
-            <Button variant="contained">Assign</Button>
+            <Button
+              variant="contained"
+              onClick={handleAssign}
+              disabled={!selectedAgent}
+            >
+              Assign
+            </Button>
           </DialogActions>
         </Dialog>
 
@@ -1128,7 +1166,7 @@ Phone: +1 (555) 123-4567`
             <Alert severity="info" sx={{ mb: 3 }}>
               This email will be escalated to a supervisor for immediate attention. Please provide a reason for escalation.
             </Alert>
-            
+
             <TextField
               fullWidth
               multiline
@@ -1140,7 +1178,7 @@ Phone: +1 (555) 123-4567`
               required
               sx={{ mb: 3 }}
             />
-            
+
             <FormControl fullWidth>
               <InputLabel>Escalation Priority</InputLabel>
               <Select
@@ -1156,10 +1194,10 @@ Phone: +1 (555) 123-4567`
           </DialogContent>
           <DialogActions>
             <Button onClick={() => setEscalateDialog(false)}>Cancel</Button>
-            <Button 
-              variant="contained" 
+            <Button
+              variant="contained"
               color="warning"
-              onClick={handleEscalate} 
+              onClick={handleEscalate}
               disabled={!escalationReason.trim()}
               startIcon={<EscalateIcon />}
             >
@@ -1169,10 +1207,10 @@ Phone: +1 (555) 123-4567`
         </Dialog>
 
         {/* Reply Dialog with Thread Attachment */}
-        <Dialog 
-          open={replyDialog} 
-          onClose={() => setReplyDialog(false)} 
-          maxWidth="lg" 
+        <Dialog
+          open={replyDialog}
+          onClose={() => setReplyDialog(false)}
+          maxWidth="lg"
           fullWidth
         >
           <DialogTitle>
@@ -1193,7 +1231,7 @@ Phone: +1 (555) 123-4567`
                 variant="outlined"
                 sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 } }}
               />
-              
+
               <TextField
                 label="Your Reply"
                 fullWidth
@@ -1205,17 +1243,17 @@ Phone: +1 (555) 123-4567`
                 onChange={(e) => setReplyText(e.target.value)}
                 sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 } }}
               />
-              
+
               <FormControlLabel
                 control={
-                  <Checkbox 
+                  <Checkbox
                     checked={includeThread}
                     onChange={(e) => setIncludeThread(e.target.checked)}
                   />
                 }
                 label="Include email thread in reply"
               />
-              
+
               {includeThread && (
                 <Card sx={{ bgcolor: 'background.default', p: 2 }}>
                   <Typography variant="subtitle2" gutterBottom>
@@ -1226,11 +1264,11 @@ Phone: +1 (555) 123-4567`
                   </Typography>
                   <Box sx={{ mt: 1, p: 2, bgcolor: 'background.paper', borderRadius: 1 }}>
                     <Typography variant="body2" sx={{ fontFamily: 'monospace', fontSize: '0.8rem' }}>
-                      --- Original Message ---<br/>
-                      From: {email.from}<br/>
-                      To: {email.to}<br/>
-                      Date: {formatDate(email.dateReceived)}<br/>
-                      Subject: {email.subject}<br/><br/>
+                      --- Original Message ---<br />
+                      From: {email.from}<br />
+                      To: {email.to}<br />
+                      Date: {formatDate(email.dateReceived)}<br />
+                      Subject: {email.subject}<br /><br />
                       {email.body.substring(0, 200)}...
                     </Typography>
                     {email.threadHistory.length > 0 && (
@@ -1247,7 +1285,7 @@ Phone: +1 (555) 123-4567`
             <Button onClick={() => setReplyDialog(false)} variant="outlined">
               Cancel
             </Button>
-            <Button 
+            <Button
               variant="contained"
               startIcon={<SendIcon />}
               disabled={!replyText.trim()}
@@ -1264,10 +1302,10 @@ Phone: +1 (555) 123-4567`
         </Dialog>
 
         {/* Forward Dialog with Thread Attachment */}
-        <Dialog 
-          open={forwardDialog} 
-          onClose={() => setForwardDialog(false)} 
-          maxWidth="lg" 
+        <Dialog
+          open={forwardDialog}
+          onClose={() => setForwardDialog(false)}
+          maxWidth="lg"
           fullWidth
         >
           <DialogTitle>
@@ -1285,7 +1323,7 @@ Phone: +1 (555) 123-4567`
                 variant="outlined"
                 sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 } }}
               />
-              
+
               <TextField
                 label="Subject"
                 fullWidth
@@ -1293,7 +1331,7 @@ Phone: +1 (555) 123-4567`
                 variant="outlined"
                 sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 } }}
               />
-              
+
               <TextField
                 label="Message"
                 fullWidth
@@ -1305,17 +1343,17 @@ Phone: +1 (555) 123-4567`
                 onChange={(e) => setForwardText(e.target.value)}
                 sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 } }}
               />
-              
+
               <FormControlLabel
                 control={
-                  <Checkbox 
+                  <Checkbox
                     checked={includeThread}
                     onChange={(e) => setIncludeThread(e.target.checked)}
                   />
                 }
                 label="Include complete email thread"
               />
-              
+
               {includeThread && (
                 <Card sx={{ bgcolor: 'background.default', p: 2 }}>
                   <Typography variant="subtitle2" gutterBottom>
@@ -1323,14 +1361,14 @@ Phone: +1 (555) 123-4567`
                   </Typography>
                   <Box sx={{ mt: 1, p: 2, bgcolor: 'background.paper', borderRadius: 1 }}>
                     <Typography variant="body2" sx={{ fontFamily: 'monospace', fontSize: '0.8rem' }}>
-                      --- Forwarded Message ---<br/>
-                      From: {email.from}<br/>
-                      To: {email.to}<br/>
-                      Date: {formatDate(email.dateReceived)}<br/>
-                      Subject: {email.subject}<br/><br/>
+                      --- Forwarded Message ---<br />
+                      From: {email.from}<br />
+                      To: {email.to}<br />
+                      Date: {formatDate(email.dateReceived)}<br />
+                      Subject: {email.subject}<br /><br />
                       {email.body}
                     </Typography>
-                    
+
                     {email.threadHistory.length > 0 && (
                       <Box sx={{ mt: 2 }}>
                         <Typography variant="subtitle2" gutterBottom>
@@ -1348,7 +1386,7 @@ Phone: +1 (555) 123-4567`
                         ))}
                       </Box>
                     )}
-                    
+
                     {email.attachments && email.attachments.length > 0 && (
                       <Box sx={{ mt: 2 }}>
                         <Typography variant="subtitle2" gutterBottom>
@@ -1375,7 +1413,7 @@ Phone: +1 (555) 123-4567`
             <Button onClick={() => setForwardDialog(false)} variant="outlined">
               Cancel
             </Button>
-            <Button 
+            <Button
               variant="contained"
               color="secondary"
               startIcon={<SendIcon />}

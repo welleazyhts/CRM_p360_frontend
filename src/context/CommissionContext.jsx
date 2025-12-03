@@ -112,6 +112,16 @@ export const CommissionProvider = ({ children }) => {
   /**
    * Update commission record
    */
+  /**
+   * Add a manual commission record
+   */
+  const addCommission = useCallback((commission) => {
+    setCommissions(prev => [commission, ...prev]);
+  }, []);
+
+  /**
+   * Update commission record
+   */
   const updateCommission = useCallback((commissionId, updates) => {
     setCommissions(prev => prev.map(comm =>
       comm.id === commissionId ? { ...comm, ...updates, updatedAt: new Date().toISOString() } : comm
@@ -282,6 +292,7 @@ export const CommissionProvider = ({ children }) => {
 
     // Commission Operations
     calculateCommission,
+    addCommission,
     updateCommission,
     deleteCommission,
     approveCommission,

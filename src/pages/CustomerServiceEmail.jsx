@@ -127,6 +127,13 @@ const CustomerServiceEmail = () => {
     })();
   };
 
+  const handleDeleteEmail = () => {
+    if (selectedEmail) {
+      setEmails(emails.filter(e => e.id !== selectedEmail.id));
+      setSelectedEmail(null);
+    }
+  };
+
   const unreadCount = emails.filter(e => !e.read).length;
 
   return (
@@ -297,7 +304,11 @@ const CustomerServiceEmail = () => {
                         <IconButton size="small" color="primary" onClick={handleReply}>
                           <ReplyIcon />
                         </IconButton>
-                        <IconButton size="small" color="error">
+                        <IconButton
+                          size="small"
+                          color="error"
+                          onClick={handleDeleteEmail}
+                        >
                           <DeleteIcon />
                         </IconButton>
                       </Box>
@@ -328,7 +339,11 @@ const CustomerServiceEmail = () => {
                     <Button variant="contained" startIcon={<ReplyIcon />} onClick={handleReply}>
                       Reply
                     </Button>
-                    <Button variant="outlined" startIcon={<DeleteIcon />}>
+                    <Button
+                      variant="outlined"
+                      startIcon={<DeleteIcon />}
+                      onClick={handleDeleteEmail}
+                    >
                       Delete
                     </Button>
                   </Box>

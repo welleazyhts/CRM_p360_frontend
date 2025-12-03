@@ -76,6 +76,13 @@ const TrainingAnalysis = () => {
     }
   };
 
+  const handleStartModule = (module) => {
+    // In a real app, this would navigate to the training module or open it
+    // For now, we'll show an alert and could navigate to a training portal
+    alert(`Starting training module: "${module.title}"\n\nDuration: ${module.duration}\nDifficulty: ${module.difficulty}\n\nThis would typically open the training content or redirect to the learning platform.`);
+    console.log('Starting module:', module);
+  };
+
   const avgCompletionRate = trainingModules.reduce((sum, m) => sum + m.completionRate, 0) / trainingModules.length || 0;
   const totalEnrolled = trainingModules.reduce((sum, m) => sum + m.enrolledCount, 0);
   const completedCount = trainingRecords.filter(r => r.status === 'Completed').length;
@@ -268,7 +275,11 @@ const TrainingAnalysis = () => {
                       <Typography variant="caption" color="text.secondary">
                         {module.enrolledCount} enrolled
                       </Typography>
-                      <Button size="small" startIcon={<PlayIcon />}>
+                      <Button
+                        size="small"
+                        startIcon={<PlayIcon />}
+                        onClick={() => handleStartModule(module)}
+                      >
                         Start
                       </Button>
                     </Box>
