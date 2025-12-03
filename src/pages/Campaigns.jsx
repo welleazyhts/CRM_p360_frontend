@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useProviders } from '../context/ProvidersContext';
 import campaignService from '../services/campaignService';
+
 import {
   Box, Typography, Grid, Card, CardContent, Button, Chip, Dialog, DialogTitle,
   DialogContent, DialogActions, TextField, FormControl, InputLabel, Select,
@@ -193,7 +194,7 @@ const CampaignManager = () => {
   // Dialog states
   const [createCampaignDialog, setCreateCampaignDialog] = useState(false);
   const [templateDialog, setTemplateDialog] = useState(false);
-  const [audienceDialog, setAudienceDialog] = useState(false);
+  const [audienceDialog, setAudienceDialog] = useState({ open: false, mode: 'list', selectedAudience: null });
   const [analyticsDialog, setAnalyticsDialog] = useState(false);
   const [advancedFiltersDialog, setAdvancedFiltersDialog] = useState(false);
   const [exportDialog, setExportDialog] = useState(false);
@@ -272,7 +273,7 @@ const CampaignManager = () => {
     }
   ]);
 
-  const [audiences] = useState([
+  const [audiences, setAudiences] = useState([
     {
       id: 1,
       name: 'Policy Holders - Expiring Q4',
@@ -306,6 +307,14 @@ const CampaignManager = () => {
       lastUpdated: '2024-12-21'
     }
   ]);
+
+  // Audience form state
+  const [audienceFormData, setAudienceFormData] = useState({
+    name: '',
+    description: '',
+    segments: [],
+    size: 0
+  });
 
   const filterCampaigns = useCallback(() => {
     let filtered = campaigns;
@@ -527,23 +536,95 @@ const CampaignManager = () => {
     }
   };
 
-  const handleAudienceAction = (action, _audience) => {
+  const handleAudienceAction = (action, audience = null) => {
     switch (action) {
+      case 'create':
+        setAudienceFormData({
+          name: '',
+          description: '',
+          segments: [],
+          size: 0
+        });
+        setAudienceDialog({ open: true, mode: 'create', selectedAudience: null });
+        break;
       case 'edit':
-        // Handle audience editing
-        break;
-      case 'duplicate':
-        // Handle audience duplication
-        break;
-      case 'delete':
-        // Handle audience deletion
+        setAudienceFormData({
+          name: audience.name,
+          description: audience.description,
+          segments: [...audience.segments],
+          size: audience.size
+        });
+        setAudienceDialog({ open: true, mode: 'edit', selectedAudience: audience });
         break;
       case 'view':
-        // Handle audience view
+        setAudienceDialog({ open: true, mode: 'view', selectedAudience: audience });
+        break;
+      case 'delete':
+        if (window.confirm(`Are you sure you want to delete "${audience.name}"?`)) {
+          setAudiences(prev => prev.filter(a => a.id !== audience.id));
+          setAudienceDialog({ open: true, mode: 'list', selectedAudience: null });
+        }
+        break;
+      case 'backToList':
+        setAudienceDialog({ open: true, mode: 'list', selectedAudience: null });
         break;
       default:
         break;
     }
+  };
+
+  const handleSaveAudience = () => {
+    if (!audienceFormData.name.trim()) {
+      alert('Please enter an audience name');
+      return;
+    }
+
+    if (audienceDialog.mode === 'create') {
+      const newAudience = {
+        id: audiences.length > 0 ? Math.max(...audiences.map(a => a.id)) + 1 : 1,
+        name: audienceFormData.name,
+        description: audienceFormData.description,
+        segments: audienceFormData.segments,
+        size: audienceFormData.size || 0,
+        lastUpdated: new Date().toISOString().split('T')[0]
+      };
+      setAudiences(prev => [...prev, newAudience]);
+    } else if (audienceDialog.mode === 'edit') {
+      setAudiences(prev => prev.map(a =>
+        a.id === audienceDialog.selectedAudience.id
+          ? {
+            ...a,
+            name: audienceFormData.name,
+            description: audienceFormData.description,
+            segments: audienceFormData.segments,
+            size: audienceFormData.size,
+            lastUpdated: new Date().toISOString().split('T')[0]
+          }
+          : a
+      ));
+    }
+
+    setAudienceDialog({ open: true, mode: 'list', selectedAudience: null });
+  };
+
+  const handleCloseAudienceDialog = () => {
+    setAudienceDialog({ open: false, mode: 'list', selectedAudience: null });
+  };
+
+  const handleAddSegment = (segment) => {
+    if (segment && !audienceFormData.segments.includes(segment)) {
+      setAudienceFormData(prev => ({
+        ...prev,
+        segments: [...prev.segments, segment]
+      }));
+    }
+  };
+
+  const handleRemoveSegment = (segmentToRemove) => {
+    setAudienceFormData(prev => ({
+      ...prev,
+      segments: prev.segments.filter(s => s !== segmentToRemove)
+    }));
   };
 
   const handleEditCampaign = (campaignId) => {
@@ -1456,7 +1537,7 @@ const CampaignManager = () => {
             <Button
               startIcon={<PeopleIcon />}
               variant="outlined"
-              onClick={() => setAudienceDialog(true)}
+              onClick={() => setAudienceDialog({ open: true, mode: 'list', selectedAudience: null })}
               sx={{ borderRadius: 2 }}
             >
               Audiences
@@ -1646,93 +1727,280 @@ const CampaignManager = () => {
 
         {/* Audience Dialog */}
         <Dialog
-          open={audienceDialog}
-          onClose={() => setAudienceDialog(false)}
+          open={audienceDialog.open}
+          onClose={handleCloseAudienceDialog}
           maxWidth="md"
           fullWidth
         >
           <DialogTitle>
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <Typography variant="h6">Audience Manager</Typography>
-              <IconButton onClick={() => setAudienceDialog(false)}>
+              <Typography variant="h6">
+                {audienceDialog.mode === 'list' && 'Audience Manager'}
+                {audienceDialog.mode === 'create' && 'Create New Audience'}
+                {audienceDialog.mode === 'edit' && 'Edit Audience'}
+                {audienceDialog.mode === 'view' && 'Audience Details'}
+              </Typography>
+              <IconButton onClick={handleCloseAudienceDialog}>
                 <CloseIcon />
               </IconButton>
             </Box>
           </DialogTitle>
           <DialogContent>
-            <Box sx={{ mb: 3 }}>
-              <Button
-                variant="contained"
-                startIcon={<AddIcon />}
-                sx={{ mb: 2 }}
-              >
-                Create New Audience
-              </Button>
-            </Box>
+            {/* List Mode */}
+            {audienceDialog.mode === 'list' && (
+              <>
+                <Box sx={{ mb: 3 }}>
+                  <Button
+                    variant="contained"
+                    startIcon={<AddIcon />}
+                    onClick={() => handleAudienceAction('create')}
+                    sx={{ mb: 2 }}
+                  >
+                    Create New Audience
+                  </Button>
+                </Box>
 
-            <Grid container spacing={2}>
-              {audiences.map((audience) => (
-                <Grid item xs={12} md={6} key={audience.id}>
-                  <Card sx={{ height: '100%' }}>
-                    <CardContent>
-                      <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
-                        <Typography variant="h6">{audience.name}</Typography>
-                        <IconButton size="small">
-                          <MoreVertIcon />
-                        </IconButton>
-                      </Box>
+                <Grid container spacing={2}>
+                  {audiences.map((audience) => (
+                    <Grid item xs={12} md={6} key={audience.id}>
+                      <Card sx={{ height: '100%' }}>
+                        <CardContent>
+                          <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
+                            <Typography variant="h6">{audience.name}</Typography>
+                          </Box>
 
-                      <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                        {audience.description}
-                      </Typography>
+                          <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                            {audience.description}
+                          </Typography>
 
-                      <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                        <PeopleIcon sx={{ mr: 1, color: 'primary.main' }} />
-                        <Typography variant="h5" color="primary" fontWeight="600">
-                          {audience.size.toLocaleString()}
-                        </Typography>
-                        <Typography variant="body2" color="text.secondary" sx={{ ml: 1 }}>
-                          contacts
-                        </Typography>
-                      </Box>
+                          <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                            <PeopleIcon sx={{ mr: 1, color: 'primary.main' }} />
+                            <Typography variant="h5" color="primary" fontWeight="600">
+                              {audience.size.toLocaleString()}
+                            </Typography>
+                            <Typography variant="body2" color="text.secondary" sx={{ ml: 1 }}>
+                              contacts
+                            </Typography>
+                          </Box>
 
-                      <Box sx={{ mb: 2 }}>
-                        <Typography variant="caption" color="text.secondary" gutterBottom>
-                          Segments
-                        </Typography>
-                        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-                          {audience.segments.map((segment, index) => (
-                            <Chip key={index} label={segment} size="small" variant="outlined" />
-                          ))}
-                        </Box>
-                      </Box>
+                          <Box sx={{ mb: 2 }}>
+                            <Typography variant="caption" color="text.secondary" gutterBottom>
+                              Segments
+                            </Typography>
+                            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                              {audience.segments.map((segment, index) => (
+                                <Chip key={index} label={segment} size="small" variant="outlined" />
+                              ))}
+                            </Box>
+                          </Box>
 
-                      <Typography variant="caption" color="text.secondary">
-                        Last updated: {new Date(audience.lastUpdated).toLocaleDateString()}
-                      </Typography>
+                          <Typography variant="caption" color="text.secondary">
+                            Last updated: {new Date(audience.lastUpdated).toLocaleDateString()}
+                          </Typography>
 
-                      <Box sx={{ display: 'flex', gap: 1, mt: 2 }}>
-                        <Button
-                          size="small"
-                          variant="outlined"
-                          onClick={() => handleAudienceAction('view', audience)}
-                        >
-                          View Details
-                        </Button>
-                        <Button
-                          size="small"
-                          variant="outlined"
-                          onClick={() => handleAudienceAction('edit', audience)}
-                        >
-                          Edit
-                        </Button>
-                      </Box>
-                    </CardContent>
-                  </Card>
+                          <Box sx={{ display: 'flex', gap: 1, mt: 2 }}>
+                            <Button
+                              size="small"
+                              variant="outlined"
+                              onClick={() => handleAudienceAction('view', audience)}
+                            >
+                              View Details
+                            </Button>
+                            <Button
+                              size="small"
+                              variant="outlined"
+                              onClick={() => handleAudienceAction('edit', audience)}
+                            >
+                              Edit
+                            </Button>
+                          </Box>
+                        </CardContent>
+                      </Card>
+                    </Grid>
+                  ))}
                 </Grid>
-              ))}
-            </Grid>
+              </>
+            )}
+
+            {/* Create/Edit Mode */}
+            {(audienceDialog.mode === 'create' || audienceDialog.mode === 'edit') && (
+              <Box sx={{ mt: 2 }}>
+                <Grid container spacing={3}>
+                  <Grid item xs={12}>
+                    <TextField
+                      fullWidth
+                      label="Audience Name"
+                      value={audienceFormData.name}
+                      onChange={(e) => setAudienceFormData(prev => ({ ...prev, name: e.target.value }))}
+                      required
+                    />
+                  </Grid>
+
+                  <Grid item xs={12}>
+                    <TextField
+                      fullWidth
+                      label="Description"
+                      multiline
+                      rows={3}
+                      value={audienceFormData.description}
+                      onChange={(e) => setAudienceFormData(prev => ({ ...prev, description: e.target.value }))}
+                    />
+                  </Grid>
+
+                  <Grid item xs={12}>
+                    <TextField
+                      fullWidth
+                      label="Audience Size"
+                      type="number"
+                      value={audienceFormData.size}
+                      onChange={(e) => setAudienceFormData(prev => ({ ...prev, size: parseInt(e.target.value) || 0 }))}
+                      helperText="Number of contacts in this audience"
+                    />
+                  </Grid>
+
+                  <Grid item xs={12}>
+                    <Typography variant="subtitle2" gutterBottom>
+                      Segments
+                    </Typography>
+                    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mb: 2 }}>
+                      {audienceFormData.segments.map((segment, index) => (
+                        <Chip
+                          key={index}
+                          label={segment}
+                          onDelete={() => handleRemoveSegment(segment)}
+                          color="primary"
+                          variant="outlined"
+                        />
+                      ))}
+                    </Box>
+                    <Box sx={{ display: 'flex', gap: 1 }}>
+                      <TextField
+                        size="small"
+                        label="Add Segment"
+                        placeholder="Enter segment name"
+                        id="segment-input"
+                        onKeyPress={(e) => {
+                          if (e.key === 'Enter') {
+                            handleAddSegment(e.target.value);
+                            e.target.value = '';
+                          }
+                        }}
+                      />
+                      <Button
+                        variant="outlined"
+                        size="small"
+                        onClick={() => {
+                          const input = document.getElementById('segment-input');
+                          if (input && input.value) {
+                            handleAddSegment(input.value);
+                            input.value = '';
+                          }
+                        }}
+                      >
+                        Add
+                      </Button>
+                    </Box>
+                  </Grid>
+                </Grid>
+              </Box>
+            )}
+
+            {/* View Mode */}
+            {audienceDialog.mode === 'view' && audienceDialog.selectedAudience && (
+              <Box sx={{ mt: 2 }}>
+                <Grid container spacing={3}>
+                  <Grid item xs={12}>
+                    <Typography variant="subtitle2" color="text.secondary">
+                      Audience Name
+                    </Typography>
+                    <Typography variant="h6" gutterBottom>
+                      {audienceDialog.selectedAudience.name}
+                    </Typography>
+                  </Grid>
+
+                  <Grid item xs={12}>
+                    <Typography variant="subtitle2" color="text.secondary">
+                      Description
+                    </Typography>
+                    <Typography variant="body1" gutterBottom>
+                      {audienceDialog.selectedAudience.description}
+                    </Typography>
+                  </Grid>
+
+                  <Grid item xs={12} md={6}>
+                    <Typography variant="subtitle2" color="text.secondary">
+                      Audience Size
+                    </Typography>
+                    <Box sx={{ display: 'flex', alignItems: 'center', mt: 1 }}>
+                      <PeopleIcon sx={{ mr: 1, color: 'primary.main', fontSize: 32 }} />
+                      <Typography variant="h4" color="primary" fontWeight="600">
+                        {audienceDialog.selectedAudience.size.toLocaleString()}
+                      </Typography>
+                      <Typography variant="body1" color="text.secondary" sx={{ ml: 1 }}>
+                        contacts
+                      </Typography>
+                    </Box>
+                  </Grid>
+
+                  <Grid item xs={12} md={6}>
+                    <Typography variant="subtitle2" color="text.secondary">
+                      Last Updated
+                    </Typography>
+                    <Typography variant="body1" sx={{ mt: 1 }}>
+                      {new Date(audienceDialog.selectedAudience.lastUpdated).toLocaleDateString()}
+                    </Typography>
+                  </Grid>
+
+                  <Grid item xs={12}>
+                    <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                      Segments
+                    </Typography>
+                    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mt: 1 }}>
+                      {audienceDialog.selectedAudience.segments.map((segment, index) => (
+                        <Chip
+                          key={index}
+                          label={segment}
+                          color="primary"
+                          variant="outlined"
+                        />
+                      ))}
+                    </Box>
+                  </Grid>
+                </Grid>
+              </Box>
+            )}
           </DialogContent>
+          <DialogActions>
+            {audienceDialog.mode === 'list' && (
+              <Button onClick={handleCloseAudienceDialog}>Close</Button>
+            )}
+            {(audienceDialog.mode === 'create' || audienceDialog.mode === 'edit') && (
+              <>
+                <Button onClick={() => handleAudienceAction('backToList')}>Cancel</Button>
+                <Button variant="contained" onClick={handleSaveAudience}>
+                  Save
+                </Button>
+              </>
+            )}
+            {audienceDialog.mode === 'view' && (
+              <>
+                <Button
+                  color="error"
+                  onClick={() => handleAudienceAction('delete', audienceDialog.selectedAudience)}
+                >
+                  Delete
+                </Button>
+                <Button onClick={() => handleAudienceAction('backToList')}>Back</Button>
+                <Button
+                  variant="contained"
+                  onClick={() => handleAudienceAction('edit', audienceDialog.selectedAudience)}
+                >
+                  Edit
+                </Button>
+              </>
+            )}
+          </DialogActions>
+
         </Dialog>
 
         {/* Advanced Filters Dialog */}
@@ -1751,51 +2019,79 @@ const CampaignManager = () => {
             </Box>
           </DialogTitle>
           <DialogContent>
-            <Grid container spacing={3} sx={{ mt: 1 }}>
+            <Grid container spacing={3}>
+              <Grid item xs={12}>
+                <Typography variant="subtitle2" gutterBottom>
+                  Date Range
+                </Typography>
+                <Box sx={{ display: 'flex', gap: 2 }}>
+                  <TextField
+                    type="date"
+                    label="Start Date"
+                    value={advancedFilters.dateRange.start}
+                    onChange={(e) => setAdvancedFilters(prev => ({
+                      ...prev,
+                      dateRange: { ...prev.dateRange, start: e.target.value }
+                    }))}
+                    InputLabelProps={{ shrink: true }}
+                    fullWidth
+                  />
+                  <TextField
+                    type="date"
+                    label="End Date"
+                    value={advancedFilters.dateRange.end}
+                    onChange={(e) => setAdvancedFilters(prev => ({
+                      ...prev,
+                      dateRange: { ...prev.dateRange, end: e.target.value }
+                    }))}
+                    InputLabelProps={{ shrink: true }}
+                    fullWidth
+                  />
+                </Box>
+              </Grid>
+
               <Grid item xs={12}>
                 <FormControl fullWidth>
                   <InputLabel>Campaign Type</InputLabel>
                   <Select
                     value={advancedFilters.campaignType}
-                    onChange={(e) => setAdvancedFilters(prev => ({
-                      ...prev,
-                      campaignType: e.target.value
-                    }))}
+                    onChange={(e) => setAdvancedFilters(prev => ({ ...prev, campaignType: e.target.value }))}
+                    label="Campaign Type"
                   >
                     <MenuItem value="all">All Types</MenuItem>
-                    <MenuItem value="renewal">Renewal</MenuItem>
-                    <MenuItem value="welcome">Welcome</MenuItem>
-                    <MenuItem value="payment">Payment</MenuItem>
                     <MenuItem value="promotional">Promotional</MenuItem>
-                    <MenuItem value="claims">Claims</MenuItem>
+                    <MenuItem value="transactional">Transactional</MenuItem>
+                    <MenuItem value="newsletter">Newsletter</MenuItem>
                   </Select>
                 </FormControl>
               </Grid>
 
-              <Grid item xs={6}>
-                <TextField
-                  fullWidth
-                  label="Min Audience Size"
-                  type="number"
-                  value={advancedFilters.audienceSize.min}
-                  onChange={(e) => setAdvancedFilters(prev => ({
-                    ...prev,
-                    audienceSize: { ...prev.audienceSize, min: e.target.value }
-                  }))}
-                />
-              </Grid>
-
-              <Grid item xs={6}>
-                <TextField
-                  fullWidth
-                  label="Max Audience Size"
-                  type="number"
-                  value={advancedFilters.audienceSize.max}
-                  onChange={(e) => setAdvancedFilters(prev => ({
-                    ...prev,
-                    audienceSize: { ...prev.audienceSize, max: e.target.value }
-                  }))}
-                />
+              <Grid item xs={12}>
+                <Typography variant="subtitle2" gutterBottom>
+                  Audience Size
+                </Typography>
+                <Box sx={{ display: 'flex', gap: 2 }}>
+                  <TextField
+                    type="number"
+                    label="Min"
+                    value={advancedFilters.audienceSize.min}
+                    onChange={(e) => setAdvancedFilters(prev => ({
+                      ...prev,
+                      audienceSize: { ...prev.audienceSize, min: e.target.value }
+                    }))}
+                    fullWidth
+                  />
+                  <TextField
+                    type="number"
+                    label="Max"
+                    value={advancedFilters.audienceSize.max}
+                    onChange={(e) => setAdvancedFilters(prev => ({
+                      ...prev,
+                      audienceSize: { ...prev.audienceSize, max: e.target.value }
+                    }))}
+                    fullWidth
+                  />
+                </Box>
               </Grid>
 
               <Grid item xs={12}>
@@ -1803,50 +2099,19 @@ const CampaignManager = () => {
                   <InputLabel>Performance</InputLabel>
                   <Select
                     value={advancedFilters.performance}
-                    onChange={(e) => setAdvancedFilters(prev => ({
-                      ...prev,
-                      performance: e.target.value
-                    }))}
+                    onChange={(e) => setAdvancedFilters(prev => ({ ...prev, performance: e.target.value }))}
+                    label="Performance"
                   >
                     <MenuItem value="all">All Performance</MenuItem>
-                    <MenuItem value="high">High (70%+ open rate)</MenuItem>
-                    <MenuItem value="medium">Medium (40-70% open rate)</MenuItem>
-                    <MenuItem value="low">Low (&lt;40% open rate)</MenuItem>
+                    <MenuItem value="high">High (70%+)</MenuItem>
+                    <MenuItem value="medium">Medium (40-70%)</MenuItem>
+                    <MenuItem value="low">Low (&lt;40%)</MenuItem>
                   </Select>
                 </FormControl>
               </Grid>
-
-              <Grid item xs={12}>
-                <Typography variant="subtitle2" gutterBottom>Tags</Typography>
-                <FormGroup>
-                  {['renewal', 'urgent', 'multi-channel', 'welcome', 'onboarding', 'payment', 'automated'].map((tag) => (
-                    <FormControlLabel
-                      key={tag}
-                      control={
-                        <Checkbox
-                          checked={advancedFilters.tags.includes(tag)}
-                          onChange={(e) => {
-                            if (e.target.checked) {
-                              setAdvancedFilters(prev => ({
-                                ...prev,
-                                tags: [...prev.tags, tag]
-                              }));
-                            } else {
-                              setAdvancedFilters(prev => ({
-                                ...prev,
-                                tags: prev.tags.filter(t => t !== tag)
-                              }));
-                            }
-                          }}
-                        />
-                      }
-                      label={tag}
-                    />
-                  ))}
-                </FormGroup>
-              </Grid>
             </Grid>
           </DialogContent>
+
           <DialogActions>
             <Button onClick={handleResetAdvancedFilters}>Reset</Button>
             <Button onClick={() => setAdvancedFiltersDialog(false)}>Cancel</Button>
@@ -1872,42 +2137,261 @@ const CampaignManager = () => {
             </Box>
           </DialogTitle>
           <DialogContent>
-            <Grid container spacing={3} sx={{ mt: 1 }}>
-              <Grid item xs={12}>
-                <FormControl fullWidth>
-                  <InputLabel>Export Format</InputLabel>
-                  <Select
-                    value={exportFormat}
-                    onChange={(e) => setExportFormat(e.target.value)}
+            {/* List Mode */}
+            {audienceDialog.mode === 'list' && (
+              <>
+                <Box sx={{ mb: 3 }}>
+                  <Button
+                    variant="contained"
+                    startIcon={<AddIcon />}
+                    onClick={() => handleAudienceAction('create')}
+                    sx={{ mb: 2 }}
                   >
-                    <MenuItem value="csv">CSV</MenuItem>
-                    <MenuItem value="xlsx">Excel (XLSX)</MenuItem>
-                    <MenuItem value="pdf">PDF Report</MenuItem>
-                    <MenuItem value="json">JSON</MenuItem>
-                  </Select>
-                </FormControl>
-              </Grid>
+                    Create New Audience
+                  </Button>
+                </Box>
 
-              <Grid item xs={12}>
-                <FormControl fullWidth>
-                  <InputLabel>Data to Export</InputLabel>
-                  <Select
-                    value={exportData}
-                    onChange={(e) => setExportData(e.target.value)}
-                  >
-                    <MenuItem value="all">All Campaigns ({campaigns.length})</MenuItem>
-                    <MenuItem value="filtered">Filtered Results ({filteredCampaigns.length})</MenuItem>
-                  </Select>
-                </FormControl>
-              </Grid>
+                <Grid container spacing={2}>
+                  {audiences.map((audience) => (
+                    <Grid item xs={12} md={6} key={audience.id}>
+                      <Card sx={{ height: '100%' }}>
+                        <CardContent>
+                          <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
+                            <Typography variant="h6">{audience.name}</Typography>
+                          </Box>
 
-              <Grid item xs={12}>
-                <Alert severity="info">
-                  The export will include campaign details, metrics, audience information, and performance data.
-                </Alert>
-              </Grid>
-            </Grid>
+                          <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                            {audience.description}
+                          </Typography>
+
+                          <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                            <PeopleIcon sx={{ mr: 1, color: 'primary.main' }} />
+                            <Typography variant="h5" color="primary" fontWeight="600">
+                              {audience.size.toLocaleString()}
+                            </Typography>
+                            <Typography variant="body2" color="text.secondary" sx={{ ml: 1 }}>
+                              contacts
+                            </Typography>
+                          </Box>
+
+                          <Box sx={{ mb: 2 }}>
+                            <Typography variant="caption" color="text.secondary" gutterBottom>
+                              Segments
+                            </Typography>
+                            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                              {audience.segments.map((segment, index) => (
+                                <Chip key={index} label={segment} size="small" variant="outlined" />
+                              ))}
+                            </Box>
+                          </Box>
+
+                          <Typography variant="caption" color="text.secondary">
+                            Last updated: {new Date(audience.lastUpdated).toLocaleDateString()}
+                          </Typography>
+
+                          <Box sx={{ display: 'flex', gap: 1, mt: 2 }}>
+                            <Button
+                              size="small"
+                              variant="outlined"
+                              onClick={() => handleAudienceAction('view', audience)}
+                            >
+                              View Details
+                            </Button>
+                            <Button
+                              size="small"
+                              variant="outlined"
+                              onClick={() => handleAudienceAction('edit', audience)}
+                            >
+                              Edit
+                            </Button>
+                          </Box>
+                        </CardContent>
+                      </Card>
+                    </Grid>
+                  ))}
+                </Grid>
+              </>
+            )}
+
+            {/* Create/Edit Mode */}
+            {(audienceDialog.mode === 'create' || audienceDialog.mode === 'edit') && (
+              <Box sx={{ mt: 2 }}>
+                <Grid container spacing={3}>
+                  <Grid item xs={12}>
+                    <TextField
+                      fullWidth
+                      label="Audience Name"
+                      value={audienceFormData.name}
+                      onChange={(e) => setAudienceFormData(prev => ({ ...prev, name: e.target.value }))}
+                      required
+                    />
+                  </Grid>
+
+                  <Grid item xs={12}>
+                    <TextField
+                      fullWidth
+                      label="Description"
+                      multiline
+                      rows={3}
+                      value={audienceFormData.description}
+                      onChange={(e) => setAudienceFormData(prev => ({ ...prev, description: e.target.value }))}
+                    />
+                  </Grid>
+
+                  <Grid item xs={12}>
+                    <TextField
+                      fullWidth
+                      label="Audience Size"
+                      type="number"
+                      value={audienceFormData.size}
+                      onChange={(e) => setAudienceFormData(prev => ({ ...prev, size: parseInt(e.target.value) || 0 }))}
+                      helperText="Number of contacts in this audience"
+                    />
+                  </Grid>
+
+                  <Grid item xs={12}>
+                    <Typography variant="subtitle2" gutterBottom>
+                      Segments
+                    </Typography>
+                    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mb: 2 }}>
+                      {audienceFormData.segments.map((segment, index) => (
+                        <Chip
+                          key={index}
+                          label={segment}
+                          onDelete={() => handleRemoveSegment(segment)}
+                          color="primary"
+                          variant="outlined"
+                        />
+                      ))}
+                    </Box>
+                    <Box sx={{ display: 'flex', gap: 1 }}>
+                      <TextField
+                        size="small"
+                        label="Add Segment"
+                        placeholder="Enter segment name"
+                        id="segment-input"
+                        onKeyPress={(e) => {
+                          if (e.key === 'Enter') {
+                            handleAddSegment(e.target.value);
+                            e.target.value = '';
+                          }
+                        }}
+                      />
+                      <Button
+                        variant="outlined"
+                        size="small"
+                        onClick={() => {
+                          const input = document.getElementById('segment-input');
+                          if (input && input.value) {
+                            handleAddSegment(input.value);
+                            input.value = '';
+                          }
+                        }}
+                      >
+                        Add
+                      </Button>
+                    </Box>
+                  </Grid>
+                </Grid>
+              </Box>
+            )}
+
+            {/* View Mode */}
+            {audienceDialog.mode === 'view' && audienceDialog.selectedAudience && (
+              <Box sx={{ mt: 2 }}>
+                <Grid container spacing={3}>
+                  <Grid item xs={12}>
+                    <Typography variant="subtitle2" color="text.secondary">
+                      Audience Name
+                    </Typography>
+                    <Typography variant="h6" gutterBottom>
+                      {audienceDialog.selectedAudience.name}
+                    </Typography>
+                  </Grid>
+
+                  <Grid item xs={12}>
+                    <Typography variant="subtitle2" color="text.secondary">
+                      Description
+                    </Typography>
+                    <Typography variant="body1" gutterBottom>
+                      {audienceDialog.selectedAudience.description}
+                    </Typography>
+                  </Grid>
+
+                  <Grid item xs={12} md={6}>
+                    <Typography variant="subtitle2" color="text.secondary">
+                      Audience Size
+                    </Typography>
+                    <Box sx={{ display: 'flex', alignItems: 'center', mt: 1 }}>
+                      <PeopleIcon sx={{ mr: 1, color: 'primary.main', fontSize: 32 }} />
+                      <Typography variant="h4" color="primary" fontWeight="600">
+                        {audienceDialog.selectedAudience.size.toLocaleString()}
+                      </Typography>
+                      <Typography variant="body1" color="text.secondary" sx={{ ml: 1 }}>
+                        contacts
+                      </Typography>
+                    </Box>
+                  </Grid>
+
+                  <Grid item xs={12} md={6}>
+                    <Typography variant="subtitle2" color="text.secondary">
+                      Last Updated
+                    </Typography>
+                    <Typography variant="body1" sx={{ mt: 1 }}>
+                      {new Date(audienceDialog.selectedAudience.lastUpdated).toLocaleDateString()}
+                    </Typography>
+                  </Grid>
+
+                  <Grid item xs={12}>
+                    <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                      Segments
+                    </Typography>
+                    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mt: 1 }}>
+                      {audienceDialog.selectedAudience.segments.map((segment, index) => (
+                        <Chip
+                          key={index}
+                          label={segment}
+                          color="primary"
+                          variant="outlined"
+                        />
+                      ))}
+                    </Box>
+                  </Grid>
+                </Grid>
+              </Box>
+            )}
           </DialogContent>
+          <DialogActions>
+            {audienceDialog.mode === 'list' && (
+              <Button onClick={handleCloseAudienceDialog}>Close</Button>
+            )}
+            {(audienceDialog.mode === 'create' || audienceDialog.mode === 'edit') && (
+              <>
+                <Button onClick={() => handleAudienceAction('backToList')}>Cancel</Button>
+                <Button variant="contained" onClick={handleSaveAudience}>
+                  Save
+                </Button>
+              </>
+            )}
+            {audienceDialog.mode === 'view' && (
+              <>
+                <Button
+                  color="error"
+                  onClick={() => handleAudienceAction('delete', audienceDialog.selectedAudience)}
+                >
+                  Delete
+                </Button>
+                <Button onClick={() => handleAudienceAction('backToList')}>Back</Button>
+                <Button
+                  variant="contained"
+                  onClick={() => handleAudienceAction('edit', audienceDialog.selectedAudience)}
+                >
+                  Edit
+                </Button>
+              </>
+            )}
+          </DialogActions>
+
           <DialogActions>
             <Button onClick={() => setExportDialog(false)}>Cancel</Button>
             <Button variant="contained" onClick={handleExportConfirm} startIcon={<GetAppIcon />}>
@@ -1932,101 +2416,261 @@ const CampaignManager = () => {
             </Box>
           </DialogTitle>
           <DialogContent>
-            <Grid container spacing={3}>
-              <Grid item xs={12} sm={6} md={3}>
-                <Card>
-                  <CardContent sx={{ textAlign: 'center' }}>
-                    <Typography variant="h4" color="primary" fontWeight="600">
-                      {campaigns.reduce((sum, c) => sum + c.metrics.sent, 0).toLocaleString()}
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary">
-                      Total Messages Sent
-                    </Typography>
-                  </CardContent>
-                </Card>
-              </Grid>
+            {/* List Mode */}
+            {audienceDialog.mode === 'list' && (
+              <>
+                <Box sx={{ mb: 3 }}>
+                  <Button
+                    variant="contained"
+                    startIcon={<AddIcon />}
+                    onClick={() => handleAudienceAction('create')}
+                    sx={{ mb: 2 }}
+                  >
+                    Create New Audience
+                  </Button>
+                </Box>
 
-              <Grid item xs={12} sm={6} md={3}>
-                <Card>
-                  <CardContent sx={{ textAlign: 'center' }}>
-                    <Typography variant="h4" color="success.main" fontWeight="600">
-                      {campaigns.reduce((sum, c) => sum + c.metrics.delivered, 0).toLocaleString()}
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary">
-                      Total Delivered
-                    </Typography>
-                  </CardContent>
-                </Card>
-              </Grid>
+                <Grid container spacing={2}>
+                  {audiences.map((audience) => (
+                    <Grid item xs={12} md={6} key={audience.id}>
+                      <Card sx={{ height: '100%' }}>
+                        <CardContent>
+                          <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
+                            <Typography variant="h6">{audience.name}</Typography>
+                          </Box>
 
-              <Grid item xs={12} sm={6} md={3}>
-                <Card>
-                  <CardContent sx={{ textAlign: 'center' }}>
-                    <Typography variant="h4" color="info.main" fontWeight="600">
-                      {campaigns.reduce((sum, c) => sum + c.metrics.opened, 0).toLocaleString()}
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary">
-                      Total Opened
-                    </Typography>
-                  </CardContent>
-                </Card>
-              </Grid>
+                          <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                            {audience.description}
+                          </Typography>
 
-              <Grid item xs={12} sm={6} md={3}>
-                <Card>
-                  <CardContent sx={{ textAlign: 'center' }}>
-                    <Typography variant="h4" color="warning.main" fontWeight="600">
-                      {campaigns.reduce((sum, c) => sum + c.metrics.clicked, 0).toLocaleString()}
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary">
-                      Total Clicked
-                    </Typography>
-                  </CardContent>
-                </Card>
-              </Grid>
+                          <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                            <PeopleIcon sx={{ mr: 1, color: 'primary.main' }} />
+                            <Typography variant="h5" color="primary" fontWeight="600">
+                              {audience.size.toLocaleString()}
+                            </Typography>
+                            <Typography variant="body2" color="text.secondary" sx={{ ml: 1 }}>
+                              contacts
+                            </Typography>
+                          </Box>
 
-              <Grid item xs={12}>
-                <Card>
-                  <CardContent>
-                    <Typography variant="h6" gutterBottom>Campaign Performance</Typography>
-                    <TableContainer>
-                      <Table size="small">
-                        <TableHead>
-                          <TableRow>
-                            <TableCell>Campaign</TableCell>
-                            <TableCell align="right">Sent</TableCell>
-                            <TableCell align="right">Delivered</TableCell>
-                            <TableCell align="right">Open Rate</TableCell>
-                            <TableCell align="right">Click Rate</TableCell>
-                          </TableRow>
-                        </TableHead>
-                        <TableBody>
-                          {campaigns.map((campaign) => {
-                            const openRate = campaign.metrics.delivered > 0
-                              ? ((campaign.metrics.opened / campaign.metrics.delivered) * 100).toFixed(1)
-                              : '0.0';
-                            const clickRate = campaign.metrics.opened > 0
-                              ? ((campaign.metrics.clicked / campaign.metrics.opened) * 100).toFixed(1)
-                              : '0.0';
+                          <Box sx={{ mb: 2 }}>
+                            <Typography variant="caption" color="text.secondary" gutterBottom>
+                              Segments
+                            </Typography>
+                            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                              {audience.segments.map((segment, index) => (
+                                <Chip key={index} label={segment} size="small" variant="outlined" />
+                              ))}
+                            </Box>
+                          </Box>
 
-                            return (
-                              <TableRow key={campaign.id}>
-                                <TableCell>{campaign.name}</TableCell>
-                                <TableCell align="right">{campaign.metrics.sent.toLocaleString()}</TableCell>
-                                <TableCell align="right">{campaign.metrics.delivered.toLocaleString()}</TableCell>
-                                <TableCell align="right">{openRate}%</TableCell>
-                                <TableCell align="right">{clickRate}%</TableCell>
-                              </TableRow>
-                            );
-                          })}
-                        </TableBody>
-                      </Table>
-                    </TableContainer>
-                  </CardContent>
-                </Card>
-              </Grid>
-            </Grid>
+                          <Typography variant="caption" color="text.secondary">
+                            Last updated: {new Date(audience.lastUpdated).toLocaleDateString()}
+                          </Typography>
+
+                          <Box sx={{ display: 'flex', gap: 1, mt: 2 }}>
+                            <Button
+                              size="small"
+                              variant="outlined"
+                              onClick={() => handleAudienceAction('view', audience)}
+                            >
+                              View Details
+                            </Button>
+                            <Button
+                              size="small"
+                              variant="outlined"
+                              onClick={() => handleAudienceAction('edit', audience)}
+                            >
+                              Edit
+                            </Button>
+                          </Box>
+                        </CardContent>
+                      </Card>
+                    </Grid>
+                  ))}
+                </Grid>
+              </>
+            )}
+
+            {/* Create/Edit Mode */}
+            {(audienceDialog.mode === 'create' || audienceDialog.mode === 'edit') && (
+              <Box sx={{ mt: 2 }}>
+                <Grid container spacing={3}>
+                  <Grid item xs={12}>
+                    <TextField
+                      fullWidth
+                      label="Audience Name"
+                      value={audienceFormData.name}
+                      onChange={(e) => setAudienceFormData(prev => ({ ...prev, name: e.target.value }))}
+                      required
+                    />
+                  </Grid>
+
+                  <Grid item xs={12}>
+                    <TextField
+                      fullWidth
+                      label="Description"
+                      multiline
+                      rows={3}
+                      value={audienceFormData.description}
+                      onChange={(e) => setAudienceFormData(prev => ({ ...prev, description: e.target.value }))}
+                    />
+                  </Grid>
+
+                  <Grid item xs={12}>
+                    <TextField
+                      fullWidth
+                      label="Audience Size"
+                      type="number"
+                      value={audienceFormData.size}
+                      onChange={(e) => setAudienceFormData(prev => ({ ...prev, size: parseInt(e.target.value) || 0 }))}
+                      helperText="Number of contacts in this audience"
+                    />
+                  </Grid>
+
+                  <Grid item xs={12}>
+                    <Typography variant="subtitle2" gutterBottom>
+                      Segments
+                    </Typography>
+                    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mb: 2 }}>
+                      {audienceFormData.segments.map((segment, index) => (
+                        <Chip
+                          key={index}
+                          label={segment}
+                          onDelete={() => handleRemoveSegment(segment)}
+                          color="primary"
+                          variant="outlined"
+                        />
+                      ))}
+                    </Box>
+                    <Box sx={{ display: 'flex', gap: 1 }}>
+                      <TextField
+                        size="small"
+                        label="Add Segment"
+                        placeholder="Enter segment name"
+                        id="segment-input"
+                        onKeyPress={(e) => {
+                          if (e.key === 'Enter') {
+                            handleAddSegment(e.target.value);
+                            e.target.value = '';
+                          }
+                        }}
+                      />
+                      <Button
+                        variant="outlined"
+                        size="small"
+                        onClick={() => {
+                          const input = document.getElementById('segment-input');
+                          if (input && input.value) {
+                            handleAddSegment(input.value);
+                            input.value = '';
+                          }
+                        }}
+                      >
+                        Add
+                      </Button>
+                    </Box>
+                  </Grid>
+                </Grid>
+              </Box>
+            )}
+
+            {/* View Mode */}
+            {audienceDialog.mode === 'view' && audienceDialog.selectedAudience && (
+              <Box sx={{ mt: 2 }}>
+                <Grid container spacing={3}>
+                  <Grid item xs={12}>
+                    <Typography variant="subtitle2" color="text.secondary">
+                      Audience Name
+                    </Typography>
+                    <Typography variant="h6" gutterBottom>
+                      {audienceDialog.selectedAudience.name}
+                    </Typography>
+                  </Grid>
+
+                  <Grid item xs={12}>
+                    <Typography variant="subtitle2" color="text.secondary">
+                      Description
+                    </Typography>
+                    <Typography variant="body1" gutterBottom>
+                      {audienceDialog.selectedAudience.description}
+                    </Typography>
+                  </Grid>
+
+                  <Grid item xs={12} md={6}>
+                    <Typography variant="subtitle2" color="text.secondary">
+                      Audience Size
+                    </Typography>
+                    <Box sx={{ display: 'flex', alignItems: 'center', mt: 1 }}>
+                      <PeopleIcon sx={{ mr: 1, color: 'primary.main', fontSize: 32 }} />
+                      <Typography variant="h4" color="primary" fontWeight="600">
+                        {audienceDialog.selectedAudience.size.toLocaleString()}
+                      </Typography>
+                      <Typography variant="body1" color="text.secondary" sx={{ ml: 1 }}>
+                        contacts
+                      </Typography>
+                    </Box>
+                  </Grid>
+
+                  <Grid item xs={12} md={6}>
+                    <Typography variant="subtitle2" color="text.secondary">
+                      Last Updated
+                    </Typography>
+                    <Typography variant="body1" sx={{ mt: 1 }}>
+                      {new Date(audienceDialog.selectedAudience.lastUpdated).toLocaleDateString()}
+                    </Typography>
+                  </Grid>
+
+                  <Grid item xs={12}>
+                    <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                      Segments
+                    </Typography>
+                    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mt: 1 }}>
+                      {audienceDialog.selectedAudience.segments.map((segment, index) => (
+                        <Chip
+                          key={index}
+                          label={segment}
+                          color="primary"
+                          variant="outlined"
+                        />
+                      ))}
+                    </Box>
+                  </Grid>
+                </Grid>
+              </Box>
+            )}
           </DialogContent>
+          <DialogActions>
+            {audienceDialog.mode === 'list' && (
+              <Button onClick={handleCloseAudienceDialog}>Close</Button>
+            )}
+            {(audienceDialog.mode === 'create' || audienceDialog.mode === 'edit') && (
+              <>
+                <Button onClick={() => handleAudienceAction('backToList')}>Cancel</Button>
+                <Button variant="contained" onClick={handleSaveAudience}>
+                  Save
+                </Button>
+              </>
+            )}
+            {audienceDialog.mode === 'view' && (
+              <>
+                <Button
+                  color="error"
+                  onClick={() => handleAudienceAction('delete', audienceDialog.selectedAudience)}
+                >
+                  Delete
+                </Button>
+                <Button onClick={() => handleAudienceAction('backToList')}>Back</Button>
+                <Button
+                  variant="contained"
+                  onClick={() => handleAudienceAction('edit', audienceDialog.selectedAudience)}
+                >
+                  Edit
+                </Button>
+              </>
+            )}
+          </DialogActions>
+
           <DialogActions>
             <Button onClick={() => setAnalyticsDialog(false)}>Close</Button>
             <Button variant="contained" onClick={() => navigate('/campaigns/analytics')}>

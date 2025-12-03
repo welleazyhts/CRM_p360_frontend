@@ -72,10 +72,12 @@ const LeadMIS = () => {
   // CSC Load Tracking Filters
   const [cscSelectedMonth, setCscSelectedMonth] = useState(new Date().toISOString().slice(0, 7));
   const [cscSelectedRegion, setCscSelectedRegion] = useState('all');
+  const [cscPerformanceFilter, setCscPerformanceFilter] = useState('all');
 
   // Daily Insurer MIS Filters
   const [dailyMISSelectedInsurer, setDailyMISSelectedInsurer] = useState('all');
   const [dailyMISSelectedDate, setDailyMISSelectedDate] = useState('all');
+  const [dailyMISConversionFilter, setDailyMISConversionFilter] = useState('all');
 
   // Premium Registers Filters
   const [premiumSelectedInsurer, setPremiumSelectedInsurer] = useState('all');
@@ -85,11 +87,17 @@ const LeadMIS = () => {
   // Capacity Planning CSC Filters
   const [capacitySelectedMonth, setCapacitySelectedMonth] = useState(new Date().toISOString().slice(0, 7));
   const [capacitySelectedRegion, setCapacitySelectedRegion] = useState('all');
+  const [capacityStatusFilter, setCapacityStatusFilter] = useState('all');
 
   // Workload Distribution Filters
   const [workloadSelectedDateRange, setWorkloadSelectedDateRange] = useState('thisMonth');
   const [workloadSelectedRegion, setWorkloadSelectedRegion] = useState('all');
   const [workloadSelectedTeam, setWorkloadSelectedTeam] = useState('all');
+
+  // Performance Analysis Filters
+  const [performanceAgentFilter, setPerformanceAgentFilter] = useState('all');
+  const [performanceConversionFilter, setPerformanceConversionFilter] = useState('all');
+  const [performancePolicyTypeFilter, setPerformancePolicyTypeFilter] = useState('all');
 
   // API Data States
   const [leadsByStatusData, setLeadsByStatusData] = useState([]);
@@ -128,25 +136,31 @@ const LeadMIS = () => {
 
   const [selectedDuplicates, setSelectedDuplicates] = useState([]);
   const [duplicateFilter, setDuplicateFilter] = useState('all');
+  const [duplicateSourceFilter, setDuplicateSourceFilter] = useState('all');
+  const [duplicateStatusFilter, setDuplicateStatusFilter] = useState('all');
 
   // preExpiryRenewals replaced by state
 
   const [renewalFilter, setRenewalFilter] = useState('all');
+  const [renewalAgentFilter, setRenewalAgentFilter] = useState('all');
+  const [renewalPolicyTypeFilter, setRenewalPolicyTypeFilter] = useState('all');
 
   // CSC Productivity data
   const cscProductivityData = [
-    { cscName: 'Priya Patel', calls: 145, policies: 28, conversionRate: 19.3, score: 92, performance: 'Excellent', region: 'Mumbai' },
-    { cscName: 'Rahul Kumar', calls: 132, policies: 24, conversionRate: 18.2, score: 88, performance: 'Good', region: 'Delhi' },
-    { cscName: 'Sarah Johnson', calls: 158, policies: 35, conversionRate: 22.2, score: 96, performance: 'Excellent', region: 'Bangalore' },
-    { cscName: 'Amit Sharma', calls: 118, policies: 18, conversionRate: 15.3, score: 78, performance: 'Average', region: 'Chennai' },
-    { cscName: 'Kavita Reddy', calls: 125, policies: 22, conversionRate: 17.6, score: 85, performance: 'Good', region: 'Hyderabad' },
-    { cscName: 'Deepak Singh', calls: 98, policies: 12, conversionRate: 12.2, score: 65, performance: 'Needs Improvement', region: 'Pune' },
-    { cscName: 'Meera Gupta', calls: 142, policies: 31, conversionRate: 21.8, score: 94, performance: 'Excellent', region: 'Kolkata' },
-    { cscName: 'Vikram Joshi', calls: 108, policies: 15, conversionRate: 13.9, score: 72, performance: 'Average', region: 'Ahmedabad' }
+    { cscName: 'Priya Patel', calls: 145, policies: 28, conversionRate: 19.3, score: 92, performance: 'Excellent', region: 'Mumbai', source: 'Website', status: 'Closed Won' },
+    { cscName: 'Rahul Kumar', calls: 132, policies: 24, conversionRate: 18.2, score: 88, performance: 'Good', region: 'Delhi', source: 'Referral', status: 'Closed Won' },
+    { cscName: 'Sarah Johnson', calls: 158, policies: 35, conversionRate: 22.2, score: 96, performance: 'Excellent', region: 'Bangalore', source: 'Direct', status: 'Closed Won' },
+    { cscName: 'Amit Sharma', calls: 118, policies: 18, conversionRate: 15.3, score: 78, performance: 'Average', region: 'Chennai', source: 'Phone', status: 'Qualified' },
+    { cscName: 'Kavita Reddy', calls: 125, policies: 22, conversionRate: 17.6, score: 85, performance: 'Good', region: 'Hyderabad', source: 'Social Media', status: 'Closed Won' },
+    { cscName: 'Deepak Singh', calls: 98, policies: 12, conversionRate: 12.2, score: 65, performance: 'Needs Improvement', region: 'Pune', source: 'Email', status: 'Contacted' },
+    { cscName: 'Meera Gupta', calls: 142, policies: 31, conversionRate: 21.8, score: 94, performance: 'Excellent', region: 'Kolkata', source: 'Website', status: 'Closed Won' },
+    { cscName: 'Vikram Joshi', calls: 108, policies: 15, conversionRate: 13.9, score: 72, performance: 'Average', region: 'Ahmedabad', source: 'Referral', status: 'Proposal Sent' }
   ];
 
+  // CSC Productivity Filters
   const [cscFilter, setCscFilter] = useState('all');
   const [regionFilter, setRegionFilter] = useState('all');
+  const [scoreFilter, setScoreFilter] = useState('all');
 
   const regions = ['Mumbai', 'Delhi', 'Bangalore', 'Chennai', 'Hyderabad', 'Pune', 'Kolkata', 'Ahmedabad'];
 
@@ -169,14 +183,14 @@ const LeadMIS = () => {
   ];
 
   const lostLeadsDetails = [
-    { id: 'L001', customerName: 'Rajesh Kumar', policyType: 'Health', agent: 'Priya Patel', lostDate: '2024-01-15', reason: 'High Premium', premium: 25000, notes: 'Customer found 20% cheaper option' },
-    { id: 'L002', customerName: 'Sunita Sharma', policyType: 'Motor', agent: 'Rahul Kumar', lostDate: '2024-01-18', reason: 'Better Competitor Offer', premium: 18000, notes: 'Competitor offered additional benefits' },
-    { id: 'L003', customerName: 'Amit Patel', policyType: 'Life', agent: 'Sarah Johnson', lostDate: '2024-01-20', reason: 'Poor Service Experience', premium: 45000, notes: 'Unhappy with claim settlement process' },
-    { id: 'L004', customerName: 'Kavita Reddy', policyType: 'Health', agent: 'Amit Sharma', lostDate: '2024-01-22', reason: 'Coverage Issues', premium: 32000, notes: 'Required specific coverage not available' },
-    { id: 'L005', customerName: 'Deepak Singh', policyType: 'Motor', agent: 'Kavita Reddy', lostDate: '2024-01-25', reason: 'Financial Constraints', premium: 22000, notes: 'Customer postponed purchase due to budget' },
-    { id: 'L006', customerName: 'Meera Gupta', policyType: 'Travel', agent: 'Priya Patel', lostDate: '2024-01-28', reason: 'High Premium', premium: 8500, notes: 'Found 30% cheaper alternative' },
-    { id: 'L007', customerName: 'Vikram Joshi', policyType: 'Home', agent: 'Rahul Kumar', lostDate: '2024-02-01', reason: 'Better Competitor Offer', premium: 35000, notes: 'Competitor offered better terms' },
-    { id: 'L008', customerName: 'Anita Desai', policyType: 'Health', agent: 'Sarah Johnson', lostDate: '2024-02-03', reason: 'Poor Service Experience', premium: 28000, notes: 'Dissatisfied with response time' }
+    { id: 'L001', customerName: 'Rajesh Kumar', policyType: 'Health', agent: 'Priya Patel', lostDate: '2024-01-15', reason: 'High Premium', premium: 25000, notes: 'Customer found 20% cheaper option', source: 'Website', status: 'Closed Lost' },
+    { id: 'L002', customerName: 'Sunita Sharma', policyType: 'Motor', agent: 'Rahul Kumar', lostDate: '2024-01-18', reason: 'Better Competitor Offer', premium: 18000, notes: 'Competitor offered additional benefits', source: 'Referral', status: 'Closed Lost' },
+    { id: 'L003', customerName: 'Amit Patel', policyType: 'Life', agent: 'Sarah Johnson', lostDate: '2024-01-20', reason: 'Poor Service Experience', premium: 45000, notes: 'Unhappy with claim settlement process', source: 'Direct', status: 'Closed Lost' },
+    { id: 'L004', customerName: 'Kavita Reddy', policyType: 'Health', agent: 'Amit Sharma', lostDate: '2024-01-22', reason: 'Coverage Issues', premium: 32000, notes: 'Required specific coverage not available', source: 'Phone', status: 'Closed Lost' },
+    { id: 'L005', customerName: 'Deepak Singh', policyType: 'Motor', agent: 'Kavita Reddy', lostDate: '2024-01-25', reason: 'Financial Constraints', premium: 22000, notes: 'Customer postponed purchase due to budget', source: 'Social Media', status: 'Closed Lost' },
+    { id: 'L006', customerName: 'Meera Gupta', policyType: 'Travel', agent: 'Priya Patel', lostDate: '2024-01-28', reason: 'High Premium', premium: 8500, notes: 'Found 30% cheaper alternative', source: 'Email', status: 'Closed Lost' },
+    { id: 'L007', customerName: 'Vikram Joshi', policyType: 'Home', agent: 'Rahul Kumar', lostDate: '2024-02-01', reason: 'Better Competitor Offer', premium: 35000, notes: 'Competitor offered better terms', source: 'Website', status: 'Closed Lost' },
+    { id: 'L008', customerName: 'Anita Desai', policyType: 'Health', agent: 'Sarah Johnson', lostDate: '2024-02-03', reason: 'Poor Service Experience', premium: 28000, notes: 'Dissatisfied with response time', source: 'Referral', status: 'Closed Lost' }
   ];
 
   const [lostReasonFilter, setLostReasonFilter] = useState('all');
@@ -187,14 +201,14 @@ const LeadMIS = () => {
 
   // Conversion % Reports data
   const conversionReportsData = [
-    { agent: 'Priya Patel', totalLeads: 145, convertedLeads: 48, conversionRate: 33.1, revenue: 2400000, productType: 'Health' },
-    { agent: 'Rahul Kumar', totalLeads: 132, convertedLeads: 42, conversionRate: 31.8, revenue: 2100000, productType: 'Motor' },
-    { agent: 'Sarah Johnson', totalLeads: 158, convertedLeads: 56, conversionRate: 35.4, revenue: 2800000, productType: 'Life' },
-    { agent: 'Amit Sharma', totalLeads: 118, convertedLeads: 32, conversionRate: 27.1, revenue: 1600000, productType: 'Health' },
-    { agent: 'Kavita Reddy', totalLeads: 125, convertedLeads: 38, conversionRate: 30.4, revenue: 1900000, productType: 'Motor' },
-    { agent: 'Deepak Singh', totalLeads: 98, convertedLeads: 22, conversionRate: 22.4, revenue: 1100000, productType: 'Travel' },
-    { agent: 'Meera Gupta', totalLeads: 142, convertedLeads: 51, conversionRate: 35.9, revenue: 2550000, productType: 'Life' },
-    { agent: 'Vikram Joshi', totalLeads: 108, convertedLeads: 28, conversionRate: 25.9, revenue: 1400000, productType: 'Home' }
+    { agent: 'Priya Patel', totalLeads: 145, convertedLeads: 48, conversionRate: 33.1, revenue: 2400000, productType: 'Health', source: 'Website', status: 'Closed Won' },
+    { agent: 'Rahul Kumar', totalLeads: 132, convertedLeads: 42, conversionRate: 31.8, revenue: 2100000, productType: 'Motor', source: 'Referral', status: 'Closed Won' },
+    { agent: 'Sarah Johnson', totalLeads: 158, convertedLeads: 56, conversionRate: 35.4, revenue: 2800000, productType: 'Life', source: 'Direct', status: 'Closed Won' },
+    { agent: 'Amit Sharma', totalLeads: 118, convertedLeads: 32, conversionRate: 27.1, revenue: 1600000, productType: 'Health', source: 'Phone', status: 'Qualified' },
+    { agent: 'Kavita Reddy', totalLeads: 125, convertedLeads: 38, conversionRate: 30.4, revenue: 1900000, productType: 'Motor', source: 'Social Media', status: 'Closed Won' },
+    { agent: 'Deepak Singh', totalLeads: 98, convertedLeads: 22, conversionRate: 22.4, revenue: 1100000, productType: 'Travel', source: 'Email', status: 'Proposal Sent' },
+    { agent: 'Meera Gupta', totalLeads: 142, convertedLeads: 51, conversionRate: 35.9, revenue: 2550000, productType: 'Life', source: 'Website', status: 'Closed Won' },
+    { agent: 'Vikram Joshi', totalLeads: 108, convertedLeads: 28, conversionRate: 25.9, revenue: 1400000, productType: 'Home', source: 'Referral', status: 'Negotiation' }
   ];
 
   const monthlyConversionTrend = [
@@ -324,6 +338,55 @@ const LeadMIS = () => {
     fetchMISData();
   };
 
+  const handleResetFilters = () => {
+    setDateRange('thisMonth');
+    setSelectedAgents([]);
+    setSelectedSources([]);
+    setSelectedStatuses([]);
+  };
+
+  const handleResetPerformanceFilters = () => {
+    setPerformanceAgentFilter('all');
+    setPerformanceConversionFilter('all');
+    setPerformancePolicyTypeFilter('all');
+  };
+
+  const handleResetDuplicateFilters = () => {
+    setDuplicateFilter('all');
+    setDuplicateSourceFilter('all');
+    setDuplicateStatusFilter('all');
+  };
+
+  const handleResetRenewalFilters = () => {
+    setRenewalFilter('all');
+    setRenewalAgentFilter('all');
+    setRenewalPolicyTypeFilter('all');
+  };
+
+  const handleResetCSCFilters = () => {
+    setCscFilter('all');
+    setRegionFilter('all');
+    setScoreFilter('all');
+  };
+
+  const handleResetLostReasonFilters = () => {
+    setLostReasonFilter('all');
+    setProductTypeFilter('all');
+    setAgentFilter('all');
+  };
+
+  const handleResetConversionFilters = () => {
+    setConversionDateFilter('thisMonth');
+    setConversionAgentFilter('all');
+    setConversionProductFilter('all');
+  };
+
+  const handleResetPivotFilters = () => {
+    setPivotGroupBy('insurer');
+    setPivotDateFilter('thisMonth');
+    setPivotProductFilter('all');
+  };
+
   const getPivotChartData = () => {
     const data = getPivotData();
     return data.map(item => ({
@@ -369,12 +432,85 @@ const LeadMIS = () => {
   };
 
   const filteredDuplicates = duplicateLeads.filter(group => {
+    // Filter by confidence
     if (duplicateFilter === 'all') return true;
     if (duplicateFilter === 'high') return group.confidence >= 95;
     if (duplicateFilter === 'medium') return group.confidence >= 90 && group.confidence < 95;
     if (duplicateFilter === 'low') return group.confidence < 90;
     return true;
+  }).filter(group => {
+    // Filter by source - check if any lead in the group matches the selected source
+    if (duplicateSourceFilter === 'all') return true;
+    return group.leads.some(lead => lead.source === duplicateSourceFilter);
+  }).filter(group => {
+    // Filter by status - check if any lead in the group matches the selected status
+    if (duplicateStatusFilter === 'all') return true;
+    return group.leads.some(lead => lead.status === duplicateStatusFilter);
   });
+
+  // Helper functions to filter static data based on global filters
+  const getFilteredCSCProductivityData = () => {
+    let filtered = cscProductivityData;
+
+    // Filter by selected agents
+    if (selectedAgents.length > 0) {
+      filtered = filtered.filter(csc => selectedAgents.includes(csc.cscName));
+    }
+
+    // Filter by selected sources
+    if (selectedSources.length > 0) {
+      filtered = filtered.filter(csc => selectedSources.includes(csc.source));
+    }
+
+    // Filter by selected statuses
+    if (selectedStatuses.length > 0) {
+      filtered = filtered.filter(csc => selectedStatuses.includes(csc.status));
+    }
+
+    return filtered;
+  };
+
+  const getFilteredLostLeadsDetails = () => {
+    let filtered = lostLeadsDetails;
+
+    // Filter by selected agents
+    if (selectedAgents.length > 0) {
+      filtered = filtered.filter(lead => selectedAgents.includes(lead.agent));
+    }
+
+    // Filter by selected sources
+    if (selectedSources.length > 0) {
+      filtered = filtered.filter(lead => selectedSources.includes(lead.source));
+    }
+
+    // Filter by selected statuses
+    if (selectedStatuses.length > 0) {
+      filtered = filtered.filter(lead => selectedStatuses.includes(lead.status));
+    }
+
+    return filtered;
+  };
+
+  const getFilteredConversionReportsData = () => {
+    let filtered = conversionReportsData;
+
+    // Filter by selected agents
+    if (selectedAgents.length > 0) {
+      filtered = filtered.filter(report => selectedAgents.includes(report.agent));
+    }
+
+    // Filter by selected sources
+    if (selectedSources.length > 0) {
+      filtered = filtered.filter(report => selectedSources.includes(report.source));
+    }
+
+    // Filter by selected statuses
+    if (selectedStatuses.length > 0) {
+      filtered = filtered.filter(report => selectedStatuses.includes(report.status));
+    }
+
+    return filtered;
+  };
 
   const handleTabChange = (event, newValue) => {
     setCurrentTab(newValue);
@@ -442,92 +578,7 @@ const LeadMIS = () => {
         </Grid >
       </Grid >
 
-      {/* Filters */}
-      < Card sx={{ mb: 3 }}>
-        <CardContent>
-          <Grid container spacing={2} alignItems="center">
-            <Grid item xs={12} sm={6} md={3}>
-              <TextField
-                fullWidth
-                select
-                label="Date Range"
-                value={dateRange}
-                onChange={(e) => setDateRange(e.target.value)}
-                InputProps={{
-                  startAdornment: <DateRangeIcon sx={{ color: 'text.secondary', mr: 1 }} />
-                }}
-              >
-                <MenuItem value="today">Today</MenuItem>
-                <MenuItem value="yesterday">Yesterday</MenuItem>
-                <MenuItem value="thisWeek">This Week</MenuItem>
-                <MenuItem value="lastWeek">Last Week</MenuItem>
-                <MenuItem value="thisMonth">This Month</MenuItem>
-                <MenuItem value="lastMonth">Last Month</MenuItem>
-                <MenuItem value="thisQuarter">This Quarter</MenuItem>
-                <MenuItem value="thisYear">This Year</MenuItem>
-                <MenuItem value="custom">Custom Range</MenuItem>
-              </TextField>
-            </Grid>
-            <Grid item xs={12} sm={6} md={3}>
-              <FormControl fullWidth>
-                <InputLabel>Filter by Agent</InputLabel>
-                <Select
-                  multiple
-                  value={selectedAgents}
-                  onChange={(e) => setSelectedAgents(e.target.value)}
-                  input={<OutlinedInput label="Filter by Agent" />}
-                  renderValue={(selected) => selected.join(', ')}
-                >
-                  {agents.map((agent) => (
-                    <MenuItem key={agent} value={agent}>
-                      <Checkbox checked={selectedAgents.indexOf(agent) > -1} />
-                      <ListItemText primary={agent} />
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-            </Grid>
-            <Grid item xs={12} sm={6} md={3}>
-              <FormControl fullWidth>
-                <InputLabel>Filter by Source</InputLabel>
-                <Select
-                  multiple
-                  value={selectedSources}
-                  onChange={(e) => setSelectedSources(e.target.value)}
-                  input={<OutlinedInput label="Filter by Source" />}
-                  renderValue={(selected) => selected.join(', ')}
-                >
-                  {sources.map((source) => (
-                    <MenuItem key={source} value={source}>
-                      <Checkbox checked={selectedSources.indexOf(source) > -1} />
-                      <ListItemText primary={source} />
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-            </Grid>
-            <Grid item xs={12} sm={6} md={3}>
-              <FormControl fullWidth>
-                <InputLabel>Filter by Status</InputLabel>
-                <Select
-                  multiple
-                  value={selectedStatuses}
-                  onChange={(e) => setSelectedStatuses(e.target.value)}
-                  input={<OutlinedInput label="Filter by Status" />}
-                  renderValue={(selected) => selected.join(', ')}
-                >
-                  {statuses.map((status) => (
-                    <MenuItem key={status} value={status}>
-                      <Checkbox checked={selectedStatuses.indexOf(status) > -1} />
-                      <ListItemText primary={status} />
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-            </Grid>
-          </Grid>
-        </CardContent>
-      </Card >
+
 
       {/* Key Metrics */}
       < Grid container spacing={2} sx={{ mb: 3 }}>
@@ -695,6 +746,70 @@ const LeadMIS = () => {
       {
         currentTab === 1 && (
           <Grid container spacing={3}>
+            {/* Filter Section */}
+            <Grid item xs={12}>
+              <Card sx={{ mb: 2 }}>
+                <CardContent>
+                  <Grid container spacing={2} alignItems="center">
+                    <Grid item xs={12} sm={6} md={4}>
+                      <TextField
+                        fullWidth
+                        select
+                        label="Filter by Agent"
+                        value={performanceAgentFilter}
+                        onChange={(e) => setPerformanceAgentFilter(e.target.value)}
+                      >
+                        <MenuItem value="all">All Agents</MenuItem>
+                        {agents.map((agent) => (
+                          <MenuItem key={agent} value={agent}>{agent}</MenuItem>
+                        ))}
+                      </TextField>
+                    </Grid>
+                    <Grid item xs={12} sm={6} md={4}>
+                      <TextField
+                        fullWidth
+                        select
+                        label="Filter by Conversion Rate"
+                        value={performanceConversionFilter}
+                        onChange={(e) => setPerformanceConversionFilter(e.target.value)}
+                      >
+                        <MenuItem value="all">All Conversion Rates</MenuItem>
+                        <MenuItem value="excellent">Excellent (≥35%)</MenuItem>
+                        <MenuItem value="good">Good (30-34%)</MenuItem>
+                        <MenuItem value="needsImprovement">Needs Improvement (&lt;30%)</MenuItem>
+                      </TextField>
+                    </Grid>
+                    <Grid item xs={12} sm={6} md={3}>
+                      <TextField
+                        fullWidth
+                        select
+                        label="Filter by Policy Type"
+                        value={performancePolicyTypeFilter}
+                        onChange={(e) => setPerformancePolicyTypeFilter(e.target.value)}
+                      >
+                        <MenuItem value="all">All Policy Types</MenuItem>
+                        <MenuItem value="Health">Health</MenuItem>
+                        <MenuItem value="Motor">Motor</MenuItem>
+                        <MenuItem value="Life">Life</MenuItem>
+                        <MenuItem value="Travel">Travel</MenuItem>
+                        <MenuItem value="Home">Home</MenuItem>
+                      </TextField>
+                    </Grid>
+                    <Grid item xs={12} sm={6} md={3}>
+                      <Button
+                        variant="outlined"
+                        fullWidth
+                        onClick={handleResetPerformanceFilters}
+                        sx={{ height: '56px' }}
+                      >
+                        Reset Filters
+                      </Button>
+                    </Grid>
+                  </Grid>
+                </CardContent>
+              </Card>
+            </Grid>
+
             <Grid item xs={12}>
               <Card>
                 <CardContent>
@@ -714,36 +829,54 @@ const LeadMIS = () => {
                         </TableRow>
                       </TableHead>
                       <TableBody>
-                        {agentPerformanceData.map((agent) => (
-                          <TableRow key={agent.name} hover>
-                            <TableCell>
-                              <Typography variant="subtitle2" fontWeight="600">
-                                {agent.name}
-                              </Typography>
-                            </TableCell>
-                            <TableCell align="center">{agent.leads}</TableCell>
-                            <TableCell align="center">{agent.converted}</TableCell>
-                            <TableCell align="center">
-                              <Chip
-                                label={`${agent.conversionRate}%`}
-                                size="small"
-                                color={agent.conversionRate >= 35 ? 'success' : agent.conversionRate >= 30 ? 'warning' : 'error'}
-                              />
-                            </TableCell>
-                            <TableCell align="right">
-                              <Typography variant="body2" fontWeight="600" color="success.main">
-                                ₹{(agent.revenue / 100000).toFixed(1)}L
-                              </Typography>
-                            </TableCell>
-                            <TableCell align="center">
-                              <Chip
-                                label={agent.conversionRate >= 35 ? 'Excellent' : agent.conversionRate >= 30 ? 'Good' : 'Needs Improvement'}
-                                size="small"
-                                color={agent.conversionRate >= 35 ? 'success' : agent.conversionRate >= 30 ? 'primary' : 'warning'}
-                              />
-                            </TableCell>
-                          </TableRow>
-                        ))}
+                        {agentPerformanceData
+                          .filter((agent) => {
+                            // Filter by agent
+                            if (performanceAgentFilter !== 'all' && agent.name !== performanceAgentFilter) {
+                              return false;
+                            }
+                            // Filter by conversion rate
+                            if (performanceConversionFilter === 'excellent' && agent.conversionRate < 35) {
+                              return false;
+                            }
+                            if (performanceConversionFilter === 'good' && (agent.conversionRate < 30 || agent.conversionRate >= 35)) {
+                              return false;
+                            }
+                            if (performanceConversionFilter === 'needsImprovement' && agent.conversionRate >= 30) {
+                              return false;
+                            }
+                            return true;
+                          })
+                          .map((agent) => (
+                            <TableRow key={agent.name} hover>
+                              <TableCell>
+                                <Typography variant="subtitle2" fontWeight="600">
+                                  {agent.name}
+                                </Typography>
+                              </TableCell>
+                              <TableCell align="center">{agent.leads}</TableCell>
+                              <TableCell align="center">{agent.converted}</TableCell>
+                              <TableCell align="center">
+                                <Chip
+                                  label={`${agent.conversionRate}%`}
+                                  size="small"
+                                  color={agent.conversionRate >= 35 ? 'success' : agent.conversionRate >= 30 ? 'warning' : 'error'}
+                                />
+                              </TableCell>
+                              <TableCell align="right">
+                                <Typography variant="body2" fontWeight="600" color="success.main">
+                                  ₹{(agent.revenue / 100000).toFixed(1)}L
+                                </Typography>
+                              </TableCell>
+                              <TableCell align="center">
+                                <Chip
+                                  label={agent.conversionRate >= 35 ? 'Excellent' : agent.conversionRate >= 30 ? 'Good' : 'Needs Improvement'}
+                                  size="small"
+                                  color={agent.conversionRate >= 35 ? 'success' : agent.conversionRate >= 30 ? 'primary' : 'warning'}
+                                />
+                              </TableCell>
+                            </TableRow>
+                          ))}
                       </TableBody>
                     </Table>
                   </TableContainer>
@@ -769,49 +902,57 @@ const LeadMIS = () => {
                         </TableRow>
                       </TableHead>
                       <TableBody>
-                        {conversionByPolicyType.map((policy) => (
-                          <TableRow key={policy.type} hover>
-                            <TableCell>
-                              <Typography variant="subtitle2" fontWeight="600">
-                                {policy.type} Insurance
-                              </Typography>
-                            </TableCell>
-                            <TableCell align="center">{policy.total}</TableCell>
-                            <TableCell align="center">{policy.converted}</TableCell>
-                            <TableCell align="center">
-                              <Chip
-                                label={`${policy.rate}%`}
-                                size="small"
-                                color={policy.rate >= 35 ? 'success' : policy.rate >= 30 ? 'warning' : 'error'}
-                              />
-                            </TableCell>
-                            <TableCell>
-                              <Box sx={{ width: '100%', display: 'flex', alignItems: 'center', gap: 1 }}>
-                                <Box
-                                  sx={{
-                                    flex: 1,
-                                    height: 8,
-                                    bgcolor: alpha(theme.palette.grey[500], 0.1),
-                                    borderRadius: 1,
-                                    overflow: 'hidden'
-                                  }}
-                                >
+                        {conversionByPolicyType
+                          .filter((policy) => {
+                            // Filter by policy type
+                            if (performancePolicyTypeFilter !== 'all' && policy.type !== performancePolicyTypeFilter) {
+                              return false;
+                            }
+                            return true;
+                          })
+                          .map((policy) => (
+                            <TableRow key={policy.type} hover>
+                              <TableCell>
+                                <Typography variant="subtitle2" fontWeight="600">
+                                  {policy.type} Insurance
+                                </Typography>
+                              </TableCell>
+                              <TableCell align="center">{policy.total}</TableCell>
+                              <TableCell align="center">{policy.converted}</TableCell>
+                              <TableCell align="center">
+                                <Chip
+                                  label={`${policy.rate}%`}
+                                  size="small"
+                                  color={policy.rate >= 35 ? 'success' : policy.rate >= 30 ? 'warning' : 'error'}
+                                />
+                              </TableCell>
+                              <TableCell>
+                                <Box sx={{ width: '100%', display: 'flex', alignItems: 'center', gap: 1 }}>
                                   <Box
                                     sx={{
-                                      width: `${policy.rate}%`,
-                                      height: '100%',
-                                      bgcolor: policy.rate >= 35 ? theme.palette.success.main : policy.rate >= 30 ? theme.palette.warning.main : theme.palette.error.main,
-                                      borderRadius: 1
+                                      flex: 1,
+                                      height: 8,
+                                      bgcolor: alpha(theme.palette.grey[500], 0.1),
+                                      borderRadius: 1,
+                                      overflow: 'hidden'
                                     }}
-                                  />
+                                  >
+                                    <Box
+                                      sx={{
+                                        width: `${policy.rate}%`,
+                                        height: '100%',
+                                        bgcolor: policy.rate >= 35 ? theme.palette.success.main : policy.rate >= 30 ? theme.palette.warning.main : theme.palette.error.main,
+                                        borderRadius: 1
+                                      }}
+                                    />
+                                  </Box>
+                                  <Typography variant="caption" fontWeight="600">
+                                    {policy.rate}%
+                                  </Typography>
                                 </Box>
-                                <Typography variant="caption" fontWeight="600">
-                                  {policy.rate}%
-                                </Typography>
-                              </Box>
-                            </TableCell>
-                          </TableRow>
-                        ))}
+                              </TableCell>
+                            </TableRow>
+                          ))}
                       </TableBody>
                     </Table>
                   </TableContainer>
@@ -912,7 +1053,7 @@ const LeadMIS = () => {
 
             {/* Duplicate Analysis Filters */}
             <Grid item xs={12}>
-              <Card sx={{ mb: 2 }}>
+              <Card>
                 <CardContent>
                   <Grid container spacing={2} alignItems="center">
                     <Grid item xs={12} sm={6} md={3}>
@@ -923,20 +1064,48 @@ const LeadMIS = () => {
                         value={duplicateFilter}
                         onChange={(e) => setDuplicateFilter(e.target.value)}
                       >
-                        <MenuItem value="all">All Duplicates</MenuItem>
-                        <MenuItem value="high">High Confidence (95%+)</MenuItem>
-                        <MenuItem value="medium">Medium Confidence (90-94%)</MenuItem>
-                        <MenuItem value="low">Low Confidence (&lt;90%)</MenuItem>
+                        <MenuItem value="all">All Confidence Levels</MenuItem>
+                        <MenuItem value="high">High (≥95%)</MenuItem>
+                        <MenuItem value="medium">Medium (90-94%)</MenuItem>
+                        <MenuItem value="low">Low (&lt;90%)</MenuItem>
+                      </TextField>
+                    </Grid>
+                    <Grid item xs={12} sm={6} md={3}>
+                      <TextField
+                        fullWidth
+                        select
+                        label="Filter by Source"
+                        value={duplicateSourceFilter}
+                        onChange={(e) => setDuplicateSourceFilter(e.target.value)}
+                      >
+                        <MenuItem value="all">All Sources</MenuItem>
+                        {sources.map((source) => (
+                          <MenuItem key={source} value={source}>{source}</MenuItem>
+                        ))}
+                      </TextField>
+                    </Grid>
+                    <Grid item xs={12} sm={6} md={3}>
+                      <TextField
+                        fullWidth
+                        select
+                        label="Filter by Status"
+                        value={duplicateStatusFilter}
+                        onChange={(e) => setDuplicateStatusFilter(e.target.value)}
+                      >
+                        <MenuItem value="all">All Status</MenuItem>
+                        {statuses.map((status) => (
+                          <MenuItem key={status} value={status}>{status}</MenuItem>
+                        ))}
                       </TextField>
                     </Grid>
                     <Grid item xs={12} sm={6} md={3}>
                       <Button
-                        variant="contained"
-                        startIcon={<DownloadIcon />}
-                        onClick={handleExportDuplicates}
+                        variant="outlined"
                         fullWidth
+                        onClick={handleResetDuplicateFilters}
+                        sx={{ height: '56px' }}
                       >
-                        Export Report
+                        Reset Filters
                       </Button>
                     </Grid>
                   </Grid>
@@ -1173,13 +1342,43 @@ const LeadMIS = () => {
                       </TextField>
                     </Grid>
                     <Grid item xs={12} sm={6} md={3}>
-                      <Button
-                        variant="contained"
-                        startIcon={<DownloadIcon />}
-                        onClick={handleExportExcel}
+                      <TextField
                         fullWidth
+                        select
+                        label="Filter by Agent"
+                        value={renewalAgentFilter}
+                        onChange={(e) => setRenewalAgentFilter(e.target.value)}
                       >
-                        Export Report
+                        <MenuItem value="all">All Agents</MenuItem>
+                        {agents.map((agent) => (
+                          <MenuItem key={agent} value={agent}>{agent}</MenuItem>
+                        ))}
+                      </TextField>
+                    </Grid>
+                    <Grid item xs={12} sm={6} md={3}>
+                      <TextField
+                        fullWidth
+                        select
+                        label="Filter by Policy Type"
+                        value={renewalPolicyTypeFilter}
+                        onChange={(e) => setRenewalPolicyTypeFilter(e.target.value)}
+                      >
+                        <MenuItem value="all">All Policy Types</MenuItem>
+                        <MenuItem value="Health">Health</MenuItem>
+                        <MenuItem value="Motor">Motor</MenuItem>
+                        <MenuItem value="Life">Life</MenuItem>
+                        <MenuItem value="Travel">Travel</MenuItem>
+                        <MenuItem value="Home">Home</MenuItem>
+                      </TextField>
+                    </Grid>
+                    <Grid item xs={12} sm={6} md={3}>
+                      <Button
+                        variant="outlined"
+                        fullWidth
+                        onClick={handleResetRenewalFilters}
+                        sx={{ height: '56px' }}
+                      >
+                        Reset Filters
                       </Button>
                     </Grid>
                   </Grid>
@@ -1216,12 +1415,27 @@ const LeadMIS = () => {
                       <TableBody>
                         {preExpiryRenewals
                           .filter(policy => {
-                            if (renewalFilter === 'all') return true;
-                            if (renewalFilter === 'pending') return policy.status === 'Pending';
-                            if (renewalFilter === 'contacted') return policy.status === 'Contacted';
-                            if (renewalFilter === 'proposal') return policy.status === 'Proposal Sent';
-                            if (renewalFilter === 'renewed') return policy.status === 'Renewed';
-                            if (renewalFilter === 'negotiation') return policy.status === 'Negotiation';
+                            // Filter by status
+                            if (renewalFilter !== 'all') {
+                              const statusMap = {
+                                'pending': 'Pending',
+                                'contacted': 'Contacted',
+                                'proposal': 'Proposal Sent',
+                                'renewed': 'Renewed',
+                                'negotiation': 'Negotiation'
+                              };
+                              if (policy.status !== statusMap[renewalFilter]) {
+                                return false;
+                              }
+                            }
+                            // Filter by agent
+                            if (renewalAgentFilter !== 'all' && policy.agent !== renewalAgentFilter) {
+                              return false;
+                            }
+                            // Filter by policy type
+                            if (renewalPolicyTypeFilter !== 'all' && policy.policyType !== renewalPolicyTypeFilter) {
+                              return false;
+                            }
                             return true;
                           })
                           .map((policy) => (
@@ -1282,8 +1496,8 @@ const LeadMIS = () => {
                   </TableContainer>
                 </CardContent>
               </Card>
-            </Grid>
-          </Grid>
+            </Grid >
+          </Grid >
         )
       }
 
@@ -1382,7 +1596,32 @@ const LeadMIS = () => {
                         ))}
                       </TextField>
                     </Grid>
-                    <Grid item xs={12} sm={6} md={3}>
+                    <Grid item xs={12} sm={6} md={2}>
+                      <TextField
+                        fullWidth
+                        select
+                        label="Filter by Score"
+                        value={scoreFilter}
+                        onChange={(e) => setScoreFilter(e.target.value)}
+                      >
+                        <MenuItem value="all">All Scores</MenuItem>
+                        <MenuItem value="excellent">Excellent (≥90)</MenuItem>
+                        <MenuItem value="good">Good (80-89)</MenuItem>
+                        <MenuItem value="average">Average (70-79)</MenuItem>
+                        <MenuItem value="poor">Poor (&lt;70)</MenuItem>
+                      </TextField>
+                    </Grid>
+                    <Grid item xs={12} sm={6} md={2}>
+                      <Button
+                        variant="outlined"
+                        fullWidth
+                        onClick={handleResetCSCFilters}
+                        sx={{ height: '56px' }}
+                      >
+                        Reset Filters
+                      </Button>
+                    </Grid>
+                    <Grid item xs={12} sm={6} md={2}>
                       <Button
                         variant="contained"
                         startIcon={<DownloadIcon />}
@@ -1445,7 +1684,7 @@ const LeadMIS = () => {
                     CSC Conversion Rates
                   </Typography>
                   <ResponsiveContainer width="100%" height={300}>
-                    <BarChart data={cscProductivityData.slice(0, 5)}>
+                    <BarChart data={getFilteredCSCProductivityData().slice(0, 5)}>
                       <CartesianGrid strokeDasharray="3 3" />
                       <XAxis dataKey="cscName" angle={-45} textAnchor="end" height={80} />
                       <YAxis />
@@ -1483,7 +1722,7 @@ const LeadMIS = () => {
                         </TableRow>
                       </TableHead>
                       <TableBody>
-                        {cscProductivityData
+                        {getFilteredCSCProductivityData()
                           .filter(csc => {
                             if (cscFilter === 'all') return true;
                             if (cscFilter === 'excellent') return csc.performance === 'Excellent';
@@ -1493,6 +1732,14 @@ const LeadMIS = () => {
                             return true;
                           })
                           .filter(csc => regionFilter === 'all' || csc.region === regionFilter)
+                          .filter(csc => {
+                            if (scoreFilter === 'all') return true;
+                            if (scoreFilter === 'excellent') return csc.score >= 90;
+                            if (scoreFilter === 'good') return csc.score >= 80 && csc.score < 90;
+                            if (scoreFilter === 'average') return csc.score >= 70 && csc.score < 80;
+                            if (scoreFilter === 'poor') return csc.score < 70;
+                            return true;
+                          })
                           .map((csc) => (
                             <TableRow key={csc.cscName} hover>
                               <TableCell>
@@ -1581,7 +1828,7 @@ const LeadMIS = () => {
                 </CardContent>
               </Card>
             </Grid>
-          </Grid>
+          </Grid >
         )
       }
 
@@ -1698,12 +1945,12 @@ const LeadMIS = () => {
                     </Grid>
                     <Grid item xs={12} sm={6} md={3}>
                       <Button
-                        variant="contained"
-                        startIcon={<DownloadIcon />}
-                        onClick={handleExportExcel}
+                        variant="outlined"
                         fullWidth
+                        onClick={handleResetLostReasonFilters}
+                        sx={{ height: '56px' }}
                       >
-                        Export Report
+                        Reset Filters
                       </Button>
                     </Grid>
                   </Grid>
@@ -1792,7 +2039,7 @@ const LeadMIS = () => {
                         </TableRow>
                       </TableHead>
                       <TableBody>
-                        {lostLeadsDetails
+                        {getFilteredLostLeadsDetails()
                           .filter(lead => {
                             if (lostReasonFilter !== 'all' && lead.reason !== lostReasonFilter) return false;
                             if (productTypeFilter !== 'all' && lead.policyType !== productTypeFilter) return false;
@@ -1965,12 +2212,12 @@ const LeadMIS = () => {
                     </Grid>
                     <Grid item xs={12} sm={6} md={3}>
                       <Button
-                        variant="contained"
-                        startIcon={<DownloadIcon />}
-                        onClick={handleExportExcel}
+                        variant="outlined"
                         fullWidth
+                        onClick={handleResetConversionFilters}
+                        sx={{ height: '56px' }}
                       >
-                        Export Report
+                        Reset Filters
                       </Button>
                     </Grid>
                   </Grid>
@@ -1986,7 +2233,7 @@ const LeadMIS = () => {
                     Agent vs Conversion Rate
                   </Typography>
                   <ResponsiveContainer width="100%" height={300}>
-                    <BarChart data={conversionReportsData.slice(0, 6)}>
+                    <BarChart data={getFilteredConversionReportsData().slice(0, 6)}>
                       <CartesianGrid strokeDasharray="3 3" />
                       <XAxis dataKey="agent" angle={-45} textAnchor="end" height={80} />
                       <YAxis />
@@ -2044,7 +2291,7 @@ const LeadMIS = () => {
                         </TableRow>
                       </TableHead>
                       <TableBody>
-                        {conversionReportsData
+                        {getFilteredConversionReportsData()
                           .filter(agent => {
                             if (conversionAgentFilter !== 'all' && agent.agent !== conversionAgentFilter) return false;
                             if (conversionProductFilter !== 'all' && agent.productType !== conversionProductFilter) return false;
@@ -2321,12 +2568,12 @@ const LeadMIS = () => {
                     </Grid>
                     <Grid item xs={12} sm={6} md={3}>
                       <Button
-                        variant="contained"
-                        startIcon={<DownloadIcon />}
-                        onClick={handleExportExcel}
+                        variant="outlined"
                         fullWidth
+                        onClick={handleResetPivotFilters}
+                        sx={{ height: '56px' }}
                       >
-                        Export Report
+                        Reset Filters
                       </Button>
                     </Grid>
                   </Grid>
@@ -2785,6 +3032,20 @@ const LeadMIS = () => {
                       </TextField>
                     </Grid>
                     <Grid item xs={12} sm={6} md={3}>
+                      <TextField
+                        fullWidth
+                        select
+                        label="Filter by Conversion"
+                        value={dailyMISConversionFilter}
+                        onChange={(e) => setDailyMISConversionFilter(e.target.value)}
+                      >
+                        <MenuItem value="all">All Conversions</MenuItem>
+                        <MenuItem value="high">High (≥30%)</MenuItem>
+                        <MenuItem value="medium">Medium (20-29%)</MenuItem>
+                        <MenuItem value="low">Low (&lt;20%)</MenuItem>
+                      </TextField>
+                    </Grid>
+                    <Grid item xs={12} sm={6} md={3}>
                       <Button
                         variant="outlined"
                         fullWidth
@@ -2792,6 +3053,7 @@ const LeadMIS = () => {
                         onClick={() => {
                           setDailyMISSelectedInsurer('all');
                           setDailyMISSelectedDate('all');
+                          setDailyMISConversionFilter('all');
                         }}
                       >
                         Reset Filters
@@ -2891,7 +3153,11 @@ const LeadMIS = () => {
                         ].filter(row => {
                           const matchesInsurer = dailyMISSelectedInsurer === 'all' || row.insurer === dailyMISSelectedInsurer;
                           const matchesDate = dailyMISSelectedDate === 'all' || row.date === dailyMISSelectedDate;
-                          return matchesInsurer && matchesDate;
+                          let matchesConversion = true;
+                          if (dailyMISConversionFilter === 'high') matchesConversion = row.conversion >= 30;
+                          if (dailyMISConversionFilter === 'medium') matchesConversion = row.conversion >= 20 && row.conversion < 30;
+                          if (dailyMISConversionFilter === 'low') matchesConversion = row.conversion < 20;
+                          return matchesInsurer && matchesDate && matchesConversion;
                         }).map((row, index) => (
                           <TableRow key={index} hover>
                             <TableCell>{row.date}</TableCell>
@@ -3024,6 +3290,21 @@ const LeadMIS = () => {
                       </TextField>
                     </Grid>
                     <Grid item xs={12} sm={6} md={3}>
+                      <TextField
+                        fullWidth
+                        select
+                        label="Filter by Status"
+                        value={capacityStatusFilter}
+                        onChange={(e) => setCapacityStatusFilter(e.target.value)}
+                      >
+                        <MenuItem value="all">All Status</MenuItem>
+                        <MenuItem value="available">Available</MenuItem>
+                        <MenuItem value="at-capacity">At Capacity</MenuItem>
+                        <MenuItem value="overloaded">Overloaded</MenuItem>
+                        <MenuItem value="underutilized">Underutilized</MenuItem>
+                      </TextField>
+                    </Grid>
+                    <Grid item xs={12} sm={6} md={3}>
                       <Button
                         variant="outlined"
                         fullWidth
@@ -3031,6 +3312,7 @@ const LeadMIS = () => {
                         onClick={() => {
                           setCapacitySelectedMonth(new Date().toISOString().slice(0, 7));
                           setCapacitySelectedRegion('all');
+                          setCapacityStatusFilter('all');
                         }}
                       >
                         Reset Filters
@@ -3202,7 +3484,13 @@ const LeadMIS = () => {
                           .filter(team => {
                             const matchesMonth = team.month === capacitySelectedMonth;
                             const matchesRegion = capacitySelectedRegion === 'all' || team.region === capacitySelectedRegion;
-                            return matchesMonth && matchesRegion;
+                            const matchesStatus = capacityStatusFilter === 'all' || team.status === (
+                              capacityStatusFilter === 'available' ? 'available' :
+                              capacityStatusFilter === 'at-capacity' ? 'optimal' :
+                              capacityStatusFilter === 'overloaded' ? 'overloaded' :
+                              capacityStatusFilter === 'underutilized' ? 'underutilized' : team.status
+                            );
+                            return matchesMonth && matchesRegion && matchesStatus;
                           })
                           .map((team, index) => (
                             <TableRow key={index} hover>
@@ -3419,9 +3707,14 @@ const LeadMIS = () => {
                         onChange={(e) => setWorkloadSelectedTeam(e.target.value)}
                       >
                         <MenuItem value="all">All Teams</MenuItem>
-                        <MenuItem value="Team Alpha">Team Alpha</MenuItem>
-                        <MenuItem value="Team Beta">Team Beta</MenuItem>
-                        <MenuItem value="Team Gamma">Team Gamma</MenuItem>
+                        <MenuItem value="North Team A">North Team A</MenuItem>
+                        <MenuItem value="North Team B">North Team B</MenuItem>
+                        <MenuItem value="South Team A">South Team A</MenuItem>
+                        <MenuItem value="South Team B">South Team B</MenuItem>
+                        <MenuItem value="East Team A">East Team A</MenuItem>
+                        <MenuItem value="East Team B">East Team B</MenuItem>
+                        <MenuItem value="West Team A">West Team A</MenuItem>
+                        <MenuItem value="West Team B">West Team B</MenuItem>
                       </TextField>
                     </Grid>
                     <Grid item xs={12} sm={6} md={3}>
@@ -3534,14 +3827,14 @@ const LeadMIS = () => {
                       </TableHead>
                       <TableBody>
                         {[
-                          { name: 'Rajesh Kumar', month: 'thisMonth', region: 'North', team: 'Team Alpha', assigned: 65, completed: 58, utilization: 89.2, status: 'balanced' },
-                          { name: 'Priya Sharma', month: 'thisMonth', region: 'South', team: 'Team Beta', assigned: 72, completed: 75, utilization: 104.2, status: 'overloaded' },
-                          { name: 'Amit Singh', month: 'thisMonth', region: 'East', team: 'Team Gamma', assigned: 45, completed: 38, utilization: 84.4, status: 'underutilized' },
-                          { name: 'Sneha Patel', month: 'thisMonth', region: 'West', team: 'Team Alpha', assigned: 58, completed: 52, utilization: 89.7, status: 'balanced' },
-                          { name: 'Vikram Reddy', month: 'thisMonth', region: 'North', team: 'Team Beta', assigned: 68, completed: 71, utilization: 104.4, status: 'overloaded' },
-                          { name: 'Anita Desai', month: 'lastMonth', region: 'South', team: 'Team Gamma', assigned: 52, completed: 48, utilization: 92.3, status: 'balanced' },
-                          { name: 'Ravi Nair', month: 'lastMonth', region: 'East', team: 'Team Alpha', assigned: 38, completed: 32, utilization: 84.2, status: 'underutilized' },
-                          { name: 'Pooja Agarwal', month: 'lastMonth', region: 'West', team: 'Team Beta', assigned: 61, completed: 65, utilization: 106.6, status: 'overloaded' }
+                          { name: 'Rajesh Kumar', month: 'thisMonth', region: 'North', team: 'North Team A', assigned: 65, completed: 58, utilization: 89.2, status: 'balanced' },
+                          { name: 'Priya Sharma', month: 'thisMonth', region: 'South', team: 'South Team A', assigned: 72, completed: 75, utilization: 104.2, status: 'overloaded' },
+                          { name: 'Amit Singh', month: 'thisMonth', region: 'East', team: 'East Team A', assigned: 45, completed: 38, utilization: 84.4, status: 'underutilized' },
+                          { name: 'Sneha Patel', month: 'thisMonth', region: 'West', team: 'West Team A', assigned: 58, completed: 52, utilization: 89.7, status: 'balanced' },
+                          { name: 'Vikram Reddy', month: 'thisMonth', region: 'North', team: 'North Team B', assigned: 68, completed: 71, utilization: 104.4, status: 'overloaded' },
+                          { name: 'Anita Desai', month: 'lastMonth', region: 'South', team: 'South Team B', assigned: 52, completed: 48, utilization: 92.3, status: 'balanced' },
+                          { name: 'Ravi Nair', month: 'lastMonth', region: 'East', team: 'East Team B', assigned: 38, completed: 32, utilization: 84.2, status: 'underutilized' },
+                          { name: 'Pooja Agarwal', month: 'lastMonth', region: 'West', team: 'West Team B', assigned: 61, completed: 65, utilization: 106.6, status: 'overloaded' }
                         ]
                           .filter(row => {
                             const matchesDateRange = workloadSelectedDateRange === 'last3Months' || row.month === workloadSelectedDateRange;
@@ -3708,6 +4001,21 @@ const LeadMIS = () => {
                         <MenuItem value="Ahmedabad">Ahmedabad</MenuItem>
                       </TextField>
                     </Grid>
+                    <Grid item xs={12} sm={6} md={3}>
+                      <TextField
+                        fullWidth
+                        select
+                        label="Filter by Performance"
+                        value={cscPerformanceFilter}
+                        onChange={(e) => setCscPerformanceFilter(e.target.value)}
+                      >
+                        <MenuItem value="all">All Performance</MenuItem>
+                        <MenuItem value="excellent">Excellent</MenuItem>
+                        <MenuItem value="good">Good</MenuItem>
+                        <MenuItem value="average">Average</MenuItem>
+                        <MenuItem value="needs-improvement">Needs Improvement</MenuItem>
+                      </TextField>
+                    </Grid>
                     <Grid item xs={12} sm={6} md={2}>
                       <Button
                         variant="outlined"
@@ -3716,6 +4024,7 @@ const LeadMIS = () => {
                         onClick={() => {
                           setCscSelectedMonth(new Date().toISOString().slice(0, 7));
                           setCscSelectedRegion('all');
+                          setCscPerformanceFilter('all');
                         }}
                       >
                         Reset Filters
@@ -3807,7 +4116,13 @@ const LeadMIS = () => {
                           .filter((record) => {
                             const matchesMonth = record.month === cscSelectedMonth;
                             const matchesRegion = cscSelectedRegion === 'all' || record.region === cscSelectedRegion;
-                            return matchesMonth && matchesRegion;
+                            const matchesPerformance = cscPerformanceFilter === 'all' || record.performance === (
+                              cscPerformanceFilter === 'excellent' ? 'Excellent' :
+                                cscPerformanceFilter === 'good' ? 'Good' :
+                                  cscPerformanceFilter === 'average' ? 'Average' :
+                                    cscPerformanceFilter === 'needs-improvement' ? 'Needs Improvement' : record.performance
+                            );
+                            return matchesMonth && matchesRegion && matchesPerformance;
                           })
                           .map((record, index) => (
                             <TableRow key={index} hover>

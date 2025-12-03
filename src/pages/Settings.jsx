@@ -131,7 +131,7 @@ const Settings = () => {
   const theme = useTheme();
   // Provide a safe fallback so we don't read properties off null during initial render
   const safeSettings = settings || {};
-  
+
   // DNC Settings State
   const [dncSettings, setDncSettings] = useState({
     enabled: true,
@@ -326,7 +326,7 @@ const Settings = () => {
     },
     {
       id: 2,
-              name: 'Arjun Sharma',
+      name: 'Arjun Sharma',
       email: 'john.smith@company.com',
       role: 'admin',
       status: 'active',
@@ -417,24 +417,24 @@ const Settings = () => {
       status: 'active',
       lastLogin: '2024-07-14T12:30:00Z',
       portalLanguage: 'en', // English preference
-              permissions: [
-          // Core Pages (excluding Renewals module - no cases, closed-cases, policy-timeline, logs)
-          'dashboard', 'upload', 'claims',
-          'policy-servicing', 'new-business', 'medical-management',
-          // Email Pages
-          'emails', 'email-dashboard', 'email-analytics', 'bulk-email',
-          // Marketing Pages
-          'campaigns', 'templates',
-          // Survey Pages
-          'feedback', 'survey-designer',
-          // WhatsApp Pages
-          'whatsapp-flow',
-          // Admin Pages
-          'settings', 'billing', 'users',
-          // Personal Pages
-          'profile'
-          // Note: Excludes Renewals module (cases, closed-cases, policy-timeline, logs related to renewals)
-        ],
+      permissions: [
+        // Core Pages (excluding Renewals module - no cases, closed-cases, policy-timeline, logs)
+        'dashboard', 'upload', 'claims',
+        'policy-servicing', 'new-business', 'medical-management',
+        // Email Pages
+        'emails', 'email-dashboard', 'email-analytics', 'bulk-email',
+        // Marketing Pages
+        'campaigns', 'templates',
+        // Survey Pages
+        'feedback', 'survey-designer',
+        // WhatsApp Pages
+        'whatsapp-flow',
+        // Admin Pages
+        'settings', 'billing', 'users',
+        // Personal Pages
+        'profile'
+        // Note: Excludes Renewals module (cases, closed-cases, policy-timeline, logs related to renewals)
+      ],
       createdAt: '2024-05-20T11:15:00Z'
     }
   ]);
@@ -576,33 +576,33 @@ const Settings = () => {
     { id: 'policy-servicing', name: 'Policy Servicing', description: 'Manage policy servicing and maintenance', category: 'Core Pages', route: '/policy-servicing' },
     { id: 'new-business', name: 'New Business', description: 'Handle new business applications and processing', category: 'Core Pages', route: '/new-business' },
     { id: 'medical-management', name: 'Medical Management', description: 'Manage medical underwriting and assessments', category: 'Core Pages', route: '/medical-management' },
-    
+
     // Email Management Pages
     { id: 'emails', name: 'Email Inbox', description: 'Access email inbox and management', category: 'Email Pages', route: '/emails' },
     { id: 'email-dashboard', name: 'Email Dashboard', description: 'View email analytics and dashboard', category: 'Email Pages', route: '/emails/dashboard' },
     { id: 'email-analytics', name: 'Email Analytics', description: 'View detailed email analytics and reports', category: 'Email Pages', route: '/emails/analytics' },
     { id: 'bulk-email', name: 'Bulk Email', description: 'Send bulk emails and campaigns', category: 'Email Pages', route: '/emails/bulk' },
-    
+
     // Campaign & Marketing Pages
     { id: 'campaigns', name: 'Campaigns', description: 'Manage marketing campaigns', category: 'Marketing Pages', route: '/campaigns' },
     { id: 'templates', name: 'Template Manager', description: 'Manage email and document templates', category: 'Marketing Pages', route: '/templates' },
-    
+
     // Feedback & Survey Pages
     { id: 'feedback', name: 'Feedback & Surveys', description: 'Manage customer feedback and surveys', category: 'Survey Pages', route: '/feedback' },
     { id: 'survey-designer', name: 'Survey Designer', description: 'Create and design custom surveys', category: 'Survey Pages', route: '/survey-designer' },
-    
+
     // WhatsApp Pages
     { id: 'whatsapp-flow', name: 'WhatsApp Flow', description: 'Manage automated WhatsApp messaging flows', category: 'Communication Pages', route: '/whatsapp-flow' },
-    
+
     // Renewal Communication Pages
-          { id: 'renewal-email-manager', name: 'Email Manager', description: 'Manage email communications for policy renewals', category: 'Renewal Pages', route: '/renewals/email-manager' },
-          { id: 'renewal-whatsapp-manager', name: 'WhatsApp Manager', description: 'Manage WhatsApp communications for policy renewals', category: 'Renewal Pages', route: '/renewals/whatsapp-manager' },
-    
+    { id: 'renewal-email-manager', name: 'Email Manager', description: 'Manage email communications for policy renewals', category: 'Renewal Pages', route: '/renewals/email-manager' },
+    { id: 'renewal-whatsapp-manager', name: 'WhatsApp Manager', description: 'Manage WhatsApp communications for policy renewals', category: 'Renewal Pages', route: '/renewals/whatsapp-manager' },
+
     // Administration Pages
     { id: 'settings', name: 'Settings', description: 'Access system settings and configuration', category: 'Admin Pages', route: '/settings' },
     { id: 'billing', name: 'Billing', description: 'View billing information and invoices', category: 'Admin Pages', route: '/billing' },
     { id: 'users', name: 'User Management', description: 'Manage users and permissions', category: 'Admin Pages', route: '/users' },
-    
+
     // Personal Pages
     { id: 'profile', name: 'Profile', description: 'Manage personal profile and account settings', category: 'Personal Pages', route: '/profile' }
   ]);
@@ -612,7 +612,7 @@ const Settings = () => {
   const [roleDialog, setRoleDialog] = useState({ open: false, role: null, mode: 'add' });
   const [permissionDialog, setPermissionDialog] = useState({ open: false, user: null });
   const [resetRoleDialog, setResetRoleDialog] = useState({ open: false, role: null });
-  
+
   const [newUser, setNewUser] = useState({
     name: '',
     email: '',
@@ -722,7 +722,7 @@ const Settings = () => {
     setTimeout(() => {
       setLoaded(true);
     }, 100);
-    
+
     // Set initial tab based on URL parameter
     const tabParam = searchParams.get('tab');
     if (tabParam) {
@@ -790,7 +790,7 @@ const Settings = () => {
       setAiSettings(prev => {
         const newSettings = { ...prev };
         let current = newSettings;
-        
+
         // Navigate to the parent object
         for (let i = 0; i < keys.length - 1; i++) {
           if (!current[keys[i]]) {
@@ -799,7 +799,7 @@ const Settings = () => {
           current[keys[i]] = { ...current[keys[i]] };
           current = current[keys[i]];
         }
-        
+
         // Set the final value
         current[keys[keys.length - 1]] = value;
         return newSettings;
@@ -897,15 +897,15 @@ const Settings = () => {
 
   const handleSaveAccount = () => {
     if (accountDialog.mode === 'add') {
-      const newAccountWithId = { 
-        ...newAccount, 
+      const newAccountWithId = {
+        ...newAccount,
         id: Math.max(...emailAccounts.map(a => a.id), 0) + 1,
         status: 'connected',
         lastSync: new Date().toISOString()
       };
       setEmailAccounts(prev => [...prev, newAccountWithId]);
     } else {
-      setEmailAccounts(prev => prev.map(account => 
+      setEmailAccounts(prev => prev.map(account =>
         account.id === accountDialog.account.id ? { ...newAccount } : account
       ));
     }
@@ -913,14 +913,14 @@ const Settings = () => {
   };
 
   const handleToggleAccountSync = (accountId) => {
-    setEmailAccounts(prev => prev.map(account => 
+    setEmailAccounts(prev => prev.map(account =>
       account.id === accountId ? { ...account, autoSync: !account.autoSync } : account
     ));
   };
 
   const handleTestConnection = (accountId) => {
     // In a real app, this would test the connection
-    setEmailAccounts(prev => prev.map(account => 
+    setEmailAccounts(prev => prev.map(account =>
       account.id === accountId ? { ...account, status: 'connected', lastSync: new Date().toISOString() } : account
     ));
     setSuccessMessage('Connection test successful!');
@@ -966,7 +966,7 @@ const Settings = () => {
 
   const handleEditUser = (user) => {
     setUserDialog({ open: true, user, mode: 'edit' });
-    setNewUser({ 
+    setNewUser({
       ...user,
       phone: user.phone || '',
       department: user.department || '',
@@ -985,8 +985,8 @@ const Settings = () => {
 
   const handleSaveUser = () => {
     if (userDialog.mode === 'add') {
-      const newUserWithId = { 
-        ...newUser, 
+      const newUserWithId = {
+        ...newUser,
         id: Math.max(...users.map(u => u.id), 0) + 1,
         createdAt: new Date().toISOString(),
         lastLogin: null
@@ -994,7 +994,7 @@ const Settings = () => {
       setUsers(prev => [...prev, newUserWithId]);
       setSuccessMessage('User created successfully!');
     } else {
-      setUsers(prev => prev.map(user => 
+      setUsers(prev => prev.map(user =>
         user.id === userDialog.user.id ? { ...newUser } : user
       ));
       setSuccessMessage('User updated successfully!');
@@ -1004,7 +1004,7 @@ const Settings = () => {
   };
 
   const handleToggleUserStatus = (userId) => {
-    setUsers(prev => prev.map(user => 
+    setUsers(prev => prev.map(user =>
       user.id === userId ? { ...user, status: user.status === 'active' ? 'inactive' : 'active' } : user
     ));
   };
@@ -1043,8 +1043,8 @@ const Settings = () => {
 
   const handleSaveRole = () => {
     if (roleDialog.mode === 'add') {
-      const newRoleWithId = { 
-        ...newRole, 
+      const newRoleWithId = {
+        ...newRole,
         id: Math.max(...roles.map(r => r.id), 0) + 1,
         isSystem: false,
         userCount: 0
@@ -1059,16 +1059,16 @@ const Settings = () => {
         isSystem: roleDialog.role.isSystem,
         userCount: roleDialog.role.userCount
       };
-      
-      setRoles(prev => prev.map(role => 
+
+      setRoles(prev => prev.map(role =>
         role.id === roleDialog.role.id ? updatedRole : role
       ));
-      
+
       // Update all users with this role to have the new permissions
-      setUsers(prev => prev.map(user => 
+      setUsers(prev => prev.map(user =>
         user.role === newRole.name ? { ...user, permissions: newRole.permissions } : user
       ));
-      
+
       setSuccessMessage('Role updated successfully!');
     }
     setRoleDialog({ open: false, role: null, mode: 'add' });
@@ -1083,17 +1083,17 @@ const Settings = () => {
     const role = resetRoleDialog.role;
     if (role && defaultRolePermissions[role.name]) {
       const defaultPermissions = defaultRolePermissions[role.name];
-      
+
       // Update the role with default permissions
-      setRoles(prev => prev.map(r => 
+      setRoles(prev => prev.map(r =>
         r.id === role.id ? { ...r, permissions: defaultPermissions } : r
       ));
-      
+
       // Update all users with this role to have the default permissions
-      setUsers(prev => prev.map(user => 
+      setUsers(prev => prev.map(user =>
         user.role === role.name ? { ...user, permissions: defaultPermissions } : user
       ));
-      
+
       setResetRoleDialog({ open: false, role: null });
       setSuccessMessage(`${role.displayName} role has been reset to default permissions.`);
       setTimeout(() => setSuccessMessage(''), 3000);
@@ -1106,7 +1106,7 @@ const Settings = () => {
   };
 
   const handleUpdateUserPermissions = (userId, permissions) => {
-    setUsers(prev => prev.map(user => 
+    setUsers(prev => prev.map(user =>
       user.id === userId ? { ...user, permissions } : user
     ));
     setPermissionDialog({ open: false, user: null });
@@ -1116,7 +1116,7 @@ const Settings = () => {
 
   const handleRoleChange = (userId, newRole) => {
     const roleData = roles.find(r => r.name === newRole);
-    setUsers(prev => prev.map(user => 
+    setUsers(prev => prev.map(user =>
       user.id === userId ? { ...user, role: newRole, permissions: roleData?.permissions || [] } : user
     ));
     setSuccessMessage('User role updated successfully!');
@@ -1125,8 +1125,8 @@ const Settings = () => {
 
   const getFilteredUsers = () => {
     return users.filter(user => {
-    const matchesSearch = user.name.toLowerCase().includes(userSearchTerm.toLowerCase()) ||
-             (user.email || '').toLowerCase().includes(userSearchTerm.toLowerCase());
+      const matchesSearch = user.name.toLowerCase().includes(userSearchTerm.toLowerCase()) ||
+        (user.email || '').toLowerCase().includes(userSearchTerm.toLowerCase());
       const matchesRole = roleFilter === 'all' || user.role === roleFilter;
       const matchesStatus = statusFilter === 'all' || user.status === statusFilter;
       return matchesSearch && matchesRole && matchesStatus;
@@ -1172,7 +1172,7 @@ const Settings = () => {
               <ListItemIcon>
                 <DarkModeIcon color="primary" />
               </ListItemIcon>
-              <ListItemText 
+              <ListItemText
                 primary={<Typography fontWeight="500">Dark Mode</Typography>}
                 secondary="Toggle between light and dark theme"
               />
@@ -1322,8 +1322,8 @@ const Settings = () => {
               </ListItemIcon>
               <ListItemText
                 primary={<Typography fontWeight="500">Enable MFA</Typography>}
-                secondary={safeSettings.mfaEnabled 
-                  ? "Enabled - OTP required at login" 
+                secondary={safeSettings.mfaEnabled
+                  ? "Enabled - OTP required at login"
                   : "Disabled - Enable for additional security"}
               />
               <ListItemSecondaryAction>
@@ -1400,23 +1400,23 @@ const Settings = () => {
           <Divider sx={{ mb: 2 }} />
           <Box sx={{ mb: 2 }}>
             <Typography variant="body2" color="text.secondary" gutterBottom>
-              Default Renewal Period (Days)
+              Default Renewal Period: <strong>{typeof settings.renewalPeriod === 'number' ? settings.renewalPeriod : 30} Days</strong>
             </Typography>
-            <Slider
-              value={settings.renewalPeriod || 30}
-              onChange={(e, value) => handleSettingChange('renewalPeriod', value)}
-              min={15}
-              max={90}
-              step={5}
-              marks={[
-                { value: 15, label: '15' },
-                { value: 30, label: '30' },
-                { value: 60, label: '60' },
-                { value: 90, label: '90' }
-              ]}
-              valueLabelDisplay="auto"
-              sx={{ mt: 2 }}
-            />
+            <Box sx={{ px: 1, mt: 2 }}>
+              <Slider
+                value={typeof settings.renewalPeriod === 'number' ? settings.renewalPeriod : 30}
+                onChange={(e, value) => handleSettingChange('renewalPeriod', value)}
+                min={15}
+                max={90}
+                step={5}
+                marks={[
+                  { value: 15, label: '15' },
+                  { value: 30, label: '30' },
+                  { value: 60, label: '60' },
+                  { value: 90, label: '90' }
+                ]}
+              />
+            </Box>
           </Box>
           <FormControlLabel
             control={
@@ -1619,7 +1619,7 @@ const Settings = () => {
                 <Typography variant="subtitle1" fontWeight="600" gutterBottom>
                   WhatsApp Configuration
                 </Typography>
-                
+
                 <FormControl fullWidth sx={{ mb: 2 }}>
                   <InputLabel>WhatsApp Provider</InputLabel>
                   <Select
@@ -1688,7 +1688,7 @@ const Settings = () => {
                 <Typography variant="subtitle1" fontWeight="600" gutterBottom>
                   SMS Configuration
                 </Typography>
-                
+
                 <FormControl fullWidth sx={{ mb: 2 }}>
                   <InputLabel>SMS Provider</InputLabel>
                   <Select
@@ -1757,7 +1757,7 @@ const Settings = () => {
                 <Typography variant="subtitle1" fontWeight="600" gutterBottom>
                   Default Message Templates
                 </Typography>
-                
+
                 <TextField
                   fullWidth
                   label="Policy Renewal Reminder"
@@ -1796,7 +1796,7 @@ const Settings = () => {
                 <Typography variant="subtitle1" fontWeight="600" gutterBottom>
                   Message Settings
                 </Typography>
-                
+
                 <Grid container spacing={2}>
                   <Grid item xs={12} md={6}>
                     <TextField
@@ -1858,7 +1858,7 @@ const Settings = () => {
           <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
             Test your calling and messaging integrations to ensure they're working correctly
           </Typography>
-          
+
           <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
             <Button
               variant="outlined"
@@ -1868,7 +1868,7 @@ const Settings = () => {
             >
               Test Calling Integration
             </Button>
-            
+
             <Button
               variant="outlined"
               startIcon={<WhatsAppIcon />}
@@ -1877,7 +1877,7 @@ const Settings = () => {
             >
               Test WhatsApp Integration
             </Button>
-            
+
             <Button
               variant="outlined"
               startIcon={<SmsIcon />}
@@ -1914,8 +1914,8 @@ const Settings = () => {
             <Divider sx={{ mb: 3 }} />
 
             {/* IMAP Connection Status */}
-            <Box sx={{ 
-              p: 2, 
+            <Box sx={{
+              p: 2,
               bgcolor: alpha(emailSettings.imapConnected ? theme.palette.success.main : theme.palette.error.main, 0.1),
               borderRadius: 2,
               display: 'flex',
@@ -1959,7 +1959,7 @@ const Settings = () => {
                 }
                 label="Enable Webhook Notifications"
               />
-              
+
               {emailSettings.webhookEnabled && (
                 <TextField
                   fullWidth
@@ -1986,7 +1986,7 @@ const Settings = () => {
             <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
               Configure mail merge templates for automated document generation in bulk emails
             </Typography>
-            
+
             <Grid container spacing={3}>
               <Grid item xs={12} md={6}>
                 <List disablePadding>
@@ -2004,7 +2004,7 @@ const Settings = () => {
                       />
                     </ListItemSecondaryAction>
                   </ListItem>
-                  
+
                   <ListItem sx={{ borderRadius: 2, mb: 1, px: 0 }}>
                     <ListItemText
                       primary={<Typography fontWeight="500">Auto-generate Documents</Typography>}
@@ -2020,7 +2020,7 @@ const Settings = () => {
                       />
                     </ListItemSecondaryAction>
                   </ListItem>
-                  
+
                   <ListItem sx={{ borderRadius: 2, mb: 1, px: 0 }}>
                     <ListItemText
                       primary={<Typography fontWeight="500">Attach to Emails</Typography>}
@@ -2038,21 +2038,21 @@ const Settings = () => {
                   </ListItem>
                 </List>
               </Grid>
-              
+
               <Grid item xs={12} md={6}>
                 <Typography variant="subtitle2" gutterBottom>
                   Available Merge Fields
                 </Typography>
                 <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mb: 3 }}>
                   {[
-                    'customerName', 'policyNumber', 'policyType', 'effectiveDate', 
+                    'customerName', 'policyNumber', 'policyType', 'effectiveDate',
                     'expiryDate', 'premiumAmount', 'agentName', 'companyName',
                     'renewalDate', 'currentPremium', 'paymentAmount', 'dueDate'
                   ].map((field) => (
                     <Chip key={field} label={`{{${field}}}`} size="small" variant="outlined" />
                   ))}
                 </Box>
-                
+
                 <TextField
                   fullWidth
                   label="Document Storage Path"
@@ -2062,7 +2062,7 @@ const Settings = () => {
                   helperText="Path where mail merge templates are stored"
                   disabled={!emailSettings.mailMergeEnabled}
                 />
-                
+
                 <TextField
                   fullWidth
                   label="Output Directory"
@@ -2100,7 +2100,7 @@ const Settings = () => {
               {emailAccounts.map((account) => (
                 <ListItem
                   key={account.id}
-                  sx={{ 
+                  sx={{
                     border: `1px solid ${theme.palette.divider}`,
                     borderRadius: 2,
                     mb: 2,
@@ -2136,7 +2136,7 @@ const Settings = () => {
                         {account?.email}
                       </Typography>
                       <Typography variant="caption" color="text.secondary">
-                        Provider: {account.provider.charAt(0).toUpperCase() + account.provider.slice(1)} • 
+                        Provider: {account.provider.charAt(0).toUpperCase() + account.provider.slice(1)} •
                         Last sync: {new Date(account.lastSync).toLocaleString()}
                       </Typography>
                     </Box>
@@ -2150,13 +2150,13 @@ const Settings = () => {
                       >
                         Test
                       </Button>
-                      <IconButton 
+                      <IconButton
                         size="small"
                         onClick={() => handleEditAccount(account)}
                       >
                         <EditIcon fontSize="small" />
                       </IconButton>
-                      <IconButton 
+                      <IconButton
                         size="small"
                         onClick={() => handleDeleteAccount(account.id)}
                         color="error"
@@ -2165,9 +2165,9 @@ const Settings = () => {
                       </IconButton>
                     </Box>
                   </Box>
-                  
+
                   <Divider sx={{ mb: 2 }} />
-                  
+
                   <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <Box sx={{ display: 'flex', gap: 3 }}>
                       <Typography variant="caption" color="text.secondary">
@@ -2400,7 +2400,7 @@ const Settings = () => {
               {rules.map((rule) => (
                 <ListItem
                   key={rule.id}
-                  sx={{ 
+                  sx={{
                     border: `1px solid ${theme.palette.divider}`,
                     borderRadius: 2,
                     mb: 1,
@@ -2420,12 +2420,12 @@ const Settings = () => {
                     }
                     secondary={
                       <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
-                        <Chip 
+                        <Chip
                           label={`Category: ${rule.category}`}
                           color={getCategoryColor(rule.category)}
                           size="small"
                         />
-                        <Chip 
+                        <Chip
                           label={`Priority: ${rule.priority}`}
                           color={getPriorityColor(rule.priority)}
                           size="small"
@@ -2441,13 +2441,13 @@ const Settings = () => {
                         onChange={() => handleToggleRule(rule.id)}
                         size="small"
                       />
-                      <IconButton 
+                      <IconButton
                         size="small"
                         onClick={() => handleEditRule(rule)}
                       >
                         <EditIcon fontSize="small" />
                       </IconButton>
-                      <IconButton 
+                      <IconButton
                         size="small"
                         onClick={() => handleDeleteRule(rule.id)}
                         color="error"
@@ -2463,8 +2463,8 @@ const Settings = () => {
         </Card>
 
         {/* Rule Dialog */}
-        <Dialog 
-          open={ruleDialog.open} 
+        <Dialog
+          open={ruleDialog.open}
           onClose={() => setRuleDialog({ open: false, rule: null, mode: 'add' })}
           maxWidth="sm"
           fullWidth
@@ -2485,7 +2485,7 @@ const Settings = () => {
                 InputProps={{ sx: { borderRadius: 2 } }}
                 helperText="Enter keyword to match in email subject or content"
               />
-              
+
               <FormControl fullWidth>
                 <InputLabel>Category</InputLabel>
                 <Select
@@ -2528,13 +2528,13 @@ const Settings = () => {
             </Box>
           </DialogContent>
           <DialogActions sx={{ p: 2.5 }}>
-            <Button 
+            <Button
               onClick={() => setRuleDialog({ open: false, rule: null, mode: 'add' })}
               sx={{ borderRadius: 2 }}
             >
               Cancel
             </Button>
-            <Button 
+            <Button
               variant="contained"
               onClick={handleSaveRule}
               disabled={!newRule.keyword.trim()}
@@ -2546,8 +2546,8 @@ const Settings = () => {
         </Dialog>
 
         {/* Account Dialog */}
-        <Dialog 
-          open={accountDialog.open} 
+        <Dialog
+          open={accountDialog.open}
           onClose={() => setAccountDialog({ open: false, account: null, mode: 'add' })}
           maxWidth="md"
           fullWidth
@@ -2574,7 +2574,7 @@ const Settings = () => {
                     InputProps={{ sx: { borderRadius: 2 } }}
                     helperText="A friendly name for this email account"
                   />
-                  
+
                   <TextField
                     fullWidth
                     label="Email Address"
@@ -2662,7 +2662,7 @@ const Settings = () => {
                     }
                     label="Use SSL/TLS encryption"
                   />
-                  
+
                   <FormControlLabel
                     control={
                       <Switch
@@ -2700,13 +2700,13 @@ const Settings = () => {
             </Box>
           </DialogContent>
           <DialogActions sx={{ p: 2.5 }}>
-            <Button 
+            <Button
               onClick={() => setAccountDialog({ open: false, account: null, mode: 'add' })}
               sx={{ borderRadius: 2 }}
             >
               Cancel
             </Button>
-            <Button 
+            <Button
               variant="contained"
               onClick={handleSaveAccount}
               disabled={!newAccount.name?.trim() || !newAccount?.email?.trim()}
@@ -2732,25 +2732,25 @@ const Settings = () => {
       smsProvider: 'msg91',
       smsApiKey: '',
       smsSenderId: '',
-      
+
       // Compliance Settings
       consentRequired: true,
       dndCompliance: true,
       optInRequired: true,
       dataRetentionDays: 365,
-      
+
       // Throttling & Limits
       emailRateLimit: 1000,
       smsRateLimit: 100,
       whatsappRateLimit: 80,
       batchSize: 50,
       retryAttempts: 3,
-      
+
       // Template Settings
       templateApprovalRequired: false,
       dltTemplateRequired: true,
       autoSaveTemplates: true,
-      
+
       // Analytics & Reporting
       trackingEnabled: true,
       webhookUrl: '',
@@ -2760,6 +2760,108 @@ const Settings = () => {
 
     const handleCampaignSettingChange = (key, value) => {
       setCampaignSettings(prev => ({ ...prev, [key]: value }));
+    };
+
+    // Audience Management State
+    const [audiences, setAudiences] = useState([
+      {
+        id: 1,
+        name: 'High Value Customers',
+        description: 'Customers with premium > ₹50,000',
+        criteria: { premium: { min: 50000 }, policyType: 'all' },
+        count: 1250,
+        createdAt: '2024-01-15',
+        lastUpdated: '2024-01-20'
+      },
+      {
+        id: 2,
+        name: 'Renewal Due - 30 Days',
+        description: 'Policies expiring in next 30 days',
+        criteria: { expiryDays: { max: 30 }, status: 'active' },
+        count: 450,
+        createdAt: '2024-01-10',
+        lastUpdated: '2024-01-25'
+      },
+      {
+        id: 3,
+        name: 'Motor Insurance Holders',
+        description: 'All motor insurance policy holders',
+        criteria: { policyType: 'motor' },
+        count: 3200,
+        createdAt: '2024-01-05',
+        lastUpdated: '2024-01-22'
+      }
+    ]);
+
+    const [audienceDialog, setAudienceDialog] = useState({
+      open: false,
+      mode: 'create', // 'create', 'edit', 'view'
+      audience: null
+    });
+
+    const [newAudience, setNewAudience] = useState({
+      name: '',
+      description: '',
+      criteria: {
+        policyType: 'all',
+        premium: { min: 0, max: 1000000 },
+        expiryDays: { min: 0, max: 365 },
+        status: 'all'
+      }
+    });
+
+    // Audience Handlers
+    const handleCreateAudience = () => {
+      setAudienceDialog({ open: true, mode: 'create', audience: null });
+      setNewAudience({
+        name: '',
+        description: '',
+        criteria: {
+          policyType: 'all',
+          premium: { min: 0, max: 1000000 },
+          expiryDays: { min: 0, max: 365 },
+          status: 'all'
+        }
+      });
+    };
+
+    const handleViewAudience = (audience) => {
+      setAudienceDialog({ open: true, mode: 'view', audience });
+      setNewAudience({ ...audience });
+    };
+
+    const handleEditAudience = (audience) => {
+      setAudienceDialog({ open: true, mode: 'edit', audience });
+      setNewAudience({ ...audience });
+    };
+
+    const handleDeleteAudience = (audienceId) => {
+      setAudiences(prev => prev.filter(a => a.id !== audienceId));
+      setSuccessMessage('Audience deleted successfully!');
+      setTimeout(() => setSuccessMessage(''), 3000);
+    };
+
+    const handleSaveAudience = () => {
+      if (audienceDialog.mode === 'create') {
+        const newAud = {
+          ...newAudience,
+          id: Math.max(...audiences.map(a => a.id), 0) + 1,
+          count: Math.floor(Math.random() * 5000) + 100,
+          createdAt: new Date().toISOString().split('T')[0],
+          lastUpdated: new Date().toISOString().split('T')[0]
+        };
+        setAudiences(prev => [...prev, newAud]);
+        setSuccessMessage('Audience created successfully!');
+      } else if (audienceDialog.mode === 'edit') {
+        setAudiences(prev => prev.map(a =>
+          a.id === audienceDialog.audience.id
+            ? { ...newAudience, id: a.id, createdAt: a.createdAt, lastUpdated: new Date().toISOString().split('T')[0] }
+            : a
+        ));
+        setSuccessMessage('Audience updated successfully!');
+      }
+      setAudienceDialog({ open: false, mode: 'create', audience: null });
+      setTimeout(() => setSuccessMessage(''), 3000);
     };
 
     return (
@@ -2778,7 +2880,7 @@ const Settings = () => {
               <EmailIcon color="primary" />
               Channel Integrations
             </Typography>
-            
+
             <Grid container spacing={3}>
               {/* Email Provider */}
               <Grid item xs={12} md={6}>
@@ -2877,7 +2979,7 @@ const Settings = () => {
               <ShieldIcon color="primary" />
               Compliance & Consent
             </Typography>
-            
+
             <List>
               <ListItem>
                 <ListItemIcon>
@@ -2894,7 +2996,7 @@ const Settings = () => {
                   />
                 </ListItemSecondaryAction>
               </ListItem>
-              
+
               <ListItem>
                 <ListItemIcon>
                   <ShieldIcon color="warning" />
@@ -2910,7 +3012,7 @@ const Settings = () => {
                   />
                 </ListItemSecondaryAction>
               </ListItem>
-              
+
               <ListItem>
                 <ListItemIcon>
                   <PersonIcon color="info" />
@@ -2927,7 +3029,7 @@ const Settings = () => {
                 </ListItemSecondaryAction>
               </ListItem>
             </List>
-            
+
             <Grid container spacing={2} sx={{ mt: 2 }}>
               <Grid item xs={12} sm={6}>
                 <TextField
@@ -2951,7 +3053,7 @@ const Settings = () => {
               <SpeedIcon color="primary" />
               Rate Limiting & Performance
             </Typography>
-            
+
             <Grid container spacing={3}>
               <Grid item xs={12} sm={6} md={4}>
                 <TextField
@@ -3019,7 +3121,7 @@ const Settings = () => {
               <DescriptionIcon color="primary" />
               Template & Content Management
             </Typography>
-            
+
             <List>
               <ListItem>
                 <ListItemIcon>
@@ -3036,7 +3138,7 @@ const Settings = () => {
                   />
                 </ListItemSecondaryAction>
               </ListItem>
-              
+
               <ListItem>
                 <ListItemIcon>
                   <VerifiedIcon color="success" />
@@ -3052,7 +3154,7 @@ const Settings = () => {
                   />
                 </ListItemSecondaryAction>
               </ListItem>
-              
+
               <ListItem>
                 <ListItemIcon>
                   <SaveIcon color="info" />
@@ -3079,7 +3181,7 @@ const Settings = () => {
               <AnalyticsIcon color="primary" />
               Analytics & Reporting
             </Typography>
-            
+
             <List>
               <ListItem>
                 <ListItemIcon>
@@ -3097,7 +3199,7 @@ const Settings = () => {
                 </ListItemSecondaryAction>
               </ListItem>
             </List>
-            
+
             <Grid container spacing={3} sx={{ mt: 1 }}>
               <Grid item xs={12} sm={6}>
                 <TextField
@@ -3141,6 +3243,122 @@ const Settings = () => {
           </CardContent>
         </Card>
 
+        {/* Audience Management */}
+        <Card sx={{ mb: 3, borderRadius: 3 }}>
+          <CardContent sx={{ p: 3 }}>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+              <Box>
+                <Typography variant="h6" fontWeight="600" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <GroupIcon color="primary" />
+                  Audience Management
+                </Typography>
+                <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+                  Create and manage target audiences for your campaigns
+                </Typography>
+              </Box>
+              <Button
+                variant="contained"
+                startIcon={<AddIcon />}
+                onClick={handleCreateAudience}
+                sx={{ borderRadius: 2 }}
+              >
+                Create New Audience
+              </Button>
+            </Box>
+
+            <TableContainer>
+              <Table>
+                <TableHead>
+                  <TableRow>
+                    <TableCell><strong>Audience Name</strong></TableCell>
+                    <TableCell><strong>Description</strong></TableCell>
+                    <TableCell align="center"><strong>Count</strong></TableCell>
+                    <TableCell><strong>Last Updated</strong></TableCell>
+                    <TableCell align="center"><strong>Actions</strong></TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {audiences.map((audience) => (
+                    <TableRow key={audience.id} hover>
+                      <TableCell>
+                        <Typography variant="body2" fontWeight="600">
+                          {audience.name}
+                        </Typography>
+                      </TableCell>
+                      <TableCell>
+                        <Typography variant="body2" color="text.secondary">
+                          {audience.description}
+                        </Typography>
+                      </TableCell>
+                      <TableCell align="center">
+                        <Chip
+                          label={audience.count.toLocaleString()}
+                          color="primary"
+                          size="small"
+                          variant="outlined"
+                        />
+                      </TableCell>
+                      <TableCell>
+                        <Typography variant="body2" color="text.secondary">
+                          {new Date(audience.lastUpdated).toLocaleDateString()}
+                        </Typography>
+                      </TableCell>
+                      <TableCell align="center">
+                        <Box sx={{ display: 'flex', gap: 1, justifyContent: 'center' }}>
+                          <IconButton
+                            size="small"
+                            color="info"
+                            onClick={() => handleViewAudience(audience)}
+                            title="View Details"
+                          >
+                            <VisibilityIcon fontSize="small" />
+                          </IconButton>
+                          <IconButton
+                            size="small"
+                            color="primary"
+                            onClick={() => handleEditAudience(audience)}
+                            title="Edit Audience"
+                          >
+                            <EditIcon fontSize="small" />
+                          </IconButton>
+                          <IconButton
+                            size="small"
+                            color="error"
+                            onClick={() => handleDeleteAudience(audience.id)}
+                            title="Delete Audience"
+                          >
+                            <DeleteIcon fontSize="small" />
+                          </IconButton>
+                        </Box>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </TableContainer>
+
+            {audiences.length === 0 && (
+              <Box sx={{ textAlign: 'center', py: 4 }}>
+                <GroupIcon sx={{ fontSize: 64, color: 'text.secondary', mb: 2 }} />
+                <Typography variant="h6" color="text.secondary" gutterBottom>
+                  No Audiences Created
+                </Typography>
+                <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+                  Create your first audience to start targeting specific customer segments
+                </Typography>
+                <Button
+                  variant="contained"
+                  startIcon={<AddIcon />}
+                  onClick={handleCreateAudience}
+                  sx={{ borderRadius: 2 }}
+                >
+                  Create Your First Audience
+                </Button>
+              </Box>
+            )}
+          </CardContent>
+        </Card>
+
         {/* Save Button */}
         <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 2 }}>
           <Button
@@ -3162,6 +3380,202 @@ const Settings = () => {
             Save Campaign Settings
           </Button>
         </Box>
+
+        {/* Audience Dialog */}
+        <Dialog
+          open={audienceDialog.open}
+          onClose={() => setAudienceDialog({ open: false, mode: 'create', audience: null })}
+          maxWidth="md"
+          fullWidth
+          PaperProps={{ sx: { borderRadius: 3 } }}
+        >
+          <DialogTitle>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <GroupIcon color="primary" />
+              <Typography variant="h6" fontWeight="600">
+                {audienceDialog.mode === 'create' && 'Create New Audience'}
+                {audienceDialog.mode === 'edit' && 'Edit Audience'}
+                {audienceDialog.mode === 'view' && 'Audience Details'}
+              </Typography>
+            </Box>
+          </DialogTitle>
+          <DialogContent dividers>
+            <Grid container spacing={3}>
+              <Grid item xs={12}>
+                <TextField
+                  fullWidth
+                  label="Audience Name"
+                  value={newAudience.name}
+                  onChange={(e) => setNewAudience(prev => ({ ...prev, name: e.target.value }))}
+                  placeholder="e.g., High Value Customers"
+                  disabled={audienceDialog.mode === 'view'}
+                  required
+                />
+              </Grid>
+              <Grid item xs={12}>
+                <TextField
+                  fullWidth
+                  multiline
+                  rows={2}
+                  label="Description"
+                  value={newAudience.description}
+                  onChange={(e) => setNewAudience(prev => ({ ...prev, description: e.target.value }))}
+                  placeholder="Describe this audience segment"
+                  disabled={audienceDialog.mode === 'view'}
+                />
+              </Grid>
+
+              <Grid item xs={12}>
+                <Typography variant="subtitle2" fontWeight="600" gutterBottom sx={{ mt: 1 }}>
+                  Audience Criteria
+                </Typography>
+                <Divider sx={{ mb: 2 }} />
+              </Grid>
+
+              <Grid item xs={12} sm={6}>
+                <FormControl fullWidth disabled={audienceDialog.mode === 'view'}>
+                  <InputLabel>Policy Type</InputLabel>
+                  <Select
+                    value={newAudience.criteria?.policyType || 'all'}
+                    label="Policy Type"
+                    onChange={(e) => setNewAudience(prev => ({
+                      ...prev,
+                      criteria: { ...prev.criteria, policyType: e.target.value }
+                    }))}
+                  >
+                    <MenuItem value="all">All Types</MenuItem>
+                    <MenuItem value="motor">Motor Insurance</MenuItem>
+                    <MenuItem value="health">Health Insurance</MenuItem>
+                    <MenuItem value="life">Life Insurance</MenuItem>
+                    <MenuItem value="travel">Travel Insurance</MenuItem>
+                    <MenuItem value="home">Home Insurance</MenuItem>
+                  </Select>
+                </FormControl>
+              </Grid>
+
+              <Grid item xs={12} sm={6}>
+                <FormControl fullWidth disabled={audienceDialog.mode === 'view'}>
+                  <InputLabel>Policy Status</InputLabel>
+                  <Select
+                    value={newAudience.criteria?.status || 'all'}
+                    label="Policy Status"
+                    onChange={(e) => setNewAudience(prev => ({
+                      ...prev,
+                      criteria: { ...prev.criteria, status: e.target.value }
+                    }))}
+                  >
+                    <MenuItem value="all">All Status</MenuItem>
+                    <MenuItem value="active">Active</MenuItem>
+                    <MenuItem value="expired">Expired</MenuItem>
+                    <MenuItem value="pending">Pending</MenuItem>
+                  </Select>
+                </FormControl>
+              </Grid>
+
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  fullWidth
+                  type="number"
+                  label="Minimum Premium (₹)"
+                  value={newAudience.criteria?.premium?.min || 0}
+                  onChange={(e) => setNewAudience(prev => ({
+                    ...prev,
+                    criteria: {
+                      ...prev.criteria,
+                      premium: { ...prev.criteria?.premium, min: parseInt(e.target.value) }
+                    }
+                  }))}
+                  disabled={audienceDialog.mode === 'view'}
+                  inputProps={{ min: 0 }}
+                />
+              </Grid>
+
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  fullWidth
+                  type="number"
+                  label="Maximum Premium (₹)"
+                  value={newAudience.criteria?.premium?.max || 1000000}
+                  onChange={(e) => setNewAudience(prev => ({
+                    ...prev,
+                    criteria: {
+                      ...prev.criteria,
+                      premium: { ...prev.criteria?.premium, max: parseInt(e.target.value) }
+                    }
+                  }))}
+                  disabled={audienceDialog.mode === 'view'}
+                  inputProps={{ min: 0 }}
+                />
+              </Grid>
+
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  fullWidth
+                  type="number"
+                  label="Expiry Within (Days)"
+                  value={newAudience.criteria?.expiryDays?.max || 365}
+                  onChange={(e) => setNewAudience(prev => ({
+                    ...prev,
+                    criteria: {
+                      ...prev.criteria,
+                      expiryDays: { ...prev.criteria?.expiryDays, max: parseInt(e.target.value) }
+                    }
+                  }))}
+                  disabled={audienceDialog.mode === 'view'}
+                  helperText="Policies expiring within this many days"
+                  inputProps={{ min: 0, max: 365 }}
+                />
+              </Grid>
+
+              {audienceDialog.mode === 'view' && (
+                <>
+                  <Grid item xs={12} sm={6}>
+                    <TextField
+                      fullWidth
+                      label="Audience Count"
+                      value={newAudience.count?.toLocaleString() || '0'}
+                      disabled
+                    />
+                  </Grid>
+                  <Grid item xs={12} sm={6}>
+                    <TextField
+                      fullWidth
+                      label="Created Date"
+                      value={newAudience.createdAt ? new Date(newAudience.createdAt).toLocaleDateString() : ''}
+                      disabled
+                    />
+                  </Grid>
+                  <Grid item xs={12} sm={6}>
+                    <TextField
+                      fullWidth
+                      label="Last Updated"
+                      value={newAudience.lastUpdated ? new Date(newAudience.lastUpdated).toLocaleDateString() : ''}
+                      disabled
+                    />
+                  </Grid>
+                </>
+              )}
+            </Grid>
+          </DialogContent>
+          <DialogActions sx={{ p: 2.5 }}>
+            <Button
+              onClick={() => setAudienceDialog({ open: false, mode: 'create', audience: null })}
+              sx={{ borderRadius: 2 }}
+            >
+              {audienceDialog.mode === 'view' ? 'Close' : 'Cancel'}
+            </Button>
+            {audienceDialog.mode !== 'view' && (
+              <Button
+                variant="contained"
+                onClick={handleSaveAudience}
+                disabled={!newAudience.name?.trim()}
+                sx={{ borderRadius: 2 }}
+              >
+                {audienceDialog.mode === 'create' ? 'Create Audience' : 'Save Changes'}
+              </Button>
+            )}
+          </DialogActions>
+        </Dialog>
       </Box>
     );
   };
@@ -3186,7 +3600,7 @@ const Settings = () => {
                 <Typography variant="h6" fontWeight="600">WhatsApp Business API</Typography>
               </Box>
               <Divider sx={{ mb: 3 }} />
-              
+
               <Grid container spacing={3}>
                 <Grid item xs={12} sm={6}>
                   <TextField
@@ -3253,10 +3667,10 @@ const Settings = () => {
             <CardContent sx={{ p: 3 }}>
               <Typography variant="h6" gutterBottom>Flow Builder</Typography>
               <Divider sx={{ mb: 2 }} />
-              
+
               <List disablePadding>
                 <ListItem sx={{ borderRadius: 2, mb: 1 }}>
-                  <ListItemText 
+                  <ListItemText
                     primary={<Typography fontWeight="500">Visual Flow Builder</Typography>}
                     secondary="Enable drag-and-drop flow creation"
                   />
@@ -3268,9 +3682,9 @@ const Settings = () => {
                     />
                   </ListItemSecondaryAction>
                 </ListItem>
-                
+
                 <ListItem sx={{ borderRadius: 2, mb: 1 }}>
-                  <ListItemText 
+                  <ListItemText
                     primary={<Typography fontWeight="500">Message Templates</Typography>}
                     secondary="Enable WhatsApp message templates"
                   />
@@ -3284,7 +3698,7 @@ const Settings = () => {
                 </ListItem>
 
                 <ListItem sx={{ borderRadius: 2, mb: 1 }}>
-                  <ListItemText 
+                  <ListItemText
                     primary={<Typography fontWeight="500">Auto Response</Typography>}
                     secondary="Enable automatic responses"
                   />
@@ -3298,7 +3712,7 @@ const Settings = () => {
                 </ListItem>
 
                 <ListItem sx={{ borderRadius: 2 }}>
-                  <ListItemText 
+                  <ListItemText
                     primary={<Typography fontWeight="500">Analytics & Reporting</Typography>}
                     secondary="Track flow performance and metrics"
                   />
@@ -3321,7 +3735,7 @@ const Settings = () => {
             <CardContent sx={{ p: 3 }}>
               <Typography variant="h6" gutterBottom>Business Hours</Typography>
               <Divider sx={{ mb: 2 }} />
-              
+
               <FormControlLabel
                 control={
                   <Switch
@@ -3384,7 +3798,7 @@ const Settings = () => {
             <CardContent sx={{ p: 3 }}>
               <Typography variant="h6" gutterBottom>Message Settings</Typography>
               <Divider sx={{ mb: 3 }} />
-              
+
               <Grid container spacing={3}>
                 <Grid item xs={12}>
                   <TextField
@@ -3398,7 +3812,7 @@ const Settings = () => {
                     helperText="This message will be sent when automated flows encounter errors"
                   />
                 </Grid>
-                
+
                 <Grid item xs={12} sm={4}>
                   <TextField
                     fullWidth
@@ -3410,7 +3824,7 @@ const Settings = () => {
                     helperText="Maximum retry attempts for failed messages"
                   />
                 </Grid>
-                
+
                 <Grid item xs={12} sm={4}>
                   <TextField
                     fullWidth
@@ -3433,7 +3847,7 @@ const Settings = () => {
             <CardContent sx={{ p: 3 }}>
               <Typography variant="h6" gutterBottom>Rate Limiting</Typography>
               <Divider sx={{ mb: 2 }} />
-              
+
               <FormControlLabel
                 control={
                   <Switch
@@ -3480,23 +3894,23 @@ const Settings = () => {
             <CardContent sx={{ p: 3 }}>
               <Typography variant="h6" gutterBottom>Integration Status</Typography>
               <Divider sx={{ mb: 2 }} />
-              
+
               <List disablePadding>
                 <ListItem sx={{ borderRadius: 2, mb: 1 }}>
                   <ListItemIcon>
                     <CheckCircleIcon color="success" />
                   </ListItemIcon>
-                  <ListItemText 
+                  <ListItemText
                     primary={<Typography fontWeight="500">WhatsApp Business API</Typography>}
                     secondary="Connected and verified"
                   />
                 </ListItem>
-                
+
                 <ListItem sx={{ borderRadius: 2, mb: 1 }}>
                   <ListItemIcon>
                     <CheckCircleIcon color="success" />
                   </ListItemIcon>
-                  <ListItemText 
+                  <ListItemText
                     primary={<Typography fontWeight="500">Webhook Configuration</Typography>}
                     secondary="Active and receiving messages"
                   />
@@ -3506,7 +3920,7 @@ const Settings = () => {
                   <ListItemIcon>
                     <WarningIcon color="warning" />
                   </ListItemIcon>
-                  <ListItemText 
+                  <ListItemText
                     primary={<Typography fontWeight="500">Message Templates</Typography>}
                     secondary="2 templates pending approval"
                   />
@@ -3516,7 +3930,7 @@ const Settings = () => {
                   <ListItemIcon>
                     <CheckCircleIcon color="success" />
                   </ListItemIcon>
-                  <ListItemText 
+                  <ListItemText
                     primary={<Typography fontWeight="500">Flow Builder</Typography>}
                     secondary="Ready to create flows"
                   />
@@ -3532,7 +3946,7 @@ const Settings = () => {
             <CardContent sx={{ p: 3 }}>
               <Typography variant="h6" gutterBottom>Flow Access Permissions</Typography>
               <Divider sx={{ mb: 3 }} />
-              
+
               <List disablePadding>
                 <ListItem sx={{ borderRadius: 2, mb: 1, bgcolor: alpha(theme.palette.primary.main, 0.05) }}>
                   <ListItemIcon>
@@ -3552,7 +3966,7 @@ const Settings = () => {
                     </FormControl>
                   </ListItemSecondaryAction>
                 </ListItem>
-                
+
                 <ListItem sx={{ borderRadius: 2, mb: 1, bgcolor: alpha(theme.palette.secondary.main, 0.05) }}>
                   <ListItemIcon>
                     <Avatar sx={{ bgcolor: 'secondary.main' }}>SM</Avatar>
@@ -3591,7 +4005,7 @@ const Settings = () => {
                   </ListItemSecondaryAction>
                 </ListItem>
               </List>
-              
+
               <Box sx={{ mt: 2 }}>
                 <Button variant="outlined" startIcon={<AddIcon />} sx={{ borderRadius: 2 }}>
                   Add User Permission
@@ -3607,7 +4021,7 @@ const Settings = () => {
             <CardContent sx={{ p: 3 }}>
               <Typography variant="h6" gutterBottom>Flow Activity & Audit Logs</Typography>
               <Divider sx={{ mb: 3 }} />
-              
+
               <List disablePadding>
                 <ListItem sx={{ borderRadius: 2, mb: 1, bgcolor: alpha(theme.palette.primary.main, 0.05) }}>
                   <ListItemIcon>
@@ -3618,7 +4032,7 @@ const Settings = () => {
                     secondary="Rajesh Kumar • 2 hours ago • Added new message block and updated conditions"
                   />
                 </ListItem>
-                
+
                 <ListItem sx={{ borderRadius: 2, mb: 1, bgcolor: alpha(theme.palette.success.main, 0.05) }}>
                   <ListItemIcon>
                     <CheckCircleIcon color="success" />
@@ -3628,7 +4042,7 @@ const Settings = () => {
                     secondary="Sarah Manager • 1 day ago • Published to production environment"
                   />
                 </ListItem>
-                
+
                 <ListItem sx={{ borderRadius: 2, mb: 1, bgcolor: alpha(theme.palette.warning.main, 0.05) }}>
                   <ListItemIcon>
                     <ScheduleIcon color="warning" />
@@ -3659,7 +4073,7 @@ const Settings = () => {
                   />
                 </ListItem>
               </List>
-              
+
               <Box sx={{ mt: 2 }}>
                 <Button variant="outlined" sx={{ borderRadius: 2 }}>
                   View All Activity Logs
@@ -3740,14 +4154,14 @@ const Settings = () => {
                 </Typography>
               </Box>
               <Divider sx={{ mb: 3 }} />
-              
+
               <Grid container spacing={3}>
                 <Grid item xs={12} md={6}>
                   <FormControlLabel
                     control={
                       <Switch
                         checked={dncSettings.enabled}
-                        onChange={(e) => setDncSettings({...dncSettings, enabled: e.target.checked})}
+                        onChange={(e) => setDncSettings({ ...dncSettings, enabled: e.target.checked })}
                         color="primary"
                       />
                     }
@@ -3763,13 +4177,13 @@ const Settings = () => {
                     }
                   />
                 </Grid>
-                
+
                 <Grid item xs={12} md={6}>
                   <FormControlLabel
                     control={
                       <Switch
                         checked={dncSettings.autoCheck}
-                        onChange={(e) => setDncSettings({...dncSettings, autoCheck: e.target.checked})}
+                        onChange={(e) => setDncSettings({ ...dncSettings, autoCheck: e.target.checked })}
                         color="primary"
                       />
                     }
@@ -3785,13 +4199,13 @@ const Settings = () => {
                     }
                   />
                 </Grid>
-                
+
                 <Grid item xs={12} md={6}>
                   <FormControlLabel
                     control={
                       <Switch
                         checked={dncSettings.blockOnDNC}
-                        onChange={(e) => setDncSettings({...dncSettings, blockOnDNC: e.target.checked})}
+                        onChange={(e) => setDncSettings({ ...dncSettings, blockOnDNC: e.target.checked })}
                         color="primary"
                       />
                     }
@@ -3807,13 +4221,13 @@ const Settings = () => {
                     }
                   />
                 </Grid>
-                
+
                 <Grid item xs={12} md={6}>
                   <FormControlLabel
                     control={
                       <Switch
                         checked={dncSettings.allowOverrides}
-                        onChange={(e) => setDncSettings({...dncSettings, allowOverrides: e.target.checked})}
+                        onChange={(e) => setDncSettings({ ...dncSettings, allowOverrides: e.target.checked })}
                         color="primary"
                       />
                     }
@@ -3876,10 +4290,10 @@ const Settings = () => {
               <ReceiptIcon sx={{ mr: 1, color: theme.palette.primary.main }} />
               <Typography variant="h6" fontWeight="600">Billing Information</Typography>
             </Box>
-            <Button 
-              component={Link} 
+            <Button
+              component={Link}
               to="/billing"
-              variant="outlined" 
+              variant="outlined"
               color="primary"
               endIcon={<ArrowForwardIcon />}
               sx={{ borderRadius: 2, fontWeight: 500 }}
@@ -3902,7 +4316,7 @@ const Settings = () => {
           </Box>
           <Divider sx={{ mb: 2 }} />
           <List disablePadding>
-            <ListItem 
+            <ListItem
               button
               onClick={handleOpenWelcomeGuide}
               sx={{ borderRadius: 2, mb: 1 }}
@@ -3926,8 +4340,8 @@ const Settings = () => {
               <SmartToyIcon sx={{ mr: 1, color: theme.palette.primary.main }} />
               <Typography variant="h6" fontWeight="600">AI Assistant Configuration</Typography>
             </Box>
-            <Button 
-              variant="outlined" 
+            <Button
+              variant="outlined"
               color="primary"
               onClick={handleTestAiConnection}
               sx={{ borderRadius: 2, fontWeight: 500 }}
@@ -3936,7 +4350,7 @@ const Settings = () => {
             </Button>
           </Box>
           <Divider sx={{ mb: 2 }} />
-          
+
           <Grid container spacing={3}>
             {/* Basic Configuration */}
             <Grid item xs={12} md={6}>
@@ -3958,7 +4372,7 @@ const Settings = () => {
                     />
                   </ListItemSecondaryAction>
                 </ListItem>
-                
+
                 <ListItem sx={{ borderRadius: 2, mb: 1 }}>
                   <ListItemText
                     primary={<Typography fontWeight="500">AI Provider</Typography>}
@@ -4180,7 +4594,7 @@ const Settings = () => {
                     />
                   </ListItemSecondaryAction>
                 </ListItem>
-                
+
                 <ListItem sx={{ borderRadius: 2, mb: 1 }}>
                   <ListItemText
                     primary={<Typography fontWeight="500">Requests per Minute</Typography>}
@@ -4235,7 +4649,7 @@ const Settings = () => {
                     />
                   </ListItemSecondaryAction>
                 </ListItem>
-                
+
                 <ListItem sx={{ borderRadius: 2, mb: 1 }}>
                   <ListItemText
                     primary={<Typography fontWeight="500">Auto Update</Typography>}
@@ -4282,8 +4696,8 @@ const Settings = () => {
                 <Typography variant="h6" fontWeight="600">Ollama Configuration</Typography>
               </Box>
               <Box sx={{ display: 'flex', gap: 1 }}>
-                <Button 
-                  variant="outlined" 
+                <Button
+                  variant="outlined"
                   size="small"
                   color="secondary"
                   onClick={() => {
@@ -4302,8 +4716,8 @@ const Settings = () => {
                   <RefreshIcon sx={{ mr: 0.5, fontSize: 16 }} />
                   Refresh Models
                 </Button>
-                <Button 
-                  variant="outlined" 
+                <Button
+                  variant="outlined"
                   size="small"
                   color="primary"
                   onClick={handleTestAiConnection}
@@ -4314,7 +4728,7 @@ const Settings = () => {
               </Box>
             </Box>
             <Divider sx={{ mb: 2 }} />
-            
+
             <Grid container spacing={3}>
               {/* Connection Settings */}
               <Grid item xs={12} md={6}>
@@ -4530,10 +4944,10 @@ const Settings = () => {
                     </Typography>
                   )}
                 </Box>
-                
+
                 <Alert severity="info" sx={{ mt: 2 }}>
                   <Typography variant="body2">
-                    <strong>Tip:</strong> You can install new models using the Ollama CLI: 
+                    <strong>Tip:</strong> You can install new models using the Ollama CLI:
                     <code style={{ marginLeft: 8, padding: '2px 6px', backgroundColor: 'rgba(0,0,0,0.1)', borderRadius: 4 }}>
                       ollama pull &lt;model-name&gt;
                     </code>
@@ -4603,7 +5017,7 @@ const Settings = () => {
     const [dialerStatus, setDialerStatus] = useState(true);
     const [activeTab, setActiveTab] = useState(0);
     const theme = useTheme();
-    
+
     const handleTabChange = (event, newValue) => {
       setActiveTab(newValue);
     };
@@ -4687,9 +5101,9 @@ const Settings = () => {
             scrollButtons="auto"
             sx={{ borderBottom: 1, borderColor: 'divider', mb: 2 }}
           >
-            <Tab 
-              icon={<PhoneIcon />} 
-              label="General" 
+            <Tab
+              icon={<PhoneIcon />}
+              label="General"
               iconPosition="start"
             />
             <Tab
@@ -4712,121 +5126,121 @@ const Settings = () => {
           <Box sx={{ p: 2 }}>
             {activeTab === 0 && (
               <Grid container spacing={3}>
-          {/* Dialer Status */}
-          <Grid item xs={12} md={6}>
-            <Card sx={{ borderRadius: 3, boxShadow: '0 8px 24px rgba(0,0,0,0.05)' }}>
-              <CardContent sx={{ p: 3 }}>
-                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
-                  <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                    <PhoneIcon sx={{ mr: 1, color: theme.palette.primary.main }} />
-                    <Typography variant="h6" fontWeight="600">Dialer Status</Typography>
-                  </Box>
-                  <Chip
-                    label={dialerStatus ? 'Active' : 'Paused'}
-                    color={dialerStatus ? 'success' : 'error'}
-                    icon={dialerStatus ? <CheckCircleIcon /> : <ErrorIcon />}
-                  />
-                </Box>
-                <Divider sx={{ mb: 2 }} />
-                
-                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                  <Typography variant="body2" color="text.secondary">
-                    Toggle dialer operation
-                  </Typography>
-                  <Button
-                    variant={dialerStatus ? 'outlined' : 'contained'}
-                    color={dialerStatus ? 'error' : 'success'}
-                    onClick={() => setDialerStatus(!dialerStatus)}
-                    sx={{ borderRadius: 2 }}
-                  >
-                    {dialerStatus ? 'Pause Dialer' : 'Start Dialer'}
-                  </Button>
-                </Box>
-              </CardContent>
-            </Card>
-          </Grid>
+                {/* Dialer Status */}
+                <Grid item xs={12} md={6}>
+                  <Card sx={{ borderRadius: 3, boxShadow: '0 8px 24px rgba(0,0,0,0.05)' }}>
+                    <CardContent sx={{ p: 3 }}>
+                      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
+                        <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                          <PhoneIcon sx={{ mr: 1, color: theme.palette.primary.main }} />
+                          <Typography variant="h6" fontWeight="600">Dialer Status</Typography>
+                        </Box>
+                        <Chip
+                          label={dialerStatus ? 'Active' : 'Paused'}
+                          color={dialerStatus ? 'success' : 'error'}
+                          icon={dialerStatus ? <CheckCircleIcon /> : <ErrorIcon />}
+                        />
+                      </Box>
+                      <Divider sx={{ mb: 2 }} />
 
-          {/* Office Hours */}
-          <Grid item xs={12} md={6}>
-            <Card sx={{ borderRadius: 3, boxShadow: '0 8px 24px rgba(0,0,0,0.05)' }}>
-              <CardContent sx={{ p: 3 }}>
-                <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                  <AccessTimeIcon sx={{ mr: 1, color: theme.palette.primary.main }} />
-                  <Typography variant="h6" fontWeight="600">Office Hours</Typography>
-                </Box>
-                <Divider sx={{ mb: 2 }} />
-                
-                <Box sx={{ mb: 2 }}>
-                  <Typography variant="body1" fontWeight="500" gutterBottom>
-                    9 AM - 6 PM, Monday - Friday
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary" gutterBottom>
-                    Current Time: {getCurrentTime()}
-                  </Typography>
-                  <Chip
-                    label={isWithinOfficeHours() ? 'Within Office Hours' : 'Outside Office Hours'}
-                    color={isWithinOfficeHours() ? 'success' : 'warning'}
-                    size="small"
-                  />
-                </Box>
-              </CardContent>
-            </Card>
-          </Grid>
+                      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                        <Typography variant="body2" color="text.secondary">
+                          Toggle dialer operation
+                        </Typography>
+                        <Button
+                          variant={dialerStatus ? 'outlined' : 'contained'}
+                          color={dialerStatus ? 'error' : 'success'}
+                          onClick={() => setDialerStatus(!dialerStatus)}
+                          sx={{ borderRadius: 2 }}
+                        >
+                          {dialerStatus ? 'Pause Dialer' : 'Start Dialer'}
+                        </Button>
+                      </Box>
+                    </CardContent>
+                  </Card>
+                </Grid>
 
-          {/* Scheduled Calls Table */}
-          <Grid item xs={12}>
-            <Card sx={{ borderRadius: 3, boxShadow: '0 8px 24px rgba(0,0,0,0.05)' }}>
-              <CardContent sx={{ p: 3 }}>
-                <Typography variant="h6" fontWeight="600" gutterBottom>
-                  Scheduled Calls
-                </Typography>
-                <Divider sx={{ mb: 2 }} />
-                
-                <TableContainer>
-                  <Table>
-                    <TableHead>
-                      <TableRow>
-                        <TableCell><Typography fontWeight="600">Lead Name</Typography></TableCell>
-                        <TableCell><Typography fontWeight="600">Phone Number</Typography></TableCell>
-                        <TableCell><Typography fontWeight="600">Scheduled Date & Time</Typography></TableCell>
-                        <TableCell><Typography fontWeight="600">Call Status</Typography></TableCell>
-                      </TableRow>
-                    </TableHead>
-                    <TableBody>
-                      {scheduledCalls.map((call) => (
-                        <TableRow key={call.id} hover>
-                          <TableCell>
-                            <Typography variant="body2" fontWeight="500">
-                              {call.leadName}
-                            </Typography>
-                          </TableCell>
-                          <TableCell>
-                            <Typography variant="body2">
-                              {call.phoneNumber}
-                            </Typography>
-                          </TableCell>
-                          <TableCell>
-                            <Typography variant="body2">
-                              {call.scheduledDateTime}
-                            </Typography>
-                          </TableCell>
-                          <TableCell>
-                            <Chip
-                              label={call.status}
-                              color={getStatusColor(call.status)}
-                              size="small"
-                            />
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </TableContainer>
-              </CardContent>
-            </Card>
-          </Grid>
-        </Grid>
-      )}
+                {/* Office Hours */}
+                <Grid item xs={12} md={6}>
+                  <Card sx={{ borderRadius: 3, boxShadow: '0 8px 24px rgba(0,0,0,0.05)' }}>
+                    <CardContent sx={{ p: 3 }}>
+                      <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                        <AccessTimeIcon sx={{ mr: 1, color: theme.palette.primary.main }} />
+                        <Typography variant="h6" fontWeight="600">Office Hours</Typography>
+                      </Box>
+                      <Divider sx={{ mb: 2 }} />
+
+                      <Box sx={{ mb: 2 }}>
+                        <Typography variant="body1" fontWeight="500" gutterBottom>
+                          9 AM - 6 PM, Monday - Friday
+                        </Typography>
+                        <Typography variant="body2" color="text.secondary" gutterBottom>
+                          Current Time: {getCurrentTime()}
+                        </Typography>
+                        <Chip
+                          label={isWithinOfficeHours() ? 'Within Office Hours' : 'Outside Office Hours'}
+                          color={isWithinOfficeHours() ? 'success' : 'warning'}
+                          size="small"
+                        />
+                      </Box>
+                    </CardContent>
+                  </Card>
+                </Grid>
+
+                {/* Scheduled Calls Table */}
+                <Grid item xs={12}>
+                  <Card sx={{ borderRadius: 3, boxShadow: '0 8px 24px rgba(0,0,0,0.05)' }}>
+                    <CardContent sx={{ p: 3 }}>
+                      <Typography variant="h6" fontWeight="600" gutterBottom>
+                        Scheduled Calls
+                      </Typography>
+                      <Divider sx={{ mb: 2 }} />
+
+                      <TableContainer>
+                        <Table>
+                          <TableHead>
+                            <TableRow>
+                              <TableCell><Typography fontWeight="600">Lead Name</Typography></TableCell>
+                              <TableCell><Typography fontWeight="600">Phone Number</Typography></TableCell>
+                              <TableCell><Typography fontWeight="600">Scheduled Date & Time</Typography></TableCell>
+                              <TableCell><Typography fontWeight="600">Call Status</Typography></TableCell>
+                            </TableRow>
+                          </TableHead>
+                          <TableBody>
+                            {scheduledCalls.map((call) => (
+                              <TableRow key={call.id} hover>
+                                <TableCell>
+                                  <Typography variant="body2" fontWeight="500">
+                                    {call.leadName}
+                                  </Typography>
+                                </TableCell>
+                                <TableCell>
+                                  <Typography variant="body2">
+                                    {call.phoneNumber}
+                                  </Typography>
+                                </TableCell>
+                                <TableCell>
+                                  <Typography variant="body2">
+                                    {call.scheduledDateTime}
+                                  </Typography>
+                                </TableCell>
+                                <TableCell>
+                                  <Chip
+                                    label={call.status}
+                                    color={getStatusColor(call.status)}
+                                    size="small"
+                                  />
+                                </TableCell>
+                              </TableRow>
+                            ))}
+                          </TableBody>
+                        </Table>
+                      </TableContainer>
+                    </CardContent>
+                  </Card>
+                </Grid>
+              </Grid>
+            )}
 
             {/* Office Hours Tab */}
             {activeTab === 1 && (
@@ -4940,7 +5354,7 @@ const Settings = () => {
                                   size="small"
                                   color={
                                     holiday.type === 'National' ? 'primary' :
-                                    holiday.type === 'Festival' ? 'success' : 'info'
+                                      holiday.type === 'Festival' ? 'success' : 'info'
                                   }
                                 />
                               </TableCell>
@@ -5113,298 +5527,298 @@ const Settings = () => {
           Configure feedback collection, survey preferences, and integrations
         </Typography>
 
-      <Grid container spacing={3}>
-        <Grid item xs={12} md={6}>
-          <Card sx={{ borderRadius: 3, boxShadow: '0 8px 24px rgba(0,0,0,0.05)' }}>
-            <CardContent sx={{ p: 3 }}>
-              <Typography variant="h6" gutterBottom>General Settings</Typography>
-              <Divider sx={{ mb: 2 }} />
-              <List disablePadding>
-                <ListItem sx={{ borderRadius: 2, mb: 1 }}>
-                  <ListItemText 
-                    primary={<Typography fontWeight="500">Default Survey Language</Typography>}
-                    secondary="Language for new surveys and feedback forms"
-                  />
-                  <ListItemSecondaryAction>
-                    <FormControl size="small" sx={{ minWidth: 120 }}>
-                      <Select
-                        value={settings.feedbackLanguage || 'en-US'}
-                        onChange={(e) => handleSettingChange('feedbackLanguage', e.target.value)}
-                        sx={{ borderRadius: 2 }}
-                      >
-                        <MenuItem value="en-US">English (US)</MenuItem>
-                        <MenuItem value="en-GB">English (UK)</MenuItem>
-                        <MenuItem value="hi">हिन्दी (Hindi)</MenuItem>
-                        <MenuItem value="bn">বাংলা (Bengali)</MenuItem>
-                        <MenuItem value="te">తెలుగు (Telugu)</MenuItem>
-                        <MenuItem value="mr">मराठी (Marathi)</MenuItem>
-                        <MenuItem value="ta">தமிழ் (Tamil)</MenuItem>
-                        <MenuItem value="gu">ગુજરાતી (Gujarati)</MenuItem>
-                        <MenuItem value="ml">മലയാളം (Malayalam)</MenuItem>
-                        <MenuItem value="kn">ಕನ್ನಡ (Kannada)</MenuItem>
-                        <MenuItem value="pa">ਪੰਜਾਬੀ (Punjabi)</MenuItem>
-                        <MenuItem value="as">অসমীয়া (Assamese)</MenuItem>
-                        <MenuItem value="or">ଓଡ଼ିଆ (Odia)</MenuItem>
-                        <MenuItem value="ur">اردو (Urdu)</MenuItem>
-                        <MenuItem value="es">Spanish</MenuItem>
-                        <MenuItem value="fr">French</MenuItem>
-                        <MenuItem value="de">German</MenuItem>
-                      </Select>
-                    </FormControl>
-                  </ListItemSecondaryAction>
-                </ListItem>
-                <ListItem sx={{ borderRadius: 2, mb: 1 }}>
-                  <ListItemText 
-                    primary={<Typography fontWeight="500">Data Retention Period</Typography>}
-                    secondary="How long to keep feedback and survey responses"
-                  />
-                  <ListItemSecondaryAction>
-                    <FormControl size="small" sx={{ minWidth: 120 }}>
-                      <Select
-                        value={settings.feedbackRetention || 24}
-                        onChange={(e) => handleSettingChange('feedbackRetention', e.target.value)}
-                        sx={{ borderRadius: 2 }}
-                      >
-                        <MenuItem value={12}>12 months</MenuItem>
-                        <MenuItem value={24}>24 months</MenuItem>
-                        <MenuItem value={36}>36 months</MenuItem>
-                        <MenuItem value={60}>5 years</MenuItem>
-                      </Select>
-                    </FormControl>
-                  </ListItemSecondaryAction>
-                </ListItem>
-                <ListItem sx={{ borderRadius: 2 }}>
-                  <ListItemText 
-                    primary={<Typography fontWeight="500">Auto-Archive Responses</Typography>}
-                    secondary="Automatically archive old survey responses"
-                  />
-                  <ListItemSecondaryAction>
-                    <Switch
-                      edge="end"
-                      checked={settings.autoArchiveFeedback !== false}
-                      onChange={(e) => handleSettingChange('autoArchiveFeedback', e.target.checked)}
-                      color="primary"
+        <Grid container spacing={3}>
+          <Grid item xs={12} md={6}>
+            <Card sx={{ borderRadius: 3, boxShadow: '0 8px 24px rgba(0,0,0,0.05)' }}>
+              <CardContent sx={{ p: 3 }}>
+                <Typography variant="h6" gutterBottom>General Settings</Typography>
+                <Divider sx={{ mb: 2 }} />
+                <List disablePadding>
+                  <ListItem sx={{ borderRadius: 2, mb: 1 }}>
+                    <ListItemText
+                      primary={<Typography fontWeight="500">Default Survey Language</Typography>}
+                      secondary="Language for new surveys and feedback forms"
                     />
-                  </ListItemSecondaryAction>
-                </ListItem>
-              </List>
-            </CardContent>
-          </Card>
-        </Grid>
-        
-        <Grid item xs={12} md={6}>
-          <Card sx={{ borderRadius: 3, boxShadow: '0 8px 24px rgba(0,0,0,0.05)' }}>
-            <CardContent sx={{ p: 3 }}>
-              <Typography variant="h6" gutterBottom>Notifications</Typography>
-              <Divider sx={{ mb: 2 }} />
-              <List disablePadding>
-                <ListItem sx={{ borderRadius: 2, mb: 1 }}>
-                  <ListItemText 
-                    primary={<Typography fontWeight="500">Email Notifications</Typography>}
-                    secondary="Receive alerts for new feedback submissions"
-                  />
-                  <ListItemSecondaryAction>
-                    <Switch
-                      edge="end"
-                      checked={settings.feedbackEmailNotifications !== false}
-                      onChange={(e) => handleSettingChange('feedbackEmailNotifications', e.target.checked)}
-                      color="primary"
+                    <ListItemSecondaryAction>
+                      <FormControl size="small" sx={{ minWidth: 120 }}>
+                        <Select
+                          value={settings.feedbackLanguage || 'en-US'}
+                          onChange={(e) => handleSettingChange('feedbackLanguage', e.target.value)}
+                          sx={{ borderRadius: 2 }}
+                        >
+                          <MenuItem value="en-US">English (US)</MenuItem>
+                          <MenuItem value="en-GB">English (UK)</MenuItem>
+                          <MenuItem value="hi">हिन्दी (Hindi)</MenuItem>
+                          <MenuItem value="bn">বাংলা (Bengali)</MenuItem>
+                          <MenuItem value="te">తెలుగు (Telugu)</MenuItem>
+                          <MenuItem value="mr">मराठी (Marathi)</MenuItem>
+                          <MenuItem value="ta">தமிழ் (Tamil)</MenuItem>
+                          <MenuItem value="gu">ગુજરાતી (Gujarati)</MenuItem>
+                          <MenuItem value="ml">മലയാളം (Malayalam)</MenuItem>
+                          <MenuItem value="kn">ಕನ್ನಡ (Kannada)</MenuItem>
+                          <MenuItem value="pa">ਪੰਜਾਬੀ (Punjabi)</MenuItem>
+                          <MenuItem value="as">অসমীয়া (Assamese)</MenuItem>
+                          <MenuItem value="or">ଓଡ଼ିଆ (Odia)</MenuItem>
+                          <MenuItem value="ur">اردو (Urdu)</MenuItem>
+                          <MenuItem value="es">Spanish</MenuItem>
+                          <MenuItem value="fr">French</MenuItem>
+                          <MenuItem value="de">German</MenuItem>
+                        </Select>
+                      </FormControl>
+                    </ListItemSecondaryAction>
+                  </ListItem>
+                  <ListItem sx={{ borderRadius: 2, mb: 1 }}>
+                    <ListItemText
+                      primary={<Typography fontWeight="500">Data Retention Period</Typography>}
+                      secondary="How long to keep feedback and survey responses"
                     />
-                  </ListItemSecondaryAction>
-                </ListItem>
-                <ListItem sx={{ borderRadius: 2, mb: 1 }}>
-                  <ListItemText 
-                    primary={<Typography fontWeight="500">SMS Alerts</Typography>}
-                    secondary="Critical feedback notifications via SMS"
-                  />
-                  <ListItemSecondaryAction>
-                    <Switch
-                      edge="end"
-                      checked={settings.feedbackSmsAlerts === true}
-                      onChange={(e) => handleSettingChange('feedbackSmsAlerts', e.target.checked)}
-                      color="primary"
+                    <ListItemSecondaryAction>
+                      <FormControl size="small" sx={{ minWidth: 120 }}>
+                        <Select
+                          value={settings.feedbackRetention || 24}
+                          onChange={(e) => handleSettingChange('feedbackRetention', e.target.value)}
+                          sx={{ borderRadius: 2 }}
+                        >
+                          <MenuItem value={12}>12 months</MenuItem>
+                          <MenuItem value={24}>24 months</MenuItem>
+                          <MenuItem value={36}>36 months</MenuItem>
+                          <MenuItem value={60}>5 years</MenuItem>
+                        </Select>
+                      </FormControl>
+                    </ListItemSecondaryAction>
+                  </ListItem>
+                  <ListItem sx={{ borderRadius: 2 }}>
+                    <ListItemText
+                      primary={<Typography fontWeight="500">Auto-Archive Responses</Typography>}
+                      secondary="Automatically archive old survey responses"
                     />
-                  </ListItemSecondaryAction>
-                </ListItem>
-                <ListItem sx={{ borderRadius: 2, mb: 1 }}>
-                  <ListItemText 
-                    primary={<Typography fontWeight="500">Weekly Reports</Typography>}
-                    secondary="Automated feedback summary emails"
-                  />
-                  <ListItemSecondaryAction>
-                    <Switch
-                      edge="end"
-                      checked={settings.feedbackWeeklyReports !== false}
-                      onChange={(e) => handleSettingChange('feedbackWeeklyReports', e.target.checked)}
-                      color="primary"
-                    />
-                  </ListItemSecondaryAction>
-                </ListItem>
-                <ListItem sx={{ borderRadius: 2 }}>
-                  <ListItemText 
-                    primary={<Typography fontWeight="500">Real-time Alerts</Typography>}
-                    secondary="Instant notifications for negative feedback"
-                  />
-                  <ListItemSecondaryAction>
-                    <Switch
-                      edge="end"
-                      checked={settings.feedbackRealTimeAlerts === true}
-                      onChange={(e) => handleSettingChange('feedbackRealTimeAlerts', e.target.checked)}
-                      color="primary"
-                    />
-                  </ListItemSecondaryAction>
-                </ListItem>
-              </List>
-            </CardContent>
-          </Card>
-        </Grid>
-        
-        <Grid item xs={12}>
-          <Card sx={{ borderRadius: 3, boxShadow: '0 8px 24px rgba(0,0,0,0.05)' }}>
-            <CardContent sx={{ p: 3 }}>
-              <Typography variant="h6" gutterBottom>Integrations</Typography>
-              <Divider sx={{ mb: 2 }} />
-              <Grid container spacing={2}>
-                <Grid item xs={12} sm={6} md={3}>
-                  <Card sx={{ textAlign: 'center', p: 2, border: '1px solid', borderColor: 'divider' }}>
-                    <Box sx={{ mb: 2 }}>
-                      <Avatar sx={{ bgcolor: '#4A154B', mx: 'auto', mb: 1 }}>
-                        <Typography variant="h6" color="white">S</Typography>
-                      </Avatar>
-                    </Box>
-                    <Typography variant="h6" gutterBottom>Slack</Typography>
-                    <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                      Send feedback notifications to Slack channels
-                    </Typography>
-                    <Button 
-                      variant={settings.slackIntegration ? "contained" : "outlined"} 
-                      fullWidth
-                      onClick={() => handleSettingChange('slackIntegration', !settings.slackIntegration)}
-                    >
-                      {settings.slackIntegration ? "Connected" : "Connect"}
-                    </Button>
-                  </Card>
-                </Grid>
-                <Grid item xs={12} sm={6} md={3}>
-                  <Card sx={{ textAlign: 'center', p: 2, border: '1px solid', borderColor: 'divider' }}>
-                    <Box sx={{ mb: 2 }}>
-                      <Avatar sx={{ bgcolor: '#00A1C9', mx: 'auto', mb: 1 }}>
-                        <Typography variant="h6" color="white">SF</Typography>
-                      </Avatar>
-                    </Box>
-                    <Typography variant="h6" gutterBottom>Salesforce</Typography>
-                    <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                      Sync customer feedback with CRM records
-                    </Typography>
-                    <Button 
-                      variant={settings.salesforceIntegration ? "contained" : "outlined"} 
-                      fullWidth
-                      onClick={() => handleSettingChange('salesforceIntegration', !settings.salesforceIntegration)}
-                    >
-                      {settings.salesforceIntegration ? "Connected" : "Connect"}
-                    </Button>
-                  </Card>
-                </Grid>
-                <Grid item xs={12} sm={6} md={3}>
-                  <Card sx={{ textAlign: 'center', p: 2, border: '1px solid', borderColor: 'divider' }}>
-                    <Box sx={{ mb: 2 }}>
-                      <Avatar sx={{ bgcolor: '#FF7A59', mx: 'auto', mb: 1 }}>
-                        <Typography variant="h6" color="white">H</Typography>
-                      </Avatar>
-                    </Box>
-                    <Typography variant="h6" gutterBottom>HubSpot</Typography>
-                    <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                      Integrate with marketing automation workflows
-                    </Typography>
-                    <Button 
-                      variant={settings.hubspotIntegration ? "contained" : "outlined"} 
-                      fullWidth
-                      onClick={() => handleSettingChange('hubspotIntegration', !settings.hubspotIntegration)}
-                    >
-                      {settings.hubspotIntegration ? "Connected" : "Connect"}
-                    </Button>
-                  </Card>
-                </Grid>
-                <Grid item xs={12} sm={6} md={3}>
-                  <Card sx={{ textAlign: 'center', p: 2, border: '1px solid', borderColor: 'divider' }}>
-                    <Box sx={{ mb: 2 }}>
-                      <Avatar sx={{ bgcolor: '#FF4A00', mx: 'auto', mb: 1 }}>
-                        <Typography variant="h6" color="white">Z</Typography>
-                      </Avatar>
-                    </Box>
-                    <Typography variant="h6" gutterBottom>Zapier</Typography>
-                    <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                      Connect feedback to 1000+ apps and services
-                    </Typography>
-                    <Button 
-                      variant={settings.zapierIntegration ? "contained" : "outlined"} 
-                      fullWidth
-                      onClick={() => handleSettingChange('zapierIntegration', !settings.zapierIntegration)}
-                    >
-                      {settings.zapierIntegration ? "Connected" : "Connect"}
-                    </Button>
-                  </Card>
-                </Grid>
-              </Grid>
-            </CardContent>
-          </Card>
-        </Grid>
+                    <ListItemSecondaryAction>
+                      <Switch
+                        edge="end"
+                        checked={settings.autoArchiveFeedback !== false}
+                        onChange={(e) => handleSettingChange('autoArchiveFeedback', e.target.checked)}
+                        color="primary"
+                      />
+                    </ListItemSecondaryAction>
+                  </ListItem>
+                </List>
+              </CardContent>
+            </Card>
+          </Grid>
 
-        <Grid item xs={12}>
-          <Card sx={{ borderRadius: 3, boxShadow: '0 8px 24px rgba(0,0,0,0.05)' }}>
-            <CardContent sx={{ p: 3 }}>
-              <Typography variant="h6" gutterBottom>Survey Automation</Typography>
-              <Divider sx={{ mb: 2 }} />
-              <List disablePadding>
-                <ListItem sx={{ borderRadius: 2, mb: 1 }}>
-                  <ListItemText 
-                    primary={<Typography fontWeight="500">Auto-send Post-Purchase Surveys</Typography>}
-                    secondary="Automatically send satisfaction surveys after policy purchases"
-                  />
-                  <ListItemSecondaryAction>
-                    <Switch
-                      edge="end"
-                      checked={settings.autoPostPurchaseSurvey === true}
-                      onChange={(e) => handleSettingChange('autoPostPurchaseSurvey', e.target.checked)}
-                      color="primary"
+          <Grid item xs={12} md={6}>
+            <Card sx={{ borderRadius: 3, boxShadow: '0 8px 24px rgba(0,0,0,0.05)' }}>
+              <CardContent sx={{ p: 3 }}>
+                <Typography variant="h6" gutterBottom>Notifications</Typography>
+                <Divider sx={{ mb: 2 }} />
+                <List disablePadding>
+                  <ListItem sx={{ borderRadius: 2, mb: 1 }}>
+                    <ListItemText
+                      primary={<Typography fontWeight="500">Email Notifications</Typography>}
+                      secondary="Receive alerts for new feedback submissions"
                     />
-                  </ListItemSecondaryAction>
-                </ListItem>
-                <ListItem sx={{ borderRadius: 2, mb: 1 }}>
-                  <ListItemText 
-                    primary={<Typography fontWeight="500">Follow-up Reminders</Typography>}
-                    secondary="Send reminders for incomplete survey responses"
-                  />
-                  <ListItemSecondaryAction>
-                    <Switch
-                      edge="end"
-                      checked={settings.surveyReminders !== false}
-                      onChange={(e) => handleSettingChange('surveyReminders', e.target.checked)}
-                      color="primary"
+                    <ListItemSecondaryAction>
+                      <Switch
+                        edge="end"
+                        checked={settings.feedbackEmailNotifications !== false}
+                        onChange={(e) => handleSettingChange('feedbackEmailNotifications', e.target.checked)}
+                        color="primary"
+                      />
+                    </ListItemSecondaryAction>
+                  </ListItem>
+                  <ListItem sx={{ borderRadius: 2, mb: 1 }}>
+                    <ListItemText
+                      primary={<Typography fontWeight="500">SMS Alerts</Typography>}
+                      secondary="Critical feedback notifications via SMS"
                     />
-                  </ListItemSecondaryAction>
-                </ListItem>
-                <ListItem sx={{ borderRadius: 2 }}>
-                  <ListItemText 
-                    primary={<Typography fontWeight="500">Smart Response Routing</Typography>}
-                    secondary="Automatically route negative feedback to support team"
-                  />
-                  <ListItemSecondaryAction>
-                    <Switch
-                      edge="end"
-                      checked={settings.smartRouting === true}
-                      onChange={(e) => handleSettingChange('smartRouting', e.target.checked)}
-                      color="primary"
+                    <ListItemSecondaryAction>
+                      <Switch
+                        edge="end"
+                        checked={settings.feedbackSmsAlerts === true}
+                        onChange={(e) => handleSettingChange('feedbackSmsAlerts', e.target.checked)}
+                        color="primary"
+                      />
+                    </ListItemSecondaryAction>
+                  </ListItem>
+                  <ListItem sx={{ borderRadius: 2, mb: 1 }}>
+                    <ListItemText
+                      primary={<Typography fontWeight="500">Weekly Reports</Typography>}
+                      secondary="Automated feedback summary emails"
                     />
-                  </ListItemSecondaryAction>
-                </ListItem>
-              </List>
-            </CardContent>
-          </Card>
+                    <ListItemSecondaryAction>
+                      <Switch
+                        edge="end"
+                        checked={settings.feedbackWeeklyReports !== false}
+                        onChange={(e) => handleSettingChange('feedbackWeeklyReports', e.target.checked)}
+                        color="primary"
+                      />
+                    </ListItemSecondaryAction>
+                  </ListItem>
+                  <ListItem sx={{ borderRadius: 2 }}>
+                    <ListItemText
+                      primary={<Typography fontWeight="500">Real-time Alerts</Typography>}
+                      secondary="Instant notifications for negative feedback"
+                    />
+                    <ListItemSecondaryAction>
+                      <Switch
+                        edge="end"
+                        checked={settings.feedbackRealTimeAlerts === true}
+                        onChange={(e) => handleSettingChange('feedbackRealTimeAlerts', e.target.checked)}
+                        color="primary"
+                      />
+                    </ListItemSecondaryAction>
+                  </ListItem>
+                </List>
+              </CardContent>
+            </Card>
+          </Grid>
+
+          <Grid item xs={12}>
+            <Card sx={{ borderRadius: 3, boxShadow: '0 8px 24px rgba(0,0,0,0.05)' }}>
+              <CardContent sx={{ p: 3 }}>
+                <Typography variant="h6" gutterBottom>Integrations</Typography>
+                <Divider sx={{ mb: 2 }} />
+                <Grid container spacing={2}>
+                  <Grid item xs={12} sm={6} md={3}>
+                    <Card sx={{ textAlign: 'center', p: 2, border: '1px solid', borderColor: 'divider' }}>
+                      <Box sx={{ mb: 2 }}>
+                        <Avatar sx={{ bgcolor: '#4A154B', mx: 'auto', mb: 1 }}>
+                          <Typography variant="h6" color="white">S</Typography>
+                        </Avatar>
+                      </Box>
+                      <Typography variant="h6" gutterBottom>Slack</Typography>
+                      <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                        Send feedback notifications to Slack channels
+                      </Typography>
+                      <Button
+                        variant={settings.slackIntegration ? "contained" : "outlined"}
+                        fullWidth
+                        onClick={() => handleSettingChange('slackIntegration', !settings.slackIntegration)}
+                      >
+                        {settings.slackIntegration ? "Connected" : "Connect"}
+                      </Button>
+                    </Card>
+                  </Grid>
+                  <Grid item xs={12} sm={6} md={3}>
+                    <Card sx={{ textAlign: 'center', p: 2, border: '1px solid', borderColor: 'divider' }}>
+                      <Box sx={{ mb: 2 }}>
+                        <Avatar sx={{ bgcolor: '#00A1C9', mx: 'auto', mb: 1 }}>
+                          <Typography variant="h6" color="white">SF</Typography>
+                        </Avatar>
+                      </Box>
+                      <Typography variant="h6" gutterBottom>Salesforce</Typography>
+                      <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                        Sync customer feedback with CRM records
+                      </Typography>
+                      <Button
+                        variant={settings.salesforceIntegration ? "contained" : "outlined"}
+                        fullWidth
+                        onClick={() => handleSettingChange('salesforceIntegration', !settings.salesforceIntegration)}
+                      >
+                        {settings.salesforceIntegration ? "Connected" : "Connect"}
+                      </Button>
+                    </Card>
+                  </Grid>
+                  <Grid item xs={12} sm={6} md={3}>
+                    <Card sx={{ textAlign: 'center', p: 2, border: '1px solid', borderColor: 'divider' }}>
+                      <Box sx={{ mb: 2 }}>
+                        <Avatar sx={{ bgcolor: '#FF7A59', mx: 'auto', mb: 1 }}>
+                          <Typography variant="h6" color="white">H</Typography>
+                        </Avatar>
+                      </Box>
+                      <Typography variant="h6" gutterBottom>HubSpot</Typography>
+                      <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                        Integrate with marketing automation workflows
+                      </Typography>
+                      <Button
+                        variant={settings.hubspotIntegration ? "contained" : "outlined"}
+                        fullWidth
+                        onClick={() => handleSettingChange('hubspotIntegration', !settings.hubspotIntegration)}
+                      >
+                        {settings.hubspotIntegration ? "Connected" : "Connect"}
+                      </Button>
+                    </Card>
+                  </Grid>
+                  <Grid item xs={12} sm={6} md={3}>
+                    <Card sx={{ textAlign: 'center', p: 2, border: '1px solid', borderColor: 'divider' }}>
+                      <Box sx={{ mb: 2 }}>
+                        <Avatar sx={{ bgcolor: '#FF4A00', mx: 'auto', mb: 1 }}>
+                          <Typography variant="h6" color="white">Z</Typography>
+                        </Avatar>
+                      </Box>
+                      <Typography variant="h6" gutterBottom>Zapier</Typography>
+                      <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                        Connect feedback to 1000+ apps and services
+                      </Typography>
+                      <Button
+                        variant={settings.zapierIntegration ? "contained" : "outlined"}
+                        fullWidth
+                        onClick={() => handleSettingChange('zapierIntegration', !settings.zapierIntegration)}
+                      >
+                        {settings.zapierIntegration ? "Connected" : "Connect"}
+                      </Button>
+                    </Card>
+                  </Grid>
+                </Grid>
+              </CardContent>
+            </Card>
+          </Grid>
+
+          <Grid item xs={12}>
+            <Card sx={{ borderRadius: 3, boxShadow: '0 8px 24px rgba(0,0,0,0.05)' }}>
+              <CardContent sx={{ p: 3 }}>
+                <Typography variant="h6" gutterBottom>Survey Automation</Typography>
+                <Divider sx={{ mb: 2 }} />
+                <List disablePadding>
+                  <ListItem sx={{ borderRadius: 2, mb: 1 }}>
+                    <ListItemText
+                      primary={<Typography fontWeight="500">Auto-send Post-Purchase Surveys</Typography>}
+                      secondary="Automatically send satisfaction surveys after policy purchases"
+                    />
+                    <ListItemSecondaryAction>
+                      <Switch
+                        edge="end"
+                        checked={settings.autoPostPurchaseSurvey === true}
+                        onChange={(e) => handleSettingChange('autoPostPurchaseSurvey', e.target.checked)}
+                        color="primary"
+                      />
+                    </ListItemSecondaryAction>
+                  </ListItem>
+                  <ListItem sx={{ borderRadius: 2, mb: 1 }}>
+                    <ListItemText
+                      primary={<Typography fontWeight="500">Follow-up Reminders</Typography>}
+                      secondary="Send reminders for incomplete survey responses"
+                    />
+                    <ListItemSecondaryAction>
+                      <Switch
+                        edge="end"
+                        checked={settings.surveyReminders !== false}
+                        onChange={(e) => handleSettingChange('surveyReminders', e.target.checked)}
+                        color="primary"
+                      />
+                    </ListItemSecondaryAction>
+                  </ListItem>
+                  <ListItem sx={{ borderRadius: 2 }}>
+                    <ListItemText
+                      primary={<Typography fontWeight="500">Smart Response Routing</Typography>}
+                      secondary="Automatically route negative feedback to support team"
+                    />
+                    <ListItemSecondaryAction>
+                      <Switch
+                        edge="end"
+                        checked={settings.smartRouting === true}
+                        onChange={(e) => handleSettingChange('smartRouting', e.target.checked)}
+                        color="primary"
+                      />
+                    </ListItemSecondaryAction>
+                  </ListItem>
+                </List>
+              </CardContent>
+            </Card>
+          </Grid>
         </Grid>
-      </Grid>
-    </Box>
-  );
+      </Box>
+    );
   };
 
   // Knowledge/Process Folder Tab
@@ -5580,13 +5994,13 @@ const Settings = () => {
       const updatedDocs = documents.map(doc =>
         doc.id === selectedDocument.id
           ? {
-              ...doc,
-              status: 'approved',
-              approvedBy: 'Current User',
-              approvedAt: new Date().toISOString().split('T')[0],
-              ocrStatus: 'completed',
-              ocrAccuracy: 95 + Math.random() * 4 // Simulated accuracy
-            }
+            ...doc,
+            status: 'approved',
+            approvedBy: 'Current User',
+            approvedAt: new Date().toISOString().split('T')[0],
+            ocrStatus: 'completed',
+            ocrAccuracy: 95 + Math.random() * 4 // Simulated accuracy
+          }
           : doc
       );
 
@@ -5740,14 +6154,14 @@ const Settings = () => {
                                 />
                               )}
                               {new Date(doc.expiryDate) > new Date() &&
-                               new Date(doc.expiryDate) <= new Date(Date.now() + 30*24*60*60*1000) && (
-                                <Chip
-                                  label="Expiring Soon"
-                                  size="small"
-                                  color="warning"
-                                  sx={{ mt: 0.5 }}
-                                />
-                              )}
+                                new Date(doc.expiryDate) <= new Date(Date.now() + 30 * 24 * 60 * 60 * 1000) && (
+                                  <Chip
+                                    label="Expiring Soon"
+                                    size="small"
+                                    color="warning"
+                                    sx={{ mt: 0.5 }}
+                                  />
+                                )}
                             </Box>
                           ) : (
                             <Typography variant="body2" color="text.secondary">
@@ -6430,9 +6844,9 @@ const Settings = () => {
             <Grid container spacing={3}>
               {roles.map((role) => (
                 <Grid item xs={12} md={6} key={role.id}>
-                  <Card 
-                    variant="outlined" 
-                    sx={{ 
+                  <Card
+                    variant="outlined"
+                    sx={{
                       borderRadius: 2,
                       transition: 'transform 0.2s, box-shadow 0.2s',
                       '&:hover': {
@@ -6447,11 +6861,11 @@ const Settings = () => {
                           <Typography variant="h6" fontWeight="600">
                             {role.displayName}
                             {role.isSystem && (
-                              <Chip 
-                                label="System" 
-                                size="small" 
-                                color="primary" 
-                                sx={{ ml: 1 }} 
+                              <Chip
+                                label="System"
+                                size="small"
+                                color="primary"
+                                sx={{ ml: 1 }}
                               />
                             )}
                           </Typography>
@@ -6490,11 +6904,11 @@ const Settings = () => {
                           )}
                         </Box>
                       </Box>
-                      
+
                       <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
                         {role.userCount} user(s) • {role.permissions.length} permissions
                       </Typography>
-                      
+
                       <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
                         {role.permissions.slice(0, 5).map((permission) => {
                           const permData = availablePermissions.find(p => p.id === permission);
@@ -6534,7 +6948,7 @@ const Settings = () => {
               </Typography>
             </Box>
             <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-              {userDialog.mode === 'add' 
+              {userDialog.mode === 'add'
                 ? 'Create a new user account with appropriate permissions and access levels.'
                 : 'Update user information and access permissions.'
               }
@@ -6548,7 +6962,7 @@ const Settings = () => {
                   Personal Information
                 </Typography>
               </Grid>
-              
+
               <Grid item xs={12} sm={6}>
                 <TextField
                   fullWidth
@@ -6559,7 +6973,7 @@ const Settings = () => {
                   helperText="Enter the user's full name"
                 />
               </Grid>
-              
+
               <Grid item xs={12} sm={6}>
                 <TextField
                   fullWidth
@@ -6571,7 +6985,7 @@ const Settings = () => {
                   helperText="Primary email for login and notifications"
                 />
               </Grid>
-              
+
               <Grid item xs={12} sm={6}>
                 <TextField
                   fullWidth
@@ -6581,7 +6995,7 @@ const Settings = () => {
                   helperText="Contact phone number (optional)"
                 />
               </Grid>
-              
+
               <Grid item xs={12} sm={6}>
                 <TextField
                   fullWidth
@@ -6591,7 +7005,7 @@ const Settings = () => {
                   helperText="User's position or role title"
                 />
               </Grid>
-              
+
               <Grid item xs={12} sm={6}>
                 <FormControl fullWidth>
                   <InputLabel>Department</InputLabel>
@@ -6650,7 +7064,7 @@ const Settings = () => {
                   Access & Permissions
                 </Typography>
               </Grid>
-              
+
               <Grid item xs={12} sm={6}>
                 <FormControl fullWidth>
                   <InputLabel>Role</InputLabel>
@@ -6658,8 +7072,8 @@ const Settings = () => {
                     value={newUser.role}
                     onChange={(e) => {
                       const selectedRole = roles.find(r => r.name === e.target.value);
-                      setNewUser({ 
-                        ...newUser, 
+                      setNewUser({
+                        ...newUser,
                         role: e.target.value,
                         permissions: selectedRole?.permissions || []
                       });
@@ -6681,7 +7095,7 @@ const Settings = () => {
                   </Select>
                 </FormControl>
               </Grid>
-              
+
               <Grid item xs={12} sm={6}>
                 <FormControl fullWidth>
                   <InputLabel>Account Status</InputLabel>
@@ -6720,7 +7134,7 @@ const Settings = () => {
                       Security Options
                     </Typography>
                   </Grid>
-                  
+
                   <Grid item xs={12}>
                     <FormControlLabel
                       control={
@@ -6742,7 +7156,7 @@ const Settings = () => {
                       }
                     />
                   </Grid>
-                  
+
                   <Grid item xs={12}>
                     <FormControlLabel
                       control={
@@ -6802,15 +7216,15 @@ const Settings = () => {
             </Grid>
           </DialogContent>
           <DialogActions sx={{ px: 3, py: 2, gap: 1 }}>
-            <Button 
+            <Button
               onClick={() => setUserDialog({ open: false, user: null, mode: 'add' })}
               variant="outlined"
               sx={{ borderRadius: 2 }}
             >
               Cancel
             </Button>
-            <Button 
-              variant="contained" 
+            <Button
+              variant="contained"
               onClick={handleSaveUser}
               disabled={!newUser?.name || !newUser?.email}
               startIcon={userDialog.mode === 'add' ? <AddIcon /> : <EditIcon />}
@@ -6830,8 +7244,8 @@ const Settings = () => {
             {roleDialog.mode === 'edit' && roleDialog.role?.isSystem && (
               <Alert severity="info" sx={{ mb: 2 }}>
                 <Typography variant="body2">
-                  <strong>System Role:</strong> You are editing a predefined system role. 
-                  Changes will affect all users assigned to this role. You can use the "Reset" button 
+                  <strong>System Role:</strong> You are editing a predefined system role.
+                  Changes will affect all users assigned to this role. You can use the "Reset" button
                   to restore default permissions if needed.
                 </Typography>
               </Alert>
@@ -6842,8 +7256,8 @@ const Settings = () => {
                   fullWidth
                   label="Role Name"
                   value={newRole.displayName}
-                  onChange={(e) => setNewRole({ 
-                    ...newRole, 
+                  onChange={(e) => setNewRole({
+                    ...newRole,
                     displayName: e.target.value,
                     name: e.target.value.toLowerCase().replace(/\s+/g, '_')
                   })}
@@ -6922,8 +7336,8 @@ const Settings = () => {
             <Button onClick={() => setRoleDialog({ open: false, role: null, mode: 'add' })}>
               Cancel
             </Button>
-            <Button 
-              variant="contained" 
+            <Button
+              variant="contained"
               onClick={handleSaveRole}
               disabled={!newRole.displayName || !newRole.name}
             >
@@ -6983,8 +7397,8 @@ const Settings = () => {
             <Button onClick={() => setPermissionDialog({ open: false, user: null })}>
               Cancel
             </Button>
-            <Button 
-              variant="contained" 
+            <Button
+              variant="contained"
               onClick={() => handleUpdateUserPermissions(selectedUser?.id, selectedUser?.permissions)}
             >
               Update Permissions
@@ -6993,10 +7407,10 @@ const Settings = () => {
         </Dialog>
 
         {/* Reset Role Confirmation Dialog */}
-        <Dialog 
-          open={resetRoleDialog.open} 
+        <Dialog
+          open={resetRoleDialog.open}
           onClose={() => setResetRoleDialog({ open: false, role: null })}
-          maxWidth="sm" 
+          maxWidth="sm"
           fullWidth
         >
           <DialogTitle sx={{ pb: 1 }}>
@@ -7052,15 +7466,15 @@ const Settings = () => {
             )}
           </DialogContent>
           <DialogActions sx={{ px: 3, py: 2, gap: 1 }}>
-            <Button 
+            <Button
               onClick={() => setResetRoleDialog({ open: false, role: null })}
               variant="outlined"
               sx={{ borderRadius: 2 }}
             >
               Cancel
             </Button>
-            <Button 
-              variant="contained" 
+            <Button
+              variant="contained"
               color="warning"
               onClick={handleConfirmResetRole}
               startIcon={<RestoreIcon />}
@@ -7094,7 +7508,7 @@ const Settings = () => {
           </Box>
           <Divider sx={{ mb: 2 }} />
           <Typography variant="body1" color="text.secondary">
-            {moduleName} specific settings will be available here. Configure notifications, automation rules, 
+            {moduleName} specific settings will be available here. Configure notifications, automation rules,
             and module-specific preferences for optimal workflow management.
           </Typography>
           <Box sx={{ mt: 3, p: 2, bgcolor: alpha(theme.palette.info.main, 0.1), borderRadius: 2 }}>
@@ -7284,10 +7698,10 @@ const Settings = () => {
 
     const handleTestConnection = async (platform) => {
       setTestConnectionLoading(platform.id);
-      
+
       // Simulate API test
       await new Promise(resolve => setTimeout(resolve, 2000));
-      
+
       setTestConnectionLoading(null);
       setSuccessMessage(`${platform.name} connection test successful!`);
       setTimeout(() => setSuccessMessage(''), 3000);
@@ -7357,9 +7771,9 @@ const Settings = () => {
                 const isConnected = integrations.socialMedia[platform.id].connected;
                 return (
                   <Grid item xs={12} sm={6} md={4} key={platform.id}>
-                    <Card 
-                      variant="outlined" 
-                      sx={{ 
+                    <Card
+                      variant="outlined"
+                      sx={{
                         height: '100%',
                         borderRadius: 2,
                         transition: 'all 0.3s ease',
@@ -7373,12 +7787,12 @@ const Settings = () => {
                     >
                       <CardContent sx={{ p: 3, height: '100%', display: 'flex', flexDirection: 'column' }}>
                         <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                          <Avatar 
-                            sx={{ 
-                              bgcolor: platform.color, 
-                              width: 40, 
-                              height: 40, 
-                              mr: 2 
+                          <Avatar
+                            sx={{
+                              bgcolor: platform.color,
+                              width: 40,
+                              height: 40,
+                              mr: 2
                             }}
                           >
                             {platform.icon}
@@ -7439,7 +7853,7 @@ const Settings = () => {
                               fullWidth
                               onClick={() => handleConnectPlatform(platform)}
                               startIcon={<LinkIcon />}
-                              sx={{ 
+                              sx={{
                                 borderRadius: 2,
                                 bgcolor: platform.color,
                                 '&:hover': {
@@ -7664,10 +8078,10 @@ const Settings = () => {
                 </Grid>
               ))}
             </Grid>
-            
+
             <Alert severity="info" sx={{ mt: 3 }}>
               <Typography variant="body2">
-                <strong>Security Note:</strong> Your API credentials are encrypted and stored securely. 
+                <strong>Security Note:</strong> Your API credentials are encrypted and stored securely.
                 We recommend using environment-specific keys and enabling API rate limiting.
               </Typography>
             </Alert>
@@ -7807,7 +8221,7 @@ const Settings = () => {
 
                 <Alert severity="success" sx={{ mt: 3 }}>
                   <Typography variant="body2">
-                    <strong>Verification Complete:</strong> Customer social media presence has been validated. 
+                    <strong>Verification Complete:</strong> Customer social media presence has been validated.
                     You can now connect with them through their verified social media channels.
                   </Typography>
                 </Alert>
@@ -7924,7 +8338,7 @@ const Settings = () => {
       setTestingProvider(provider.id);
       const success = await testProvider(channel, provider.id);
       setTestingProvider(null);
-      
+
       // Show result notification
       if (success) {
         setSuccessMessage(`${provider.name} connection test successful!`);
@@ -8091,16 +8505,16 @@ const Settings = () => {
             <Box>
               {providers?.[selectedChannel]?.length > 0 ? (
                 providers?.[selectedChannel]?.map((provider) =>
-                renderProviderCard(
-                {
-                ...provider,
-                email:
-                (provider && (provider.email || (provider.config && provider.config.email))) ||
-                (provider && (provider.senderId || provider.fromNumber || provider.phoneNumberId)) ||
-                ''
-                },
-                selectedChannel
-                )
+                  renderProviderCard(
+                    {
+                      ...provider,
+                      email:
+                        (provider && (provider.email || (provider.config && provider.config.email))) ||
+                        (provider && (provider.senderId || provider.fromNumber || provider.phoneNumberId)) ||
+                        ''
+                    },
+                    selectedChannel
+                  )
                 )
               ) : (
                 <Box sx={{ textAlign: 'center', py: 4 }}>
@@ -8152,8 +8566,8 @@ const Settings = () => {
                   <Select
                     value={newProvider.type}
                     label="Provider Type"
-                    onChange={(e) => setNewProvider(prev => ({ 
-                      ...prev, 
+                    onChange={(e) => setNewProvider(prev => ({
+                      ...prev,
                       type: e.target.value,
                       config: {}
                     }))}
@@ -8261,10 +8675,10 @@ const Settings = () => {
   return (
     <Fade in={true} timeout={800}>
       <Box sx={{ px: 1 }}>
-        <Box sx={{ 
-          display: 'flex', 
-          justifyContent: 'space-between', 
-          alignItems: 'center', 
+        <Box sx={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
           mb: 4
         }}>
           <Typography variant="h4" fontWeight="600">
@@ -8274,10 +8688,10 @@ const Settings = () => {
 
         {successMessage && (
           <Grow in={Boolean(successMessage)}>
-            <Alert 
-              severity="success" 
-              sx={{ 
-                mb: 3, 
+            <Alert
+              severity="success"
+              sx={{
+                mb: 3,
                 borderRadius: 2,
                 boxShadow: '0 4px 12px rgba(0,0,0,0.05)'
               }}
@@ -8326,7 +8740,7 @@ const Settings = () => {
               <AdminSettings />
             </TabPanel>
             <TabPanel value={tabValue} index={2}>
-              <RenewalsSettingsTab />
+              {RenewalsSettingsTab()}
             </TabPanel>
             <TabPanel value={tabValue} index={3}>
               <EmailSettingsTab />
@@ -8402,7 +8816,7 @@ const Settings = () => {
               Save Settings
             </Button>
           </Zoom>
-        </Box> 
+        </Box>
         <WelcomeModal open={welcomeModalOpen} onClose={handleCloseWelcomeGuide} />
       </Box>
     </Fade>

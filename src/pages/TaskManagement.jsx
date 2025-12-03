@@ -151,7 +151,6 @@ const TaskManagement = () => {
       setSortBy(field);
       setSortOrder('asc');
     }
-    setSortMenuAnchor(null);
   };
 
   // Handle export
@@ -395,20 +394,21 @@ const TaskManagement = () => {
         anchorEl={sortMenuAnchor}
         open={Boolean(sortMenuAnchor)}
         onClose={() => setSortMenuAnchor(null)}
+        disablePortal
       >
-        <MenuItem onClick={() => handleSortChange('dueDate')}>
+        <MenuItem onClick={() => { handleSortChange('dueDate'); setSortMenuAnchor(null); }}>
           Due Date {sortBy === 'dueDate' && `(${sortOrder})`}
         </MenuItem>
-        <MenuItem onClick={() => handleSortChange('priority')}>
+        <MenuItem onClick={() => { handleSortChange('priority'); setSortMenuAnchor(null); }}>
           Priority {sortBy === 'priority' && `(${sortOrder})`}
         </MenuItem>
-        <MenuItem onClick={() => handleSortChange('status')}>
+        <MenuItem onClick={() => { handleSortChange('status'); setSortMenuAnchor(null); }}>
           Status {sortBy === 'status' && `(${sortOrder})`}
         </MenuItem>
-        <MenuItem onClick={() => handleSortChange('createdAt')}>
+        <MenuItem onClick={() => { handleSortChange('createdAt'); setSortMenuAnchor(null); }}>
           Created Date {sortBy === 'createdAt' && `(${sortOrder})`}
         </MenuItem>
-        <MenuItem onClick={() => handleSortChange('title')}>
+        <MenuItem onClick={() => { handleSortChange('title'); setSortMenuAnchor(null); }}>
           Title {sortBy === 'title' && `(${sortOrder})`}
         </MenuItem>
       </Menu>

@@ -6,7 +6,7 @@ import {
   FormControl, InputLabel, Select, MenuItem, Card, CardContent,
   useTheme, alpha, Stack, Divider, Avatar, IconButton, Badge,
   Tooltip, LinearProgress, CardHeader, CardActions, Alert,
-  List, ListItem, ListItemText, ListItemAvatar, InputAdornment,
+  List, ListItem, ListItemText, ListItemAvatar, ListItemIcon, InputAdornment,
   Menu, Collapse, Stepper, Step, StepLabel
 } from '@mui/material';
 import {
@@ -25,7 +25,7 @@ import {
   Delete as DeleteIcon,
   Send as SendIcon,
   Download as DownloadIcon,
-  ContentCopy as CopyIcon,
+  ContentCopy,
   CheckCircle as ApprovedIcon,
   Cancel as RejectedIcon,
   HourglassEmpty as PendingIcon,
@@ -48,6 +48,8 @@ import {
   Print as PrintIcon
 } from '@mui/icons-material';
 
+// Quote Management Component - Updated with action handlers
+
 import QuoteService from '../services/qouteservice';
 
 const QuoteManagement = () => {
@@ -60,6 +62,7 @@ const QuoteManagement = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [expandedCards, setExpandedCards] = useState({});
+  const [deleteConfirmDialog, setDeleteConfirmDialog] = useState(false);
 
   const [formData, setFormData] = useState({
     customerName: '',
@@ -393,6 +396,129 @@ const QuoteManagement = () => {
       throw err;
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Edit Quote - populate form and switch to create tab
+  const handleEditQuote = (quote) => {
+    if (!quote) return;
+
+    // Populate form with quote data
+    setFormData({
+      customerName: quote.customerName || '',
+      customerEmail: quote.customerEmail || '',
+      customerPhone: quote.customerPhone || '',
+      leadId: quote.leadId || '',
+      productType: quote.productType || '',
+      productPlan: quote.productPlan || '',
+      coverageAmount: quote.coverageAmount?.replace('₹', '') || '',
+      premium: quote.premium?.replace('₹', '') || '',
+      sumInsured: quote.sumInsured?.replace('₹', '') || '',
+      tenure: quote.tenure || '1',
+      quoteAmount: quote.quoteAmount?.replace('₹', '') || '',
+      validityPeriod: '30',
+      remarks: quote.remarks || '',
+      ageOfInsured: quote.ageOfInsured || '',
+      medicalHistory: quote.medicalHistory || '',
+      vehicleDetails: quote.vehicleDetails || '',
+      previousInsurance: quote.previousInsurance || ''
+    });
+
+    // Store the quote ID for updating instead of creating new
+    setSelectedQuote(quote);
+
+    // Switch to raise quote tab
+    setCurrentTab(1);
+    handleMenuClose();
+  };
+
+  // Duplicate Quote - create a copy with new ID
+  const handleDuplicateQuote = async (quote) => {
+    if (!quote) return;
+
+    const duplicatedQuote = {
+      ...quote,
+      id: `Q${Date.now()}`, // New ID
+      status: 'Draft',
+      raisedDate: new Date().toLocaleDateString('en-GB'),
+      validUntil: '',
+      policyNumber: undefined,
+      timeline: [
+        {
+          action: 'Quote Duplicated',
+          user: 'Current User',
+          timestamp: new Date().toLocaleString(),
+          details: `Duplicated from ${quote.id}`
+        }
+      ]
+    };
+
+    setLoading(true);
+    try {
+      const created = await QuoteService.createQuote(duplicatedQuote);
+      setQuotes(prev => [created, ...prev]);
+      handleMenuClose();
+    } catch (err) {
+      console.error('Duplicate quote error', err);
+      setError(err.message || 'Failed to duplicate quote');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Print Quote - open print dialog
+  const handlePrintQuote = (quote) => {
+    if (!quote) return;
+
+    // Store selected quote and open details dialog for printing
+    setSelectedQuote(quote);
+    setOpenDetailsDialog(true);
+    handleMenuClose();
+
+    // Trigger print after a short delay to ensure dialog is rendered
+    setTimeout(() => {
+      window.print();
+    }, 500);
+  };
+
+  // Delete Quote - show confirmation dialog
+  const handleDeleteQuote = (quote) => {
+    if (!quote) return;
+    setSelectedQuote(quote);
+    setDeleteConfirmDialog(true);
+  };
+
+  // Confirm Delete Quote
+  const handleConfirmDelete = () => {
+    if (!selectedQuote) return;
+
+    setQuotes(prev => prev.filter(q => q.id !== selectedQuote.id));
+    setDeleteConfirmDialog(false);
+    handleMenuClose();
+    setSelectedQuote(null);
+  };
+
+  // Send Quote via Menu
+  const handleSendQuoteFromMenu = async () => {
+    if (!selectedQuote) return;
+
+    try {
+      await handleSendQuote(selectedQuote.id, { channel: 'email' });
+      handleMenuClose();
+    } catch (err) {
+      // Error already handled in handleSendQuote
+    }
+  };
+
+  // Download PDF via Menu
+  const handleDownloadPDFFromMenu = async () => {
+    if (!selectedQuote) return;
+
+    try {
+      await handleDownloadPDF(selectedQuote.id);
+      handleMenuClose();
+    } catch (err) {
+      // Error already handled in handleDownloadPDF
     }
   };
 
@@ -1281,51 +1407,6 @@ const QuoteManagement = () => {
         {currentTab === 2 && renderQuoteHistory()}
       </Box>
 
-      {/* Context Menu */}
-      <Menu anchorEl={menuAnchor} open={Boolean(menuAnchor)} onClose={handleMenuClose}>
-        {selectedQuote && selectedQuote.status === 'Draft' && (
-          <MenuItem onClick={() => handleStatusChange('Pending')}>
-            <PendingIcon sx={{ mr: 1 }} fontSize="small" /> Submit for Approval
-          </MenuItem>
-        )}
-        {selectedQuote && selectedQuote.status === 'Pending' && (
-          <>
-            <MenuItem onClick={() => handleStatusChange('Approved')}>
-              <ApprovedIcon sx={{ mr: 1 }} fontSize="small" color="success" /> Approve Quote
-            </MenuItem>
-            <MenuItem onClick={() => handleStatusChange('Rejected')}>
-              <RejectedIcon sx={{ mr: 1 }} fontSize="small" color="error" /> Reject Quote
-            </MenuItem>
-          </>
-        )}
-        {selectedQuote && selectedQuote.status === 'Approved' && (
-          <>
-            <MenuItem onClick={() => handleStatusChange('Converted')}>
-              <ConvertedIcon sx={{ mr: 1 }} fontSize="small" color="info" /> Convert to Policy
-            </MenuItem>
-            <MenuItem onClick={() => handleStatusChange('Lost')}>
-              <LostIcon sx={{ mr: 1 }} fontSize="small" color="error" /> Mark as Lost
-            </MenuItem>
-          </>
-        )}
-        <Divider />
-        <MenuItem onClick={handleMenuClose}>
-          <EditIcon sx={{ mr: 1 }} fontSize="small" /> Edit Quote
-        </MenuItem>
-        <MenuItem onClick={handleMenuClose}>
-          <CopyIcon sx={{ mr: 1 }} fontSize="small" /> Duplicate Quote
-        </MenuItem>
-        <MenuItem onClick={handleMenuClose}>
-          <SendIcon sx={{ mr: 1 }} fontSize="small" /> Send to Customer
-        </MenuItem>
-        <MenuItem onClick={handleMenuClose}>
-          <PrintIcon sx={{ mr: 1 }} fontSize="small" /> Print Quote
-        </MenuItem>
-        <Divider />
-        <MenuItem onClick={handleMenuClose}>
-          <DeleteIcon sx={{ mr: 1 }} fontSize="small" color="error" /> Delete Quote
-        </MenuItem>
-      </Menu>
 
       {/* Quote Details Dialog */}
       <Dialog
@@ -1553,6 +1634,156 @@ const QuoteManagement = () => {
           </Button>
           <Button variant="contained" startIcon={<SendIcon />}>
             Send to Customer
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Quote Actions Menu */}
+      <Menu
+        anchorEl={menuAnchor}
+        open={Boolean(menuAnchor)}
+        onClose={handleMenuClose}
+        PaperProps={{
+          sx: {
+            borderRadius: 2,
+            minWidth: 200,
+            boxShadow: '0 4px 20px rgba(0,0,0,0.1)'
+          }
+        }}
+      >
+        {/* Status Change Options */}
+        {selectedQuote && selectedQuote.status === 'Draft' && (
+          <>
+            <MenuItem onClick={() => handleStatusChange('Pending')}>
+              <ListItemIcon>
+                <PendingIcon fontSize="small" />
+              </ListItemIcon>
+              <ListItemText>Submit for Approval</ListItemText>
+            </MenuItem>
+            <Divider />
+          </>
+        )}
+        {selectedQuote && selectedQuote.status === 'Pending' && (
+          <>
+            <MenuItem onClick={() => handleStatusChange('Approved')}>
+              <ListItemIcon>
+                <ApprovedIcon fontSize="small" color="success" />
+              </ListItemIcon>
+              <ListItemText>Approve Quote</ListItemText>
+            </MenuItem>
+            <MenuItem onClick={() => handleStatusChange('Rejected')}>
+              <ListItemIcon>
+                <RejectedIcon fontSize="small" color="error" />
+              </ListItemIcon>
+              <ListItemText>Reject Quote</ListItemText>
+            </MenuItem>
+            <Divider />
+          </>
+        )}
+        {selectedQuote && selectedQuote.status === 'Approved' && (
+          <>
+            <MenuItem onClick={() => handleStatusChange('Converted')}>
+              <ListItemIcon>
+                <ConvertedIcon fontSize="small" color="info" />
+              </ListItemIcon>
+              <ListItemText>Convert to Policy</ListItemText>
+            </MenuItem>
+            <MenuItem onClick={() => handleStatusChange('Lost')}>
+              <ListItemIcon>
+                <LostIcon fontSize="small" color="error" />
+              </ListItemIcon>
+              <ListItemText>Mark as Lost</ListItemText>
+            </MenuItem>
+            <Divider />
+          </>
+        )}
+
+        {/* Quote Actions */}
+        <MenuItem onClick={() => handleEditQuote(selectedQuote)}>
+          <ListItemIcon>
+            <EditIcon fontSize="small" />
+          </ListItemIcon>
+          <ListItemText>Edit Quote</ListItemText>
+        </MenuItem>
+        <MenuItem onClick={() => handleDuplicateQuote(selectedQuote)}>
+          <ListItemIcon>
+            <ContentCopy fontSize="small" />
+          </ListItemIcon>
+          <ListItemText>Duplicate Quote</ListItemText>
+        </MenuItem>
+        <Divider />
+        <MenuItem onClick={handleSendQuoteFromMenu}>
+          <ListItemIcon>
+            <SendIcon fontSize="small" />
+          </ListItemIcon>
+          <ListItemText>Send to Customer</ListItemText>
+        </MenuItem>
+        <MenuItem onClick={handleDownloadPDFFromMenu}>
+          <ListItemIcon>
+            <DownloadIcon fontSize="small" />
+          </ListItemIcon>
+          <ListItemText>Download PDF</ListItemText>
+        </MenuItem>
+        <MenuItem onClick={() => handlePrintQuote(selectedQuote)}>
+          <ListItemIcon>
+            <PrintIcon fontSize="small" />
+          </ListItemIcon>
+          <ListItemText>Print Quote</ListItemText>
+        </MenuItem>
+        <Divider />
+        <MenuItem onClick={() => handleDeleteQuote(selectedQuote)} sx={{ color: 'error.main' }}>
+          <ListItemIcon>
+            <DeleteIcon fontSize="small" color="error" />
+          </ListItemIcon>
+          <ListItemText>Delete Quote</ListItemText>
+        </MenuItem>
+      </Menu>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog
+        open={deleteConfirmDialog}
+        onClose={() => setDeleteConfirmDialog(false)}
+        maxWidth="xs"
+        fullWidth
+      >
+        <DialogTitle>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <DeleteIcon color="error" />
+            <Typography variant="h6">Delete Quote</Typography>
+          </Box>
+        </DialogTitle>
+        <DialogContent>
+          <Typography variant="body1" gutterBottom>
+            Are you sure you want to delete this quote?
+          </Typography>
+          {selectedQuote && (
+            <Box sx={{ mt: 2, p: 2, bgcolor: 'background.default', borderRadius: 1 }}>
+              <Typography variant="body2" color="text.secondary">
+                <strong>Quote ID:</strong> {selectedQuote.id}
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                <strong>Customer:</strong> {selectedQuote.customerName}
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                <strong>Amount:</strong> {selectedQuote.quoteAmount}
+              </Typography>
+            </Box>
+          )}
+          <Alert severity="warning" sx={{ mt: 2 }}>
+            This action cannot be undone.
+          </Alert>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setDeleteConfirmDialog(false)}>
+            Cancel
+          </Button>
+          <Button
+            onClick={handleConfirmDelete}
+            color="error"
+            variant="contained"
+            startIcon={<DeleteIcon />}
+          >
+            Delete
           </Button>
         </DialogActions>
       </Dialog>
