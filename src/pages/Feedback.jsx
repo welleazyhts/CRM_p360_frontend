@@ -8,10 +8,10 @@ import {
   useTheme, Fade, Grow, IconButton, Tooltip, Avatar, Badge,
   Paper, Switch, FormControlLabel, Table, TableBody, TableCell,
   TableContainer, TableHead, TableRow, LinearProgress, Toolbar,
-  Checkbox
+  Checkbox, Popover, MenuList
 } from '@mui/material';
-import { 
-  XAxis, YAxis, CartesianGrid, 
+import {
+  XAxis, YAxis, CartesianGrid,
   Tooltip as RechartsTooltip, Legend, ResponsiveContainer, LineChart, Line,
   PieChart, Pie, Cell
 } from 'recharts';
@@ -34,7 +34,8 @@ import {
   Person as PersonIcon, CalendarToday as CalendarIcon, MoreVert as MoreVertIcon,
   Search as SearchIcon,
   Comment as CommentIcon, History as HistoryIcon,
-  Archive as ArchiveIcon, Reply as ReplyIcon, PersonAdd as AssignIcon
+  Archive as ArchiveIcon, Reply as ReplyIcon, PersonAdd as AssignIcon,
+  FilterAltOff as FilterAltOffIcon
 } from '@mui/icons-material';
 
 import feedbackService from '../services/feedbackserver';
@@ -45,7 +46,7 @@ const Feedback = () => {
 
   const [loaded, setLoaded] = useState(false);
   const [activeTab, setActiveTab] = useState(0);
-  
+
   // Dialog states
   const [createSurveyDialog, setCreateSurveyDialog] = useState(false);
   const [surveyTabIndex, setSurveyTabIndex] = useState(0);
@@ -56,7 +57,7 @@ const Feedback = () => {
 
   const [dateRangeDialog, setDateRangeDialog] = useState(false);
 
-  
+
   // Form states
   const [searchTerm, setSearchTerm] = useState('');
   const [feedbackFilter, setFeedbackFilter] = useState('all');
@@ -73,9 +74,10 @@ const Feedback = () => {
   const [activeMenu, setActiveMenu] = useState(null);
   const [menuPosition, setMenuPosition] = useState(null);
   const menuRef = useRef(null);
-  
+  const [exportMenuAnchor, setExportMenuAnchor] = useState(null);
+
   // Publish form state removed (unused)
-  
+
   // Survey form states
   const [surveyForm, setSurveyForm] = useState({
     name: '',
@@ -144,7 +146,7 @@ const Feedback = () => {
   const [recentFeedback, setRecentFeedback] = useState([
     {
       id: 1,
-              customer: 'Arjun Sharma',
+      customer: 'Arjun Sharma',
       customerEmail: 'john.smith@email.com',
       customerPhone: '+1234567890',
       rating: 5,
@@ -393,15 +395,15 @@ const Feedback = () => {
   ]);
 
   const [surveyResponses] = useState([
-          { id: 1, surveyId: 1, respondent: 'Arjun Sharma', responses: { 1: 5, 2: 'Great service!' }, submittedAt: '2024-12-28' },
-          { id: 2, surveyId: 1, respondent: 'Meera Kapoor', responses: { 1: 4, 2: 'Good overall' }, submittedAt: '2024-12-27' },
-          { id: 3, surveyId: 3, respondent: 'Vikram Singh', responses: { 1: 5, 2: 5 }, submittedAt: '2024-11-25' }
+    { id: 1, surveyId: 1, respondent: 'Arjun Sharma', responses: { 1: 5, 2: 'Great service!' }, submittedAt: '2024-12-28' },
+    { id: 2, surveyId: 1, respondent: 'Meera Kapoor', responses: { 1: 4, 2: 'Good overall' }, submittedAt: '2024-12-27' },
+    { id: 3, surveyId: 3, respondent: 'Vikram Singh', responses: { 1: 5, 2: 5 }, submittedAt: '2024-11-25' }
   ]);
 
   useEffect(() => {
     setTimeout(() => setLoaded(true), 100);
   }, []);
-  
+
 
 
   // Handler functions
@@ -487,28 +489,231 @@ const Feedback = () => {
     setSelectedFeedback(null);
   };
 
-  const handleExportData = (_format) => {
+  const handleExportData = (format) => {
+    // Prepare survey responses data for export
+    const dataToExport = surveyResponses.map(response => {
+      const survey = surveys.find(s => s.id === response.surveyId);
+      const responseData = {
+        'Survey Name': survey?.name || 'N/A',
+        'Survey Type': survey?.type || 'N/A',
+        'Respondent': response.respondent,
+        'Submitted Date': new Date(response.submittedAt).toLocaleDateString(),
+        'Submitted Time': new Date(response.submittedAt).toLocaleTimeString(),
+      };
 
-    // In real app, this would generate and download the file
+      // Add each question and answer
+      survey?.questions.forEach((question, index) => {
+        responseData[`Q${index + 1}: ${question.text}`] = response.responses[question.id] || 'No response';
+      });
+
+      return responseData;
+    });
+
+    if (format === 'csv') {
+      if (dataToExport.length === 0) {
+        alert('No survey responses to export');
+        return;
+      }
+
+      const headers = Object.keys(dataToExport[0]);
+      const csvContent = [
+        headers.join(','),
+        ...dataToExport.map(row =>
+          headers.map(header => {
+            const value = row[header];
+            const escaped = String(value).replace(/"/g, '""');
+            return escaped.includes(',') ? `"${escaped}"` : escaped;
+          }).join(',')
+        )
+      ].join('\n');
+
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = `survey_responses_${new Date().toISOString().split('T')[0]}.csv`;
+      link.click();
+    } else if (format === 'pdf') {
+      if (dataToExport.length === 0) {
+        alert('No survey responses to export');
+        return;
+      }
+
+      const headers = Object.keys(dataToExport[0]);
+      const htmlContent = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <title>Survey Responses Export</title>
+          <style>
+            body { font-family: Arial, sans-serif; padding: 20px; }
+            h1 { color: #333; margin-bottom: 20px; }
+            table { border-collapse: collapse; width: 100%; margin: 20px 0; }
+            th, td { border: 1px solid #ddd; padding: 8px; text-align: left; font-size: 11px; }
+            th { background-color: #4CAF50; color: white; font-weight: bold; }
+            tr:nth-child(even) { background-color: #f2f2f2; }
+            .export-info { margin-bottom: 15px; color: #666; font-size: 12px; }
+          </style>
+        </head>
+        <body>
+          <h1>Survey Responses Export</h1>
+          <div class="export-info">
+            <strong>Export Date:</strong> ${new Date().toLocaleDateString()} ${new Date().toLocaleTimeString()}<br>
+            <strong>Total Responses:</strong> ${dataToExport.length}
+          </div>
+          <table>
+            <thead>
+              <tr>${headers.map(h => `<th>${h}</th>`).join('')}</tr>
+            </thead>
+            <tbody>
+              ${dataToExport.map(row =>
+        `<tr>${headers.map(h => `<td>${row[h]}</td>`).join('')}</tr>`
+      ).join('')}
+            </tbody>
+          </table>
+        </body>
+        </html>
+      `;
+
+      const printWindow = window.open('', '_blank');
+      printWindow.document.write(htmlContent);
+      printWindow.document.close();
+      printWindow.focus();
+      setTimeout(() => {
+        printWindow.print();
+      }, 250);
+    }
+  };
+
+  // Refresh feedback data
+  const handleRefreshFeedback = async () => {
+    try {
+      const list = await feedbackService.listFeedback();
+      setRecentFeedback(list);
+    } catch (e) {
+      console.error('Failed to refresh feedback:', e);
+    }
+  };
+
+  // Reset all filters to default state
+  const handleResetFilters = () => {
+    setSearchTerm('');
+    setFeedbackFilter('all');
+    setChannelFilter('all');
+    setAssignedFilter('all');
+    setRatingFilter('all');
+    setDateRange({ from: '', to: '' });
+  };
+
+  // Export feedback data in specified format
+  const handleExportFeedback = (format) => {
+    const dataToExport = filteredFeedback.map(feedback => ({
+      Date: new Date(feedback.date).toLocaleDateString(),
+      Time: new Date(feedback.date).toLocaleTimeString(),
+      Customer: feedback.customer,
+      Email: feedback.customerEmail,
+      Phone: feedback.customerPhone || '',
+      Rating: feedback.rating,
+      Category: feedback.category,
+      Message: feedback.message,
+      Channel: feedback.channel,
+      Status: feedback.status,
+      AssignedTo: feedback.assignedTo || 'Unassigned',
+      Sentiment: feedback.sentiment,
+      Priority: feedback.priority || '',
+      Flagged: feedback.flagged ? 'Yes' : 'No'
+    }));
+
+    if (format === 'csv') {
+      const headers = Object.keys(dataToExport[0] || {});
+      const csvContent = [
+        headers.join(','),
+        ...dataToExport.map(row =>
+          headers.map(header => {
+            const value = row[header];
+            const escaped = String(value).replace(/"/g, '""');
+            return escaped.includes(',') ? `"${escaped}"` : escaped;
+          }).join(',')
+        )
+      ].join('\n');
+
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = `feedback_export_${new Date().toISOString().split('T')[0]}.csv`;
+      link.click();
+    } else if (format === 'excel') {
+      const headers = Object.keys(dataToExport[0] || {});
+      const csvContent = [
+        headers.join('\t'),
+        ...dataToExport.map(row =>
+          headers.map(header => String(row[header])).join('\t')
+        )
+      ].join('\n');
+
+      const blob = new Blob([csvContent], { type: 'application/vnd.ms-excel' });
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = `feedback_export_${new Date().toISOString().split('T')[0]}.xls`;
+      link.click();
+    } else if (format === 'pdf') {
+      const headers = Object.keys(dataToExport[0] || {});
+      const htmlContent = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <title>Feedback Export</title>
+          <style>
+            body { font-family: Arial, sans-serif; }
+            table { border-collapse: collapse; width: 100%; margin: 20px 0; }
+            th, td { border: 1px solid #ddd; padding: 8px; text-align: left; font-size: 12px; }
+            th { background-color: #4CAF50; color: white; }
+            tr:nth-child(even) { background-color: #f2f2f2; }
+            h1 { color: #333; }
+          </style>
+        </head>
+        <body>
+          <h1>Feedback Export - ${new Date().toLocaleDateString()}</h1>
+          <table>
+            <thead>
+              <tr>${headers.map(h => `<th>${h}</th>`).join('')}</tr>
+            </thead>
+            <tbody>
+              ${dataToExport.map(row =>
+        `<tr>${headers.map(h => `<td>${row[h]}</td>`).join('')}</tr>`
+      ).join('')}
+            </tbody>
+          </table>
+        </body>
+        </html>
+      `;
+
+      const printWindow = window.open('', '_blank');
+      printWindow.document.write(htmlContent);
+      printWindow.document.close();
+      printWindow.focus();
+      setTimeout(() => {
+        printWindow.print();
+      }, 250);
+    }
   };
 
   const handleLaunchSurvey = (surveyId) => {
-    setSurveys(surveys.map(survey => 
+    setSurveys(surveys.map(survey =>
       survey.id === surveyId ? { ...survey, status: 'active' } : survey
     ));
   };
 
   const handlePauseSurvey = (surveyId) => {
-    setSurveys(surveys.map(survey => 
+    setSurveys(surveys.map(survey =>
       survey.id === surveyId ? { ...survey, status: 'paused' } : survey
     ));
   };
 
   const filteredFeedback = recentFeedback.filter(feedback => {
     const matchesSearch = feedback.customer.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         feedback.message.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         feedback.customerEmail.toLowerCase().includes(searchTerm.toLowerCase());
-    
+      feedback.message.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      feedback.customerEmail.toLowerCase().includes(searchTerm.toLowerCase());
+
     // Main feedback filter
     let matchesFeedbackFilter = true;
     switch (feedbackFilter) {
@@ -533,17 +738,17 @@ const Feedback = () => {
       default:
         matchesFeedbackFilter = true;
     }
-    
+
     const matchesStatus = statusFilter === 'all' || feedback.status === statusFilter;
-    const matchesRating = ratingFilter === 'all' || 
-                         (ratingFilter === 'negative' && feedback.rating <= 2) ||
-                         (ratingFilter === 'neutral' && feedback.rating === 3) ||
-                         (ratingFilter === 'positive' && feedback.rating >= 4);
+    const matchesRating = ratingFilter === 'all' ||
+      (ratingFilter === 'negative' && feedback.rating <= 2) ||
+      (ratingFilter === 'neutral' && feedback.rating === 3) ||
+      (ratingFilter === 'positive' && feedback.rating >= 4);
     const matchesChannel = channelFilter === 'all' || feedback.channel === channelFilter;
-    const matchesAssigned = assignedFilter === 'all' || 
-                           (assignedFilter === 'unassigned' && !feedback.assignedTo) ||
-                           feedback.assignedTo === assignedFilter;
-    
+    const matchesAssigned = assignedFilter === 'all' ||
+      (assignedFilter === 'unassigned' && !feedback.assignedTo) ||
+      feedback.assignedTo === assignedFilter;
+
     // Date range filter
     let matchesDateRange = true;
     if (dateRange.from && dateRange.to) {
@@ -553,7 +758,7 @@ const Feedback = () => {
       toDate.setHours(23, 59, 59, 999); // Include the entire end date
       matchesDateRange = feedbackDate >= fromDate && feedbackDate <= toDate;
     }
-    
+
     return matchesSearch && matchesFeedbackFilter && matchesStatus && matchesRating && matchesChannel && matchesAssigned && matchesDateRange;
   });
 
@@ -561,15 +766,15 @@ const Feedback = () => {
   const StatCard = ({ title, value, color, icon, index, subtitle, trend, isCurrency }) => {
     const gradientFrom = alpha(color, theme.palette.mode === 'dark' ? 0.7 : 0.9);
     const gradientTo = alpha(color, theme.palette.mode === 'dark' ? 0.4 : 0.6);
-    
+
     // Safe number conversion and formatting
     let displayValue = value;
     if (isCurrency) {
       // Ensure we have a valid number before formatting
       const numericValue = Number(value);
       if (!isNaN(numericValue)) {
-        displayValue = new Intl.NumberFormat('en-IN', { 
-          style: 'currency', 
+        displayValue = new Intl.NumberFormat('en-IN', {
+          style: 'currency',
           currency: 'INR',
           minimumFractionDigits: 0,
           maximumFractionDigits: 0
@@ -578,12 +783,12 @@ const Feedback = () => {
         displayValue = '₹0'; // Default fallback for NaN values
       }
     }
-    
+
     return (
       <Grow in={loaded} timeout={(index + 1) * 200}>
-        <Card 
-          sx={{ 
-            height: '100%', 
+        <Card
+          sx={{
+            height: '100%',
             background: `linear-gradient(135deg, ${gradientFrom} 0%, ${gradientTo} 100%)`,
             borderRadius: 4,
             boxShadow: `0 10px 20px ${alpha(color, 0.2)}`,
@@ -680,7 +885,7 @@ const Feedback = () => {
 
   const handleSelectFeedback = (feedbackId) => {
     setSelectedFeedbackIds(prev => {
-      const newSelection = prev.includes(feedbackId) 
+      const newSelection = prev.includes(feedbackId)
         ? prev.filter(id => id !== feedbackId)
         : [...prev, feedbackId];
       setBulkActionsVisible(newSelection.length > 0);
@@ -716,16 +921,16 @@ const Feedback = () => {
   const handleActionMenuClick = useCallback((event, feedback) => {
     event.stopPropagation();
     event.preventDefault();
-    
+
     // Get the button's position
     const rect = event.currentTarget.getBoundingClientRect();
-    
+
     // Set position relative to the viewport
     setMenuPosition({
       top: rect.bottom + window.scrollY,
       left: rect.right - 200, // Align right edge of menu with right edge of button
     });
-    
+
     setActiveMenu(feedback);
   }, []);
 
@@ -733,7 +938,7 @@ const Feedback = () => {
     setActiveMenu(null);
     setMenuPosition(null);
   }, []);
-  
+
   // Handle clicks outside the menu
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -741,11 +946,11 @@ const Feedback = () => {
         handleActionMenuClose();
       }
     };
-    
+
     if (menuPosition) {
       document.addEventListener('mousedown', handleClickOutside);
     }
-    
+
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
@@ -781,7 +986,7 @@ const Feedback = () => {
 
   const [editFeedbackDialog, setEditFeedbackDialog] = useState({ open: false, feedback: null });
   const [editedFeedback, setEditedFeedback] = useState({});
-  
+
   // Update recentFeedback state when editedFeedback changes
   useEffect(() => {
     if (editedFeedback.id) {
@@ -798,14 +1003,14 @@ const Feedback = () => {
     }
     handleActionMenuClose();
   };
-  
+
   const handleEditChange = (field, value) => {
     setEditedFeedback(prev => ({
       ...prev,
       [field]: value
     }));
   };
-  
+
   const handleSaveFeedback = () => {
     (async () => {
       try {
@@ -840,7 +1045,7 @@ const Feedback = () => {
       {/* Enhanced Stats Cards */}
       <Grid container spacing={3} sx={{ mb: 4 }}>
         <Grid item xs={12} sm={6} md={4} lg={3}>
-          <StatCard 
+          <StatCard
             title="Overall Satisfaction"
             value={`${dashboardStats.overallSatisfaction}/5.0`}
             color="#ff6b35"
@@ -852,7 +1057,7 @@ const Feedback = () => {
           />
         </Grid>
         <Grid item xs={12} sm={6} md={4} lg={3}>
-          <StatCard 
+          <StatCard
             title="NPS Score"
             value={dashboardStats.npsScore}
             color="#4caf50"
@@ -863,7 +1068,7 @@ const Feedback = () => {
           />
         </Grid>
         <Grid item xs={12} sm={6} md={4} lg={3}>
-          <StatCard 
+          <StatCard
             title="Survey Completion Rate"
             value={`${dashboardStats.surveyCompletionRate}%`}
             color="#2196f3"
@@ -875,7 +1080,7 @@ const Feedback = () => {
           />
         </Grid>
         <Grid item xs={12} sm={6} md={4} lg={3}>
-          <StatCard 
+          <StatCard
             title="Total Feedback"
             value={dashboardStats.totalFeedback}
             color="#9c27b0"
@@ -887,7 +1092,7 @@ const Feedback = () => {
           />
         </Grid>
         <Grid item xs={12} sm={6} md={4} lg={3}>
-          <StatCard 
+          <StatCard
             title="Sentiment Score"
             value={`${dashboardStats.sentimentScore}%`}
             color="#00bcd4"
@@ -898,7 +1103,7 @@ const Feedback = () => {
           />
         </Grid>
         <Grid item xs={12} sm={6} md={4} lg={3}>
-          <StatCard 
+          <StatCard
             title="Flagged Feedback"
             value={dashboardStats.flaggedFeedback}
             color="#ff5722"
@@ -909,7 +1114,7 @@ const Feedback = () => {
           />
         </Grid>
         <Grid item xs={12} sm={6} md={4} lg={3}>
-          <StatCard 
+          <StatCard
             title="Negative Feedback"
             value={dashboardStats.negativeFeedback}
             color="#f44336"
@@ -935,53 +1140,53 @@ const Feedback = () => {
               </Typography>
               <Box sx={{ width: '100%', height: 280 }}>
                 <ResponsiveContainer width="100%" height="100%">
-                  <LineChart 
+                  <LineChart
                     data={feedbackTrends}
                     margin={{ top: 20, right: 30, left: 20, bottom: 20 }}
                   >
                     <CartesianGrid strokeDasharray="3 3" opacity={0.1} />
-                    <XAxis 
-                      dataKey="name" 
+                    <XAxis
+                      dataKey="name"
                       tick={{ fontSize: 12 }}
                       axisLine={{ stroke: theme.palette.divider }}
                     />
-                    <YAxis 
-                      yAxisId="left" 
-                      domain={[0, 5]} 
+                    <YAxis
+                      yAxisId="left"
+                      domain={[0, 5]}
                       tick={{ fontSize: 12 }}
                       axisLine={{ stroke: theme.palette.divider }}
                     />
-                    <YAxis 
-                      yAxisId="right" 
-                      orientation="right" 
-                      domain={[0, 100]} 
+                    <YAxis
+                      yAxisId="right"
+                      orientation="right"
+                      domain={[0, 100]}
                       tick={{ fontSize: 12 }}
                       axisLine={{ stroke: theme.palette.divider }}
                     />
-                    <RechartsTooltip 
-                      contentStyle={{ 
+                    <RechartsTooltip
+                      contentStyle={{
                         backgroundColor: theme.palette.mode === 'dark' ? '#2a2a2a' : '#fff',
                         borderRadius: 8,
                         boxShadow: '0 4px 20px rgba(0,0,0,0.15)',
                         border: 'none'
-                      }} 
+                      }}
                     />
                     <Legend wrapperStyle={{ paddingTop: '10px' }} />
-                    <Line 
+                    <Line
                       yAxisId="left"
-                      type="monotone" 
-                      dataKey="satisfaction" 
-                      stroke="#ff6b35" 
+                      type="monotone"
+                      dataKey="satisfaction"
+                      stroke="#ff6b35"
                       strokeWidth={2}
                       dot={{ r: 3 }}
                       activeDot={{ r: 5 }}
                       name="Satisfaction Score"
                     />
-                    <Line 
+                    <Line
                       yAxisId="right"
-                      type="monotone" 
-                      dataKey="nps" 
-                      stroke="#4caf50" 
+                      type="monotone"
+                      dataKey="nps"
+                      stroke="#4caf50"
                       strokeWidth={2}
                       dot={{ r: 3 }}
                       activeDot={{ r: 5 }}
@@ -1022,13 +1227,13 @@ const Feedback = () => {
                         <Cell key={`cell-${index}`} fill={entry.color} />
                       ))}
                     </Pie>
-                    <RechartsTooltip 
-                      contentStyle={{ 
+                    <RechartsTooltip
+                      contentStyle={{
                         backgroundColor: theme.palette.mode === 'dark' ? '#2a2a2a' : '#fff',
                         borderRadius: 8,
                         boxShadow: '0 4px 20px rgba(0,0,0,0.15)',
                         border: 'none'
-                      }} 
+                      }}
                     />
                   </PieChart>
                 </ResponsiveContainer>
@@ -1065,31 +1270,31 @@ const Feedback = () => {
                           <Cell key={`cell-${index}`} fill={entry.color} />
                         ))}
                       </Pie>
-                      <RechartsTooltip 
+                      <RechartsTooltip
                         formatter={(value) => [`${value}%`, 'Percentage']}
-                        contentStyle={{ 
+                        contentStyle={{
                           backgroundColor: theme.palette.mode === 'dark' ? '#2a2a2a' : '#fff',
                           borderRadius: 8,
                           boxShadow: '0 4px 20px rgba(0,0,0,0.15)',
                           border: 'none'
-                        }} 
+                        }}
                       />
                     </PieChart>
                   </ResponsiveContainer>
                 </Box>
-                
+
                 {/* Legend and Stats */}
                 <Box sx={{ width: '50%', display: 'flex', flexDirection: 'column', justifyContent: 'center', pl: 2 }}>
                   {sentimentData.map((item, index) => (
                     <Box key={index} sx={{ display: 'flex', alignItems: 'center', mb: 1.5 }}>
-                      <Box 
-                        sx={{ 
-                          width: 12, 
-                          height: 12, 
-                          backgroundColor: item.color, 
-                          borderRadius: '50%', 
-                          mr: 1.5 
-                        }} 
+                      <Box
+                        sx={{
+                          width: 12,
+                          height: 12,
+                          backgroundColor: item.color,
+                          borderRadius: '50%',
+                          mr: 1.5
+                        }}
                       />
                       <Box sx={{ flex: 1 }}>
                         <Typography variant="body2" fontWeight="600" fontSize="0.875rem">
@@ -1101,7 +1306,7 @@ const Feedback = () => {
                       </Box>
                     </Box>
                   ))}
-                  
+
                   <Box sx={{ mt: 2, p: 1.5, backgroundColor: alpha(theme.palette.primary.main, 0.1), borderRadius: 2 }}>
                     <Typography variant="body2" color="text.secondary" gutterBottom fontSize="0.75rem">
                       Overall Sentiment Score
@@ -1170,7 +1375,7 @@ const Feedback = () => {
                   </Button>
                 </Grid>
               </Grid>
-              
+
               {/* Attention Required Section */}
               <Box sx={{ mt: 3 }}>
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
@@ -1184,7 +1389,7 @@ const Feedback = () => {
                     <ListItemIcon>
                       <ThumbDownIcon color="error" />
                     </ListItemIcon>
-                    <ListItemText 
+                    <ListItemText
                       primary="Negative Feedback"
                       secondary={`${dashboardStats.negativeFeedback} items need attention`}
                     />
@@ -1193,7 +1398,7 @@ const Feedback = () => {
                     <ListItemIcon>
                       <FlagIcon color="warning" />
                     </ListItemIcon>
-                    <ListItemText 
+                    <ListItemText
                       primary="Flagged Items"
                       secondary={`${dashboardStats.flaggedFeedback} items flagged for follow-up`}
                     />
@@ -1246,8 +1451,8 @@ const Feedback = () => {
                           <StarIcon
                             key={i}
                             fontSize="small"
-                            sx={{ 
-                              color: i < feedback.rating ? '#ffc107' : '#e0e0e0' 
+                            sx={{
+                              color: i < feedback.rating ? '#ffc107' : '#e0e0e0'
                             }}
                           />
                         ))}
@@ -1260,9 +1465,9 @@ const Feedback = () => {
                       <Chip label={feedback.category} size="small" variant="outlined" />
                     </TableCell>
                     <TableCell>
-                      <Typography variant="body2" sx={{ 
-                        maxWidth: 200, 
-                        overflow: 'hidden', 
+                      <Typography variant="body2" sx={{
+                        maxWidth: 200,
+                        overflow: 'hidden',
                         textOverflow: 'ellipsis',
                         whiteSpace: 'nowrap'
                       }}>
@@ -1270,7 +1475,7 @@ const Feedback = () => {
                       </Typography>
                     </TableCell>
                     <TableCell>
-                      <Chip 
+                      <Chip
                         label={feedback.status.replace('_', ' ').toUpperCase()}
                         color={getStatusColor(feedback.status)}
                         size="small"
@@ -1310,17 +1515,17 @@ const Feedback = () => {
       <Box>
         {/* Header */}
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-    <Box>
-      <Typography variant="h5" gutterBottom>Feedback Inbox</Typography>
+          <Box>
+            <Typography variant="h5" gutterBottom>Feedback Inbox</Typography>
             <Typography variant="body2" color="text.secondary">
-        Real-time view of all incoming feedback and customer responses
-      </Typography>
+              Real-time view of all incoming feedback and customer responses
+            </Typography>
           </Box>
           <Box sx={{ display: 'flex', gap: 2 }}>
             {selectedFeedbackIds.length > 0 && (
-              <Chip 
-                label={`${selectedFeedbackIds.length} selected`} 
-                color="primary" 
+              <Chip
+                label={`${selectedFeedbackIds.length} selected`}
+                color="primary"
                 variant="outlined"
               />
             )}
@@ -1328,6 +1533,7 @@ const Feedback = () => {
               variant="outlined"
               startIcon={<RefreshIcon />}
               size="small"
+              onClick={handleRefreshFeedback}
             >
               Refresh
             </Button>
@@ -1340,45 +1546,45 @@ const Feedback = () => {
             <Typography variant="h6" gutterBottom>Filter Categories</Typography>
             <Grid container spacing={2}>
               {[
-                { 
-                  key: 'all', 
-                  label: 'All Feedback', 
-                  icon: '🔁', 
+                {
+                  key: 'all',
+                  label: 'All Feedback',
+                  icon: '🔁',
                   color: 'primary',
                   count: filterCounts.all
                 },
-                { 
-                  key: 'unaddressed', 
-                  label: 'Unaddressed', 
-                  icon: '🚩', 
+                {
+                  key: 'unaddressed',
+                  label: 'Unaddressed',
+                  icon: '🚩',
                   color: 'error',
                   count: filterCounts.unaddressed
                 },
-                { 
-                  key: 'negative', 
-                  label: 'Negative / Low Rating', 
-                  icon: '❗', 
+                {
+                  key: 'negative',
+                  label: 'Negative / Low Rating',
+                  icon: '❗',
                   color: 'error',
                   count: filterCounts.negative
                 },
-                { 
-                  key: 'flagged', 
-                  label: 'Flagged for Follow-Up', 
-                  icon: '🔍', 
+                {
+                  key: 'flagged',
+                  label: 'Flagged for Follow-Up',
+                  icon: '🔍',
                   color: 'warning',
                   count: filterCounts.flagged
                 },
-                { 
-                  key: 'attachments', 
-                  label: 'With Attachments', 
-                  icon: '📎', 
+                {
+                  key: 'attachments',
+                  label: 'With Attachments',
+                  icon: '📎',
                   color: 'info',
                   count: filterCounts.attachments
                 },
-                { 
-                  key: 'resolved', 
-                  label: 'Resolved Feedback', 
-                  icon: '✅', 
+                {
+                  key: 'resolved',
+                  label: 'Resolved Feedback',
+                  icon: '✅',
                   color: 'success',
                   count: filterCounts.resolved
                 }
@@ -1389,8 +1595,8 @@ const Feedback = () => {
                     variant={feedbackFilter === filter.key ? "contained" : "outlined"}
                     color={filter.color}
                     onClick={() => setFeedbackFilter(filter.key)}
-                    sx={{ 
-                      borderRadius: 2, 
+                    sx={{
+                      borderRadius: 2,
                       py: 1.5,
                       display: 'flex',
                       flexDirection: 'column',
@@ -1402,9 +1608,9 @@ const Feedback = () => {
                     <Typography variant="body2" fontWeight="600" fontSize="0.75rem" textAlign="center">
                       {filter.label}
                     </Typography>
-                    <Typography 
-                      variant="h6" 
-                      fontWeight="bold" 
+                    <Typography
+                      variant="h6"
+                      fontWeight="bold"
                       color={feedbackFilter === filter.key ? "inherit" : filter.color}
                     >
                       {filter.count}
@@ -1417,23 +1623,23 @@ const Feedback = () => {
         </Paper>
 
         {/* 3. Filter & Search Panel */}
-      <Paper sx={{ p: 2, mb: 3, borderRadius: 2 }}>
-        <Grid container spacing={2} alignItems="center">
+        <Paper sx={{ p: 2, mb: 3, borderRadius: 2 }}>
+          <Grid container spacing={2} alignItems="center">
             <Grid item xs={12} md={3}>
-            <TextField
-              fullWidth
+              <TextField
+                fullWidth
                 placeholder="Search customers, feedback, email..."
-              size="small"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
+                size="small"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
                 InputProps={{
                   startAdornment: <SearchIcon sx={{ mr: 1, color: 'text.secondary' }} />,
                   sx: { borderRadius: 2 }
                 }}
-            />
-          </Grid>
+              />
+            </Grid>
             <Grid item xs={6} sm={3} md={2}>
-            <FormControl fullWidth size="small">
+              <FormControl fullWidth size="small">
                 <InputLabel>Channel</InputLabel>
                 <Select value={channelFilter} onChange={(e) => setChannelFilter(e.target.value)}>
                   <MenuItem value="all">All Channels</MenuItem>
@@ -1443,11 +1649,11 @@ const Feedback = () => {
                   <MenuItem value="phone">Phone</MenuItem>
                   <MenuItem value="web">Web</MenuItem>
                   <MenuItem value="survey">Survey</MenuItem>
-              </Select>
-            </FormControl>
-          </Grid>
+                </Select>
+              </FormControl>
+            </Grid>
             <Grid item xs={6} sm={3} md={2}>
-            <FormControl fullWidth size="small">
+              <FormControl fullWidth size="small">
                 <InputLabel>Assigned To</InputLabel>
                 <Select value={assignedFilter} onChange={(e) => setAssignedFilter(e.target.value)}>
                   <MenuItem value="all">All Agents</MenuItem>
@@ -1461,47 +1667,50 @@ const Feedback = () => {
             <Grid item xs={6} sm={3} md={2}>
               <FormControl fullWidth size="small">
                 <InputLabel>Priority</InputLabel>
-              <Select value={ratingFilter} onChange={(e) => setRatingFilter(e.target.value)}>
+                <Select value={ratingFilter} onChange={(e) => setRatingFilter(e.target.value)}>
                   <MenuItem value="all">All Priorities</MenuItem>
                   <MenuItem value="urgent">Urgent</MenuItem>
                   <MenuItem value="high">High</MenuItem>
                   <MenuItem value="medium">Medium</MenuItem>
                   <MenuItem value="low">Low</MenuItem>
-              </Select>
-            </FormControl>
-          </Grid>
+                </Select>
+              </FormControl>
+            </Grid>
             <Grid item xs={6} sm={6} md={3}>
-            <Box sx={{ display: 'flex', gap: 1 }}>
-                <Button 
-                  startIcon={<CalendarIcon />} 
-                  variant="outlined" 
+              <Box sx={{ display: 'flex', gap: 1 }}>
+                <Button
+                  startIcon={<CalendarIcon />}
+                  variant="outlined"
                   size="small"
                   onClick={() => setDateRangeDialog(true)}
                   sx={{ borderRadius: 2 }}
                   color={dateRange.from && dateRange.to ? "primary" : "inherit"}
                 >
                   {dateRange.from && dateRange.to ? "Date Filtered" : "Date Range"}
-              </Button>
-                <Button 
-                  startIcon={<GetAppIcon />} 
-                  variant="outlined" 
+                </Button>
+                <Button
+                  startIcon={<FilterAltOffIcon />}
+                  variant="outlined"
                   size="small"
+                  onClick={handleResetFilters}
                   sx={{ borderRadius: 2 }}
+                  color={searchTerm || channelFilter !== 'all' || assignedFilter !== 'all' || ratingFilter !== 'all' || (dateRange.from && dateRange.to) ? "warning" : "inherit"}
                 >
-                Export
-              </Button>
-            </Box>
+                  Reset
+                </Button>
+              </Box>
+            </Grid>
           </Grid>
-        </Grid>
-      </Paper>
+        </Paper>
+
 
         {/* Bulk Actions Toolbar */}
         {bulkActionsVisible && (
           <Grow in={bulkActionsVisible} timeout={300}>
-            <Paper sx={{ 
-              p: 2, 
-              mb: 3, 
-              borderRadius: 3, 
+            <Paper sx={{
+              p: 2,
+              mb: 3,
+              borderRadius: 3,
               bgcolor: alpha(theme.palette.primary.main, 0.05),
               border: `1px solid ${alpha(theme.palette.primary.main, 0.2)}`
             }}>
@@ -1567,9 +1776,9 @@ const Feedback = () => {
         )}
 
         {/* 2. Feedback Listing Table */}
-        <Paper 
-          elevation={0} 
-          sx={{ 
+        <Paper
+          elevation={0}
+          sx={{
             borderRadius: 3,
             boxShadow: '0 8px 24px rgba(0,0,0,0.05)',
             overflow: 'visible'
@@ -1579,9 +1788,9 @@ const Feedback = () => {
             <Table stickyHeader>
               <TableHead>
                 <TableRow>
-                  <TableCell 
+                  <TableCell
                     padding="checkbox"
-                    sx={{ 
+                    sx={{
                       bgcolor: theme.palette.background.paper,
                       borderBottom: `2px solid ${theme.palette.divider}`,
                       position: 'sticky',
@@ -1595,8 +1804,8 @@ const Feedback = () => {
                       onChange={(e) => handleSelectAllFeedback(e.target.checked)}
                     />
                   </TableCell>
-                  <TableCell 
-                    sx={{ 
+                  <TableCell
+                    sx={{
                       fontWeight: 600,
                       bgcolor: theme.palette.background.paper,
                       borderBottom: `2px solid ${theme.palette.divider}`,
@@ -1607,8 +1816,8 @@ const Feedback = () => {
                   >
                     Date & Time
                   </TableCell>
-                  <TableCell 
-                    sx={{ 
+                  <TableCell
+                    sx={{
                       fontWeight: 600,
                       bgcolor: theme.palette.background.paper,
                       borderBottom: `2px solid ${theme.palette.divider}`,
@@ -1619,8 +1828,8 @@ const Feedback = () => {
                   >
                     Customer
                   </TableCell>
-                  <TableCell 
-                    sx={{ 
+                  <TableCell
+                    sx={{
                       fontWeight: 600,
                       bgcolor: theme.palette.background.paper,
                       borderBottom: `2px solid ${theme.palette.divider}`,
@@ -1631,8 +1840,8 @@ const Feedback = () => {
                   >
                     Rating
                   </TableCell>
-                  <TableCell 
-                    sx={{ 
+                  <TableCell
+                    sx={{
                       fontWeight: 600,
                       bgcolor: theme.palette.background.paper,
                       borderBottom: `2px solid ${theme.palette.divider}`,
@@ -1643,8 +1852,8 @@ const Feedback = () => {
                   >
                     Feedback Snippet
                   </TableCell>
-                  <TableCell 
-                    sx={{ 
+                  <TableCell
+                    sx={{
                       fontWeight: 600,
                       bgcolor: theme.palette.background.paper,
                       borderBottom: `2px solid ${theme.palette.divider}`,
@@ -1655,8 +1864,8 @@ const Feedback = () => {
                   >
                     Channel
                   </TableCell>
-                  <TableCell 
-                    sx={{ 
+                  <TableCell
+                    sx={{
                       fontWeight: 600,
                       bgcolor: theme.palette.background.paper,
                       borderBottom: `2px solid ${theme.palette.divider}`,
@@ -1667,8 +1876,8 @@ const Feedback = () => {
                   >
                     Category/Tag
                   </TableCell>
-                  <TableCell 
-                    sx={{ 
+                  <TableCell
+                    sx={{
                       fontWeight: 600,
                       bgcolor: theme.palette.background.paper,
                       borderBottom: `2px solid ${theme.palette.divider}`,
@@ -1679,8 +1888,8 @@ const Feedback = () => {
                   >
                     Status
                   </TableCell>
-                  <TableCell 
-                    sx={{ 
+                  <TableCell
+                    sx={{
                       fontWeight: 600,
                       bgcolor: theme.palette.background.paper,
                       borderBottom: `2px solid ${theme.palette.divider}`,
@@ -1691,8 +1900,8 @@ const Feedback = () => {
                   >
                     Assigned To
                   </TableCell>
-                  <TableCell 
-                    sx={{ 
+                  <TableCell
+                    sx={{
                       fontWeight: 600,
                       bgcolor: theme.palette.background.paper,
                       borderBottom: `2px solid ${theme.palette.divider}`,
@@ -1706,12 +1915,12 @@ const Feedback = () => {
                 </TableRow>
               </TableHead>
               <TableBody>
-        {filteredFeedback.map((feedback) => (
-                  <TableRow 
+                {filteredFeedback.map((feedback) => (
+                  <TableRow
                     key={feedback.id}
                     hover
                     selected={selectedFeedbackIds.includes(feedback.id)}
-                    sx={{ 
+                    sx={{
                       '&:hover': { cursor: 'pointer' },
                       borderLeft: feedback.priority === 'urgent' ? `4px solid ${getPriorityColor(feedback.priority)}` : 'none'
                     }}
@@ -1735,12 +1944,12 @@ const Feedback = () => {
                     <TableCell>
                       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                         <Avatar sx={{ width: 32, height: 32, bgcolor: theme.palette.primary.main }}>
-                      {feedback.customer.charAt(0)}
-                    </Avatar>
-                    <Box>
+                          {feedback.customer.charAt(0)}
+                        </Avatar>
+                        <Box>
                           <Typography variant="body2" fontWeight="600">
-                        {feedback.customer}
-                      </Typography>
+                            {feedback.customer}
+                          </Typography>
                           <Typography variant="caption" color="text.secondary">
                             {feedback.customerEmail}
                           </Typography>
@@ -1748,25 +1957,25 @@ const Feedback = () => {
                       </Box>
                     </TableCell>
                     <TableCell>
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                          {[...Array(5)].map((_, i) => (
-                            <StarIcon
-                              key={i}
-                              fontSize="small"
-                              sx={{ 
-                                color: i < feedback.rating ? '#ffc107' : '#e0e0e0' 
-                              }}
-                            />
-                          ))}
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                        {[...Array(5)].map((_, i) => (
+                          <StarIcon
+                            key={i}
+                            fontSize="small"
+                            sx={{
+                              color: i < feedback.rating ? '#ffc107' : '#e0e0e0'
+                            }}
+                          />
+                        ))}
                         <Typography variant="body2" sx={{ ml: 1 }}>
                           {feedback.rating}/5
                         </Typography>
-                        </Box>
+                      </Box>
                     </TableCell>
                     <TableCell>
                       <Box sx={{ maxWidth: 200 }}>
-                        <Typography variant="body2" sx={{ 
-                          overflow: 'hidden', 
+                        <Typography variant="body2" sx={{
+                          overflow: 'hidden',
                           textOverflow: 'ellipsis',
                           whiteSpace: 'nowrap'
                         }}>
@@ -1774,28 +1983,28 @@ const Feedback = () => {
                         </Typography>
                         <Box sx={{ display: 'flex', gap: 0.5, mt: 0.5 }}>
                           {feedback.hasAttachments && (
-                            <Chip 
-                              icon={<AttachFileIcon />} 
-                              label={`${feedback.attachments?.length || 0} files`} 
-                              size="small" 
-                              color="info" 
-                              variant="outlined" 
+                            <Chip
+                              icon={<AttachFileIcon />}
+                              label={`${feedback.attachments?.length || 0} files`}
+                              size="small"
+                              color="info"
+                              variant="outlined"
                             />
                           )}
                           {feedback.flagged && (
-                            <Chip 
-                              icon={<FlagIcon />} 
-                              label="Flagged" 
-                              size="small" 
-                              color="error" 
-                              variant="outlined" 
+                            <Chip
+                              icon={<FlagIcon />}
+                              label="Flagged"
+                              size="small"
+                              color="error"
+                              variant="outlined"
                             />
                           )}
+                        </Box>
                       </Box>
-                    </Box>
                     </TableCell>
                     <TableCell>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                         {getChannelIcon(feedback.channel)}
                         <Typography variant="body2" sx={{ textTransform: 'capitalize' }}>
                           {feedback.channel}
@@ -1804,17 +2013,17 @@ const Feedback = () => {
                     </TableCell>
                     <TableCell>
                       <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-                        <Chip 
-                          label={feedback.category} 
-                          size="small" 
-                          variant="outlined" 
+                        <Chip
+                          label={feedback.category}
+                          size="small"
+                          variant="outlined"
                           color="primary"
                         />
                         {feedback.tags?.slice(0, 2).map((tag, idx) => (
-                          <Chip 
+                          <Chip
                             key={idx}
-                            label={tag} 
-                            size="small" 
+                            label={tag}
+                            size="small"
                             variant="filled"
                             sx={{ fontSize: '0.7rem' }}
                           />
@@ -1822,10 +2031,10 @@ const Feedback = () => {
                       </Box>
                     </TableCell>
                     <TableCell>
-                    <Chip 
-                      label={feedback.status.replace('_', ' ').toUpperCase()}
-                      color={getStatusColor(feedback.status)}
-                      size="small"
+                      <Chip
+                        label={feedback.status.replace('_', ' ').toUpperCase()}
+                        color={getStatusColor(feedback.status)}
+                        size="small"
                         variant="filled"
                       />
                     </TableCell>
@@ -1837,8 +2046,8 @@ const Feedback = () => {
                     <TableCell>
                       <Box sx={{ display: 'flex', gap: 0.5 }}>
                         <Tooltip title="View Details">
-                          <IconButton 
-                            size="small" 
+                          <IconButton
+                            size="small"
                             onClick={() => {
                               setSelectedFeedback(feedback);
                               setFeedbackDetailOpen(true);
@@ -1848,8 +2057,8 @@ const Feedback = () => {
                           </IconButton>
                         </Tooltip>
                         <Tooltip title="Mark as Resolved">
-                          <IconButton 
-                            size="small" 
+                          <IconButton
+                            size="small"
                             color="success"
                             onClick={() => handleResolveFeedback(feedback.id)}
                             disabled={feedback.status === 'resolved'}
@@ -1858,8 +2067,8 @@ const Feedback = () => {
                           </IconButton>
                         </Tooltip>
                         <Tooltip title="Flag for Follow-up">
-                          <IconButton 
-                            size="small" 
+                          <IconButton
+                            size="small"
                             color="warning"
                             onClick={() => handleFlagFeedback(feedback.id)}
                             disabled={feedback.flagged}
@@ -1868,14 +2077,14 @@ const Feedback = () => {
                           </IconButton>
                         </Tooltip>
                         <Tooltip title="More Actions">
-                          <IconButton 
+                          <IconButton
                             size="small"
                             onClick={(e) => handleActionMenuClick(e, feedback)}
                           >
                             <MoreVertIcon />
                           </IconButton>
                         </Tooltip>
-                  </Box>
+                      </Box>
                     </TableCell>
                   </TableRow>
                 ))}
@@ -1886,7 +2095,7 @@ const Feedback = () => {
 
         {/* Custom Action Menu using React Portal for guaranteed positioning */}
         {menuPosition && activeMenu && ReactDOM.createPortal(
-          <div 
+          <div
             ref={menuRef}
             style={{
               position: 'absolute',
@@ -1953,7 +2162,7 @@ const Feedback = () => {
                   </ListItemIcon>
                   <ListItemText>Archive</ListItemText>
                 </MenuItem>
-                <MenuItem 
+                <MenuItem
                   onClick={() => {
                     handleDeleteFeedback(activeMenu.id);
                     handleActionMenuClose();
@@ -1973,10 +2182,10 @@ const Feedback = () => {
 
 
         {/* 6. Feedback Detail View - Right Drawer */}
-        <Dialog 
-          open={feedbackDetailOpen} 
-          onClose={() => setFeedbackDetailOpen(false)} 
-          maxWidth="md" 
+        <Dialog
+          open={feedbackDetailOpen}
+          onClose={() => setFeedbackDetailOpen(false)}
+          maxWidth="md"
           fullWidth
           PaperProps={{ sx: { borderRadius: 3 } }}
         >
@@ -2007,7 +2216,7 @@ const Feedback = () => {
                         <Typography variant="body2" color="text.secondary">
                           {selectedFeedback.customerPhone}
                         </Typography>
-                </Box>
+                      </Box>
                     </Box>
                     <Box sx={{ mb: 2 }}>
                       <Typography variant="body2" color="text.secondary">Location</Typography>
@@ -2022,8 +2231,8 @@ const Feedback = () => {
                     <Typography variant="h6" gutterBottom>Full Feedback Content</Typography>
                     <Typography variant="body1" paragraph>
                       {selectedFeedback.fullMessage}
-                </Typography>
-                
+                    </Typography>
+
                     {/* Rating Breakdown */}
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
                       <Typography variant="subtitle2">Rating:</Typography>
@@ -2032,8 +2241,8 @@ const Feedback = () => {
                           <StarIcon
                             key={i}
                             fontSize="small"
-                            sx={{ 
-                              color: i < selectedFeedback.rating ? '#ffc107' : '#e0e0e0' 
+                            sx={{
+                              color: i < selectedFeedback.rating ? '#ffc107' : '#e0e0e0'
                             }}
                           />
                         ))}
@@ -2047,17 +2256,17 @@ const Feedback = () => {
                     <Box sx={{ mb: 2 }}>
                       <Typography variant="subtitle2" gutterBottom>Tags & Category</Typography>
                       <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-                        <Chip 
-                          label={selectedFeedback.category} 
-                          color="primary" 
+                        <Chip
+                          label={selectedFeedback.category}
+                          color="primary"
                           variant="filled"
                         />
                         {selectedFeedback.tags?.map((tag, idx) => (
-                          <Chip 
+                          <Chip
                             key={idx}
-                            label={tag} 
-                      size="small" 
-                      variant="outlined"
+                            label={tag}
+                            size="small"
+                            variant="outlined"
                           />
                         ))}
                       </Box>
@@ -2076,7 +2285,7 @@ const Feedback = () => {
                               variant="outlined"
                               color="info"
                               clickable
-                              onClick={() => {}}
+                              onClick={() => { }}
                             />
                           ))}
                         </Box>
@@ -2105,28 +2314,28 @@ const Feedback = () => {
           </DialogContent>
           <DialogActions sx={{ p: 3 }}>
             <Button onClick={() => setFeedbackDetailOpen(false)}>Close</Button>
-                    <Button 
-                      variant="outlined"
+            <Button
+              variant="outlined"
               startIcon={<CommentIcon />}
               onClick={() => {
                 setFeedbackDetailOpen(false);
                 handleReplyFeedback(selectedFeedback);
               }}
-                    >
-                      Reply
-                    </Button>
-                    <Button 
-                      variant="outlined"
+            >
+              Reply
+            </Button>
+            <Button
+              variant="outlined"
               startIcon={<PersonIcon />}
               onClick={() => {
                 setFeedbackDetailDialog(false);
                 handleAssignFeedback(selectedFeedback);
               }}
-                    >
-                      Assign
-                    </Button>
-                    <Button 
-                      variant="contained"
+            >
+              Assign
+            </Button>
+            <Button
+              variant="contained"
               startIcon={<CheckCircleIcon />}
               onClick={() => {
                 handleResolveFeedback(selectedFeedback.id);
@@ -2135,13 +2344,13 @@ const Feedback = () => {
               disabled={selectedFeedback?.status === 'resolved'}
             >
               Mark Resolved
-                    </Button>
+            </Button>
           </DialogActions>
         </Dialog>
 
         {/* Edit Feedback Dialog */}
-        <Dialog 
-          open={editFeedbackDialog.open} 
+        <Dialog
+          open={editFeedbackDialog.open}
           onClose={() => setEditFeedbackDialog({ open: false, feedback: null })}
           maxWidth="md"
           fullWidth
@@ -2177,7 +2386,7 @@ const Feedback = () => {
                 <Grid item xs={12} sm={6}>
                   <FormControl fullWidth sx={{ mb: 2 }}>
                     <InputLabel>Category</InputLabel>
-                                         <Select
+                    <Select
                       value={editedFeedback.category || ''}
                       label="Category"
                       onChange={(e) => handleEditChange('category', e.target.value)}
@@ -2194,7 +2403,7 @@ const Feedback = () => {
                 <Grid item xs={12} sm={6}>
                   <FormControl fullWidth sx={{ mb: 2 }}>
                     <InputLabel>Status</InputLabel>
-                                         <Select
+                    <Select
                       value={editedFeedback.status || ''}
                       label="Status"
                       onChange={(e) => handleEditChange('status', e.target.value)}
@@ -2208,7 +2417,7 @@ const Feedback = () => {
                 <Grid item xs={12} sm={6}>
                   <FormControl fullWidth sx={{ mb: 2 }}>
                     <InputLabel>Priority</InputLabel>
-                                         <Select
+                    <Select
                       value={editedFeedback.priority || 'medium'}
                       label="Priority"
                       onChange={(e) => handleEditChange('priority', e.target.value)}
@@ -2223,7 +2432,7 @@ const Feedback = () => {
                 <Grid item xs={12} sm={6}>
                   <FormControlLabel
                     control={
-                      <Switch 
+                      <Switch
                         checked={editedFeedback.flagged || false}
                         onChange={(e) => handleEditChange('flagged', e.target.checked)}
                         color="warning"
@@ -2260,9 +2469,9 @@ const Feedback = () => {
                   </FormControl>
                 </Grid>
                 <Grid item xs={12}>
-                                     <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+                  <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
                     {editedFeedback.tags?.map((tag, index) => (
-                      <Chip 
+                      <Chip
                         key={index}
                         label={tag}
                         onDelete={() => {
@@ -2295,7 +2504,7 @@ const Feedback = () => {
             <Button onClick={() => setEditFeedbackDialog({ open: false, feedback: null })}>
               Cancel
             </Button>
-            <Button 
+            <Button
               variant="contained"
               onClick={handleSaveFeedback}
             >
@@ -2331,56 +2540,56 @@ const Feedback = () => {
               </Grid>
               <Grid item xs={12}>
                 <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
-                  <Chip 
-                    label="Today" 
-                    clickable 
+                  <Chip
+                    label="Today"
+                    clickable
                     onClick={() => {
                       const today = new Date().toISOString().split('T')[0];
                       setDateRange({ from: today, to: today });
                     }}
                   />
-                  <Chip 
-                    label="Last 7 days" 
-                    clickable 
+                  <Chip
+                    label="Last 7 days"
+                    clickable
                     onClick={() => {
                       const today = new Date();
                       const lastWeek = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000);
-                      setDateRange({ 
-                        from: lastWeek.toISOString().split('T')[0], 
-                        to: today.toISOString().split('T')[0] 
+                      setDateRange({
+                        from: lastWeek.toISOString().split('T')[0],
+                        to: today.toISOString().split('T')[0]
                       });
                     }}
                   />
-                  <Chip 
-                    label="Last 30 days" 
-                    clickable 
+                  <Chip
+                    label="Last 30 days"
+                    clickable
                     onClick={() => {
                       const today = new Date();
                       const lastMonth = new Date(today.getTime() - 30 * 24 * 60 * 60 * 1000);
-                      setDateRange({ 
-                        from: lastMonth.toISOString().split('T')[0], 
-                        to: today.toISOString().split('T')[0] 
+                      setDateRange({
+                        from: lastMonth.toISOString().split('T')[0],
+                        to: today.toISOString().split('T')[0]
                       });
                     }}
                   />
-                  <Chip 
-                    label="This Month" 
-                    clickable 
+                  <Chip
+                    label="This Month"
+                    clickable
                     onClick={() => {
                       const today = new Date();
                       const firstDayOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
-                      setDateRange({ 
-                        from: firstDayOfMonth.toISOString().split('T')[0], 
-                        to: today.toISOString().split('T')[0] 
+                      setDateRange({
+                        from: firstDayOfMonth.toISOString().split('T')[0],
+                        to: today.toISOString().split('T')[0]
                       });
                     }}
                   />
                 </Box>
-          </Grid>
-      </Grid>
+              </Grid>
+            </Grid>
           </DialogContent>
           <DialogActions>
-            <Button 
+            <Button
               onClick={() => {
                 setDateRange({ from: '', to: '' });
                 setDateRangeDialog(false);
@@ -2389,8 +2598,8 @@ const Feedback = () => {
               Clear
             </Button>
             <Button onClick={() => setDateRangeDialog(false)}>Cancel</Button>
-            <Button 
-              onClick={() => setDateRangeDialog(false)} 
+            <Button
+              onClick={() => setDateRangeDialog(false)}
               variant="contained"
               disabled={!dateRange.from || !dateRange.to}
             >
@@ -2398,8 +2607,8 @@ const Feedback = () => {
             </Button>
           </DialogActions>
         </Dialog>
-    </Box>
-  );
+      </Box>
+    );
   };
 
   const SurveyCampaignsTab = () => (
@@ -2430,17 +2639,17 @@ const Feedback = () => {
                   <Typography variant="h6" fontWeight="600">
                     {survey.name}
                   </Typography>
-                  <Chip 
+                  <Chip
                     label={survey.status.toUpperCase()}
                     color={getSurveyStatusColor(survey.status)}
                     size="small"
                   />
                 </Box>
-                
+
                 <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
                   Type: {survey.type} • Created: {new Date(survey.createdDate).toLocaleDateString()}
                 </Typography>
-                
+
                 <Box sx={{ mb: 2 }}>
                   <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
                     <Typography variant="body2">Progress</Typography>
@@ -2448,8 +2657,8 @@ const Feedback = () => {
                       {survey.responses}/{survey.targetResponses}
                     </Typography>
                   </Box>
-                  <LinearProgress 
-                    variant="determinate" 
+                  <LinearProgress
+                    variant="determinate"
                     value={(survey.responses / survey.targetResponses) * 100}
                     sx={{ borderRadius: 1, height: 8 }}
                   />
@@ -2457,7 +2666,7 @@ const Feedback = () => {
                     {survey.completionRate}% completion rate
                   </Typography>
                 </Box>
-                
+
                 <Box sx={{ display: 'flex', gap: 1, mb: 2 }}>
                   {survey.channels.map((channel) => (
                     <Tooltip key={channel} title={channel.toUpperCase()}>
@@ -2467,12 +2676,12 @@ const Feedback = () => {
                     </Tooltip>
                   ))}
                 </Box>
-                
+
                 <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
                   {survey.status === 'draft' && (
-                    <Button 
-                      size="small" 
-                      variant="contained" 
+                    <Button
+                      size="small"
+                      variant="contained"
                       startIcon={<SendIcon />}
                       onClick={() => handleLaunchSurvey(survey.id)}
                     >
@@ -2480,34 +2689,34 @@ const Feedback = () => {
                     </Button>
                   )}
                   {survey.status === 'active' && (
-                    <Button 
-                      size="small" 
-                      variant="outlined" 
+                    <Button
+                      size="small"
+                      variant="outlined"
                       color="warning"
                       onClick={() => handlePauseSurvey(survey.id)}
                     >
                       Pause
                     </Button>
                   )}
-                  <Button 
-                    size="small" 
-                    variant="outlined" 
+                  <Button
+                    size="small"
+                    variant="outlined"
                     startIcon={<ViewIcon />}
                     onClick={() => setActiveTab(4)}
                   >
                     View
                   </Button>
-                  <Button 
-                    size="small" 
-                    variant="outlined" 
+                  <Button
+                    size="small"
+                    variant="outlined"
                     startIcon={<EditIcon />}
                     onClick={() => setActiveTab(3)}
                   >
                     Edit
                   </Button>
-                  <Button 
-                    size="small" 
-                    variant="outlined" 
+                  <Button
+                    size="small"
+                    variant="outlined"
                     startIcon={<AnalyticsIcon />}
                     onClick={() => setActiveTab(5)}
                   >
@@ -2525,7 +2734,7 @@ const Feedback = () => {
 
 
 
-    const SurveyResponsesTab = () => (
+  const SurveyResponsesTab = () => (
     <Box>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
         <Box>
@@ -2568,7 +2777,7 @@ const Feedback = () => {
                     </Box>
                     <Chip label={survey?.type} size="small" />
                   </Box>
-                  
+
                   <Box sx={{ mt: 2 }}>
                     {survey?.questions.map((question) => (
                       <Box key={question.id} sx={{ mb: 2 }}>
@@ -2587,8 +2796,8 @@ const Feedback = () => {
                                     <StarIcon
                                       key={i}
                                       fontSize="small"
-                                      sx={{ 
-                                        color: i < response.responses[question.id] ? '#ffc107' : '#e0e0e0' 
+                                      sx={{
+                                        color: i < response.responses[question.id] ? '#ffc107' : '#e0e0e0'
                                       }}
                                     />
                                   ))}
@@ -2671,53 +2880,53 @@ const Feedback = () => {
             <Typography variant="h6" gutterBottom>Feedback Categories</Typography>
             <List>
               <ListItem>
-                <ListItemText 
-                  primary="Service Quality" 
+                <ListItemText
+                  primary="Service Quality"
                   secondary="45% of feedback"
                 />
-                <LinearProgress 
-                  variant="determinate" 
-                  value={45} 
+                <LinearProgress
+                  variant="determinate"
+                  value={45}
                   sx={{ width: 100, ml: 2 }}
                 />
               </ListItem>
               <ListItem>
-                <ListItemText 
-                  primary="Product Features" 
+                <ListItemText
+                  primary="Product Features"
                   secondary="28% of feedback"
                 />
-                <LinearProgress 
-                  variant="determinate" 
-                  value={28} 
+                <LinearProgress
+                  variant="determinate"
+                  value={28}
                   sx={{ width: 100, ml: 2 }}
                 />
               </ListItem>
               <ListItem>
-                <ListItemText 
-                  primary="Support Experience" 
+                <ListItemText
+                  primary="Support Experience"
                   secondary="18% of feedback"
                 />
-                <LinearProgress 
-                  variant="determinate" 
-                  value={18} 
+                <LinearProgress
+                  variant="determinate"
+                  value={18}
                   sx={{ width: 100, ml: 2 }}
                 />
               </ListItem>
               <ListItem>
-                <ListItemText 
-                  primary="Pricing" 
+                <ListItemText
+                  primary="Pricing"
                   secondary="9% of feedback"
                 />
-                <LinearProgress 
-                  variant="determinate" 
-                  value={9} 
+                <LinearProgress
+                  variant="determinate"
+                  value={9}
                   sx={{ width: 100, ml: 2 }}
                 />
               </ListItem>
             </List>
           </Paper>
         </Grid>
-        
+
         <Grid item xs={12} md={6}>
           <Paper sx={{ p: 3, borderRadius: 3 }}>
             <Typography variant="h6" gutterBottom>Sentiment Trends</Typography>
@@ -2833,8 +3042,8 @@ const Feedback = () => {
                   <ListItemIcon>
                     <CheckCircleIcon color="success" />
                   </ListItemIcon>
-                  <ListItemText 
-                    primary="Policy Purchase" 
+                  <ListItemText
+                    primary="Policy Purchase"
                     secondary="Send CSAT survey 24 hours after policy purchase"
                   />
                   <Switch defaultChecked />
@@ -2843,8 +3052,8 @@ const Feedback = () => {
                   <ListItemIcon>
                     <CheckCircleIcon color="success" />
                   </ListItemIcon>
-                  <ListItemText 
-                    primary="Claim Settlement" 
+                  <ListItemText
+                    primary="Claim Settlement"
                     secondary="Send feedback survey after claim is settled"
                   />
                   <Switch defaultChecked />
@@ -2853,8 +3062,8 @@ const Feedback = () => {
                   <ListItemIcon>
                     <CheckCircleIcon />
                   </ListItemIcon>
-                  <ListItemText 
-                    primary="Support Interaction" 
+                  <ListItemText
+                    primary="Support Interaction"
                     secondary="Send support experience survey after ticket closure"
                   />
                   <Switch />
@@ -2871,10 +3080,10 @@ const Feedback = () => {
     <Fade in timeout={800}>
       <Box sx={{ px: 1 }}>
         {/* Header */}
-        <Box sx={{ 
-          display: 'flex', 
+        <Box sx={{
+          display: 'flex',
           justifyContent: 'space-between',
-          alignItems: 'center', 
+          alignItems: 'center',
           mb: 4
         }}>
           <Box>
@@ -2899,8 +3108,8 @@ const Feedback = () => {
 
         {/* Navigation Tabs */}
         <Paper sx={{ mb: 3, borderRadius: 3 }}>
-          <Tabs 
-            value={activeTab} 
+          <Tabs
+            value={activeTab}
             onChange={(e, newValue) => setActiveTab(newValue)}
             variant="scrollable"
             scrollButtons="auto"
@@ -2949,8 +3158,8 @@ const Feedback = () => {
           <DialogTitle>Create New Survey</DialogTitle>
           <DialogContent>
             <Box sx={{ mt: 1 }}>
-              <Tabs 
-                value={surveyTabIndex} 
+              <Tabs
+                value={surveyTabIndex}
                 onChange={(e, newValue) => setSurveyTabIndex(newValue)}
                 sx={{ mb: 3, borderBottom: 1, borderColor: 'divider' }}
               >
@@ -2959,7 +3168,7 @@ const Feedback = () => {
                 <Tab label="Schedule" />
                 <Tab label="Branding" />
               </Tabs>
-              
+
               {surveyTabIndex === 0 && (
                 <Grid container spacing={2}>
                   <Grid item xs={12}>
@@ -2967,7 +3176,7 @@ const Feedback = () => {
                       fullWidth
                       label="Survey Name"
                       value={surveyForm.name}
-                      onChange={(e) => setSurveyForm({...surveyForm, name: e.target.value})}
+                      onChange={(e) => setSurveyForm({ ...surveyForm, name: e.target.value })}
                     />
                   </Grid>
                   <Grid item xs={12} sm={6}>
@@ -2975,7 +3184,7 @@ const Feedback = () => {
                       <InputLabel>Survey Type</InputLabel>
                       <Select
                         value={surveyForm.type}
-                        onChange={(e) => setSurveyForm({...surveyForm, type: e.target.value})}
+                        onChange={(e) => setSurveyForm({ ...surveyForm, type: e.target.value })}
                       >
                         <MenuItem value="CSAT">Customer Satisfaction (CSAT)</MenuItem>
                         <MenuItem value="NPS">Net Promoter Score (NPS)</MenuItem>
@@ -2990,7 +3199,7 @@ const Feedback = () => {
                       label="Target Responses"
                       type="number"
                       value={surveyForm.targetResponses}
-                      onChange={(e) => setSurveyForm({...surveyForm, targetResponses: parseInt(e.target.value)})}
+                      onChange={(e) => setSurveyForm({ ...surveyForm, targetResponses: parseInt(e.target.value) })}
                     />
                   </Grid>
                   <Grid item xs={12}>
@@ -3000,12 +3209,12 @@ const Feedback = () => {
                       multiline
                       rows={3}
                       value={surveyForm.description}
-                      onChange={(e) => setSurveyForm({...surveyForm, description: e.target.value})}
+                      onChange={(e) => setSurveyForm({ ...surveyForm, description: e.target.value })}
                     />
                   </Grid>
                 </Grid>
               )}
-              
+
               {surveyTabIndex === 1 && (
                 <Grid container spacing={2}>
                   <Grid item xs={12}>
@@ -3013,7 +3222,7 @@ const Feedback = () => {
                       <InputLabel>Target Audience</InputLabel>
                       <Select
                         value={surveyForm.audience}
-                        onChange={(e) => setSurveyForm({...surveyForm, audience: e.target.value})}
+                        onChange={(e) => setSurveyForm({ ...surveyForm, audience: e.target.value })}
                       >
                         <MenuItem value="">Select an audience</MenuItem>
                         <MenuItem value="all-customers">All Customers</MenuItem>
@@ -3030,15 +3239,15 @@ const Feedback = () => {
                       <Select
                         multiple
                         value={surveyForm.channels}
-                        onChange={(e) => setSurveyForm({...surveyForm, channels: e.target.value})}
+                        onChange={(e) => setSurveyForm({ ...surveyForm, channels: e.target.value })}
                         renderValue={(selected) => (
                           <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
                             {selected.map((value) => (
-                              <Chip 
-                                key={value} 
-                                label={value.toUpperCase()} 
-                                size="small" 
-                                icon={getChannelIcon(value)} 
+                              <Chip
+                                key={value}
+                                label={value.toUpperCase()}
+                                size="small"
+                                icon={getChannelIcon(value)}
                               />
                             ))}
                           </Box>
@@ -3055,9 +3264,9 @@ const Feedback = () => {
                   <Grid item xs={12}>
                     <FormControlLabel
                       control={
-                        <Switch 
+                        <Switch
                           checked={surveyForm.anonymous || false}
-                          onChange={(e) => setSurveyForm({...surveyForm, anonymous: e.target.checked})}
+                          onChange={(e) => setSurveyForm({ ...surveyForm, anonymous: e.target.checked })}
                         />
                       }
                       label="Anonymous Responses"
@@ -3065,7 +3274,7 @@ const Feedback = () => {
                   </Grid>
                 </Grid>
               )}
-              
+
               {surveyTabIndex === 2 && (
                 <Grid container spacing={2}>
                   <Grid item xs={12} sm={6}>
@@ -3073,7 +3282,7 @@ const Feedback = () => {
                       <InputLabel>Campaign Mode</InputLabel>
                       <Select
                         value={surveyForm.campaignMode}
-                        onChange={(e) => setSurveyForm({...surveyForm, campaignMode: e.target.value})}
+                        onChange={(e) => setSurveyForm({ ...surveyForm, campaignMode: e.target.value })}
                       >
                         <MenuItem value="one-time">One-time</MenuItem>
                         <MenuItem value="recurring">Recurring</MenuItem>
@@ -3082,14 +3291,14 @@ const Feedback = () => {
                       </Select>
                     </FormControl>
                   </Grid>
-                  
+
                   {surveyForm.campaignMode === 'event-triggered' && (
                     <Grid item xs={12} sm={6}>
                       <FormControl fullWidth>
                         <InputLabel>Trigger Event</InputLabel>
                         <Select
                           value={surveyForm.triggerEvent}
-                          onChange={(e) => setSurveyForm({...surveyForm, triggerEvent: e.target.value})}
+                          onChange={(e) => setSurveyForm({ ...surveyForm, triggerEvent: e.target.value })}
                         >
                           <MenuItem value="purchase">Purchase Completion</MenuItem>
                           <MenuItem value="support">Support Interaction</MenuItem>
@@ -3100,7 +3309,7 @@ const Feedback = () => {
                       </FormControl>
                     </Grid>
                   )}
-                  
+
                   {(surveyForm.campaignMode === 'one-time' || surveyForm.campaignMode === 'recurring') && (
                     <>
                       <Grid item xs={12} sm={6}>
@@ -3111,8 +3320,8 @@ const Feedback = () => {
                           InputLabelProps={{ shrink: true }}
                           value={surveyForm.schedule.startDate}
                           onChange={(e) => setSurveyForm({
-                            ...surveyForm, 
-                            schedule: {...surveyForm.schedule, startDate: e.target.value}
+                            ...surveyForm,
+                            schedule: { ...surveyForm.schedule, startDate: e.target.value }
                           })}
                         />
                       </Grid>
@@ -3124,14 +3333,14 @@ const Feedback = () => {
                           InputLabelProps={{ shrink: true }}
                           value={surveyForm.schedule.endDate}
                           onChange={(e) => setSurveyForm({
-                            ...surveyForm, 
-                            schedule: {...surveyForm.schedule, endDate: e.target.value}
+                            ...surveyForm,
+                            schedule: { ...surveyForm.schedule, endDate: e.target.value }
                           })}
                         />
                       </Grid>
                     </>
                   )}
-                  
+
                   {surveyForm.campaignMode === 'recurring' && (
                     <>
                       <Grid item xs={12} sm={6}>
@@ -3140,8 +3349,8 @@ const Feedback = () => {
                           <Select
                             value={surveyForm.schedule.frequency}
                             onChange={(e) => setSurveyForm({
-                              ...surveyForm, 
-                              schedule: {...surveyForm.schedule, frequency: e.target.value}
+                              ...surveyForm,
+                              schedule: { ...surveyForm.schedule, frequency: e.target.value }
                             })}
                           >
                             <MenuItem value="daily">Daily</MenuItem>
@@ -3158,8 +3367,8 @@ const Feedback = () => {
                           type="number"
                           value={surveyForm.schedule.reminderDays}
                           onChange={(e) => setSurveyForm({
-                            ...surveyForm, 
-                            schedule: {...surveyForm.schedule, reminderDays: parseInt(e.target.value)}
+                            ...surveyForm,
+                            schedule: { ...surveyForm.schedule, reminderDays: parseInt(e.target.value) }
                           })}
                           helperText="Days to wait before sending a reminder"
                         />
@@ -3168,17 +3377,17 @@ const Feedback = () => {
                   )}
                 </Grid>
               )}
-              
+
               {surveyTabIndex === 3 && (
                 <Grid container spacing={2}>
                   <Grid item xs={12}>
                     <FormControlLabel
                       control={
-                        <Switch 
+                        <Switch
                           checked={surveyForm.branding.logo}
                           onChange={(e) => setSurveyForm({
-                            ...surveyForm, 
-                            branding: {...surveyForm.branding, logo: e.target.checked}
+                            ...surveyForm,
+                            branding: { ...surveyForm.branding, logo: e.target.checked }
                           })}
                         />
                       }
@@ -3191,8 +3400,8 @@ const Feedback = () => {
                       <Select
                         value={surveyForm.branding.colors}
                         onChange={(e) => setSurveyForm({
-                          ...surveyForm, 
-                          branding: {...surveyForm.branding, colors: e.target.value}
+                          ...surveyForm,
+                          branding: { ...surveyForm.branding, colors: e.target.value }
                         })}
                       >
                         <MenuItem value="default">Default</MenuItem>
@@ -3207,11 +3416,11 @@ const Feedback = () => {
                     <Grid item xs={12}>
                       <FormControlLabel
                         control={
-                          <Switch 
+                          <Switch
                             checked={surveyForm.branding.customTheme}
                             onChange={(e) => setSurveyForm({
-                              ...surveyForm, 
-                              branding: {...surveyForm.branding, customTheme: e.target.checked}
+                              ...surveyForm,
+                              branding: { ...surveyForm.branding, customTheme: e.target.checked }
                             })}
                           />
                         }
@@ -3229,21 +3438,21 @@ const Feedback = () => {
             </Box>
             <Box sx={{ display: 'flex', gap: 1 }}>
               {surveyTabIndex > 0 && (
-                <Button 
+                <Button
                   onClick={() => setSurveyTabIndex(surveyTabIndex - 1)}
                 >
                   Back
                 </Button>
               )}
               {surveyTabIndex < 3 ? (
-                <Button 
+                <Button
                   variant="contained"
                   onClick={() => setSurveyTabIndex(surveyTabIndex + 1)}
                 >
                   Next
                 </Button>
               ) : (
-                <Button 
+                <Button
                   variant="contained"
                   onClick={handleSaveSurvey}
                   disabled={!surveyForm.name}
@@ -3285,7 +3494,7 @@ const Feedback = () => {
                   </Grid>
                   <Grid item xs={12} sm={6}>
                     <Typography variant="subtitle2" gutterBottom>Status</Typography>
-                    <Chip 
+                    <Chip
                       label={selectedFeedback.status.replace('_', ' ').toUpperCase()}
                       color={getStatusColor(selectedFeedback.status)}
                       size="small"

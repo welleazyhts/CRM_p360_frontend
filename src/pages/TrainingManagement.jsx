@@ -350,6 +350,7 @@ const TrainingManagement = () => {
     type: '',
     size: '',
   });
+  const [selectedFile, setSelectedFile] = useState(null);
 
   const handleTabChange = (event, newValue) => {
     setActiveTab(newValue);
@@ -428,6 +429,7 @@ const TrainingManagement = () => {
   const handleOpenDocumentDialog = (module) => {
     setSelectedModule(module);
     setDocumentForm({ name: '', type: '', size: '' });
+    setSelectedFile(null);
     setDocumentDialog(true);
   };
 
@@ -436,10 +438,37 @@ const TrainingManagement = () => {
     setSelectedModule(null);
   };
 
+  const handleFileSelect = (event) => {
+    const file = event.target.files[0];
+    if (file) {
+      setSelectedFile(file);
+
+      // Auto-fill form fields
+      const fileName = file.name;
+      const fileSize = (file.size / (1024 * 1024)).toFixed(2) + ' MB';
+      const fileExtension = fileName.split('.').pop().toLowerCase();
+
+      let fileType = 'doc';
+      if (fileExtension === 'pdf') fileType = 'pdf';
+      else if (['mp4', 'avi', 'mov', 'wmv'].includes(fileExtension)) fileType = 'video';
+
+      setDocumentForm({
+        name: fileName,
+        type: fileType,
+        size: fileSize,
+      });
+    }
+  };
+
   const handleUploadDocument = async () => {
-    if (selectedModule && documentForm.name) {
+    if (selectedModule && documentForm.name && selectedFile) {
       try {
-        const newDocument = await trainingService.uploadDocument(selectedModule.id, documentForm);
+        // In a real app, you would upload the file to a server
+        // For now, we'll create a document record with the file info
+        const newDocument = await trainingService.uploadDocument(selectedModule.id, {
+          ...documentForm,
+          file: selectedFile,
+        });
 
         setModules(modules.map(m => m.id === selectedModule.id ? {
           ...m,
@@ -452,6 +481,8 @@ const TrainingManagement = () => {
         console.error('Error uploading document:', error);
         setSnackbar({ open: true, message: 'Failed to upload document', severity: 'error' });
       }
+    } else {
+      setSnackbar({ open: true, message: 'Please select a file to upload', severity: 'warning' });
     }
   };
 
@@ -1326,17 +1357,32 @@ const TrainingManagement = () => {
               />
             </Grid>
             <Grid item xs={12}>
-              <Button
-                variant="outlined"
-                fullWidth
-                startIcon={<UploadIcon />}
-                sx={{ height: 100, borderStyle: 'dashed' }}
-              >
-                Click to Upload or Drag & Drop
-              </Button>
+              <input
+                type="file"
+                accept=".pdf,.mp4,.avi,.mov,.wmv,.doc,.docx,.ppt,.pptx"
+                style={{ display: 'none' }}
+                id="file-upload-input"
+                onChange={handleFileSelect}
+              />
+              <label htmlFor="file-upload-input" style={{ width: '100%', display: 'block' }}>
+                <Button
+                  variant="outlined"
+                  fullWidth
+                  component="span"
+                  startIcon={<UploadIcon />}
+                  sx={{ height: 100, borderStyle: 'dashed' }}
+                >
+                  {selectedFile ? selectedFile.name : 'Click to Upload or Drag & Drop'}
+                </Button>
+              </label>
               <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
                 Supported formats: PDF, MP4, DOCX, PPTX (Max 100MB)
               </Typography>
+              {selectedFile && (
+                <Typography variant="body2" color="primary" sx={{ mt: 1 }}>
+                  Selected: {selectedFile.name} ({(selectedFile.size / (1024 * 1024)).toFixed(2)} MB)
+                </Typography>
+              )}
             </Grid>
           </Grid>
         </DialogContent>

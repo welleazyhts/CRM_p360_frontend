@@ -359,6 +359,8 @@ const LeadDetails = () => {
         duration: '15 min',
         type: 'Outbound',
         status: 'Completed',
+        disposition: 'Call Back',
+        subDisposition: 'Specific Time',
         notes: 'Discussed policy options and premium calculations. Customer interested in comprehensive coverage.',
         agentName: 'Sarah Johnson',
         callSummary: 'Customer inquiry about vehicle insurance premium. Provided quote for comprehensive coverage.',
@@ -372,6 +374,8 @@ const LeadDetails = () => {
         duration: '8 min',
         type: 'Inbound',
         status: 'Completed',
+        disposition: 'Interested',
+        subDisposition: 'Needs Quote',
         notes: 'Customer inquiry about premium payment options and policy renewal process.',
         agentName: 'Mike Wilson',
         callSummary: 'Customer called to inquire about premium payment methods.',
@@ -385,6 +389,8 @@ const LeadDetails = () => {
         duration: '0 min',
         type: 'Outbound',
         status: 'Missed',
+        disposition: 'Not Reachable',
+        subDisposition: 'Not Responding',
         notes: 'Customer did not answer. Left voicemail.',
         agentName: 'Sarah Johnson',
         callSummary: 'Attempted to contact customer for policy follow-up.',
@@ -1442,6 +1448,7 @@ const LeadDetails = () => {
                           <TableCell>Agent Name</TableCell>
                           <TableCell>Call Type</TableCell>
                           <TableCell>Duration</TableCell>
+                          <TableCell>Disposition</TableCell>
                           <TableCell>Date & Time</TableCell>
                           <TableCell align="center">Actions</TableCell>
                         </TableRow>
@@ -1476,6 +1483,28 @@ const LeadDetails = () => {
                               <Typography variant="body2" fontWeight="600">
                                 {log.duration}
                               </Typography>
+                            </TableCell>
+                            <TableCell>
+                              <Box>
+                                <Chip
+                                  label={log.disposition}
+                                  size="small"
+                                  color={
+                                    log.disposition === 'Interested' ? 'success' :
+                                      log.disposition === 'Not Interested' ? 'error' :
+                                        log.disposition === 'Call Back' ? 'warning' :
+                                          log.disposition === 'Not Reachable' ? 'default' :
+                                            log.disposition === 'Converted' ? 'primary' :
+                                              'default'
+                                  }
+                                  sx={{ mb: 0.5 }}
+                                />
+                                {log.subDisposition && (
+                                  <Typography variant="caption" color="text.secondary" display="block">
+                                    {log.subDisposition}
+                                  </Typography>
+                                )}
+                              </Box>
                             </TableCell>
                             <TableCell>
                               <Typography variant="body2">{log.date}</Typography>
@@ -2190,6 +2219,33 @@ const LeadDetails = () => {
                   <MenuItem value="Busy">📵 Busy</MenuItem>
                 </Select>
               </FormControl>
+            </Grid>
+
+              <Grid item xs={12} sm={6}>
+              <FormControl fullWidth>
+                <InputLabel>Disposition</InputLabel>
+                <Select
+                  value={callLogForm.disposition || ''}
+                  label="Disposition"
+                  onChange={(e) => setCallLogForm({ ...callLogForm, disposition: e.target.value })}
+                >
+                  <MenuItem value="Interested">✅ Interested</MenuItem>
+                  <MenuItem value="Not Interested">❌ Not Interested</MenuItem>
+                  <MenuItem value="Call Back">📞 Call Back</MenuItem>
+                  <MenuItem value="Not Reachable">📵 Not Reachable</MenuItem>
+                  <MenuItem value="Converted">🎉 Converted</MenuItem>
+                  <MenuItem value="DNC">🚫 DNC</MenuItem>
+                </Select>
+              </FormControl>
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <TextField
+                fullWidth
+                label="Sub-Disposition"
+                placeholder="e.g., Needs Quote, Specific Time"
+                value={callLogForm.subDisposition || ''}
+                onChange={(e) => setCallLogForm({ ...callLogForm, subDisposition: e.target.value })}
+              />
             </Grid>
             <Grid item xs={12}>
               <TextField
