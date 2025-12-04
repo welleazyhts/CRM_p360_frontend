@@ -3,8 +3,8 @@ import {
   Box, Paper, Typography, Button, Grid, Card, CardContent,
   IconButton, Tooltip, Chip, Avatar, Divider, List, ListItem,
   ListItemText, ListItemIcon, ListItemButton, ListItemSecondaryAction,
-  Dialog, DialogTitle, DialogContent, DialogActions, TextField, 
-  FormControl, InputLabel, Select, MenuItem, Switch, FormControlLabel, 
+  Dialog, DialogTitle, DialogContent, DialogActions, TextField,
+  FormControl, InputLabel, Select, MenuItem, Switch, FormControlLabel,
   Alert, Fab, useTheme, alpha, Fade, Collapse, Badge, Tabs, Tab, Grow
 } from '@mui/material';
 import FlowBuilder from '../components/whatsapp/FlowBuilder';
@@ -223,8 +223,8 @@ const WhatsappFlow = () => {
   const handleSaveFlow = (flowData) => {
     if (selectedFlowForEdit) {
       // Update existing flow
-      setFlows(flows.map(flow => 
-        flow.id === selectedFlowForEdit.id 
+      setFlows(flows.map(flow =>
+        flow.id === selectedFlowForEdit.id
           ? { ...flow, ...flowData, updatedAt: new Date().toISOString() }
           : flow
       ));
@@ -303,12 +303,12 @@ const WhatsappFlow = () => {
     // Create a gradient background
     const gradientFrom = alpha(color, theme.palette.mode === 'dark' ? 0.7 : 0.9);
     const gradientTo = alpha(color, theme.palette.mode === 'dark' ? 0.4 : 0.6);
-    
+
     return (
       <Grow in={loaded} timeout={(index + 1) * 200}>
-        <Card 
-          sx={{ 
-            height: '100%', 
+        <Card
+          sx={{
+            height: '100%',
             background: `linear-gradient(135deg, ${gradientFrom} 0%, ${gradientTo} 100%)`,
             borderRadius: 4,
             boxShadow: `0 10px 20px ${alpha(color, 0.2)}`,
@@ -351,7 +351,7 @@ const WhatsappFlow = () => {
       {/* Stats Cards */}
       <Grid container spacing={3} sx={{ mb: 4 }}>
         <Grid item xs={12} sm={6} md={3}>
-          <StatCard 
+          <StatCard
             title="Total Flows"
             value={flows.length}
             color={theme.palette.primary.main}
@@ -360,7 +360,7 @@ const WhatsappFlow = () => {
           />
         </Grid>
         <Grid item xs={12} sm={6} md={3}>
-          <StatCard 
+          <StatCard
             title="Total Recipients"
             value={totalStats.totalRecipients.toLocaleString()}
             color={theme.palette.success.main}
@@ -369,7 +369,7 @@ const WhatsappFlow = () => {
           />
         </Grid>
         <Grid item xs={12} sm={6} md={3}>
-          <StatCard 
+          <StatCard
             title="Delivery Rate"
             value={`${((totalStats.totalDelivered / totalStats.totalRecipients) * 100 || 0).toFixed(1)}%`}
             color={theme.palette.info.main}
@@ -378,7 +378,7 @@ const WhatsappFlow = () => {
           />
         </Grid>
         <Grid item xs={12} sm={6} md={3}>
-          <StatCard 
+          <StatCard
             title="Reply Rate"
             value={`${((totalStats.totalReplied / totalStats.totalOpened) * 100 || 0).toFixed(1)}%`}
             color={theme.palette.warning.main}
@@ -439,7 +439,7 @@ const WhatsappFlow = () => {
       <Grid container spacing={3}>
         {flows.map((flow) => (
           <Grid item xs={12} md={6} lg={4} key={flow.id}>
-            <Card sx={{ 
+            <Card sx={{
               height: '100%',
               transition: 'all 0.3s ease',
               '&:hover': {
@@ -509,15 +509,15 @@ const WhatsappFlow = () => {
                   </Typography>
                   <Box>
                     <Tooltip title="Edit Flow">
-                      <IconButton 
-                        size="small" 
+                      <IconButton
+                        size="small"
                         onClick={() => handleOpenFlowBuilder(flow)}
                       >
                         <EditIcon />
                       </IconButton>
                     </Tooltip>
                     <Tooltip title="View Analytics">
-                      <IconButton 
+                      <IconButton
                         size="small"
                         onClick={() => setAnalyticsDialogOpen(true)}
                       >
@@ -525,7 +525,7 @@ const WhatsappFlow = () => {
                       </IconButton>
                     </Tooltip>
                     <Tooltip title={flow.status === 'active' ? 'Pause Flow' : 'Activate Flow'}>
-                      <IconButton 
+                      <IconButton
                         size="small"
                         onClick={() => handleToggleFlowStatus(flow.id)}
                       >
@@ -533,8 +533,8 @@ const WhatsappFlow = () => {
                       </IconButton>
                     </Tooltip>
                     <Tooltip title="Delete Flow">
-                      <IconButton 
-                        size="small" 
+                      <IconButton
+                        size="small"
                         color="error"
                         onClick={() => handleDeleteFlow(flow.id)}
                       >
@@ -550,6 +550,108 @@ const WhatsappFlow = () => {
       </Grid>
     </Box>
   );
+
+  // Flow Templates State
+  const [flowTemplates, setFlowTemplates] = useState([
+    {
+      id: 1,
+      name: 'Welcome Onboarding Flow',
+      description: 'Complete onboarding sequence for new customers',
+      category: 'onboarding',
+      status: 'approved',
+      screens: 5,
+      usage: 1250,
+      lastModified: '2024-01-15',
+      steps: [
+        { id: 1, type: 'message', title: 'Welcome Message', content: 'Hello {{customer_name}}! Welcome to our insurance services.' },
+        { id: 2, type: 'question', title: 'Policy Interest', content: 'What type of insurance are you interested in?' },
+        { id: 3, type: 'message', title: 'Options Display', content: 'Here are our available plans...' },
+        { id: 4, type: 'action', title: 'Quote Request', content: 'Get a personalized quote' },
+        { id: 5, type: 'message', title: 'Thank You', content: 'Thank you for your interest!' }
+      ]
+    },
+    {
+      id: 2,
+      name: 'Policy Renewal Flow',
+      description: 'Automated renewal reminder and payment collection',
+      category: 'renewal',
+      status: 'approved',
+      screens: 4,
+      usage: 890,
+      lastModified: '2024-01-14',
+      steps: [
+        { id: 1, type: 'message', title: 'Renewal Reminder', content: 'Your policy {{policy_number}} is due for renewal.' },
+        { id: 2, type: 'question', title: 'Renewal Confirmation', content: 'Would you like to renew?' },
+        { id: 3, type: 'action', title: 'Payment Link', content: 'Click here to pay: {{payment_link}}' },
+        { id: 4, type: 'message', title: 'Confirmation', content: 'Your renewal is complete!' }
+      ]
+    },
+    {
+      id: 3,
+      name: 'Customer Feedback Flow',
+      description: 'Post-service feedback collection',
+      category: 'feedback',
+      status: 'pending',
+      screens: 3,
+      usage: 456,
+      lastModified: '2024-01-10',
+      steps: [
+        { id: 1, type: 'message', title: 'Feedback Request', content: 'We would love your feedback!' },
+        { id: 2, type: 'question', title: 'Rating', content: 'How would you rate our service?' },
+        { id: 3, type: 'message', title: 'Thank You', content: 'Thank you for your feedback!' }
+      ]
+    }
+  ]);
+
+  const [flowTemplatePreviewOpen, setFlowTemplatePreviewOpen] = useState(false);
+  const [flowTemplateEditOpen, setFlowTemplateEditOpen] = useState(false);
+  const [selectedFlowTemplate, setSelectedFlowTemplate] = useState(null);
+  const [editFlowTemplateData, setEditFlowTemplateData] = useState(null);
+
+  const handlePreviewFlowTemplate = (template) => {
+    setSelectedFlowTemplate(template);
+    setFlowTemplatePreviewOpen(true);
+  };
+
+  const handleEditFlowTemplate = (template) => {
+    setEditFlowTemplateData({
+      ...template,
+      steps: [...template.steps]
+    });
+    setFlowTemplateEditOpen(true);
+  };
+
+  const handleSaveFlowTemplate = () => {
+    setFlowTemplates(prevTemplates =>
+      prevTemplates.map(t =>
+        t.id === editFlowTemplateData.id
+          ? { ...editFlowTemplateData, lastModified: new Date().toISOString().split('T')[0] }
+          : t
+      )
+    );
+    setFlowTemplateEditOpen(false);
+    setEditFlowTemplateData(null);
+  };
+
+  const getFlowCategoryColor = (category) => {
+    const colors = {
+      onboarding: theme.palette.info.main,
+      renewal: theme.palette.warning.main,
+      feedback: theme.palette.success.main,
+      marketing: theme.palette.primary.main,
+      support: theme.palette.secondary.main
+    };
+    return colors[category] || theme.palette.grey[600];
+  };
+
+  const getStepIcon = (type) => {
+    switch (type) {
+      case 'message': return <MessageIcon />;
+      case 'question': return <ScheduleIcon />;
+      case 'action': return <SendIcon />;
+      default: return <MessageIcon />;
+    }
+  };
 
   // Additional tab components
   const TemplatesTab = () => (
@@ -567,7 +669,7 @@ const WhatsappFlow = () => {
           Create Template
         </Button>
       </Box>
-      
+
       {/* Template Categories */}
       <Grid container spacing={3}>
         <Grid item xs={12} md={4}>
@@ -585,13 +687,13 @@ const WhatsappFlow = () => {
               <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
                 Pre-approved message templates for marketing and notifications
               </Typography>
-              <Button size="small" variant="outlined" fullWidth>
+              <Button size="small" variant="outlined" fullWidth onClick={() => setTemplateManagerOpen(true)}>
                 Manage Templates
               </Button>
             </CardContent>
           </Card>
         </Grid>
-        
+
         <Grid item xs={12} md={4}>
           <Card>
             <CardContent>
@@ -601,7 +703,7 @@ const WhatsappFlow = () => {
                 </Avatar>
                 <Box>
                   <Typography variant="h6">Flow Templates</Typography>
-                  <Typography variant="body2" color="text.secondary">8 templates</Typography>
+                  <Typography variant="body2" color="text.secondary">{flowTemplates.length} templates</Typography>
                 </Box>
               </Box>
               <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
@@ -613,7 +715,7 @@ const WhatsappFlow = () => {
             </CardContent>
           </Card>
         </Grid>
-        
+
         <Grid item xs={12} md={4}>
           <Card>
             <CardContent>
@@ -636,10 +738,86 @@ const WhatsappFlow = () => {
           </Card>
         </Grid>
       </Grid>
-      
+
+      {/* Flow Templates Grid */}
+      <Typography variant="h6" fontWeight="bold" sx={{ mt: 4, mb: 2 }}>
+        Flow Templates
+      </Typography>
+      <Grid container spacing={3}>
+        {flowTemplates.map((template) => (
+          <Grid item xs={12} md={6} lg={4} key={template.id}>
+            <Card sx={{
+              height: '100%',
+              transition: 'transform 0.2s, box-shadow 0.2s',
+              '&:hover': {
+                transform: 'translateY(-4px)',
+                boxShadow: theme.shadows[8]
+              }
+            }}>
+              <CardContent>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', mb: 2 }}>
+                  <Typography variant="h6" fontWeight="600">
+                    {template.name}
+                  </Typography>
+                  <Chip
+                    label={template.status}
+                    color={template.status === 'approved' ? 'success' : 'warning'}
+                    size="small"
+                  />
+                </Box>
+
+                <Chip
+                  label={template.category}
+                  size="small"
+                  sx={{
+                    mb: 2,
+                    bgcolor: alpha(getFlowCategoryColor(template.category), 0.1),
+                    color: getFlowCategoryColor(template.category),
+                    fontWeight: 600
+                  }}
+                />
+
+                <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                  {template.description}
+                </Typography>
+
+                <Typography variant="body2" color="text.secondary" gutterBottom>
+                  {template.screens} screens • Used {template.usage} times
+                </Typography>
+
+                <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 2 }}>
+                  Last modified: {template.lastModified}
+                </Typography>
+
+                <Box sx={{ display: 'flex', gap: 1 }}>
+                  <Button
+                    size="small"
+                    variant="outlined"
+                    startIcon={<ViewIcon />}
+                    onClick={() => handlePreviewFlowTemplate(template)}
+                    sx={{ flex: 1 }}
+                  >
+                    Preview
+                  </Button>
+                  <Button
+                    size="small"
+                    variant="contained"
+                    startIcon={<EditIcon />}
+                    onClick={() => handleEditFlowTemplate(template)}
+                    sx={{ flex: 1 }}
+                  >
+                    Edit
+                  </Button>
+                </Box>
+              </CardContent>
+            </Card>
+          </Grid>
+        ))}
+      </Grid>
+
       {/* Recent Templates */}
       <Paper sx={{ mt: 3, p: 3 }}>
-        <Typography variant="h6" gutterBottom>Recent Templates</Typography>
+        <Typography variant="h6" gutterBottom>Recent Message Templates</Typography>
         <List>
           <ListItem>
             <ListItemIcon>
@@ -652,12 +830,16 @@ const WhatsappFlow = () => {
               secondary="Last modified 2 hours ago • Marketing"
             />
             <ListItemSecondaryAction>
-              <IconButton size="small">
-                <EditIcon />
-              </IconButton>
-              <IconButton size="small">
-                <ViewIcon />
-              </IconButton>
+              <Tooltip title="Edit">
+                <IconButton size="small" onClick={() => setTemplateManagerOpen(true)}>
+                  <EditIcon />
+                </IconButton>
+              </Tooltip>
+              <Tooltip title="Preview">
+                <IconButton size="small" onClick={() => setTemplateManagerOpen(true)}>
+                  <ViewIcon />
+                </IconButton>
+              </Tooltip>
             </ListItemSecondaryAction>
           </ListItem>
           <ListItem>
@@ -671,16 +853,321 @@ const WhatsappFlow = () => {
               secondary="Last modified 1 day ago • Renewal"
             />
             <ListItemSecondaryAction>
-              <IconButton size="small">
-                <EditIcon />
-              </IconButton>
-              <IconButton size="small">
-                <ViewIcon />
-              </IconButton>
+              <Tooltip title="Edit">
+                <IconButton size="small" onClick={() => setTemplateManagerOpen(true)}>
+                  <EditIcon />
+                </IconButton>
+              </Tooltip>
+              <Tooltip title="Preview">
+                <IconButton size="small" onClick={() => setTemplateManagerOpen(true)}>
+                  <ViewIcon />
+                </IconButton>
+              </Tooltip>
             </ListItemSecondaryAction>
           </ListItem>
         </List>
       </Paper>
+
+      {/* Flow Template Preview Dialog */}
+      <Dialog
+        open={flowTemplatePreviewOpen}
+        onClose={() => setFlowTemplatePreviewOpen(false)}
+        maxWidth="md"
+        fullWidth
+      >
+        <DialogTitle>
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <ViewIcon color="primary" />
+              <Typography variant="h6">Flow Template Preview</Typography>
+            </Box>
+            <IconButton onClick={() => setFlowTemplatePreviewOpen(false)}>
+              <CloseIcon />
+            </IconButton>
+          </Box>
+        </DialogTitle>
+        <DialogContent>
+          {selectedFlowTemplate && (
+            <Box>
+              {/* Template Info */}
+              <Box sx={{ mb: 3 }}>
+                <Typography variant="h5" fontWeight="600" gutterBottom>
+                  {selectedFlowTemplate.name}
+                </Typography>
+                <Box sx={{ display: 'flex', gap: 1, mb: 2 }}>
+                  <Chip
+                    label={selectedFlowTemplate.status}
+                    color={selectedFlowTemplate.status === 'approved' ? 'success' : 'warning'}
+                    size="small"
+                  />
+                  <Chip
+                    label={selectedFlowTemplate.category}
+                    size="small"
+                    sx={{
+                      bgcolor: alpha(getFlowCategoryColor(selectedFlowTemplate.category), 0.1),
+                      color: getFlowCategoryColor(selectedFlowTemplate.category)
+                    }}
+                  />
+                </Box>
+                <Typography variant="body2" color="text.secondary">
+                  {selectedFlowTemplate.description}
+                </Typography>
+              </Box>
+
+              <Divider sx={{ my: 2 }} />
+
+              {/* Flow Steps Preview */}
+              <Typography variant="subtitle1" fontWeight="600" gutterBottom>
+                Flow Steps ({selectedFlowTemplate.steps?.length || 0})
+              </Typography>
+
+              <Box sx={{ position: 'relative', mt: 3 }}>
+                {selectedFlowTemplate.steps?.map((step, index) => (
+                  <Box key={step.id} sx={{ display: 'flex', mb: 3 }}>
+                    {/* Step Number & Line */}
+                    <Box sx={{
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'center',
+                      mr: 2,
+                      position: 'relative'
+                    }}>
+                      <Avatar sx={{
+                        bgcolor: step.type === 'message' ? 'primary.main' :
+                          step.type === 'question' ? 'warning.main' : 'success.main',
+                        width: 40,
+                        height: 40
+                      }}>
+                        {getStepIcon(step.type)}
+                      </Avatar>
+                      {index < selectedFlowTemplate.steps.length - 1 && (
+                        <Box sx={{
+                          width: 2,
+                          height: 40,
+                          bgcolor: 'grey.300',
+                          my: 1
+                        }} />
+                      )}
+                    </Box>
+
+                    {/* Step Content */}
+                    <Card sx={{ flex: 1, bgcolor: alpha(theme.palette.grey[100], 0.5) }}>
+                      <CardContent sx={{ py: 1.5, '&:last-child': { pb: 1.5 } }}>
+                        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
+                          <Typography variant="subtitle2" fontWeight="600">
+                            {step.title}
+                          </Typography>
+                          <Chip
+                            label={step.type}
+                            size="small"
+                            variant="outlined"
+                            sx={{ textTransform: 'capitalize' }}
+                          />
+                        </Box>
+                        <Typography variant="body2" color="text.secondary">
+                          {step.content}
+                        </Typography>
+                      </CardContent>
+                    </Card>
+                  </Box>
+                ))}
+              </Box>
+            </Box>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setFlowTemplatePreviewOpen(false)}>Close</Button>
+          <Button
+            variant="contained"
+            startIcon={<EditIcon />}
+            onClick={() => {
+              setFlowTemplatePreviewOpen(false);
+              handleEditFlowTemplate(selectedFlowTemplate);
+            }}
+          >
+            Edit Template
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Flow Template Edit Dialog */}
+      <Dialog
+        open={flowTemplateEditOpen}
+        onClose={() => setFlowTemplateEditOpen(false)}
+        maxWidth="lg"
+        fullWidth
+        PaperProps={{ sx: { height: '90vh' } }}
+      >
+        <DialogTitle>
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <EditIcon color="primary" />
+              <Typography variant="h6">Edit Flow Template</Typography>
+            </Box>
+            <IconButton onClick={() => setFlowTemplateEditOpen(false)}>
+              <CloseIcon />
+            </IconButton>
+          </Box>
+        </DialogTitle>
+        <DialogContent>
+          {editFlowTemplateData && (
+            <Grid container spacing={3} sx={{ mt: 1 }}>
+              {/* Template Info */}
+              <Grid item xs={12} md={6}>
+                <TextField
+                  fullWidth
+                  label="Template Name"
+                  value={editFlowTemplateData.name}
+                  onChange={(e) => setEditFlowTemplateData(prev => ({ ...prev, name: e.target.value }))}
+                />
+              </Grid>
+              <Grid item xs={12} md={6}>
+                <FormControl fullWidth>
+                  <InputLabel>Category</InputLabel>
+                  <Select
+                    value={editFlowTemplateData.category}
+                    label="Category"
+                    onChange={(e) => setEditFlowTemplateData(prev => ({ ...prev, category: e.target.value }))}
+                  >
+                    <MenuItem value="onboarding">Onboarding</MenuItem>
+                    <MenuItem value="renewal">Renewal</MenuItem>
+                    <MenuItem value="feedback">Feedback</MenuItem>
+                    <MenuItem value="marketing">Marketing</MenuItem>
+                    <MenuItem value="support">Support</MenuItem>
+                  </Select>
+                </FormControl>
+              </Grid>
+              <Grid item xs={12}>
+                <TextField
+                  fullWidth
+                  multiline
+                  rows={2}
+                  label="Description"
+                  value={editFlowTemplateData.description}
+                  onChange={(e) => setEditFlowTemplateData(prev => ({ ...prev, description: e.target.value }))}
+                />
+              </Grid>
+
+              {/* Flow Steps */}
+              <Grid item xs={12}>
+                <Typography variant="subtitle1" fontWeight="600" gutterBottom>
+                  Flow Steps
+                </Typography>
+                <Alert severity="info" sx={{ mb: 2 }}>
+                  Edit each step's content below. Use variables like {'{{customer_name}}'}, {'{{policy_number}}'} for dynamic content.
+                </Alert>
+
+                {editFlowTemplateData.steps?.map((step, index) => (
+                  <Card key={step.id} sx={{ mb: 2 }}>
+                    <CardContent>
+                      <Grid container spacing={2} alignItems="center">
+                        <Grid item>
+                          <Avatar sx={{
+                            bgcolor: step.type === 'message' ? 'primary.main' :
+                              step.type === 'question' ? 'warning.main' : 'success.main'
+                          }}>
+                            {index + 1}
+                          </Avatar>
+                        </Grid>
+                        <Grid item xs>
+                          <Grid container spacing={2}>
+                            <Grid item xs={12} sm={4}>
+                              <TextField
+                                fullWidth
+                                size="small"
+                                label="Step Title"
+                                value={step.title}
+                                onChange={(e) => {
+                                  const newSteps = [...editFlowTemplateData.steps];
+                                  newSteps[index].title = e.target.value;
+                                  setEditFlowTemplateData(prev => ({ ...prev, steps: newSteps }));
+                                }}
+                              />
+                            </Grid>
+                            <Grid item xs={12} sm={3}>
+                              <FormControl fullWidth size="small">
+                                <InputLabel>Type</InputLabel>
+                                <Select
+                                  value={step.type}
+                                  label="Type"
+                                  onChange={(e) => {
+                                    const newSteps = [...editFlowTemplateData.steps];
+                                    newSteps[index].type = e.target.value;
+                                    setEditFlowTemplateData(prev => ({ ...prev, steps: newSteps }));
+                                  }}
+                                >
+                                  <MenuItem value="message">Message</MenuItem>
+                                  <MenuItem value="question">Question</MenuItem>
+                                  <MenuItem value="action">Action</MenuItem>
+                                </Select>
+                              </FormControl>
+                            </Grid>
+                            <Grid item xs={12} sm={5}>
+                              <TextField
+                                fullWidth
+                                size="small"
+                                label="Content"
+                                value={step.content}
+                                onChange={(e) => {
+                                  const newSteps = [...editFlowTemplateData.steps];
+                                  newSteps[index].content = e.target.value;
+                                  setEditFlowTemplateData(prev => ({ ...prev, steps: newSteps }));
+                                }}
+                              />
+                            </Grid>
+                          </Grid>
+                        </Grid>
+                        <Grid item>
+                          <IconButton
+                            size="small"
+                            color="error"
+                            onClick={() => {
+                              const newSteps = editFlowTemplateData.steps.filter((_, i) => i !== index);
+                              setEditFlowTemplateData(prev => ({ ...prev, steps: newSteps }));
+                            }}
+                          >
+                            <DeleteIcon />
+                          </IconButton>
+                        </Grid>
+                      </Grid>
+                    </CardContent>
+                  </Card>
+                ))}
+
+                <Button
+                  variant="outlined"
+                  startIcon={<AddIcon />}
+                  onClick={() => {
+                    const newStep = {
+                      id: Date.now(),
+                      type: 'message',
+                      title: 'New Step',
+                      content: 'Enter content here...'
+                    };
+                    setEditFlowTemplateData(prev => ({
+                      ...prev,
+                      steps: [...prev.steps, newStep],
+                      screens: prev.steps.length + 1
+                    }));
+                  }}
+                >
+                  Add Step
+                </Button>
+              </Grid>
+            </Grid>
+          )}
+        </DialogContent>
+        <DialogActions sx={{ p: 2 }}>
+          <Button onClick={() => setFlowTemplateEditOpen(false)}>Cancel</Button>
+          <Button
+            variant="contained"
+            onClick={handleSaveFlowTemplate}
+            disabled={!editFlowTemplateData?.name}
+          >
+            Save Changes
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 
@@ -689,7 +1176,7 @@ const WhatsappFlow = () => {
       <Typography variant="h6" fontWeight="bold" gutterBottom>
         Flow Analytics & Performance
       </Typography>
-      
+
       {/* Analytics Overview Cards */}
       <Grid container spacing={3} sx={{ mb: 4 }}>
         <Grid item xs={12} md={3}>
@@ -831,18 +1318,18 @@ const WhatsappFlow = () => {
     <Fade in timeout={800}>
       <Box sx={{ px: 1 }}>
         {/* Header */}
-        <Box sx={{ 
-          display: 'flex', 
+        <Box sx={{
+          display: 'flex',
           justifyContent: 'space-between',
-          alignItems: 'center', 
+          alignItems: 'center',
           mb: 4
         }}>
           <Box sx={{ display: 'flex', alignItems: 'center' }}>
-            <Avatar sx={{ 
-              bgcolor: 'success.main', 
-              mr: 2, 
-              width: 48, 
-              height: 48 
+            <Avatar sx={{
+              bgcolor: 'success.main',
+              mr: 2,
+              width: 48,
+              height: 48
             }}>
               <WhatsAppIcon />
             </Avatar>
@@ -869,8 +1356,8 @@ const WhatsappFlow = () => {
 
         {/* Navigation Tabs */}
         <Paper sx={{ mb: 3, borderRadius: 3 }}>
-          <Tabs 
-            value={activeTab} 
+          <Tabs
+            value={activeTab}
             onChange={(e, newValue) => setActiveTab(newValue)}
             variant="scrollable"
             scrollButtons="auto"
@@ -907,246 +1394,246 @@ const WhatsappFlow = () => {
 
         {/* Dialogs */}
 
-      {/* Create Flow Dialog */}
-      <Dialog
-        open={createFlowDialog}
-        onClose={() => setCreateFlowDialog(false)}
-        maxWidth="md"
-        fullWidth
-      >
-        <DialogTitle>
-          <Box sx={{ display: 'flex', alignItems: 'center' }}>
-            <AutoAwesomeIcon sx={{ mr: 1 }} />
-            Create New WhatsApp Flow
-          </Box>
-        </DialogTitle>
-        <DialogContent>
-          <Grid container spacing={3} sx={{ mt: 1 }}>
-            <Grid item xs={12}>
-              <TextField
-                fullWidth
-                label="Flow Name"
-                value={newFlow.name}
-                onChange={(e) => setNewFlow({ ...newFlow, name: e.target.value })}
-                placeholder="Enter flow name"
-              />
+        {/* Create Flow Dialog */}
+        <Dialog
+          open={createFlowDialog}
+          onClose={() => setCreateFlowDialog(false)}
+          maxWidth="md"
+          fullWidth
+        >
+          <DialogTitle>
+            <Box sx={{ display: 'flex', alignItems: 'center' }}>
+              <AutoAwesomeIcon sx={{ mr: 1 }} />
+              Create New WhatsApp Flow
+            </Box>
+          </DialogTitle>
+          <DialogContent>
+            <Grid container spacing={3} sx={{ mt: 1 }}>
+              <Grid item xs={12}>
+                <TextField
+                  fullWidth
+                  label="Flow Name"
+                  value={newFlow.name}
+                  onChange={(e) => setNewFlow({ ...newFlow, name: e.target.value })}
+                  placeholder="Enter flow name"
+                />
+              </Grid>
+              <Grid item xs={12}>
+                <TextField
+                  fullWidth
+                  multiline
+                  rows={3}
+                  label="Description"
+                  value={newFlow.description}
+                  onChange={(e) => setNewFlow({ ...newFlow, description: e.target.value })}
+                  placeholder="Describe the purpose of this flow"
+                />
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <FormControl fullWidth>
+                  <InputLabel>Flow Type</InputLabel>
+                  <Select
+                    value={newFlow.type}
+                    label="Flow Type"
+                    onChange={(e) => setNewFlow({ ...newFlow, type: e.target.value })}
+                  >
+                    <MenuItem value="marketing">Marketing</MenuItem>
+                    <MenuItem value="renewal">Renewal</MenuItem>
+                    <MenuItem value="onboarding">Onboarding</MenuItem>
+                    <MenuItem value="feedback">Feedback</MenuItem>
+                    <MenuItem value="support">Support</MenuItem>
+                  </Select>
+                </FormControl>
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <FormControl fullWidth>
+                  <InputLabel>Schedule Type</InputLabel>
+                  <Select
+                    value={newFlow.schedule}
+                    label="Schedule Type"
+                    onChange={(e) => setNewFlow({ ...newFlow, schedule: e.target.value })}
+                  >
+                    <MenuItem value="immediate">Send Immediately</MenuItem>
+                    <MenuItem value="scheduled">Scheduled</MenuItem>
+                    <MenuItem value="trigger">Trigger-based</MenuItem>
+                  </Select>
+                </FormControl>
+              </Grid>
+              <Grid item xs={12}>
+                <TextField
+                  fullWidth
+                  label="Target Audience"
+                  value={newFlow.targetAudience}
+                  onChange={(e) => setNewFlow({ ...newFlow, targetAudience: e.target.value })}
+                  placeholder="e.g., New Customers, Renewal Due, All Customers"
+                />
+              </Grid>
             </Grid>
-            <Grid item xs={12}>
-              <TextField
-                fullWidth
-                multiline
-                rows={3}
-                label="Description"
-                value={newFlow.description}
-                onChange={(e) => setNewFlow({ ...newFlow, description: e.target.value })}
-                placeholder="Describe the purpose of this flow"
-              />
-            </Grid>
-            <Grid item xs={12} sm={6}>
-              <FormControl fullWidth>
-                <InputLabel>Flow Type</InputLabel>
-                <Select
-                  value={newFlow.type}
-                  label="Flow Type"
-                  onChange={(e) => setNewFlow({ ...newFlow, type: e.target.value })}
-                >
-                  <MenuItem value="marketing">Marketing</MenuItem>
-                  <MenuItem value="renewal">Renewal</MenuItem>
-                  <MenuItem value="onboarding">Onboarding</MenuItem>
-                  <MenuItem value="feedback">Feedback</MenuItem>
-                  <MenuItem value="support">Support</MenuItem>
-                </Select>
-              </FormControl>
-            </Grid>
-            <Grid item xs={12} sm={6}>
-              <FormControl fullWidth>
-                <InputLabel>Schedule Type</InputLabel>
-                <Select
-                  value={newFlow.schedule}
-                  label="Schedule Type"
-                  onChange={(e) => setNewFlow({ ...newFlow, schedule: e.target.value })}
-                >
-                  <MenuItem value="immediate">Send Immediately</MenuItem>
-                  <MenuItem value="scheduled">Scheduled</MenuItem>
-                  <MenuItem value="trigger">Trigger-based</MenuItem>
-                </Select>
-              </FormControl>
-            </Grid>
-            <Grid item xs={12}>
-              <TextField
-                fullWidth
-                label="Target Audience"
-                value={newFlow.targetAudience}
-                onChange={(e) => setNewFlow({ ...newFlow, targetAudience: e.target.value })}
-                placeholder="e.g., New Customers, Renewal Due, All Customers"
-              />
-            </Grid>
-          </Grid>
-        </DialogContent>
-        <DialogActions sx={{ p: 3 }}>
-          <Button onClick={() => setCreateFlowDialog(false)}>
-            Cancel
-          </Button>
-          <Button
-            variant="contained"
-            onClick={handleCreateFlow}
-            disabled={!newFlow.name || !newFlow.description}
-          >
-            Create Flow
-          </Button>
-        </DialogActions>
-      </Dialog>
+          </DialogContent>
+          <DialogActions sx={{ p: 3 }}>
+            <Button onClick={() => setCreateFlowDialog(false)}>
+              Cancel
+            </Button>
+            <Button
+              variant="contained"
+              onClick={handleCreateFlow}
+              disabled={!newFlow.name || !newFlow.description}
+            >
+              Create Flow
+            </Button>
+          </DialogActions>
+        </Dialog>
 
-      {/* Flow Builder */}
-      <FlowBuilder
-        open={flowBuilderOpen}
-        onClose={() => {
-          setFlowBuilderOpen(false);
-          setSelectedFlowForEdit(null);
-        }}
-        flow={selectedFlowForEdit}
-        onSave={handleSaveFlow}
-      />
+        {/* Flow Builder */}
+        <FlowBuilder
+          open={flowBuilderOpen}
+          onClose={() => {
+            setFlowBuilderOpen(false);
+            setSelectedFlowForEdit(null);
+          }}
+          flow={selectedFlowForEdit}
+          onSave={handleSaveFlow}
+        />
 
-      {/* Template Manager */}
-      <TemplateManager
-        open={templateManagerOpen}
-        onClose={() => setTemplateManagerOpen(false)}
-        onSave={(template) => {
-          console.log('Template saved:', template);
-        }}
-      />
+        {/* Template Manager */}
+        <TemplateManager
+          open={templateManagerOpen}
+          onClose={() => setTemplateManagerOpen(false)}
+          onSave={(template) => {
+            console.log('Template saved:', template);
+          }}
+        />
 
-      {/* Analytics Dashboard */}
-      <Dialog
-        open={analyticsDialogOpen}
-        onClose={() => setAnalyticsDialogOpen(false)}
-        maxWidth="lg"
-        fullWidth
-        PaperProps={{ sx: { height: '90vh' } }}
-      >
-        <DialogTitle>
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <Typography variant="h6">Flow Analytics & Heatmap</Typography>
-            <IconButton onClick={() => setAnalyticsDialogOpen(false)}>
-              <CloseIcon />
-            </IconButton>
-          </Box>
-        </DialogTitle>
-        <DialogContent>
-          <Grid container spacing={3}>
-            <Grid item xs={12} md={3}>
-              <Card>
-                <CardContent sx={{ textAlign: 'center' }}>
-                  <Typography variant="h4" color="primary">94.2%</Typography>
-                  <Typography variant="body2">Completion Rate</Typography>
-                </CardContent>
-              </Card>
-            </Grid>
-            <Grid item xs={12} md={3}>
-              <Card>
-                <CardContent sx={{ textAlign: 'center' }}>
-                  <Typography variant="h4" color="success.main">2.3s</Typography>
-                  <Typography variant="body2">Avg Response Time</Typography>
-                </CardContent>
-              </Card>
-            </Grid>
-            <Grid item xs={12} md={3}>
-              <Card>
-                <CardContent sx={{ textAlign: 'center' }}>
-                  <Typography variant="h4" color="warning.main">12.5%</Typography>
-                  <Typography variant="body2">Drop-off Rate</Typography>
-                </CardContent>
-              </Card>
-            </Grid>
-            <Grid item xs={12} md={3}>
-              <Card>
-                <CardContent sx={{ textAlign: 'center' }}>
-                  <Typography variant="h4" color="info.main">87.8%</Typography>
-                  <Typography variant="body2">Click-through Rate</Typography>
-                </CardContent>
-              </Card>
-            </Grid>
+        {/* Analytics Dashboard */}
+        <Dialog
+          open={analyticsDialogOpen}
+          onClose={() => setAnalyticsDialogOpen(false)}
+          maxWidth="lg"
+          fullWidth
+          PaperProps={{ sx: { height: '90vh' } }}
+        >
+          <DialogTitle>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <Typography variant="h6">Flow Analytics & Heatmap</Typography>
+              <IconButton onClick={() => setAnalyticsDialogOpen(false)}>
+                <CloseIcon />
+              </IconButton>
+            </Box>
+          </DialogTitle>
+          <DialogContent>
+            <Grid container spacing={3}>
+              <Grid item xs={12} md={3}>
+                <Card>
+                  <CardContent sx={{ textAlign: 'center' }}>
+                    <Typography variant="h4" color="primary">94.2%</Typography>
+                    <Typography variant="body2">Completion Rate</Typography>
+                  </CardContent>
+                </Card>
+              </Grid>
+              <Grid item xs={12} md={3}>
+                <Card>
+                  <CardContent sx={{ textAlign: 'center' }}>
+                    <Typography variant="h4" color="success.main">2.3s</Typography>
+                    <Typography variant="body2">Avg Response Time</Typography>
+                  </CardContent>
+                </Card>
+              </Grid>
+              <Grid item xs={12} md={3}>
+                <Card>
+                  <CardContent sx={{ textAlign: 'center' }}>
+                    <Typography variant="h4" color="warning.main">12.5%</Typography>
+                    <Typography variant="body2">Drop-off Rate</Typography>
+                  </CardContent>
+                </Card>
+              </Grid>
+              <Grid item xs={12} md={3}>
+                <Card>
+                  <CardContent sx={{ textAlign: 'center' }}>
+                    <Typography variant="h4" color="info.main">87.8%</Typography>
+                    <Typography variant="body2">Click-through Rate</Typography>
+                  </CardContent>
+                </Card>
+              </Grid>
 
-            <Grid item xs={12}>
-              <Card>
-                <CardContent>
-                  <Typography variant="h6" gutterBottom>Flow Heatmap - Drop-off Points</Typography>
-                  <Box sx={{ p: 3, bgcolor: 'grey.50', borderRadius: 2 }}>
-                    <Typography variant="body2" color="text.secondary" textAlign="center">
-                      Interactive heatmap showing user drop-off points throughout the flow.
-                      Red areas indicate high drop-off rates, green areas show successful progression.
-                    </Typography>
-                    <Box sx={{ mt: 2, display: 'flex', justifyContent: 'center', gap: 2 }}>
-                      <Chip label="High Drop-off" color="error" size="small" />
-                      <Chip label="Medium Drop-off" color="warning" size="small" />
-                      <Chip label="Low Drop-off" color="success" size="small" />
+              <Grid item xs={12}>
+                <Card>
+                  <CardContent>
+                    <Typography variant="h6" gutterBottom>Flow Heatmap - Drop-off Points</Typography>
+                    <Box sx={{ p: 3, bgcolor: 'grey.50', borderRadius: 2 }}>
+                      <Typography variant="body2" color="text.secondary" textAlign="center">
+                        Interactive heatmap showing user drop-off points throughout the flow.
+                        Red areas indicate high drop-off rates, green areas show successful progression.
+                      </Typography>
+                      <Box sx={{ mt: 2, display: 'flex', justifyContent: 'center', gap: 2 }}>
+                        <Chip label="High Drop-off" color="error" size="small" />
+                        <Chip label="Medium Drop-off" color="warning" size="small" />
+                        <Chip label="Low Drop-off" color="success" size="small" />
+                      </Box>
                     </Box>
-                  </Box>
-                </CardContent>
-              </Card>
-            </Grid>
+                  </CardContent>
+                </Card>
+              </Grid>
 
-            <Grid item xs={12}>
-              <Card>
-                <CardContent>
-                  <Typography variant="h6" gutterBottom>Downloadable Reports</Typography>
-                  <Grid container spacing={2}>
-                    <Grid item xs={12} sm={6} md={3}>
-                      <Button
-                        fullWidth
-                        variant="outlined"
-                        startIcon={<AnalyticsIcon />}
-                        onClick={() => {
-                          const csvData = 'Flow Name,Completion Rate,Drop-off Rate,Avg Response Time\nWelcome Series,94.2%,5.8%,2.3s\n';
-                          const blob = new Blob([csvData], { type: 'text/csv' });
-                          const url = URL.createObjectURL(blob);
-                          const a = document.createElement('a');
-                          a.href = url;
-                          a.download = 'flow-analytics.csv';
-                          a.click();
-                        }}
-                      >
-                        CSV Report
-                      </Button>
+              <Grid item xs={12}>
+                <Card>
+                  <CardContent>
+                    <Typography variant="h6" gutterBottom>Downloadable Reports</Typography>
+                    <Grid container spacing={2}>
+                      <Grid item xs={12} sm={6} md={3}>
+                        <Button
+                          fullWidth
+                          variant="outlined"
+                          startIcon={<AnalyticsIcon />}
+                          onClick={() => {
+                            const csvData = 'Flow Name,Completion Rate,Drop-off Rate,Avg Response Time\nWelcome Series,94.2%,5.8%,2.3s\n';
+                            const blob = new Blob([csvData], { type: 'text/csv' });
+                            const url = URL.createObjectURL(blob);
+                            const a = document.createElement('a');
+                            a.href = url;
+                            a.download = 'flow-analytics.csv';
+                            a.click();
+                          }}
+                        >
+                          CSV Report
+                        </Button>
+                      </Grid>
+                      <Grid item xs={12} sm={6} md={3}>
+                        <Button
+                          fullWidth
+                          variant="outlined"
+                          startIcon={<AnalyticsIcon />}
+                          onClick={() => console.log('Generating PDF report...')}
+                        >
+                          PDF Report
+                        </Button>
+                      </Grid>
+                      <Grid item xs={12} sm={6} md={3}>
+                        <Button
+                          fullWidth
+                          variant="outlined"
+                          startIcon={<AnalyticsIcon />}
+                          onClick={() => console.log('Exporting to Excel...')}
+                        >
+                          Excel Export
+                        </Button>
+                      </Grid>
+                      <Grid item xs={12} sm={6} md={3}>
+                        <Button
+                          fullWidth
+                          variant="outlined"
+                          startIcon={<SendIcon />}
+                          onClick={() => console.log('Syncing with CRM...')}
+                        >
+                          CRM Sync
+                        </Button>
+                      </Grid>
                     </Grid>
-                    <Grid item xs={12} sm={6} md={3}>
-                      <Button
-                        fullWidth
-                        variant="outlined"
-                        startIcon={<AnalyticsIcon />}
-                        onClick={() => console.log('Generating PDF report...')}
-                      >
-                        PDF Report
-                      </Button>
-                    </Grid>
-                    <Grid item xs={12} sm={6} md={3}>
-                      <Button
-                        fullWidth
-                        variant="outlined"
-                        startIcon={<AnalyticsIcon />}
-                        onClick={() => console.log('Exporting to Excel...')}
-                      >
-                        Excel Export
-                      </Button>
-                    </Grid>
-                    <Grid item xs={12} sm={6} md={3}>
-                      <Button
-                        fullWidth
-                        variant="outlined"
-                        startIcon={<SendIcon />}
-                        onClick={() => console.log('Syncing with CRM...')}
-                      >
-                        CRM Sync
-                      </Button>
-                    </Grid>
-                  </Grid>
-                </CardContent>
-              </Card>
+                  </CardContent>
+                </Card>
+              </Grid>
             </Grid>
-          </Grid>
-        </DialogContent>
-      </Dialog>
+          </DialogContent>
+        </Dialog>
 
 
 

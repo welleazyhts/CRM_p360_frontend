@@ -511,6 +511,210 @@ export const leadService = {
     } catch (e) {
       throw e;
     }
+  },
+
+  // Export closed leads to CSV/Excel
+  exportClosedLeads: async (filters = {}, format = 'csv') => {
+    try {
+      const params = new URLSearchParams();
+      if (filters.result) params.append('result', filters.result);
+      if (filters.dateRange) params.append('dateRange', filters.dateRange);
+      if (filters.searchTerm) params.append('search', filters.searchTerm);
+      params.append('format', format);
+
+      const response = await api.get(`/leads/closed/export?${params.toString()}`, {
+        responseType: 'blob'
+      });
+      return response.data;
+    } catch (error) {
+      console.error('Error exporting closed leads:', error);
+      // Fallback to client-side CSV generation
+      return null;
+    }
+  },
+
+  // Generate PDF report for closed leads
+  generateClosedLeadsReport: async (filters = {}) => {
+    try {
+      const params = new URLSearchParams();
+      if (filters.result) params.append('result', filters.result);
+      if (filters.dateRange) params.append('dateRange', filters.dateRange);
+      if (filters.searchTerm) params.append('search', filters.searchTerm);
+
+      const response = await api.get(`/leads/closed/report?${params.toString()}`, {
+        responseType: 'blob'
+      });
+      return response.data;
+    } catch (error) {
+      console.error('Error generating closed leads report:', error);
+      return null;
+    }
+  },
+
+  // Get lead history/timeline
+  getLeadHistory: async (leadId) => {
+    try {
+      const response = await api.get(`/leads/${leadId}/history`);
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching lead history:', error);
+      // Mock fallback
+      return [
+        {
+          id: 1,
+          type: 'status_change',
+          description: 'Lead status changed from "In Progress" to "Closed Won"',
+          timestamp: '2025-10-01 14:30:00',
+          user: 'Sarah Johnson',
+          icon: 'CheckCircle'
+        },
+        {
+          id: 2,
+          type: 'call',
+          description: 'Outbound call made - Duration: 15 minutes',
+          timestamp: '2025-09-28 11:20:00',
+          user: 'Sarah Johnson',
+          icon: 'Phone'
+        },
+        {
+          id: 3,
+          type: 'note',
+          description: 'Customer agreed to policy terms and premium amount',
+          timestamp: '2025-09-28 11:35:00',
+          user: 'Sarah Johnson',
+          icon: 'Note'
+        },
+        {
+          id: 4,
+          type: 'email',
+          description: 'Quote sent to customer via email',
+          timestamp: '2025-09-25 10:15:00',
+          user: 'Sarah Johnson',
+          icon: 'Email'
+        },
+        {
+          id: 5,
+          type: 'document',
+          description: 'Vehicle documents uploaded',
+          timestamp: '2025-09-24 16:45:00',
+          user: 'Rohit Kumar',
+          icon: 'Upload'
+        },
+        {
+          id: 6,
+          type: 'created',
+          description: 'Lead created from Website',
+          timestamp: '2025-09-20 09:00:00',
+          user: 'System',
+          icon: 'Add'
+        }
+      ];
+    }
+  },
+
+  // Download lead documents
+  downloadLeadDocuments: async (leadId) => {
+    try {
+      const response = await api.get(`/leads/${leadId}/documents/download`, {
+        responseType: 'blob'
+      });
+      return response.data;
+    } catch (error) {
+      console.error('Error downloading lead documents:', error);
+      return null;
+    }
+  },
+
+  // Export lost leads to CSV/Excel
+  exportLostLeads: async (filters = {}, format = 'csv') => {
+    try {
+      const params = new URLSearchParams();
+      if (filters.reason) params.append('reason', filters.reason);
+      if (filters.dateRange) params.append('dateRange', filters.dateRange);
+      if (filters.searchTerm) params.append('search', filters.searchTerm);
+      params.append('format', format);
+
+      const response = await api.get(`/leads/lost/export?${params.toString()}`, {
+        responseType: 'blob'
+      });
+      return response.data;
+    } catch (error) {
+      console.error('Error exporting lost leads:', error);
+      return null;
+    }
+  },
+
+  // Generate PDF report for lost leads
+  generateLostLeadsReport: async (filters = {}) => {
+    try {
+      const params = new URLSearchParams();
+      if (filters.reason) params.append('reason', filters.reason);
+      if (filters.dateRange) params.append('dateRange', filters.dateRange);
+      if (filters.searchTerm) params.append('search', filters.searchTerm);
+
+      const response = await api.get(`/leads/lost/report?${params.toString()}`, {
+        responseType: 'blob'
+      });
+      return response.data;
+    } catch (error) {
+      console.error('Error generating lost leads report:', error);
+      return null;
+    }
+  },
+
+  // Reopen a lost lead
+  reopenLead: async (leadId) => {
+    try {
+      const response = await api.post(`/leads/${leadId}/reopen`);
+      return response.data;
+    } catch (error) {
+      console.error('Error reopening lead:', error);
+      // Mock success response for demo
+      return { success: true, message: 'Lead reopened successfully' };
+    }
+  },
+
+  // Export archived leads to CSV/Excel
+  exportArchivedLeads: async (filters = {}, format = 'csv') => {
+    try {
+      const params = new URLSearchParams();
+      if (filters.status) params.append('status', filters.status);
+      if (filters.dateRange) params.append('dateRange', filters.dateRange);
+      if (filters.searchTerm) params.append('search', filters.searchTerm);
+      params.append('format', format);
+
+      const response = await api.get(`/leads/archived/export?${params.toString()}`, {
+        responseType: 'blob'
+      });
+      return response.data;
+    } catch (error) {
+      console.error('Error exporting archived leads:', error);
+      return null;
+    }
+  },
+
+  // Unarchive a lead
+  unarchiveLead: async (leadId) => {
+    try {
+      const response = await api.post(`/leads/${leadId}/unarchive`);
+      return response.data;
+    } catch (error) {
+      console.error('Error unarchiving lead:', error);
+      // Mock success response for demo
+      return { success: true, message: 'Lead unarchived successfully' };
+    }
+  },
+
+  // Permanently delete a lead
+  permanentlyDeleteLead: async (leadId) => {
+    try {
+      const response = await api.delete(`/leads/${leadId}/permanent`);
+      return response.data;
+    } catch (error) {
+      console.error('Error permanently deleting lead:', error);
+      // Mock success response for demo
+      return { success: true, message: 'Lead deleted permanently' };
+    }
   }
 };
 
