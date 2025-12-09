@@ -60,6 +60,8 @@ import {
 } from '@mui/icons-material';
 import { BarChart, Bar, PieChart, Pie, LineChart, Line, Cell, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, Legend, ResponsiveContainer } from 'recharts';
 import * as misServices from '../services/misServices';
+import * as XLSX from 'xlsx';
+import { jsPDF } from 'jspdf';
 
 const LeadMIS = () => {
   const theme = useTheme();
@@ -234,26 +236,32 @@ const LeadMIS = () => {
 
   // Pivot Reports data
   const pivotByInsurer = [
-    { insurer: 'HDFC ERGO', policies: 145, premium: 6500000, claims: 12, claimRatio: 8.3, marketShare: 28.5, product: 'Health', date: '2025-01-15' },
-    { insurer: 'ICICI Lombard', policies: 132, premium: 5800000, claims: 8, claimRatio: 6.1, marketShare: 25.9, product: 'Motor', date: '2025-01-20' },
-    { insurer: 'Bajaj Allianz', policies: 98, premium: 4200000, claims: 15, claimRatio: 15.3, marketShare: 19.2, product: 'Life', date: '2025-01-18' },
-    { insurer: 'Star Health', policies: 87, premium: 3900000, claims: 6, claimRatio: 6.9, marketShare: 17.1, product: 'Health', date: '2025-01-22' },
-    { insurer: 'Max Bupa', policies: 48, premium: 2100000, claims: 4, claimRatio: 8.3, marketShare: 9.4, product: 'Travel', date: '2025-01-25' }
+    { insurer: 'HDFC ERGO', policies: 145, premium: 6500000, claims: 12, claimRatio: 8.3, marketShare: 28.5, product: 'Health', date: '2025-12-01' },
+    { insurer: 'ICICI Lombard', policies: 132, premium: 5800000, claims: 8, claimRatio: 6.1, marketShare: 25.9, product: 'Motor', date: '2025-12-03' },
+    { insurer: 'Bajaj Allianz', policies: 98, premium: 4200000, claims: 15, claimRatio: 15.3, marketShare: 19.2, product: 'Life', date: '2025-12-02' },
+    { insurer: 'Star Health', policies: 87, premium: 3900000, claims: 6, claimRatio: 6.9, marketShare: 17.1, product: 'Health', date: '2025-12-04' },
+    { insurer: 'Max Bupa', policies: 48, premium: 2100000, claims: 4, claimRatio: 8.3, marketShare: 9.4, product: 'Travel', date: '2025-12-05' },
+    { insurer: 'Tata AIG', policies: 110, premium: 4800000, claims: 9, claimRatio: 8.2, marketShare: 21.6, product: 'Motor', date: '2025-11-15' },
+    { insurer: 'New India Assurance', policies: 75, premium: 3200000, claims: 5, claimRatio: 6.7, marketShare: 14.7, product: 'Health', date: '2025-11-20' }
   ];
 
   const pivotByCSC = [
-    { csc: 'Mumbai Central', policies: 185, premium: 8200000, agents: 12, avgPerAgent: 15.4, efficiency: 92.3, product: 'Health', date: '2025-01-15' },
-    { csc: 'Delhi North', policies: 165, premium: 7400000, agents: 10, avgPerAgent: 16.5, efficiency: 88.7, product: 'Motor', date: '2025-01-20' },
-    { csc: 'Bangalore Tech', policies: 142, premium: 6800000, agents: 9, avgPerAgent: 15.8, efficiency: 94.1, product: 'Life', date: '2025-01-18' },
-    { csc: 'Chennai Express', policies: 128, premium: 5900000, agents: 8, avgPerAgent: 16.0, efficiency: 85.2, product: 'Health', date: '2025-01-22' },
-    { csc: 'Hyderabad Hub', policies: 95, premium: 4300000, agents: 6, avgPerAgent: 15.8, efficiency: 89.6, product: 'Motor', date: '2025-01-25' }
+    { csc: 'Mumbai Central', policies: 185, premium: 8200000, agents: 12, avgPerAgent: 15.4, efficiency: 92.3, product: 'Health', date: '2025-12-01' },
+    { csc: 'Delhi North', policies: 165, premium: 7400000, agents: 10, avgPerAgent: 16.5, efficiency: 88.7, product: 'Motor', date: '2025-12-03' },
+    { csc: 'Bangalore Tech', policies: 142, premium: 6800000, agents: 9, avgPerAgent: 15.8, efficiency: 94.1, product: 'Life', date: '2025-12-02' },
+    { csc: 'Chennai Express', policies: 128, premium: 5900000, agents: 8, avgPerAgent: 16.0, efficiency: 85.2, product: 'Health', date: '2025-12-04' },
+    { csc: 'Hyderabad Hub', policies: 95, premium: 4300000, agents: 6, avgPerAgent: 15.8, efficiency: 89.6, product: 'Motor', date: '2025-12-05' },
+    { csc: 'Kolkata East', policies: 88, premium: 3800000, agents: 7, avgPerAgent: 12.6, efficiency: 81.5, product: 'Travel', date: '2025-11-18' },
+    { csc: 'Pune West', policies: 102, premium: 4500000, agents: 8, avgPerAgent: 12.8, efficiency: 86.3, product: 'Health', date: '2025-11-22' }
   ];
 
   const pivotByTenure = [
-    { tenure: '1 Year', policies: 285, premium: 8500000, renewalRate: 78.2, avgPremium: 29825, satisfaction: 4.2, product: 'Health', date: '2025-01-15' },
-    { tenure: '2 Years', policies: 198, premium: 7200000, renewalRate: 85.4, avgPremium: 36364, satisfaction: 4.5, product: 'Motor', date: '2025-01-20' },
-    { tenure: '3 Years', policies: 142, premium: 6800000, renewalRate: 91.5, avgPremium: 47887, satisfaction: 4.7, product: 'Life', date: '2025-01-18' },
-    { tenure: '5 Years', policies: 85, premium: 5100000, renewalRate: 94.1, avgPremium: 60000, satisfaction: 4.8, product: 'Health', date: '2025-01-22' }
+    { tenure: '1 Year', policies: 285, premium: 8500000, renewalRate: 78.2, avgPremium: 29825, satisfaction: 4.2, product: 'Health', date: '2025-12-01' },
+    { tenure: '2 Years', policies: 198, premium: 7200000, renewalRate: 85.4, avgPremium: 36364, satisfaction: 4.5, product: 'Motor', date: '2025-12-03' },
+    { tenure: '3 Years', policies: 142, premium: 6800000, renewalRate: 91.5, avgPremium: 47887, satisfaction: 4.7, product: 'Life', date: '2025-12-02' },
+    { tenure: '5 Years', policies: 85, premium: 5100000, renewalRate: 94.1, avgPremium: 60000, satisfaction: 4.8, product: 'Health', date: '2025-12-04' },
+    { tenure: '1 Year', policies: 150, premium: 4500000, renewalRate: 75.5, avgPremium: 30000, satisfaction: 4.0, product: 'Motor', date: '2025-11-15' },
+    { tenure: '2 Years', policies: 120, premium: 5200000, renewalRate: 82.3, avgPremium: 43333, satisfaction: 4.3, product: 'Life', date: '2025-11-20' }
   ];
 
   const [pivotGroupBy, setPivotGroupBy] = useState('insurer');
@@ -261,12 +269,80 @@ const LeadMIS = () => {
   const [pivotProductFilter, setPivotProductFilter] = useState('all');
 
   const getPivotData = () => {
+    let data;
     switch (pivotGroupBy) {
-      case 'insurer': return pivotByInsurer;
-      case 'csc': return pivotByCSC;
-      case 'tenure': return pivotByTenure;
-      default: return pivotByInsurer;
+      case 'insurer': data = pivotByInsurer; break;
+      case 'csc': data = pivotByCSC; break;
+      case 'tenure': data = pivotByTenure; break;
+      default: data = pivotByInsurer;
     }
+
+    // Apply date range filtering
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+    const getStartDate = () => {
+      switch (pivotDateFilter) {
+        case 'today':
+          return today;
+        case 'thisWeek':
+          const weekStart = new Date(today);
+          weekStart.setDate(today.getDate() - today.getDay());
+          return weekStart;
+        case 'thisMonth':
+          return new Date(now.getFullYear(), now.getMonth(), 1);
+        case 'lastMonth':
+          return new Date(now.getFullYear(), now.getMonth() - 1, 1);
+        case 'thisQuarter':
+          const quarter = Math.floor(now.getMonth() / 3);
+          return new Date(now.getFullYear(), quarter * 3, 1);
+        case 'thisYear':
+          return new Date(now.getFullYear(), 0, 1);
+        default:
+          return new Date(now.getFullYear(), now.getMonth(), 1);
+      }
+    };
+
+    const getEndDate = () => {
+      switch (pivotDateFilter) {
+        case 'today':
+          const endOfToday = new Date(today);
+          endOfToday.setHours(23, 59, 59, 999);
+          return endOfToday;
+        case 'thisWeek':
+          const weekEnd = new Date(today);
+          weekEnd.setDate(today.getDate() + (6 - today.getDay()));
+          weekEnd.setHours(23, 59, 59, 999);
+          return weekEnd;
+        case 'thisMonth':
+          return new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999);
+        case 'lastMonth':
+          return new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59, 999);
+        case 'thisQuarter':
+          const quarter = Math.floor(now.getMonth() / 3);
+          return new Date(now.getFullYear(), (quarter + 1) * 3, 0, 23, 59, 59, 999);
+        case 'thisYear':
+          return new Date(now.getFullYear(), 11, 31, 23, 59, 59, 999);
+        default:
+          return new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999);
+      }
+    };
+
+    const startDate = getStartDate();
+    const endDate = getEndDate();
+
+    // Filter by date range
+    let filteredData = data.filter(item => {
+      const itemDate = new Date(item.date);
+      return itemDate >= startDate && itemDate <= endDate;
+    });
+
+    // Apply product filtering
+    if (pivotProductFilter !== 'all') {
+      filteredData = filteredData.filter(item => item.product === pivotProductFilter);
+    }
+
+    return filteredData;
   };
 
   // Fetch all MIS data
@@ -397,11 +473,438 @@ const LeadMIS = () => {
   };
 
   const handleExportExcel = () => {
-    alert('Exporting MIS report to Excel...');
+    const workbook = XLSX.utils.book_new();
+
+    // Tab names for reference
+    const tabNames = [
+      'Status Distribution', 'Performance Analysis', 'Trends & Patterns',
+      'Duplicate Analysis', 'Pre-Expiry Renewals', 'CSC Productivity',
+      'Lost Reasons Analysis', 'Conversion Reports', 'Pivot Reports'
+    ];
+
+    // 1. Leads by Status
+    if (leadsByStatusData.length > 0) {
+      const statusSheet = XLSX.utils.json_to_sheet(leadsByStatusData.map(item => ({
+        'Status': item.name,
+        'Count': item.value
+      })));
+      XLSX.utils.book_append_sheet(workbook, statusSheet, 'Leads by Status');
+    }
+
+    // 2. Leads by Source
+    if (leadsBySourceData.length > 0) {
+      const sourceSheet = XLSX.utils.json_to_sheet(leadsBySourceData.map(item => ({
+        'Source': item.name,
+        'Count': item.value
+      })));
+      XLSX.utils.book_append_sheet(workbook, sourceSheet, 'Leads by Source');
+    }
+
+    // 3. Leads Trend
+    if (leadsTrendData.length > 0) {
+      const trendSheet = XLSX.utils.json_to_sheet(leadsTrendData.map(item => ({
+        'Month': item.month,
+        'New Leads': item.newLeads,
+        'Converted': item.converted,
+        'Lost': item.lost
+      })));
+      XLSX.utils.book_append_sheet(workbook, trendSheet, 'Leads Trend');
+    }
+
+    // 4. Agent Performance
+    if (agentPerformanceData.length > 0) {
+      const performanceSheet = XLSX.utils.json_to_sheet(agentPerformanceData.map(item => ({
+        'Agent Name': item.name,
+        'Total Leads': item.totalLeads,
+        'Converted': item.converted,
+        'Conversion Rate': `${item.conversionRate}%`,
+        'Revenue': `₹${item.revenue?.toLocaleString() || 0}`
+      })));
+      XLSX.utils.book_append_sheet(workbook, performanceSheet, 'Agent Performance');
+    }
+
+    // 5. Duplicate Leads
+    if (duplicateLeads.length > 0) {
+      const duplicateData = [];
+      duplicateLeads.forEach(group => {
+        group.leads.forEach(lead => {
+          duplicateData.push({
+            'Group ID': group.groupId,
+            'Confidence': `${group.confidence}%`,
+            'Match Type': group.matchType,
+            'Lead Name': lead.name,
+            'Phone': lead.phone,
+            'Email': lead.email,
+            'Source': lead.source,
+            'Status': lead.status,
+            'Created Date': lead.createdAt
+          });
+        });
+      });
+      const duplicateSheet = XLSX.utils.json_to_sheet(duplicateData);
+      XLSX.utils.book_append_sheet(workbook, duplicateSheet, 'Duplicate Leads');
+    }
+
+    // 6. Pre-Expiry Renewals
+    if (preExpiryRenewals.length > 0) {
+      const renewalSheet = XLSX.utils.json_to_sheet(preExpiryRenewals.map(item => ({
+        'Policy Number': item.policyNumber,
+        'Customer Name': item.customerName,
+        'Policy Type': item.policyType,
+        'Expiry Date': item.expiryDate,
+        'Days to Expiry': item.daysToExpiry,
+        'Premium': `₹${item.premium?.toLocaleString() || 0}`,
+        'Agent': item.agent,
+        'Status': item.status
+      })));
+      XLSX.utils.book_append_sheet(workbook, renewalSheet, 'Pre-Expiry Renewals');
+    }
+
+    // 7. CSC Productivity
+    const cscData = getFilteredCSCProductivityData();
+    if (cscData.length > 0) {
+      const cscSheet = XLSX.utils.json_to_sheet(cscData.map(item => ({
+        'CSC Name': item.cscName,
+        'Region': item.region,
+        'Total Calls': item.calls,
+        'Policies Issued': item.policies,
+        'Conversion Rate': `${item.conversionRate}%`,
+        'Performance Score': item.score,
+        'Performance': item.performance
+      })));
+      XLSX.utils.book_append_sheet(workbook, cscSheet, 'CSC Productivity');
+    }
+
+    // 8. Lost Reasons
+    const lostData = getFilteredLostLeadsDetails();
+    if (lostData.length > 0) {
+      const lostSheet = XLSX.utils.json_to_sheet(lostData.map(item => ({
+        'Lead ID': item.id,
+        'Customer Name': item.customerName,
+        'Policy Type': item.policyType,
+        'Agent': item.agent,
+        'Lost Date': item.lostDate,
+        'Reason': item.reason,
+        'Premium': `₹${item.premium?.toLocaleString() || 0}`,
+        'Notes': item.notes
+      })));
+      XLSX.utils.book_append_sheet(workbook, lostSheet, 'Lost Leads');
+    }
+
+    // 9. Conversion Reports
+    const conversionData = getFilteredConversionReportsData();
+    if (conversionData.length > 0) {
+      const conversionSheet = XLSX.utils.json_to_sheet(conversionData.map(item => ({
+        'Agent': item.agent,
+        'Product Type': item.productType,
+        'Total Leads': item.totalLeads,
+        'Converted Leads': item.convertedLeads,
+        'Conversion Rate': `${item.conversionRate}%`,
+        'Revenue': `₹${item.revenue?.toLocaleString() || 0}`
+      })));
+      XLSX.utils.book_append_sheet(workbook, conversionSheet, 'Conversion Reports');
+    }
+
+    // 10. Pivot Reports
+    const pivotData = getPivotData();
+    if (pivotData.length > 0) {
+      const pivotSheet = XLSX.utils.json_to_sheet(pivotData.map(item => {
+        if (pivotGroupBy === 'insurer') {
+          return {
+            'Insurer': item.insurer,
+            'Product': item.product,
+            'Date': item.date,
+            'Policies': item.policies,
+            'Premium': `₹${item.premium?.toLocaleString() || 0}`,
+            'Claims': item.claims,
+            'Claim Ratio': `${item.claimRatio}%`,
+            'Market Share': `${item.marketShare}%`
+          };
+        } else if (pivotGroupBy === 'csc') {
+          return {
+            'CSC': item.csc,
+            'Product': item.product,
+            'Date': item.date,
+            'Policies': item.policies,
+            'Premium': `₹${item.premium?.toLocaleString() || 0}`,
+            'Agents': item.agents,
+            'Avg Per Agent': item.avgPerAgent,
+            'Efficiency': `${item.efficiency}%`
+          };
+        } else {
+          return {
+            'Tenure': item.tenure,
+            'Product': item.product,
+            'Date': item.date,
+            'Policies': item.policies,
+            'Premium': `₹${item.premium?.toLocaleString() || 0}`,
+            'Renewal Rate': `${item.renewalRate}%`,
+            'Avg Premium': `₹${item.avgPremium?.toLocaleString() || 0}`,
+            'Satisfaction': item.satisfaction
+          };
+        }
+      }));
+      XLSX.utils.book_append_sheet(workbook, pivotSheet, 'Pivot Reports');
+    }
+
+    // Generate filename with timestamp
+    const timestamp = new Date().toISOString().slice(0, 10);
+    const filename = `Lead_MIS_Report_${timestamp}.xlsx`;
+
+    // Write and download file
+    XLSX.writeFile(workbook, filename);
   };
 
   const handleExportPDF = () => {
-    alert('Generating PDF report...');
+    const doc = new jsPDF();
+    const pageWidth = doc.internal.pageSize.getWidth();
+    let yPosition = 20;
+    const lineHeight = 7;
+    const marginLeft = 14;
+    const marginRight = pageWidth - 14;
+
+    // Helper function to add a new page if needed
+    const checkPageBreak = (requiredSpace = 30) => {
+      if (yPosition + requiredSpace > doc.internal.pageSize.getHeight() - 20) {
+        doc.addPage();
+        yPosition = 20;
+      }
+    };
+
+    // Helper function to draw a table
+    const drawTable = (headers, data, columnWidths) => {
+      const startX = marginLeft;
+      let startY = yPosition;
+      const cellPadding = 2;
+      const rowHeight = 8;
+
+      // Draw header row
+      doc.setFillColor(41, 128, 185);
+      doc.setTextColor(255, 255, 255);
+      doc.setFontSize(9);
+      doc.setFont('helvetica', 'bold');
+
+      let xPos = startX;
+      headers.forEach((header, i) => {
+        doc.rect(xPos, startY, columnWidths[i], rowHeight, 'F');
+        doc.text(header, xPos + cellPadding, startY + rowHeight - 2);
+        xPos += columnWidths[i];
+      });
+
+      startY += rowHeight;
+      yPosition = startY;
+
+      // Draw data rows
+      doc.setTextColor(0, 0, 0);
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(8);
+
+      data.forEach((row, rowIndex) => {
+        checkPageBreak(rowHeight + 10);
+        startY = yPosition;
+        xPos = startX;
+
+        // Alternate row background
+        if (rowIndex % 2 === 0) {
+          doc.setFillColor(245, 245, 245);
+          doc.rect(startX, startY, columnWidths.reduce((a, b) => a + b, 0), rowHeight, 'F');
+        }
+
+        row.forEach((cell, i) => {
+          const cellText = String(cell || '').substring(0, 20); // Truncate long text
+          doc.text(cellText, xPos + cellPadding, startY + rowHeight - 2);
+          xPos += columnWidths[i];
+        });
+
+        yPosition += rowHeight;
+      });
+
+      yPosition += 10;
+    };
+
+    // Title
+    doc.setFontSize(20);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(41, 128, 185);
+    doc.text('Lead MIS Report', pageWidth / 2, yPosition, { align: 'center' });
+    yPosition += 10;
+
+    // Generated date
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(100, 100, 100);
+    const generatedDate = new Date().toLocaleString('en-IN', {
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+    doc.text(`Generated: ${generatedDate}`, pageWidth / 2, yPosition, { align: 'center' });
+    yPosition += 15;
+
+    // Summary Section
+    doc.setFontSize(14);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(0, 0, 0);
+    doc.text('Executive Summary', marginLeft, yPosition);
+    yPosition += 10;
+
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'normal');
+
+    const summaryItems = [
+      ['Total Leads:', '180', 'Conversion Rate:', '34.2%'],
+      ['Total Revenue:', '₹3.9 Cr', 'Lost Leads:', '18']
+    ];
+
+    summaryItems.forEach(row => {
+      doc.setFont('helvetica', 'bold');
+      doc.text(row[0], marginLeft, yPosition);
+      doc.setFont('helvetica', 'normal');
+      doc.text(row[1], marginLeft + 35, yPosition);
+      doc.setFont('helvetica', 'bold');
+      doc.text(row[2], marginLeft + 70, yPosition);
+      doc.setFont('helvetica', 'normal');
+      doc.text(row[3], marginLeft + 110, yPosition);
+      yPosition += lineHeight;
+    });
+
+    yPosition += 10;
+
+    // Leads by Status
+    if (leadsByStatusData.length > 0) {
+      checkPageBreak(50);
+      doc.setFontSize(12);
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(41, 128, 185);
+      doc.text('Leads by Status', marginLeft, yPosition);
+      yPosition += 8;
+
+      const statusHeaders = ['Status', 'Count'];
+      const statusData = leadsByStatusData.map(item => [item.name, String(item.value)]);
+      drawTable(statusHeaders, statusData, [90, 40]);
+    }
+
+    // Agent Performance
+    if (agentPerformanceData.length > 0) {
+      checkPageBreak(50);
+      doc.setFontSize(12);
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(41, 128, 185);
+      doc.text('Agent Performance', marginLeft, yPosition);
+      yPosition += 8;
+
+      const perfHeaders = ['Agent', 'Leads', 'Converted', 'Rate'];
+      const perfData = agentPerformanceData.slice(0, 8).map(item => [
+        item.name,
+        String(item.totalLeads || 0),
+        String(item.converted || 0),
+        `${item.conversionRate || 0}%`
+      ]);
+      drawTable(perfHeaders, perfData, [50, 30, 35, 30]);
+    }
+
+    // CSC Productivity
+    const cscData = getFilteredCSCProductivityData();
+    if (cscData.length > 0) {
+      checkPageBreak(50);
+      doc.setFontSize(12);
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(41, 128, 185);
+      doc.text('CSC Productivity', marginLeft, yPosition);
+      yPosition += 8;
+
+      const cscHeaders = ['CSC Name', 'Calls', 'Policies', 'Conv %', 'Score'];
+      const cscTableData = cscData.slice(0, 8).map(item => [
+        item.cscName,
+        String(item.calls),
+        String(item.policies),
+        `${item.conversionRate}%`,
+        String(item.score)
+      ]);
+      drawTable(cscHeaders, cscTableData, [45, 25, 28, 28, 25]);
+    }
+
+    // Pivot Reports
+    const pivotData = getPivotData();
+    if (pivotData.length > 0) {
+      checkPageBreak(50);
+      doc.setFontSize(12);
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(41, 128, 185);
+      const pivotTitle = pivotGroupBy === 'insurer' ? 'Pivot by Insurer' :
+        pivotGroupBy === 'csc' ? 'Pivot by CSC' : 'Pivot by Tenure';
+      doc.text(pivotTitle, marginLeft, yPosition);
+      yPosition += 8;
+
+      let pivotHeaders, pivotTableData;
+      if (pivotGroupBy === 'insurer') {
+        pivotHeaders = ['Insurer', 'Policies', 'Premium', 'Claims'];
+        pivotTableData = pivotData.slice(0, 8).map(item => [
+          item.insurer,
+          String(item.policies),
+          `₹${(item.premium / 100000).toFixed(1)}L`,
+          String(item.claims)
+        ]);
+      } else if (pivotGroupBy === 'csc') {
+        pivotHeaders = ['CSC', 'Policies', 'Premium', 'Efficiency'];
+        pivotTableData = pivotData.slice(0, 8).map(item => [
+          item.csc,
+          String(item.policies),
+          `₹${(item.premium / 100000).toFixed(1)}L`,
+          `${item.efficiency}%`
+        ]);
+      } else {
+        pivotHeaders = ['Tenure', 'Policies', 'Premium', 'Renewal %'];
+        pivotTableData = pivotData.slice(0, 8).map(item => [
+          item.tenure,
+          String(item.policies),
+          `₹${(item.premium / 100000).toFixed(1)}L`,
+          `${item.renewalRate}%`
+        ]);
+      }
+      drawTable(pivotHeaders, pivotTableData, [50, 30, 40, 35]);
+    }
+
+    // Conversion Reports
+    const conversionData = getFilteredConversionReportsData();
+    if (conversionData.length > 0) {
+      checkPageBreak(50);
+      doc.setFontSize(12);
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(41, 128, 185);
+      doc.text('Conversion Reports', marginLeft, yPosition);
+      yPosition += 8;
+
+      const convHeaders = ['Agent', 'Leads', 'Converted', 'Rate', 'Revenue'];
+      const convTableData = conversionData.slice(0, 8).map(item => [
+        item.agent,
+        String(item.totalLeads),
+        String(item.convertedLeads),
+        `${item.conversionRate}%`,
+        `₹${(item.revenue / 100000).toFixed(1)}L`
+      ]);
+      drawTable(convHeaders, convTableData, [40, 25, 30, 25, 35]);
+    }
+
+    // Footer on last page
+    const totalPages = doc.internal.getNumberOfPages();
+    for (let i = 1; i <= totalPages; i++) {
+      doc.setPage(i);
+      doc.setFontSize(8);
+      doc.setTextColor(150, 150, 150);
+      doc.text(
+        `Page ${i} of ${totalPages}`,
+        pageWidth / 2,
+        doc.internal.pageSize.getHeight() - 10,
+        { align: 'center' }
+      );
+    }
+
+    // Save PDF
+    const timestamp = new Date().toISOString().slice(0, 10);
+    doc.save(`Lead_MIS_Report_${timestamp}.pdf`);
   };
 
   const handleMergeDuplicates = (groupId) => {
@@ -2663,111 +3166,106 @@ const LeadMIS = () => {
                         </TableRow>
                       </TableHead>
                       <TableBody>
-                        {getPivotData()
-                          .filter(item => {
-                            const matchesProduct = pivotProductFilter === 'all' || item.product === pivotProductFilter;
-                            return matchesProduct;
-                          })
-                          .map((item, index) => (
-                            <TableRow key={index} hover>
-                              <TableCell>
-                                <Typography variant="body2" fontWeight="600">
-                                  {item.insurer || item.csc || item.tenure}
-                                </Typography>
-                              </TableCell>
-                              <TableCell>
-                                <Chip label={item.product} size="small" variant="outlined" />
-                              </TableCell>
-                              <TableCell>
-                                <Typography variant="body2">
-                                  {new Date(item.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
-                                </Typography>
-                              </TableCell>
-                              <TableCell align="center">
-                                <Typography variant="body2" fontWeight="600" color="primary.main">
-                                  {item.policies}
-                                </Typography>
-                              </TableCell>
-                              <TableCell align="right">
-                                <Typography variant="body2" fontWeight="600" color="success.main">
-                                  ₹{(item.premium / 100000).toFixed(1)}L
-                                </Typography>
-                              </TableCell>
-                              <TableCell align="center">
-                                {pivotGroupBy === 'insurer' && (
-                                  <Typography variant="body2">{item.claims}</Typography>
-                                )}
-                                {pivotGroupBy === 'csc' && (
-                                  <Typography variant="body2">{item.agents}</Typography>
-                                )}
-                                {pivotGroupBy === 'tenure' && (
-                                  <Chip label={`${item.renewalRate}%`} size="small" color="success" />
-                                )}
-                              </TableCell>
-                              <TableCell align="center">
-                                {pivotGroupBy === 'insurer' && (
-                                  <Chip
-                                    label={`${item.claimRatio}%`}
-                                    size="small"
-                                    color={item.claimRatio <= 8 ? 'success' : item.claimRatio <= 12 ? 'warning' : 'error'}
-                                  />
-                                )}
-                                {pivotGroupBy === 'csc' && (
-                                  <Typography variant="body2" fontWeight="600">{item.avgPerAgent}</Typography>
-                                )}
-                                {pivotGroupBy === 'tenure' && (
-                                  <Typography variant="body2" fontWeight="600">₹{item.avgPremium.toLocaleString()}</Typography>
-                                )}
-                              </TableCell>
-                              <TableCell align="center">
-                                {pivotGroupBy === 'insurer' && (
-                                  <Chip
-                                    label={`${item.marketShare}%`}
-                                    size="small"
-                                    color={item.marketShare >= 25 ? 'success' : item.marketShare >= 15 ? 'primary' : 'warning'}
-                                  />
-                                )}
-                                {pivotGroupBy === 'csc' && (
-                                  <Chip
-                                    label={`${item.efficiency}%`}
-                                    size="small"
-                                    color={item.efficiency >= 90 ? 'success' : item.efficiency >= 85 ? 'primary' : 'warning'}
-                                  />
-                                )}
-                                {pivotGroupBy === 'tenure' && (
-                                  <Stack direction="row" alignItems="center" justifyContent="center" spacing={0.5}>
-                                    <Typography variant="body2" fontWeight="600">{item.satisfaction}</Typography>
-                                    <StarIcon fontSize="small" sx={{ color: theme.palette.warning.main }} />
-                                  </Stack>
-                                )}
-                              </TableCell>
-                              <TableCell>
-                                <Box sx={{ width: '100%', display: 'flex', alignItems: 'center', gap: 1 }}>
+                        {getPivotData().map((item, index) => (
+                          <TableRow key={index} hover>
+                            <TableCell>
+                              <Typography variant="body2" fontWeight="600">
+                                {item.insurer || item.csc || item.tenure}
+                              </Typography>
+                            </TableCell>
+                            <TableCell>
+                              <Chip label={item.product} size="small" variant="outlined" />
+                            </TableCell>
+                            <TableCell>
+                              <Typography variant="body2">
+                                {new Date(item.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                              </Typography>
+                            </TableCell>
+                            <TableCell align="center">
+                              <Typography variant="body2" fontWeight="600" color="primary.main">
+                                {item.policies}
+                              </Typography>
+                            </TableCell>
+                            <TableCell align="right">
+                              <Typography variant="body2" fontWeight="600" color="success.main">
+                                ₹{(item.premium / 100000).toFixed(1)}L
+                              </Typography>
+                            </TableCell>
+                            <TableCell align="center">
+                              {pivotGroupBy === 'insurer' && (
+                                <Typography variant="body2">{item.claims}</Typography>
+                              )}
+                              {pivotGroupBy === 'csc' && (
+                                <Typography variant="body2">{item.agents}</Typography>
+                              )}
+                              {pivotGroupBy === 'tenure' && (
+                                <Chip label={`${item.renewalRate}%`} size="small" color="success" />
+                              )}
+                            </TableCell>
+                            <TableCell align="center">
+                              {pivotGroupBy === 'insurer' && (
+                                <Chip
+                                  label={`${item.claimRatio}%`}
+                                  size="small"
+                                  color={item.claimRatio <= 8 ? 'success' : item.claimRatio <= 12 ? 'warning' : 'error'}
+                                />
+                              )}
+                              {pivotGroupBy === 'csc' && (
+                                <Typography variant="body2" fontWeight="600">{item.avgPerAgent}</Typography>
+                              )}
+                              {pivotGroupBy === 'tenure' && (
+                                <Typography variant="body2" fontWeight="600">₹{item.avgPremium.toLocaleString()}</Typography>
+                              )}
+                            </TableCell>
+                            <TableCell align="center">
+                              {pivotGroupBy === 'insurer' && (
+                                <Chip
+                                  label={`${item.marketShare}%`}
+                                  size="small"
+                                  color={item.marketShare >= 25 ? 'success' : item.marketShare >= 15 ? 'primary' : 'warning'}
+                                />
+                              )}
+                              {pivotGroupBy === 'csc' && (
+                                <Chip
+                                  label={`${item.efficiency}%`}
+                                  size="small"
+                                  color={item.efficiency >= 90 ? 'success' : item.efficiency >= 85 ? 'primary' : 'warning'}
+                                />
+                              )}
+                              {pivotGroupBy === 'tenure' && (
+                                <Stack direction="row" alignItems="center" justifyContent="center" spacing={0.5}>
+                                  <Typography variant="body2" fontWeight="600">{item.satisfaction}</Typography>
+                                  <StarIcon fontSize="small" sx={{ color: theme.palette.warning.main }} />
+                                </Stack>
+                              )}
+                            </TableCell>
+                            <TableCell>
+                              <Box sx={{ width: '100%', display: 'flex', alignItems: 'center', gap: 1 }}>
+                                <Box
+                                  sx={{
+                                    flex: 1,
+                                    height: 8,
+                                    bgcolor: alpha(theme.palette.grey[500], 0.1),
+                                    borderRadius: 1,
+                                    overflow: 'hidden'
+                                  }}
+                                >
                                   <Box
                                     sx={{
-                                      flex: 1,
-                                      height: 8,
-                                      bgcolor: alpha(theme.palette.grey[500], 0.1),
-                                      borderRadius: 1,
-                                      overflow: 'hidden'
+                                      width: `${pivotGroupBy === 'insurer' ? item.marketShare * 2 : pivotGroupBy === 'csc' ? item.efficiency : item.renewalRate}%`,
+                                      height: '100%',
+                                      bgcolor: theme.palette.primary.main,
+                                      borderRadius: 1
                                     }}
-                                  >
-                                    <Box
-                                      sx={{
-                                        width: `${pivotGroupBy === 'insurer' ? item.marketShare * 2 : pivotGroupBy === 'csc' ? item.efficiency : item.renewalRate}%`,
-                                        height: '100%',
-                                        bgcolor: theme.palette.primary.main,
-                                        borderRadius: 1
-                                      }}
-                                    />
-                                  </Box>
-                                  <Typography variant="caption" fontWeight="600">
-                                    {pivotGroupBy === 'insurer' ? `${item.marketShare}%` : pivotGroupBy === 'csc' ? `${item.efficiency}%` : `${item.renewalRate}%`}
-                                  </Typography>
+                                  />
                                 </Box>
-                              </TableCell>
-                            </TableRow>
-                          ))}
+                                <Typography variant="caption" fontWeight="600">
+                                  {pivotGroupBy === 'insurer' ? `${item.marketShare}%` : pivotGroupBy === 'csc' ? `${item.efficiency}%` : `${item.renewalRate}%`}
+                                </Typography>
+                              </Box>
+                            </TableCell>
+                          </TableRow>
+                        ))}
                       </TableBody>
                     </Table>
                   </TableContainer>
@@ -3486,9 +3984,9 @@ const LeadMIS = () => {
                             const matchesRegion = capacitySelectedRegion === 'all' || team.region === capacitySelectedRegion;
                             const matchesStatus = capacityStatusFilter === 'all' || team.status === (
                               capacityStatusFilter === 'available' ? 'available' :
-                              capacityStatusFilter === 'at-capacity' ? 'optimal' :
-                              capacityStatusFilter === 'overloaded' ? 'overloaded' :
-                              capacityStatusFilter === 'underutilized' ? 'underutilized' : team.status
+                                capacityStatusFilter === 'at-capacity' ? 'optimal' :
+                                  capacityStatusFilter === 'overloaded' ? 'overloaded' :
+                                    capacityStatusFilter === 'underutilized' ? 'underutilized' : team.status
                             );
                             return matchesMonth && matchesRegion && matchesStatus;
                           })

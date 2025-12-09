@@ -37,7 +37,10 @@ import {
   Assignment as AssignmentIcon,
   Timeline as TimelineIcon,
   Warning as WarningIcon,
-  CloudUpload as CloudUploadIcon
+  CloudUpload as CloudUploadIcon,
+  PushPin as PushPinIcon,
+  Star as StarIcon,
+  StarBorder as StarBorderIcon
 } from '@mui/icons-material';
 import { bulkUpdateCaseStatus, bulkAssignCases, checkDNCStatus, requestDNCOverride } from '../services/api';
 import { useNavigate } from 'react-router-dom';
@@ -54,13 +57,13 @@ const CaseTracking = () => {
   const { currentUser } = useAuth();
   const theme = useTheme();
   const [loaded, setLoaded] = useState(false);
-  
+
   // Function to handle customer name click
   const handleCustomerNameClick = (e, customerName, customerId) => {
     e.stopPropagation(); // Prevent row click event
     navigate(`/policy-timeline?customerName=${encodeURIComponent(customerName)}&customerId=${encodeURIComponent(customerId || 'CUST-' + Math.floor(Math.random() * 10000))}`);
   };
-  
+
   const mockCases = useMemo(() => [
     {
       id: 'CASE-001',
@@ -611,7 +614,7 @@ const CaseTracking = () => {
   const [dncOverrideDialog, setDNCOverrideDialog] = useState(false);
   const [dncCheckResult, setDNCCheckResult] = useState(null);
   const [overrideReason, setOverrideReason] = useState('');
-  
+
   // Bulk operations states
   const [selectedCases, setSelectedCases] = useState([]);
   const [bulkActionsVisible, setBulkActionsVisible] = useState(false);
@@ -622,10 +625,16 @@ const CaseTracking = () => {
   const [bulkAgent, setBulkAgent] = useState('');
   const [bulkPolicyStatus, setBulkPolicyStatus] = useState('');
 
+  // Pin to top states
+  const [pinnedCases, setPinnedCases] = useState(() => {
+    const saved = localStorage.getItem('pinnedCases');
+    return saved ? JSON.parse(saved) : [];
+  });
+
   // Available agents for assignment
   const availableAgents = [
     'Priya Patel',
-    'Rajesh Kumar', 
+    'Rajesh Kumar',
     'Ananya Reddy',
     'Amit Shah',
     'Sarah Johnson',
@@ -638,7 +647,7 @@ const CaseTracking = () => {
   // Available statuses for bulk change
   const availableStatuses = [
     'Uploaded',
-    'Assigned', 
+    'Assigned',
     'In Progress',
     'Pending',
     'Failed',
@@ -726,7 +735,7 @@ const CaseTracking = () => {
 
   const handleFilterClose = () => {
     setFilterAnchorEl(null);
-    
+
     // Apply all filters when the filter menu is closed
     applyAllFilters(searchTerm, statusFilter, dateFilter, agentFilter, policyStatusFilter);
   };
@@ -801,7 +810,7 @@ const CaseTracking = () => {
   const handleStatusFilterChange = (event) => {
     const newStatusFilter = event.target.value;
     setStatusFilter(newStatusFilter);
-    
+
     // Apply all filters
     applyAllFilters(searchTerm, newStatusFilter, dateFilter, agentFilter, policyStatusFilter);
   };
@@ -809,7 +818,7 @@ const CaseTracking = () => {
   const handleDateFilterChange = (event) => {
     const newDateFilter = event.target.value;
     setDateFilter(newDateFilter);
-    
+
     // Apply all filters
     applyAllFilters(searchTerm, statusFilter, newDateFilter, agentFilter, policyStatusFilter);
   };
@@ -817,7 +826,7 @@ const CaseTracking = () => {
   const handleAgentFilterChange = (event) => {
     const newAgentFilter = event.target.value;
     setAgentFilter(newAgentFilter);
-    
+
     // Apply all filters
     applyAllFilters(searchTerm, statusFilter, dateFilter, newAgentFilter, policyStatusFilter);
   };
@@ -825,11 +834,11 @@ const CaseTracking = () => {
   const handlePolicyStatusFilterChange = (event) => {
     const newPolicyStatusFilter = event.target.value;
     setPolicyStatusFilter(newPolicyStatusFilter);
-    
+
     // Apply all filters
     applyAllFilters(searchTerm, statusFilter, dateFilter, agentFilter, newPolicyStatusFilter);
   };
-  
+
   // Helper function to apply all filters
   const applyAllFilters = (search, status, date, agent, policyStatus) => {
     // Process comma-separated search terms
@@ -837,18 +846,18 @@ const CaseTracking = () => {
       .split(',')
       .map(term => term.trim().toLowerCase())
       .filter(term => term !== '');
-    
+
     // Filter cases based on all criteria
     const filteredCases = mockCases.filter(caseItem => {
       // Filter by search terms
-      const matchesSearch = searchTerms.length === 0 || searchTerms.some(term => 
+      const matchesSearch = searchTerms.length === 0 || searchTerms.some(term =>
         caseItem.id.toLowerCase().includes(term) ||
         caseItem.customerName.toLowerCase().includes(term) ||
         caseItem.policyNumber.toLowerCase().includes(term)
       );
-      
+
       // Filter by status
-      const matchesStatus = status === 'all' || 
+      const matchesStatus = status === 'all' ||
         caseItem.status.toLowerCase() === status.toLowerCase() ||
         // Handle specific status mappings
         (status === 'inProgress' && caseItem.status.toLowerCase() === 'in progress') ||
@@ -861,21 +870,21 @@ const CaseTracking = () => {
         (status === 'dncBotCalling' && caseItem.status.toLowerCase() === 'dnc bot calling') ||
         (status === 'paymentFailed' && caseItem.status.toLowerCase() === 'payment failed') ||
         (status === 'customerPostponed' && caseItem.status.toLowerCase() === 'customer postponed');
-      
+
       // Filter by agent
-      const matchesAgent = agent === 'all' || 
+      const matchesAgent = agent === 'all' ||
         caseItem.agent.toLowerCase() === agent.toLowerCase();
-        
+
       // Filter by policy status
-      const matchesPolicyStatus = policyStatus === 'all' || 
+      const matchesPolicyStatus = policyStatus === 'all' ||
         caseItem.policyStatus.toLowerCase() === policyStatus.toLowerCase();
-        
+
       // Filter by date if needed (example implementation)
       let matchesDate = true;
       if (date !== 'all') {
         const today = new Date();
         const caseDate = new Date(caseItem.uploadDate);
-        
+
         if (date === 'today') {
           matchesDate = caseDate.toDateString() === today.toDateString();
         } else if (date === 'yesterday') {
@@ -892,11 +901,11 @@ const CaseTracking = () => {
           matchesDate = caseDate >= lastMonth;
         }
       }
-      
+
       // Exclude cases with status "Renewed"
       return matchesSearch && matchesStatus && matchesAgent && matchesPolicyStatus && matchesDate && caseItem.status !== 'Renewed';
     });
-    
+
     setCases(filteredCases);
     setPage(0); // Reset to first page when filtering
   };
@@ -911,12 +920,12 @@ const CaseTracking = () => {
     try {
       // In a real app, this would call your API
       // await updateCase(currentCase.id, currentCase);
-      
+
       // Update local state
       setCases(cases.map(c => c.id === currentCase.id ? currentCase : c));
       setEditDialogOpen(false);
     } catch (error) {
-              setError("Failed to update case. Please try again.");
+      setError("Failed to update case. Please try again.");
     }
   };
 
@@ -1123,64 +1132,64 @@ const CaseTracking = () => {
 
   const handleSendQuickMessage = async () => {
     if (!selectedCase) return;
-    
+
     try {
       // Check DNC status before sending
       const dncStatus = await checkDNCStatus(
-        selectedCase.contactInfo, 
-        currentUser.clientId || 'CLIENT-001', 
+        selectedCase.contactInfo,
+        currentUser.clientId || 'CLIENT-001',
         messageType
       );
-      
+
       if (dncStatus.isBlocked && !dncStatus.overrideAllowed) {
         setError(`Message blocked: ${dncStatus.reason} (${dncStatus.source})`);
         setTimeout(() => setError(''), 5000);
         return;
       }
-      
+
       if (dncStatus.isBlocked && dncStatus.overrideAllowed) {
         // Show override dialog
         setDNCCheckResult(dncStatus);
         setDNCOverrideDialog(true);
         return;
       }
-      
+
       // Proceed with sending if not blocked
       await sendMessageAfterDNCCheck();
-      
+
     } catch (error) {
       setError('Failed to send message. Please try again.');
       setTimeout(() => setError(''), 3000);
     }
   };
-  
+
   const sendMessageAfterDNCCheck = async () => {
     // Here you would integrate with your messaging API
     // In a real app, this would call the actual messaging service
     // await sendMessage(selectedCase, messageType, quickMessage);
-    
+
     setSuccessMessage(`Quick message sent to ${selectedCase.customerName} via ${messageType.toUpperCase()}`);
     handleQuickMessageClose();
-    
+
     setTimeout(() => {
       setSuccessMessage('');
     }, 3000);
   };
-  
+
   const handleDNCOverride = async () => {
     if (!overrideReason.trim()) {
       setError('Please provide a reason for the override');
       setTimeout(() => setError(''), 3000);
       return;
     }
-    
+
     try {
       const overrideResult = await requestDNCOverride(dncCheckResult.dncId, {
         reason: overrideReason,
         overrideType: 'temporary',
         endDate: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString() // 24 hours
       });
-      
+
       if (overrideResult.success) {
         // Override approved, send message
         await sendMessageAfterDNCCheck();
@@ -1228,23 +1237,23 @@ const CaseTracking = () => {
     try {
       // Call API to update case statuses
       const response = await bulkUpdateCaseStatus(selectedCases, bulkStatus);
-      
+
       if (response.success) {
         // Update local state
-        const updatedCases = cases.map(caseItem => 
-          selectedCases.includes(caseItem.id) 
+        const updatedCases = cases.map(caseItem =>
+          selectedCases.includes(caseItem.id)
             ? { ...caseItem, status: bulkStatus }
             : caseItem
         );
-        
+
         setCases(updatedCases);
         setSuccessMessage(response.message || `Successfully updated status to "${bulkStatus}" for ${selectedCases.length} case(s)`);
-        
+
         // Reset states
         setSelectedCases([]);
         setBulkStatusDialog(false);
         setBulkStatus('');
-        
+
         setTimeout(() => setSuccessMessage(''), 3000);
       }
     } catch (error) {
@@ -1257,29 +1266,29 @@ const CaseTracking = () => {
     try {
       // Call API to assign cases to agent
       const response = await bulkAssignCases(selectedCases, bulkAgent);
-      
+
       if (response.success) {
         // Update local state
-        const updatedCases = cases.map(caseItem => 
-          selectedCases.includes(caseItem.id) 
+        const updatedCases = cases.map(caseItem =>
+          selectedCases.includes(caseItem.id)
             ? { ...caseItem, agent: bulkAgent, status: caseItem.status === 'Uploaded' ? 'Assigned' : caseItem.status }
             : caseItem
         );
-        
+
         setCases(updatedCases);
-        
+
         // Enhanced success message with dialer integration info
         let successMsg = response.message || `Successfully assigned ${selectedCases.length} case(s) to ${bulkAgent}`;
         if (response.dialerIntegration?.success) {
           successMsg += ` (Dialer Queue ID: ${response.dialerIntegration.dialerSystemId})`;
         }
         setSuccessMessage(successMsg);
-        
+
         // Reset states
         setSelectedCases([]);
         setBulkAssignDialog(false);
         setBulkAgent('');
-        
+
         setTimeout(() => setSuccessMessage(''), 4000);
       }
     } catch (error) {
@@ -1291,20 +1300,20 @@ const CaseTracking = () => {
   const handleConfirmBulkPolicyStatusChange = async () => {
     try {
       // Update selected cases with new policy status
-      const updatedCases = cases.map(caseItem => 
-        selectedCases.includes(caseItem.id) 
+      const updatedCases = cases.map(caseItem =>
+        selectedCases.includes(caseItem.id)
           ? { ...caseItem, policyStatus: bulkPolicyStatus }
           : caseItem
       );
-      
+
       setCases(updatedCases);
       setSuccessMessage(`Successfully updated policy status to "${bulkPolicyStatus}" for ${selectedCases.length} case(s)`);
-      
+
       // Reset states
       setSelectedCases([]);
       setBulkPolicyStatusDialog(false);
       setBulkPolicyStatus('');
-      
+
       setTimeout(() => setSuccessMessage(''), 3000);
     } catch (error) {
       setError(error.message || 'Failed to update policy statuses. Please try again.');
@@ -1316,19 +1325,51 @@ const CaseTracking = () => {
     setSelectedCases([]);
   };
 
+  // Pin to top handlers
+  const handlePinToTop = () => {
+    const newPinnedCases = [...new Set([...pinnedCases, ...selectedCases])];
+    if (newPinnedCases.length > 5) {
+      setError('Maximum 5 cases can be pinned to top');
+      setTimeout(() => setError(null), 3000);
+      return;
+    }
+    setPinnedCases(newPinnedCases);
+    localStorage.setItem('pinnedCases', JSON.stringify(newPinnedCases));
+    setSuccessMessage(`${selectedCases.length} case(s) pinned to top`);
+    setSelectedCases([]);
+    setTimeout(() => setSuccessMessage(''), 3000);
+  };
+
+  const handleUnpinCase = (caseId) => {
+    const newPinnedCases = pinnedCases.filter(id => id !== caseId);
+    setPinnedCases(newPinnedCases);
+    localStorage.setItem('pinnedCases', JSON.stringify(newPinnedCases));
+    setSuccessMessage('Case unpinned');
+    setTimeout(() => setSuccessMessage(''), 3000);
+  };
+
+  const handleBulkUnpin = () => {
+    const newPinnedCases = pinnedCases.filter(id => !selectedCases.includes(id));
+    setPinnedCases(newPinnedCases);
+    localStorage.setItem('pinnedCases', JSON.stringify(newPinnedCases));
+    setSuccessMessage(`${selectedCases.length} case(s) unpinned`);
+    setSelectedCases([]);
+    setTimeout(() => setSuccessMessage(''), 3000);
+  };
+
   return (
     <Fade in={true} timeout={800}>
       <Box sx={{ px: 1 }}>
-        <Box sx={{ 
-          display: 'flex', 
-          justifyContent: 'space-between', 
-          alignItems: 'center', 
+        <Box sx={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
           mb: 4
         }}>
           <Typography variant="h4" fontWeight="600">
             Case Tracking
           </Typography>
-          
+
           <Box sx={{ display: 'flex', gap: 2 }}>
             <Zoom in={loaded} style={{ transitionDelay: '200ms' }}>
               <Button
@@ -1415,13 +1456,13 @@ const CaseTracking = () => {
             </Zoom>
           </Box>
         </Box>
-        
+
         {successMessage && (
           <Grow in={!!successMessage}>
-            <Alert 
-              severity="success" 
-              sx={{ 
-                mb: 3, 
+            <Alert
+              severity="success"
+              sx={{
+                mb: 3,
                 borderRadius: 2,
                 boxShadow: '0 4px 12px rgba(0,0,0,0.05)'
               }}
@@ -1430,13 +1471,13 @@ const CaseTracking = () => {
             </Alert>
           </Grow>
         )}
-        
+
         {error && (
           <Grow in={!!error}>
-            <Alert 
-              severity="error" 
-              sx={{ 
-                mb: 3, 
+            <Alert
+              severity="error"
+              sx={{
+                mb: 3,
                 borderRadius: 2,
                 boxShadow: '0 4px 12px rgba(0,0,0,0.05)'
               }}
@@ -1514,14 +1555,14 @@ const CaseTracking = () => {
             </CardContent>
           </Card>
         </Grow>
-        
+
         {/* Bulk Actions Toolbar */}
         {bulkActionsVisible && (
           <Grow in={bulkActionsVisible} timeout={300}>
-            <Paper sx={{ 
-              p: 2, 
-              mb: 3, 
-              borderRadius: 3, 
+            <Paper sx={{
+              p: 2,
+              mb: 3,
+              borderRadius: 3,
               bgcolor: alpha(theme.palette.primary.main, 0.05),
               border: `1px solid ${alpha(theme.palette.primary.main, 0.2)}`
             }}>
@@ -1533,12 +1574,50 @@ const CaseTracking = () => {
                   </Typography>
                 </Box>
                 <Box sx={{ display: 'flex', gap: 1 }}>
+                  <Tooltip
+                    title={
+                      selectedCases.some(id => pinnedCases.includes(id))
+                        ? "Unpin selected cases"
+                        : pinnedCases.length + selectedCases.length > 5
+                          ? "Maximum 5 cases can be pinned"
+                          : "Pin selected cases to top"
+                    }
+                    arrow
+                  >
+                    <span>
+                      <Button
+                        startIcon={<PushPinIcon />}
+                        variant="contained"
+                        color={selectedCases.some(id => pinnedCases.includes(id)) ? "warning" : "secondary"}
+                        size="small"
+                        onClick={selectedCases.some(id => pinnedCases.includes(id)) ? handleBulkUnpin : handlePinToTop}
+                        disabled={!selectedCases.some(id => pinnedCases.includes(id)) && pinnedCases.length + selectedCases.length > 5}
+                        sx={{
+                          borderRadius: 2,
+                          fontWeight: 600,
+                          boxShadow: selectedCases.some(id => pinnedCases.includes(id))
+                            ? '0 4px 14px rgba(255,152,0,0.25)'
+                            : '0 4px 14px rgba(156,39,176,0.25)',
+                          '&:hover': {
+                            boxShadow: selectedCases.some(id => pinnedCases.includes(id))
+                              ? '0 6px 20px rgba(255,152,0,0.35)'
+                              : '0 6px 20px rgba(156,39,176,0.35)',
+                          },
+                          '&:disabled': {
+                            opacity: 0.5
+                          }
+                        }}
+                      >
+                        {selectedCases.some(id => pinnedCases.includes(id)) ? 'Unpin' : 'Pin to Top'}
+                      </Button>
+                    </span>
+                  </Tooltip>
                   <Button
                     startIcon={<CheckCircleIcon />}
                     variant="contained"
                     size="small"
                     onClick={handleBulkStatusChange}
-                    sx={{ 
+                    sx={{
                       borderRadius: 2,
                       fontWeight: 600,
                       boxShadow: '0 4px 14px rgba(0,118,255,0.25)',
@@ -1555,7 +1634,7 @@ const CaseTracking = () => {
                     color="success"
                     size="small"
                     onClick={handleBulkAgentAssignment}
-                    sx={{ 
+                    sx={{
                       borderRadius: 2,
                       fontWeight: 600,
                       boxShadow: '0 4px 14px rgba(76,175,80,0.25)',
@@ -1572,7 +1651,7 @@ const CaseTracking = () => {
                     color="warning"
                     size="small"
                     onClick={handleBulkPolicyStatusChange}
-                    sx={{ 
+                    sx={{
                       borderRadius: 2,
                       fontWeight: 600,
                       boxShadow: '0 4px 14px rgba(255,152,0,0.25)',
@@ -1588,7 +1667,7 @@ const CaseTracking = () => {
                     variant="outlined"
                     size="small"
                     onClick={handleClearSelection}
-                    sx={{ 
+                    sx={{
                       borderRadius: 2,
                       fontWeight: 600,
                       borderColor: alpha(theme.palette.error.main, 0.3),
@@ -1606,14 +1685,14 @@ const CaseTracking = () => {
             </Paper>
           </Grow>
         )}
-        
+
 
 
         {/* Scrollable Table Section */}
         <Grow in={loaded} timeout={600}>
-          <Card 
+          <Card
             elevation={0}
-            sx={{ 
+            sx={{
               borderRadius: 3,
               boxShadow: '0 8px 24px rgba(0,0,0,0.05)',
               mb: 4,
@@ -1624,8 +1703,8 @@ const CaseTracking = () => {
               }
             }}
           >
-            <TableContainer 
-              sx={{ 
+            <TableContainer
+              sx={{
                 maxHeight: '70vh',
                 overflowX: 'auto',
                 overflowY: 'auto',
@@ -1646,20 +1725,20 @@ const CaseTracking = () => {
                 }
               }}
             >
-              <Table 
-                sx={{ 
+              <Table
+                sx={{
                   minWidth: 2560,
                   tableLayout: 'fixed'
-                }} 
+                }}
                 aria-label="case tracking table"
               >
-                <TableHead sx={{ 
+                <TableHead sx={{
                   position: 'sticky',
                   top: 0,
                   zIndex: 10,
                   bgcolor: 'background.paper'
                 }}>
-                  <TableRow sx={{ 
+                  <TableRow sx={{
                     bgcolor: alpha(theme.palette.primary.main, 0.08),
                     '& .MuiTableCell-head': {
                       borderBottom: `2px solid ${alpha(theme.palette.primary.main, 0.15)}`,
@@ -1676,7 +1755,7 @@ const CaseTracking = () => {
                         indeterminate={selectedCases.length > 0 && selectedCases.length < cases.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).length}
                         checked={cases.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).length > 0 && selectedCases.length === cases.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).length}
                         onChange={(e) => handleSelectAllCases(e.target.checked)}
-                        sx={{ 
+                        sx={{
                           color: theme.palette.primary.main,
                           '&.Mui-checked': {
                             color: theme.palette.primary.main,
@@ -1707,365 +1786,427 @@ const CaseTracking = () => {
                   </TableRow>
                 </TableHead>
                 <TableBody>
-                  {cases.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map((caseItem, index) => (
-                    <TableRow 
-                      key={caseItem.id}
-                      hover
-                      onClick={() => navigate(`/cases/${caseItem.id}`)}
-                      sx={{ 
-                        cursor: 'pointer',
-                        transition: 'background-color 0.2s, transform 0.1s',
-                        bgcolor: index % 2 === 0 ? 'transparent' : alpha(theme.palette.primary.main, 0.02),
-                        '&:hover': {
-                          backgroundColor: alpha(theme.palette.primary.main, 0.08),
-                          transform: 'translateY(-1px)',
-                          boxShadow: '0 4px 12px rgba(0,0,0,0.08)',
-                          zIndex: 1,
-                        },
-                        '& .MuiTableCell-root': {
-                          borderBottom: `1px solid ${alpha(theme.palette.divider, 0.3)}`,
-                          py: 2,
-                          px: 2,
-                          fontSize: '0.875rem',
-                          verticalAlign: 'middle'
-                        }
-                      }}
-                    >
-                      <TableCell sx={{ textAlign: 'center', width: 80 }}>
-                        <Checkbox
-                          checked={selectedCases.includes(caseItem.id)}
-                          onChange={(e) => {
-                            e.stopPropagation();
-                            handleSelectCase(caseItem.id, e.target.checked);
-                          }}
-                          sx={{ 
-                            color: theme.palette.primary.main,
-                            '&.Mui-checked': {
+                  {(() => {
+                    // Sort cases: pinned first, then others
+                    const sortedCases = [...cases].sort((a, b) => {
+                      const aIsPinned = pinnedCases.includes(a.id);
+                      const bIsPinned = pinnedCases.includes(b.id);
+                      if (aIsPinned && !bIsPinned) return -1;
+                      if (!aIsPinned && bIsPinned) return 1;
+                      return 0;
+                    });
+                    return sortedCases.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage);
+                  })().map((caseItem, index) => {
+                    return (
+                      <TableRow
+                        key={caseItem.id}
+                        hover
+                        onClick={() => navigate(`/cases/${caseItem.id}`)}
+                        sx={{
+                          cursor: 'pointer',
+                          transition: 'background-color 0.2s, transform 0.1s',
+                          bgcolor: pinnedCases.includes(caseItem.id)
+                            ? alpha(theme.palette.secondary.main, 0.08)
+                            : index % 2 === 0 ? 'transparent' : alpha(theme.palette.primary.main, 0.02),
+                          borderLeft: pinnedCases.includes(caseItem.id)
+                            ? `4px solid ${theme.palette.secondary.main}`
+                            : 'none',
+                          '&:hover': {
+                            backgroundColor: pinnedCases.includes(caseItem.id)
+                              ? alpha(theme.palette.secondary.main, 0.15)
+                              : alpha(theme.palette.primary.main, 0.08),
+                            transform: 'translateY(-1px)',
+                            boxShadow: '0 4px 12px rgba(0,0,0,0.08)',
+                            zIndex: 1,
+                          },
+                          '& .MuiTableCell-root': {
+                            borderBottom: `1px solid ${alpha(theme.palette.divider, 0.3)}`,
+                            py: 2,
+                            px: 2,
+                            fontSize: '0.875rem',
+                            verticalAlign: 'middle'
+                          }
+                        }}
+                      >
+                        <TableCell
+                          sx={{ textAlign: 'center', width: 80 }}
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          <Checkbox
+                            checked={selectedCases.includes(caseItem.id)}
+                            onChange={(e) => {
+                              e.stopPropagation();
+                              handleSelectCase(caseItem.id, e.target.checked);
+                            }}
+                            onClick={(e) => e.stopPropagation()}
+                            sx={{
                               color: theme.palette.primary.main,
-                            }
-                          }}
-                        />
-                      </TableCell>
-                      <TableCell sx={{ textAlign: 'center', width: 180 }}>
-                        <Box sx={{ display: 'flex', gap: 0.5, alignItems: 'center', justifyContent: 'center' }}>
-                          {/* Primary Actions - Always Visible */}
-                          <Tooltip title="Call Lead" arrow placement="top">
-                            <IconButton
-                              size="small"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setSelectedCallCase(caseItem);
-                                setCallDialogOpen(true);
-                              }}
-                              sx={{
-                                color: theme.palette.success.main,
-                                transition: 'transform 0.2s',
-                                '&:hover': {
-                                  bgcolor: alpha(theme.palette.success.main, 0.1),
-                                  transform: 'scale(1.15)'
-                                }
-                              }}
-                            >
-                              <CallIcon fontSize="small" />
-                            </IconButton>
-                          </Tooltip>
-
-                          <Tooltip title="View Details" arrow placement="top">
-                            <IconButton
-                              size="small"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                navigate(`/cases/${caseItem.id}`);
-                              }}
-                              sx={{
-                                color: 'primary.main',
-                                transition: 'transform 0.2s',
-                                '&:hover': { transform: 'scale(1.15)' }
-                              }}
-                            >
-                              <ViewIcon fontSize="small" />
-                            </IconButton>
-                          </Tooltip>
-
-                          <Tooltip title="Quick Edit" arrow placement="top">
-                            <IconButton
-                              size="small"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleQuickEditOpen(caseItem);
-                              }}
-                              sx={{ 
-                                color: 'info.main',
-                                transition: 'transform 0.2s',
-                                '&:hover': { transform: 'scale(1.15)' }
-                              }}
-                            >
-                              <EditNoteIcon fontSize="small" />
-                            </IconButton>
-                          </Tooltip>
-                          
-                          <Tooltip title="Add Comment" arrow placement="top">
-                            <IconButton
-                              size="small"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleCommentDialogOpen(caseItem);
-                              }}
-                              sx={{ 
-                                color: 'secondary.main',
-                                transition: 'transform 0.2s',
-                                '&:hover': { transform: 'scale(1.15)' }
-                              }}
-                            >
-                              <CommentIcon fontSize="small" />
-                            </IconButton>
-                          </Tooltip>
-                          
-                          {/* More Actions Menu */}
-                          <Tooltip title="More Actions" arrow placement="top">
-                            <IconButton
-                              size="small"
-                              onClick={(e) => handleMoreActionsClick(e, caseItem)}
-                              sx={{ 
-                                color: 'text.secondary',
-                                transition: 'transform 0.2s, color 0.2s',
-                                '&:hover': { 
-                                  transform: 'scale(1.15)',
-                                  color: 'primary.main'
-                                }
-                              }}
-                            >
-                              <MoreIcon fontSize="small" />
-                            </IconButton>
-                          </Tooltip>
-                        </Box>
-                      </TableCell>
-                      <TableCell sx={{ width: 140 }}>
-                        <Typography variant="body2" fontWeight="500" color="primary">
-                          {caseItem.id}
-                        </Typography>
-                      </TableCell>
-                      <TableCell sx={{ width: 180 }}>
-                        <Typography 
-                          variant="body2" 
-                          sx={{ 
-                            fontWeight: 500,
-                            color: 'primary.main',
-                            cursor: 'pointer',
-                            '&:hover': {
-                              textDecoration: 'underline'
-                            }
-                          }}
-                          onClick={(e) => handleCustomerNameClick(e, caseItem.customerName, caseItem.customerId)}
-                        >
-                          {caseItem.customerName}
-                        </Typography>
-                      </TableCell>
-                      <TableCell sx={{ width: 150 }}>
-                        <Chip
-                          label={caseItem.customerProfile}
-                          color={getCustomerProfileColor(caseItem.customerProfile)}
-                          size="small"
-                          sx={{ 
-                            fontWeight: 500,
-                            minWidth: '100px',
-                            boxShadow: '0 2px 5px rgba(0,0,0,0.08)',
-                            borderRadius: 5
-                          }}
-                        />
-                      </TableCell>
-                      <TableCell sx={{ width: 150 }}>
-                        <Typography variant="body2" fontWeight="500">
-                          {caseItem.customerMobile}
-                        </Typography>
-                      </TableCell>
-                      <TableCell sx={{ width: 130 }}>
-                        <Typography variant="body2" fontWeight="500">
-                          {caseItem.preferredLanguage}
-                        </Typography>
-                      </TableCell>
-                      <TableCell sx={{ width: 160 }}>
-                        <Typography variant="body2" fontWeight="500">
-                          {caseItem.policyNumber}
-                        </Typography>
-                      </TableCell>
-                      <TableCell sx={{ width: 200 }}>
-                        <Typography variant="body2" fontWeight="500">
-                          {caseItem.productName}
-                        </Typography>
-                      </TableCell>
-                      <TableCell sx={{ width: 140 }}>
-                        <Chip
-                          label={caseItem.productCategory}
-                          color="info"
-                          variant="outlined"
-                          size="small"
-                          sx={{ 
-                            fontWeight: 500,
-                            minWidth: '110px',
-                            borderRadius: 5
-                          }}
-                        />
-                      </TableCell>
-                      <TableCell sx={{ width: 170 }}>
-                        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
-                          <Typography variant="body2" fontWeight="500">
-                            {caseItem.channel}
-                          </Typography>
-                          <Typography variant="caption" color="text.secondary">
-                            {caseItem.subChannel}
-                          </Typography>
-                        </Box>
-                      </TableCell>
-                      <TableCell sx={{ width: 160 }}>
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                          {caseItem.currentCommunicationChannel === 'email' && <EmailIcon fontSize="small" color="primary" />}
-                          {caseItem.currentCommunicationChannel === 'whatsapp' && <WhatsAppIcon fontSize="small" sx={{ color: '#25d366' }} />}
-                          {caseItem.currentCommunicationChannel === 'sms' && <SmsIcon fontSize="small" color="warning" />}
-                          {caseItem.currentCommunicationChannel === 'call' && <PhoneIcon fontSize="small" color="secondary" />}
-                          {caseItem.currentCommunicationChannel === 'bot-calling' && <PhoneIcon fontSize="small" sx={{ color: '#673ab7' }} />}
-                          <Typography variant="body2" fontWeight="500" sx={{ textTransform: 'capitalize' }}>
-                            {caseItem.currentCommunicationChannel === 'bot-calling' ? 'Bot Calling' : caseItem.currentCommunicationChannel || 'N/A'}
-                          </Typography>
-                        </Box>
-                      </TableCell>
-                      <TableCell sx={{ width: 140 }}>
-                        <Typography variant="body2" fontWeight="500">
-                          {caseItem.batchId}
-                        </Typography>
-                      </TableCell>
-                      <TableCell sx={{ width: 130 }}>
-                        <Chip
-                          label={caseItem.status}
-                          color={getStatusColor(caseItem.status)}
-                          size="small"
-                          sx={{ 
-                            fontWeight: 500,
-                            minWidth: '110px',
-                            boxShadow: '0 2px 5px rgba(0,0,0,0.08)',
-                            borderRadius: 5
-                          }}
-                        />
-                      </TableCell>
-                      <TableCell sx={{ width: 150 }}>
-                        <Chip
-                          label={caseItem.policyStatus}
-                          color={getPolicyStatusColor(caseItem.policyStatus)}
-                          size="small"
-                          sx={{ 
-                            fontWeight: 500,
-                            minWidth: '130px',
-                            boxShadow: '0 2px 5px rgba(0,0,0,0.08)',
-                            borderRadius: 5
-                          }}
-                        />
-                      </TableCell>
-                      <TableCell sx={{ width: 160 }}>
-                        <Typography variant="body2" fontWeight="500">
-                          {caseItem.assignedAgent}
-                        </Typography>
-                      </TableCell>
-                      <TableCell sx={{ width: 120, textAlign: 'center' }}>
-                        <Chip
-                          icon={<PriorityHighIcon />}
-                          label={caseItem.isPriority ? "Priority" : "Normal"}
-                          color={caseItem.isPriority ? "error" : "primary"}
-                          variant={caseItem.isPriority ? "filled" : "outlined"}
-                          size="small"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            try {
-                              // Toggle priority status
-                              const updatedCase = { ...caseItem, isPriority: !caseItem.isPriority };
-                              // await updateCase(caseItem.id, { isPriority: !caseItem.isPriority });
-                              
-                              // Update the cases array with the updated case
-                              setCases(cases.map(c => c.id === caseItem.id ? updatedCase : c));
-                              setSuccessMessage(`Priority status ${!caseItem.isPriority ? 'enabled' : 'disabled'} for case ${caseItem.id}`);
-                              
-                              setTimeout(() => {
-                                setSuccessMessage('');
-                              }, 3000);
-                            } catch (err) {
-                              setError('Failed to update priority status');
-                              // Auto-dismiss error message after 3 seconds
-                              setTimeout(() => {
-                                setError(null);
-                              }, 3000);
-                            }
-                          }}
-                          sx={{ 
-                            cursor: 'pointer',
-                            minWidth: '100px',
-                            fontWeight: 500,
-                            borderRadius: 5,
-                            boxShadow: '0 2px 5px rgba(0,0,0,0.08)',
-                            '&:hover': {
-                              boxShadow: '0 4px 10px rgba(0,0,0,0.15)',
-                              transform: 'translateY(-1px)'
-                            },
-                            transition: 'transform 0.2s, box-shadow 0.2s',
-                            ...(caseItem.isPriority ? {} : {
-                              borderWidth: '1px',
-                              borderColor: 'primary.main',
-                              color: 'primary.main',
-                              '& .MuiChip-icon': {
-                                color: 'primary.main'
-                              },
-                            })
-                          }}
-                        />
-                      </TableCell>
-                      <TableCell sx={{ width: 150 }}>
-                        <Typography variant="body2" fontWeight="500">
-                          {new Date(caseItem.lastActionDate).toLocaleDateString()}
-                        </Typography>
-                      </TableCell>
-                      <TableCell sx={{ width: 120, textAlign: 'center' }}>
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, justifyContent: 'center' }}>
-                          <Typography variant="body2" fontWeight="600" color="primary">
-                            {caseItem.totalCalls}
-                          </Typography>
-                          <Typography variant="caption" color="text.secondary">
-                            calls
-                          </Typography>
-                        </Box>
-                      </TableCell>
-                      <TableCell sx={{ width: 150 }}>
-                        <Typography 
-                          variant="body2" 
-                          fontWeight="500"
-                          sx={{
-                            color: (() => {
-                              const renewalDate = new Date(caseItem.policyDetails.renewalDate);
-                              const today = new Date();
-                              const daysUntilRenewal = Math.ceil((renewalDate - today) / (1000 * 60 * 60 * 24));
-                              
-                              if (daysUntilRenewal <= 0) {
-                                return 'error.main'; // Overdue - red
-                              } else if (daysUntilRenewal <= 7) {
-                                return 'error.main'; // Due soon - red
-                              } else if (daysUntilRenewal <= 30) {
-                                return 'warning.main'; // Due within month - orange
+                              '&.Mui-checked': {
+                                color: theme.palette.primary.main,
                               }
-                              return 'text.primary'; // Normal - default color
-                            })()
-                          }}
-                        >
-                          {new Date(caseItem.policyDetails.renewalDate).toLocaleDateString('en-GB', {
-                            day: '2-digit',
-                            month: '2-digit',
-                            year: 'numeric'
-                          })}
-                        </Typography>
-                      </TableCell>
-                      <TableCell sx={{ width: 140 }}>
-                        <Typography variant="body2" fontWeight="500">
-                          {new Date(caseItem.uploadDate).toLocaleDateString()}
-                        </Typography>
-                      </TableCell>
-                    </TableRow>
-                  ))}
+                            }}
+                          />
+                        </TableCell>
+                        <TableCell sx={{ textAlign: 'center', width: 200 }}>
+                          <Box sx={{ display: 'flex', gap: 0.5, alignItems: 'center', justifyContent: 'center' }}>
+                            {/* Primary Actions - Always Visible */}
+                            <Tooltip title={caseItem.isStarred ? "Unmark as Important" : "Mark as Important"} arrow placement="top">
+                              <IconButton
+                                size="small"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  const updatedCases = cases.map(c =>
+                                    c.id === caseItem.id ? { ...c, isStarred: !c.isStarred } : c
+                                  );
+                                  setCases(updatedCases);
+                                  setSuccessMessage(caseItem.isStarred ? 'Removed from important' : 'Marked as important');
+                                  setTimeout(() => setSuccessMessage(''), 2000);
+                                }}
+                                sx={{
+                                  color: caseItem.isStarred ? 'warning.main' : 'action.disabled',
+                                  transition: 'transform 0.2s, color 0.2s',
+                                  '&:hover': {
+                                    bgcolor: alpha(theme.palette.warning.main, 0.1),
+                                    transform: 'scale(1.15)',
+                                    color: 'warning.main'
+                                  }
+                                }}
+                              >
+                                {caseItem.isStarred ? <StarIcon fontSize="small" /> : <StarBorderIcon fontSize="small" />}
+                              </IconButton>
+                            </Tooltip>
+
+                            <Tooltip title="Call Lead" arrow placement="top">
+                              <IconButton
+                                size="small"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setSelectedCallCase(caseItem);
+                                  setCallDialogOpen(true);
+                                }}
+                                sx={{
+                                  color: theme.palette.success.main,
+                                  transition: 'transform 0.2s',
+                                  '&:hover': {
+                                    bgcolor: alpha(theme.palette.success.main, 0.1),
+                                    transform: 'scale(1.15)'
+                                  }
+                                }}
+                              >
+                                <CallIcon fontSize="small" />
+                              </IconButton>
+                            </Tooltip>
+
+                            <Tooltip title="View Details" arrow placement="top">
+                              <IconButton
+                                size="small"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  navigate(`/cases/${caseItem.id}`);
+                                }}
+                                sx={{
+                                  color: 'primary.main',
+                                  transition: 'transform 0.2s',
+                                  '&:hover': { transform: 'scale(1.15)' }
+                                }}
+                              >
+                                <ViewIcon fontSize="small" />
+                              </IconButton>
+                            </Tooltip>
+
+                            <Tooltip title="Quick Edit" arrow placement="top">
+                              <IconButton
+                                size="small"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleQuickEditOpen(caseItem);
+                                }}
+                                sx={{
+                                  color: 'info.main',
+                                  transition: 'transform 0.2s',
+                                  '&:hover': { transform: 'scale(1.15)' }
+                                }}
+                              >
+                                <EditNoteIcon fontSize="small" />
+                              </IconButton>
+                            </Tooltip>
+
+                            <Tooltip title="Add Comment" arrow placement="top">
+                              <IconButton
+                                size="small"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleCommentDialogOpen(caseItem);
+                                }}
+                                sx={{
+                                  color: 'secondary.main',
+                                  transition: 'transform 0.2s',
+                                  '&:hover': { transform: 'scale(1.15)' }
+                                }}
+                              >
+                                <CommentIcon fontSize="small" />
+                              </IconButton>
+                            </Tooltip>
+
+                            {/* More Actions Menu */}
+                            <Tooltip title="More Actions" arrow placement="top">
+                              <IconButton
+                                size="small"
+                                onClick={(e) => handleMoreActionsClick(e, caseItem)}
+                                sx={{
+                                  color: 'text.secondary',
+                                  transition: 'transform 0.2s, color 0.2s',
+                                  '&:hover': {
+                                    transform: 'scale(1.15)',
+                                    color: 'primary.main'
+                                  }
+                                }}
+                              >
+                                <MoreIcon fontSize="small" />
+                              </IconButton>
+                            </Tooltip>
+                          </Box>
+                        </TableCell>
+                        <TableCell sx={{ width: 140 }}>
+                          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1 }}>
+                            {pinnedCases.includes(caseItem.id) && (
+                              <Tooltip title="Pinned to top" arrow>
+                                <PushPinIcon
+                                  fontSize="small"
+                                  sx={{
+                                    color: theme.palette.secondary.main,
+                                    transform: 'rotate(45deg)'
+                                  }}
+                                />
+                              </Tooltip>
+                            )}
+                            <Typography variant="body2" fontWeight="500" color="primary">
+                              {caseItem.id}
+                            </Typography>
+                          </Box>
+                        </TableCell>
+                        <TableCell sx={{ width: 180 }}>
+                          <Typography
+                            variant="body2"
+                            sx={{
+                              fontWeight: 500,
+                              color: 'primary.main',
+                              cursor: 'pointer',
+                              '&:hover': {
+                                textDecoration: 'underline'
+                              }
+                            }}
+                            onClick={(e) => handleCustomerNameClick(e, caseItem.customerName, caseItem.customerId)}
+                          >
+                            {caseItem.customerName}
+                          </Typography>
+                        </TableCell>
+                        <TableCell sx={{ width: 150 }}>
+                          <Chip
+                            label={caseItem.customerProfile}
+                            color={getCustomerProfileColor(caseItem.customerProfile)}
+                            size="small"
+                            sx={{
+                              fontWeight: 500,
+                              minWidth: '100px',
+                              boxShadow: '0 2px 5px rgba(0,0,0,0.08)',
+                              borderRadius: 5
+                            }}
+                          />
+                        </TableCell>
+                        <TableCell sx={{ width: 150 }}>
+                          <Typography variant="body2" fontWeight="500">
+                            {caseItem.customerMobile}
+                          </Typography>
+                        </TableCell>
+                        <TableCell sx={{ width: 130 }}>
+                          <Typography variant="body2" fontWeight="500">
+                            {caseItem.preferredLanguage}
+                          </Typography>
+                        </TableCell>
+                        <TableCell sx={{ width: 160 }}>
+                          <Typography variant="body2" fontWeight="500">
+                            {caseItem.policyNumber}
+                          </Typography>
+                        </TableCell>
+                        <TableCell sx={{ width: 200 }}>
+                          <Typography variant="body2" fontWeight="500">
+                            {caseItem.productName}
+                          </Typography>
+                        </TableCell>
+                        <TableCell sx={{ width: 140 }}>
+                          <Chip
+                            label={caseItem.productCategory}
+                            color="info"
+                            variant="outlined"
+                            size="small"
+                            sx={{
+                              fontWeight: 500,
+                              minWidth: '110px',
+                              borderRadius: 5
+                            }}
+                          />
+                        </TableCell>
+                        <TableCell sx={{ width: 170 }}>
+                          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
+                            <Typography variant="body2" fontWeight="500">
+                              {caseItem.channel}
+                            </Typography>
+                            <Typography variant="caption" color="text.secondary">
+                              {caseItem.subChannel}
+                            </Typography>
+                          </Box>
+                        </TableCell>
+                        <TableCell sx={{ width: 160 }}>
+                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                            {caseItem.currentCommunicationChannel === 'email' && <EmailIcon fontSize="small" color="primary" />}
+                            {caseItem.currentCommunicationChannel === 'whatsapp' && <WhatsAppIcon fontSize="small" sx={{ color: '#25d366' }} />}
+                            {caseItem.currentCommunicationChannel === 'sms' && <SmsIcon fontSize="small" color="warning" />}
+                            {caseItem.currentCommunicationChannel === 'call' && <PhoneIcon fontSize="small" color="secondary" />}
+                            {caseItem.currentCommunicationChannel === 'bot-calling' && <PhoneIcon fontSize="small" sx={{ color: '#673ab7' }} />}
+                            <Typography variant="body2" fontWeight="500" sx={{ textTransform: 'capitalize' }}>
+                              {caseItem.currentCommunicationChannel === 'bot-calling' ? 'Bot Calling' : caseItem.currentCommunicationChannel || 'N/A'}
+                            </Typography>
+                          </Box>
+                        </TableCell>
+                        <TableCell sx={{ width: 140 }}>
+                          <Typography variant="body2" fontWeight="500">
+                            {caseItem.batchId}
+                          </Typography>
+                        </TableCell>
+                        <TableCell sx={{ width: 130 }}>
+                          <Chip
+                            label={caseItem.status}
+                            color={getStatusColor(caseItem.status)}
+                            size="small"
+                            sx={{
+                              fontWeight: 500,
+                              minWidth: '110px',
+                              boxShadow: '0 2px 5px rgba(0,0,0,0.08)',
+                              borderRadius: 5
+                            }}
+                          />
+                        </TableCell>
+                        <TableCell sx={{ width: 150 }}>
+                          <Chip
+                            label={caseItem.policyStatus}
+                            color={getPolicyStatusColor(caseItem.policyStatus)}
+                            size="small"
+                            sx={{
+                              fontWeight: 500,
+                              minWidth: '130px',
+                              boxShadow: '0 2px 5px rgba(0,0,0,0.08)',
+                              borderRadius: 5
+                            }}
+                          />
+                        </TableCell>
+                        <TableCell sx={{ width: 160 }}>
+                          <Typography variant="body2" fontWeight="500">
+                            {caseItem.assignedAgent}
+                          </Typography>
+                        </TableCell>
+                        <TableCell sx={{ width: 120, textAlign: 'center' }}>
+                          <Chip
+                            icon={<PriorityHighIcon />}
+                            label={caseItem.isPriority ? "Priority" : "Normal"}
+                            color={caseItem.isPriority ? "error" : "primary"}
+                            variant={caseItem.isPriority ? "filled" : "outlined"}
+                            size="small"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              try {
+                                // Toggle priority status
+                                const updatedCase = { ...caseItem, isPriority: !caseItem.isPriority };
+                                // await updateCase(caseItem.id, { isPriority: !caseItem.isPriority });
+
+                                // Update the cases array with the updated case
+                                setCases(cases.map(c => c.id === caseItem.id ? updatedCase : c));
+                                setSuccessMessage(`Priority status ${!caseItem.isPriority ? 'enabled' : 'disabled'} for case ${caseItem.id}`);
+
+                                setTimeout(() => {
+                                  setSuccessMessage('');
+                                }, 3000);
+                              } catch (err) {
+                                setError('Failed to update priority status');
+                                // Auto-dismiss error message after 3 seconds
+                                setTimeout(() => {
+                                  setError(null);
+                                }, 3000);
+                              }
+                            }}
+                            sx={{
+                              cursor: 'pointer',
+                              minWidth: '100px',
+                              fontWeight: 500,
+                              borderRadius: 5,
+                              boxShadow: '0 2px 5px rgba(0,0,0,0.08)',
+                              '&:hover': {
+                                boxShadow: '0 4px 10px rgba(0,0,0,0.15)',
+                                transform: 'translateY(-1px)'
+                              },
+                              transition: 'transform 0.2s, box-shadow 0.2s',
+                              ...(caseItem.isPriority ? {} : {
+                                borderWidth: '1px',
+                                borderColor: 'primary.main',
+                                color: 'primary.main',
+                                '& .MuiChip-icon': {
+                                  color: 'primary.main'
+                                },
+                              })
+                            }}
+                          />
+                        </TableCell>
+                        <TableCell sx={{ width: 150 }}>
+                          <Typography variant="body2" fontWeight="500">
+                            {new Date(caseItem.lastActionDate).toLocaleDateString()}
+                          </Typography>
+                        </TableCell>
+                        <TableCell sx={{ width: 120, textAlign: 'center' }}>
+                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, justifyContent: 'center' }}>
+                            <Typography variant="body2" fontWeight="600" color="primary">
+                              {caseItem.totalCalls}
+                            </Typography>
+                            <Typography variant="caption" color="text.secondary">
+                              calls
+                            </Typography>
+                          </Box>
+                        </TableCell>
+                        <TableCell sx={{ width: 150 }}>
+                          <Typography
+                            variant="body2"
+                            fontWeight="500"
+                            sx={{
+                              color: (() => {
+                                const renewalDate = new Date(caseItem.policyDetails.renewalDate);
+                                const today = new Date();
+                                const daysUntilRenewal = Math.ceil((renewalDate - today) / (1000 * 60 * 60 * 24));
+
+                                if (daysUntilRenewal <= 0) {
+                                  return 'error.main'; // Overdue - red
+                                } else if (daysUntilRenewal <= 7) {
+                                  return 'error.main'; // Due soon - red
+                                } else if (daysUntilRenewal <= 30) {
+                                  return 'warning.main'; // Due within month - orange
+                                }
+                                return 'text.primary'; // Normal - default color
+                              })()
+                            }}
+                          >
+                            {new Date(caseItem.policyDetails.renewalDate).toLocaleDateString('en-GB', {
+                              day: '2-digit',
+                              month: '2-digit',
+                              year: 'numeric'
+                            })}
+                          </Typography>
+                        </TableCell>
+                        <TableCell sx={{ width: 140 }}>
+                          <Typography variant="body2" fontWeight="500">
+                            {new Date(caseItem.uploadDate).toLocaleDateString()}
+                          </Typography>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
                 </TableBody>
               </Table>
             </TableContainer>
@@ -2074,9 +2215,9 @@ const CaseTracking = () => {
 
         {/* Fixed Pagination Outside Scrollable Area */}
         <Grow in={loaded} timeout={800}>
-          <Card 
+          <Card
             elevation={0}
-            sx={{ 
+            sx={{
               borderRadius: 3,
               boxShadow: '0 4px 12px rgba(0,0,0,0.03)',
               mt: 2
@@ -2153,7 +2294,7 @@ const CaseTracking = () => {
             </MenuItem>
 
             {settings?.showEditCaseButton !== false && (
-              <MenuItem 
+              <MenuItem
                 onClick={() => {
                   handleMoreActionsClose(caseId);
                   const caseItem = cases.find(c => c.id === caseId);
@@ -2170,8 +2311,8 @@ const CaseTracking = () => {
                 <ListItemText primary="Edit Case" />
               </MenuItem>
             )}
-            
-            <MenuItem 
+
+            <MenuItem
               onClick={() => {
                 handleMoreActionsClose(caseId);
                 const caseItem = cases.find(c => c.id === caseId);
@@ -2183,6 +2324,38 @@ const CaseTracking = () => {
                 <HistoryIcon fontSize="small" sx={{ color: 'info.main' }} />
               </ListItemIcon>
               <ListItemText primary="View History" />
+            </MenuItem>
+
+            <MenuItem
+              onClick={() => {
+                handleMoreActionsClose(caseId);
+                if (pinnedCases.includes(caseId)) {
+                  handleUnpinCase(caseId);
+                } else {
+                  if (pinnedCases.length >= 5) {
+                    setError('Maximum 5 cases can be pinned to top');
+                    setTimeout(() => setError(null), 3000);
+                  } else {
+                    const newPinnedCases = [...pinnedCases, caseId];
+                    setPinnedCases(newPinnedCases);
+                    localStorage.setItem('pinnedCases', JSON.stringify(newPinnedCases));
+                    setSuccessMessage('Case pinned to top');
+                    setTimeout(() => setSuccessMessage(''), 3000);
+                  }
+                }
+              }}
+              sx={{ py: 1.5 }}
+            >
+              <ListItemIcon>
+                <PushPinIcon
+                  fontSize="small"
+                  sx={{
+                    color: pinnedCases.includes(caseId) ? 'warning.main' : 'secondary.main',
+                    transform: pinnedCases.includes(caseId) ? 'none' : 'rotate(45deg)'
+                  }}
+                />
+              </ListItemIcon>
+              <ListItemText primary={pinnedCases.includes(caseId) ? "Unpin from Top" : "Pin to Top"} />
             </MenuItem>
           </Menu>
         ))}
@@ -2197,10 +2370,10 @@ const CaseTracking = () => {
           PaperProps={{
             elevation: 3,
             sx: {
-              borderRadius: 2, 
+              borderRadius: 2,
               minWidth: '220px',
               mt: 1,
-              p: 1, 
+              p: 1,
               boxShadow: '0 8px 24px rgba(0,0,0,0.15)'
             }
           }}
@@ -2215,7 +2388,7 @@ const CaseTracking = () => {
                 value={statusFilter}
                 label="Status"
                 onChange={handleStatusFilterChange}
-                sx={{ 
+                sx={{
                   borderRadius: 2,
                   '.MuiOutlinedInput-notchedOutline': {
                     borderColor: alpha(theme.palette.primary.main, 0.2),
@@ -2243,7 +2416,7 @@ const CaseTracking = () => {
               </Select>
             </FormControl>
           </MenuItem>
-          
+
           <MenuItem sx={{ py: 1.5 }}>
             <FormControl fullWidth size="small">
               <InputLabel>Date</InputLabel>
@@ -2251,7 +2424,7 @@ const CaseTracking = () => {
                 value={dateFilter}
                 label="Date"
                 onChange={handleDateFilterChange}
-                sx={{ 
+                sx={{
                   borderRadius: 2,
                   '.MuiOutlinedInput-notchedOutline': {
                     borderColor: alpha(theme.palette.primary.main, 0.2),
@@ -2269,7 +2442,7 @@ const CaseTracking = () => {
               </Select>
             </FormControl>
           </MenuItem>
-          
+
           <MenuItem sx={{ py: 1.5 }}>
             <FormControl fullWidth size="small">
               <InputLabel>Agent</InputLabel>
@@ -2277,7 +2450,7 @@ const CaseTracking = () => {
                 value={agentFilter}
                 label="Agent"
                 onChange={handleAgentFilterChange}
-                sx={{ 
+                sx={{
                   borderRadius: 2,
                   '.MuiOutlinedInput-notchedOutline': {
                     borderColor: alpha(theme.palette.primary.main, 0.2),
@@ -2296,7 +2469,7 @@ const CaseTracking = () => {
               </Select>
             </FormControl>
           </MenuItem>
-          
+
           <MenuItem sx={{ py: 1.5 }}>
             <FormControl fullWidth size="small">
               <InputLabel>Policy Status</InputLabel>
@@ -2304,7 +2477,7 @@ const CaseTracking = () => {
                 value={policyStatusFilter}
                 label="Policy Status"
                 onChange={handlePolicyStatusFilterChange}
-                sx={{ 
+                sx={{
                   borderRadius: 2,
                   '.MuiOutlinedInput-notchedOutline': {
                     borderColor: alpha(theme.palette.primary.main, 0.2),
@@ -2321,10 +2494,10 @@ const CaseTracking = () => {
               </Select>
             </FormControl>
           </MenuItem>
-          
+
           <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 2, px: 1 }}>
-            <Button 
-              variant="contained" 
+            <Button
+              variant="contained"
               onClick={handleFilterClose}
               sx={{
                 borderRadius: 2,
@@ -2354,14 +2527,14 @@ const CaseTracking = () => {
           PaperProps={{
             elevation: 3,
             sx: {
-              borderRadius: 2, 
+              borderRadius: 2,
               mt: 1,
               boxShadow: '0 8px 24px rgba(0,0,0,0.15)'
             }
           }}
         >
-          <MenuItem 
-            onClick={() => { 
+          <MenuItem
+            onClick={() => {
               exportData('csv');
               handleExportClose();
             }}
@@ -2379,8 +2552,8 @@ const CaseTracking = () => {
             </ListItemIcon>
             <ListItemText primary="Export as CSV" />
           </MenuItem>
-          <MenuItem 
-            onClick={() => { 
+          <MenuItem
+            onClick={() => {
               exportData('xls');
               handleExportClose();
             }}
@@ -2401,9 +2574,9 @@ const CaseTracking = () => {
         </Menu>
 
         {/* Edit Dialog */}
-        <Dialog 
-          open={editDialogOpen} 
-          onClose={handleEditDialogClose} 
+        <Dialog
+          open={editDialogOpen}
+          onClose={handleEditDialogClose}
           maxWidth="md"
           PaperProps={{
             sx: {
@@ -2422,10 +2595,10 @@ const CaseTracking = () => {
                   label="Customer Name"
                   fullWidth
                   value={currentCase.customerName}
-                  onChange={(e) => setCurrentCase({...currentCase, customerName: e.target.value})}
+                  onChange={(e) => setCurrentCase({ ...currentCase, customerName: e.target.value })}
                   InputProps={{ sx: { borderRadius: 2 } }}
                 />
-                
+
                 <TextField
                   label="Policy Number"
                   fullWidth
@@ -2433,29 +2606,29 @@ const CaseTracking = () => {
                   disabled // Policy number shouldn't be editable
                   InputProps={{ sx: { borderRadius: 2 } }}
                 />
-                
+
                 <TextField
                   label="Email"
                   fullWidth
                   value={currentCase.contactInfo.email}
                   onChange={(e) => setCurrentCase({
-                    ...currentCase, 
-                    contactInfo: {...currentCase.contactInfo, email: e.target.value}
+                    ...currentCase,
+                    contactInfo: { ...currentCase.contactInfo, email: e.target.value }
                   })}
                   InputProps={{ sx: { borderRadius: 2 } }}
                 />
-                
+
                 <TextField
                   label="Phone"
                   fullWidth
                   value={currentCase.contactInfo.phone}
                   onChange={(e) => setCurrentCase({
-                    ...currentCase, 
-                    contactInfo: {...currentCase.contactInfo, phone: e.target.value}
+                    ...currentCase,
+                    contactInfo: { ...currentCase.contactInfo, phone: e.target.value }
                   })}
                   InputProps={{ sx: { borderRadius: 2 } }}
                 />
-                
+
                 <FormControl fullWidth>
                   <InputLabel>Policy Type</InputLabel>
                   <Select
@@ -2463,7 +2636,7 @@ const CaseTracking = () => {
                     label="Policy Type"
                     onChange={(e) => setCurrentCase({
                       ...currentCase,
-                      policyDetails: {...currentCase.policyDetails, type: e.target.value}
+                      policyDetails: { ...currentCase.policyDetails, type: e.target.value }
                     })}
                     sx={{ borderRadius: 2 }}
                   >
@@ -2473,7 +2646,7 @@ const CaseTracking = () => {
                     <MenuItem value="Vehicle">Vehicle</MenuItem>
                   </Select>
                 </FormControl>
-                
+
                 <TextField
                   label="Premium"
                   type="number"
@@ -2481,14 +2654,14 @@ const CaseTracking = () => {
                   value={currentCase.policyDetails.premium}
                   onChange={(e) => setCurrentCase({
                     ...currentCase,
-                    policyDetails: {...currentCase.policyDetails, premium: parseFloat(e.target.value)}
+                    policyDetails: { ...currentCase.policyDetails, premium: parseFloat(e.target.value) }
                   })}
                   InputProps={{
                     startAdornment: <InputAdornment position="start">$</InputAdornment>,
                     sx: { borderRadius: 2 }
                   }}
                 />
-                
+
                 <TextField
                   label="Expiry Date"
                   type="date"
@@ -2496,14 +2669,14 @@ const CaseTracking = () => {
                   value={currentCase.policyDetails.expiryDate}
                   onChange={(e) => setCurrentCase({
                     ...currentCase,
-                    policyDetails: {...currentCase.policyDetails, expiryDate: e.target.value}
+                    policyDetails: { ...currentCase.policyDetails, expiryDate: e.target.value }
                   })}
                   InputLabelProps={{
                     shrink: true,
                   }}
                   InputProps={{ sx: { borderRadius: 2 } }}
                 />
-                
+
                 <FormControl fullWidth>
                   <InputLabel>Assigned Agent</InputLabel>
                   <Select
@@ -2526,15 +2699,15 @@ const CaseTracking = () => {
             )}
           </DialogContent>
           <DialogActions sx={{ p: 2.5 }}>
-            <Button 
-              onClick={handleEditDialogClose} 
+            <Button
+              onClick={handleEditDialogClose}
               variant="outlined"
               sx={{ borderRadius: 2, px: 3 }}
             >
               Cancel
             </Button>
-            <Button 
-              onClick={handleSaveEdit} 
+            <Button
+              onClick={handleSaveEdit}
               variant="contained"
               sx={{ borderRadius: 2, px: 3 }}
             >
@@ -2542,7 +2715,7 @@ const CaseTracking = () => {
             </Button>
           </DialogActions>
         </Dialog>
-        
+
         {/* Enhanced Comment Dialog */}
         <Dialog open={commentDialogOpen} onClose={handleCommentDialogClose} maxWidth="lg" fullWidth>
           <DialogTitle>
@@ -2559,7 +2732,7 @@ const CaseTracking = () => {
                 <Typography variant="subtitle2" gutterBottom sx={{ mb: 3 }}>
                   Case: {currentCase.id} - {currentCase.customerName}
                 </Typography>
-                
+
                 {/* Current Case Status */}
                 <Box sx={{ mb: 3, p: 2, bgcolor: alpha(theme.palette.info.main, 0.05), borderRadius: 2 }}>
                   <Typography variant="subtitle2" fontWeight="600" sx={{ mb: 2 }}>
@@ -2590,7 +2763,7 @@ const CaseTracking = () => {
                     <Typography variant="body2" fontWeight="500">{currentCase.nextActionPlan}</Typography>
                   </Box>
                 </Box>
-                
+
                 <TextField
                   fullWidth
                   multiline
@@ -2623,7 +2796,7 @@ const CaseTracking = () => {
                       }
                     />
                   </Box>
-                  
+
                   {commentFormData.updateStatus && (
                     <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 2, ml: 4 }}>
                       <FormControl fullWidth size="small">
@@ -2691,7 +2864,7 @@ const CaseTracking = () => {
                       }
                     />
                   </Box>
-                  
+
                   {commentFormData.updateFollowUp && (
                     <Box sx={{ ml: 4 }}>
                       <TextField
@@ -2704,7 +2877,7 @@ const CaseTracking = () => {
                           nextFollowUpDate: e.target.value
                         })}
                         InputLabelProps={{ shrink: true }}
-                        InputProps={{ 
+                        InputProps={{
                           sx: { borderRadius: 2 },
                           startAdornment: <ScheduleIcon sx={{ mr: 1, color: 'text.secondary' }} />
                         }}
@@ -2750,10 +2923,10 @@ const CaseTracking = () => {
                           <CardContent sx={{ p: 2 }}>
                             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 1 }}>
                               <Typography variant="body2" fontWeight="500" color="primary">
-                                    {comment.user}
-                                  </Typography>
+                                {comment.user}
+                              </Typography>
                               <Typography variant="caption" color="text.secondary">
-                                  {new Date(comment.timestamp).toLocaleString()}
+                                {new Date(comment.timestamp).toLocaleString()}
                               </Typography>
                             </Box>
                             <Typography variant="body2" sx={{ mb: 1 }}>
@@ -2763,19 +2936,19 @@ const CaseTracking = () => {
                               <Chip label={comment.status} size="small" color={getStatusColor(comment.status)} />
                               <Chip label={comment.subStatus} size="small" variant="outlined" />
                               {comment.statusChanged && (
-                                <Chip 
-                                  label="Status Updated" 
-                                  size="small" 
-                                  color="primary" 
+                                <Chip
+                                  label="Status Updated"
+                                  size="small"
+                                  color="primary"
                                   variant="outlined"
                                   icon={<CheckCircleIcon />}
                                 />
                               )}
                               {comment.followUpChanged && (
-                                <Chip 
-                                  label="Follow-up Updated" 
-                                  size="small" 
-                                  color="warning" 
+                                <Chip
+                                  label="Follow-up Updated"
+                                  size="small"
+                                  color="warning"
                                   variant="outlined"
                                   icon={<ScheduleIcon />}
                                 />
@@ -2790,23 +2963,23 @@ const CaseTracking = () => {
               </Box>
             )}
           </DialogContent>
-                     <DialogActions sx={{ px: 3, pb: 3 }}>
-             <Button onClick={handleCommentDialogClose} sx={{ borderRadius: 2 }}>
-               Cancel
-             </Button>
-             <Button 
-               onClick={handleCommentSubmit} 
-               variant="contained" 
-               disabled={!commentText.trim()}
-               sx={{ borderRadius: 2, fontWeight: 600 }}
-               startIcon={<CommentIcon />}
-             >
-               {(commentFormData.updateStatus || commentFormData.updateFollowUp) 
-                 ? 'Add Comment & Update Case' 
-                 : 'Add Comment'
-               }
-             </Button>
-           </DialogActions>
+          <DialogActions sx={{ px: 3, pb: 3 }}>
+            <Button onClick={handleCommentDialogClose} sx={{ borderRadius: 2 }}>
+              Cancel
+            </Button>
+            <Button
+              onClick={handleCommentSubmit}
+              variant="contained"
+              disabled={!commentText.trim()}
+              sx={{ borderRadius: 2, fontWeight: 600 }}
+              startIcon={<CommentIcon />}
+            >
+              {(commentFormData.updateStatus || commentFormData.updateFollowUp)
+                ? 'Add Comment & Update Case'
+                : 'Add Comment'
+              }
+            </Button>
+          </DialogActions>
         </Dialog>
 
         {/* Quick Edit Dialog */}
@@ -2825,14 +2998,14 @@ const CaseTracking = () => {
                 <Typography variant="subtitle2" gutterBottom sx={{ mb: 3 }}>
                   Case: {currentCase.id} - {currentCase.customerName}
                 </Typography>
-                
+
                 <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 2, mb: 3 }}>
                   <FormControl fullWidth>
                     <InputLabel>Status</InputLabel>
                     <Select
                       value={quickEditData.status}
                       label="Status"
-                      onChange={(e) => setQuickEditData({...quickEditData, status: e.target.value})}
+                      onChange={(e) => setQuickEditData({ ...quickEditData, status: e.target.value })}
                       sx={{ borderRadius: 2 }}
                     >
                       {availableStatuses.map((status) => (
@@ -2851,7 +3024,7 @@ const CaseTracking = () => {
                     <Select
                       value={quickEditData.subStatus}
                       label="Sub-Status"
-                      onChange={(e) => setQuickEditData({...quickEditData, subStatus: e.target.value})}
+                      onChange={(e) => setQuickEditData({ ...quickEditData, subStatus: e.target.value })}
                       sx={{ borderRadius: 2 }}
                     >
                       {availableSubStatuses.map((subStatus) => (
@@ -2867,9 +3040,9 @@ const CaseTracking = () => {
                     type="date"
                     fullWidth
                     value={quickEditData.nextFollowUpDate}
-                    onChange={(e) => setQuickEditData({...quickEditData, nextFollowUpDate: e.target.value})}
+                    onChange={(e) => setQuickEditData({ ...quickEditData, nextFollowUpDate: e.target.value })}
                     InputLabelProps={{ shrink: true }}
-                    InputProps={{ 
+                    InputProps={{
                       sx: { borderRadius: 2 },
                       startAdornment: <ScheduleIcon sx={{ mr: 1, color: 'text.secondary' }} />
                     }}
@@ -2880,7 +3053,7 @@ const CaseTracking = () => {
                     <Select
                       value={quickEditData.currentWorkStep}
                       label="Current Work Step"
-                      onChange={(e) => setQuickEditData({...quickEditData, currentWorkStep: e.target.value})}
+                      onChange={(e) => setQuickEditData({ ...quickEditData, currentWorkStep: e.target.value })}
                       sx={{ borderRadius: 2 }}
                     >
                       {availableWorkSteps.map((step) => (
@@ -2901,7 +3074,7 @@ const CaseTracking = () => {
                   rows={3}
                   label="Next Action Plan"
                   value={quickEditData.nextActionPlan}
-                  onChange={(e) => setQuickEditData({...quickEditData, nextActionPlan: e.target.value})}
+                  onChange={(e) => setQuickEditData({ ...quickEditData, nextActionPlan: e.target.value })}
                   placeholder="Describe the next action plan..."
                   sx={{ mb: 3, borderRadius: 2 }}
                   InputProps={{
@@ -2915,7 +3088,7 @@ const CaseTracking = () => {
                   rows={3}
                   label="Add Comment (Optional)"
                   value={quickEditData.commentText}
-                  onChange={(e) => setQuickEditData({...quickEditData, commentText: e.target.value})}
+                  onChange={(e) => setQuickEditData({ ...quickEditData, commentText: e.target.value })}
                   placeholder="Add a comment about this update..."
                   sx={{ mb: 2, borderRadius: 2 }}
                   InputProps={{
@@ -2950,9 +3123,9 @@ const CaseTracking = () => {
             <Button onClick={handleQuickEditClose} sx={{ borderRadius: 2 }}>
               Cancel
             </Button>
-            <Button 
-              onClick={handleQuickEditSave} 
-              variant="contained" 
+            <Button
+              onClick={handleQuickEditSave}
+              variant="contained"
               sx={{ borderRadius: 2, fontWeight: 600 }}
             >
               Save Changes
@@ -2970,14 +3143,14 @@ const CaseTracking = () => {
               </Typography>
             </Box>
           </DialogTitle>
-          
+
           <DialogContent sx={{ pb: 0 }}>
             {selectedCase && (
               <Box>
                 <Typography variant="subtitle2" gutterBottom sx={{ mb: 2 }}>
                   Sending message to: <strong>{selectedCase.customerName}</strong> ({selectedCase.id})
                 </Typography>
-                
+
                 {/* Message Type Selection */}
                 <Box sx={{ mb: 3 }}>
                   <Typography variant="subtitle1" fontWeight="600" sx={{ mb: 2 }}>
@@ -3033,9 +3206,9 @@ const CaseTracking = () => {
                       }
                     }}
                   />
-                  <Box sx={{ 
-                    mt: 1, 
-                    display: 'flex', 
+                  <Box sx={{
+                    mt: 1,
+                    display: 'flex',
                     justifyContent: 'space-between',
                     alignItems: 'center'
                   }}>
@@ -3055,8 +3228,8 @@ const CaseTracking = () => {
                 </Box>
 
                 {/* Policy Information Preview */}
-                <Box sx={{ 
-                  p: 2, 
+                <Box sx={{
+                  p: 2,
                   bgcolor: alpha(theme.palette.info.main, 0.05),
                   borderRadius: 2,
                   border: `1px solid ${alpha(theme.palette.info.main, 0.1)}`
@@ -3065,15 +3238,15 @@ const CaseTracking = () => {
                     Policy Information
                   </Typography>
                   <Typography variant="body2" color="text.secondary">
-                    Policy: {selectedCase.policyNumber} | Type: {selectedCase.policyDetails.type} | 
-                    Premium: ${selectedCase.policyDetails.premium} | 
+                    Policy: {selectedCase.policyNumber} | Type: {selectedCase.policyDetails.type} |
+                    Premium: ${selectedCase.policyDetails.premium} |
                     Expiry: {new Date(selectedCase.policyDetails.expiryDate).toLocaleDateString()}
                   </Typography>
                 </Box>
               </Box>
             )}
           </DialogContent>
-          
+
           <DialogActions sx={{ p: 3, pt: 1 }}>
             <Button
               onClick={handleQuickMessageClose}
@@ -3109,7 +3282,7 @@ const CaseTracking = () => {
         <Box sx={{ position: 'fixed', right: 30, bottom: 30 }}>
           <Zoom in={loaded} style={{ transitionDelay: '800ms' }}>
             <Tooltip title={settings?.autoRefresh ? "Auto-refresh enabled" : "Refresh cases"} arrow>
-              <IconButton 
+              <IconButton
                 color="primary"
                 onClick={() => {
                   // Refresh data
@@ -3135,8 +3308,8 @@ const CaseTracking = () => {
         </Box>
 
         {/* Bulk Status Change Dialog */}
-        <Dialog 
-          open={bulkStatusDialog} 
+        <Dialog
+          open={bulkStatusDialog}
           onClose={() => setBulkStatusDialog(false)}
           maxWidth="sm"
           fullWidth
@@ -3178,17 +3351,17 @@ const CaseTracking = () => {
             </FormControl>
           </DialogContent>
           <DialogActions sx={{ px: 3, pb: 3 }}>
-            <Button 
+            <Button
               onClick={() => setBulkStatusDialog(false)}
               sx={{ borderRadius: 2 }}
             >
               Cancel
             </Button>
-            <Button 
-              variant="contained" 
+            <Button
+              variant="contained"
               onClick={handleConfirmBulkStatusChange}
               disabled={!bulkStatus}
-              sx={{ 
+              sx={{
                 borderRadius: 2,
                 fontWeight: 600,
                 boxShadow: '0 4px 14px rgba(0,118,255,0.25)',
@@ -3203,8 +3376,8 @@ const CaseTracking = () => {
         </Dialog>
 
         {/* Bulk Agent Assignment Dialog */}
-        <Dialog 
-          open={bulkAssignDialog} 
+        <Dialog
+          open={bulkAssignDialog}
           onClose={() => setBulkAssignDialog(false)}
           maxWidth="sm"
           fullWidth
@@ -3246,18 +3419,18 @@ const CaseTracking = () => {
             </Box>
           </DialogContent>
           <DialogActions sx={{ px: 3, pb: 3 }}>
-            <Button 
+            <Button
               onClick={() => setBulkAssignDialog(false)}
               sx={{ borderRadius: 2 }}
             >
               Cancel
             </Button>
-            <Button 
-              variant="contained" 
+            <Button
+              variant="contained"
               color="success"
               onClick={handleConfirmBulkAgentAssignment}
               disabled={!bulkAgent}
-              sx={{ 
+              sx={{
                 borderRadius: 2,
                 fontWeight: 600,
                 boxShadow: '0 4px 14px rgba(76,175,80,0.25)',
@@ -3272,8 +3445,8 @@ const CaseTracking = () => {
         </Dialog>
 
         {/* Bulk Policy Status Change Dialog */}
-        <Dialog 
-          open={bulkPolicyStatusDialog} 
+        <Dialog
+          open={bulkPolicyStatusDialog}
           onClose={() => setBulkPolicyStatusDialog(false)}
           maxWidth="sm"
           fullWidth
@@ -3315,18 +3488,18 @@ const CaseTracking = () => {
             </FormControl>
           </DialogContent>
           <DialogActions sx={{ px: 3, pb: 3 }}>
-            <Button 
+            <Button
               onClick={() => setBulkPolicyStatusDialog(false)}
               sx={{ borderRadius: 2 }}
             >
               Cancel
             </Button>
-            <Button 
-              variant="contained" 
+            <Button
+              variant="contained"
               color="warning"
               onClick={handleConfirmBulkPolicyStatusChange}
               disabled={!bulkPolicyStatus}
-              sx={{ 
+              sx={{
                 borderRadius: 2,
                 fontWeight: 600,
                 boxShadow: '0 4px 14px rgba(255,152,0,0.25)',
@@ -3339,7 +3512,7 @@ const CaseTracking = () => {
             </Button>
           </DialogActions>
         </Dialog>
-        
+
         {/* DNC Override Dialog */}
         <Dialog open={dncOverrideDialog} onClose={() => setDNCOverrideDialog(false)} maxWidth="sm" fullWidth>
           <DialogTitle>
@@ -3370,12 +3543,12 @@ const CaseTracking = () => {
                     <strong>Source:</strong> {dncCheckResult.source}
                   </Typography>
                 </Alert>
-                
+
                 <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                  This contact is registered in the DNC (Do Not Call) registry. To proceed with sending the message, 
+                  This contact is registered in the DNC (Do Not Call) registry. To proceed with sending the message,
                   please provide a valid business reason for the override.
                 </Typography>
-                
+
                 <TextField
                   label="Reason for Override"
                   fullWidth
@@ -3385,7 +3558,7 @@ const CaseTracking = () => {
                   onChange={(e) => setOverrideReason(e.target.value)}
                   placeholder="Please provide a detailed business reason for this override (e.g., urgent policy renewal, customer consent obtained, etc.)"
                 />
-                
+
                 <Box sx={{ mt: 2, p: 2, bgcolor: alpha(theme.palette.info.main, 0.05), borderRadius: 1 }}>
                   <Typography variant="caption" color="text.secondary">
                     <strong>Note:</strong> This override will be temporary (24 hours) and will be logged for compliance purposes.
@@ -3398,9 +3571,9 @@ const CaseTracking = () => {
             <Button onClick={() => setDNCOverrideDialog(false)} sx={{ borderRadius: 2 }}>
               Cancel
             </Button>
-            <Button 
-              onClick={handleDNCOverride} 
-              variant="contained" 
+            <Button
+              onClick={handleDNCOverride}
+              variant="contained"
               color="warning"
               disabled={!overrideReason.trim()}
               sx={{ borderRadius: 2, fontWeight: 600 }}

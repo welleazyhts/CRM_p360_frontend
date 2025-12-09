@@ -342,6 +342,7 @@ const ComplaintsManagement = () => {
                 <FormControl fullWidth>
                   <InputLabel>Complaint Type</InputLabel>
                   <Select
+                    label="Complaint Type"
                     value={formData.complaintType}
                     onChange={(e) => setFormData({ ...formData, complaintType: e.target.value })}
                   >
@@ -358,6 +359,7 @@ const ComplaintsManagement = () => {
                 <FormControl fullWidth>
                   <InputLabel>Severity</InputLabel>
                   <Select
+                    label="Severity"
                     value={formData.severity}
                     onChange={(e) => setFormData({ ...formData, severity: e.target.value })}
                   >
@@ -372,6 +374,7 @@ const ComplaintsManagement = () => {
                 <FormControl fullWidth>
                   <InputLabel>Status</InputLabel>
                   <Select
+                    label="Status"
                     value={formData.status}
                     onChange={(e) => setFormData({ ...formData, status: e.target.value })}
                   >

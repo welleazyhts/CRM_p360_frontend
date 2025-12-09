@@ -216,7 +216,25 @@ const Dashboard = () => {
     }
   });
 
+  // Campaign Dialog State
+  const [viewCampaignDialog, setViewCampaignDialog] = useState(false);
+  const [selectedCampaign, setSelectedCampaign] = useState(null);
+
   // Memoize the loadDashboardData function to avoid recreating it on every render
+  const handleViewCampaign = (campaign) => {
+    setSelectedCampaign(campaign);
+    setViewCampaignDialog(true);
+  };
+
+  const handleToggleCampaignStatus = (id, currentStatus) => {
+    const newStatus = currentStatus === 'active' ? 'paused' : 'active';
+    setCampaignData(prevData =>
+      prevData.map(campaign =>
+        campaign.id === id ? { ...campaign, status: newStatus } : campaign
+      )
+    );
+  };
+
   const loadDashboardData = useCallback(async () => {
     try {
       const statsData = await fetchDashboardStats(dateRange, policyType, caseStatus, startDate, endDate, selectedTeam, selectedTeamMember);
@@ -3616,18 +3634,36 @@ const Dashboard = () => {
                               </Box>
                               <Box sx={{ display: 'flex', gap: 0.5 }}>
                                 {campaign.status === 'active' && (
-                                  <IconButton size="small" sx={{ color: theme.palette.warning.main }}>
-                                    <PauseIcon fontSize="small" />
-                                  </IconButton>
+                                  <Tooltip title="Pause Campaign">
+                                    <IconButton
+                                      size="small"
+                                      sx={{ color: theme.palette.warning.main }}
+                                      onClick={() => handleToggleCampaignStatus(campaign.id, campaign.status)}
+                                    >
+                                      <PauseIcon fontSize="small" />
+                                    </IconButton>
+                                  </Tooltip>
                                 )}
                                 {campaign.status === 'paused' && (
-                                  <IconButton size="small" sx={{ color: theme.palette.success.main }}>
-                                    <PlayIcon fontSize="small" />
-                                  </IconButton>
+                                  <Tooltip title="Resume Campaign">
+                                    <IconButton
+                                      size="small"
+                                      sx={{ color: theme.palette.success.main }}
+                                      onClick={() => handleToggleCampaignStatus(campaign.id, campaign.status)}
+                                    >
+                                      <PlayIcon fontSize="small" />
+                                    </IconButton>
+                                  </Tooltip>
                                 )}
-                                <IconButton size="small" sx={{ color: theme.palette.primary.main }}>
-                                  <ViewIcon fontSize="small" />
-                                </IconButton>
+                                <Tooltip title="View Details">
+                                  <IconButton
+                                    size="small"
+                                    sx={{ color: theme.palette.primary.main }}
+                                    onClick={() => handleViewCampaign(campaign)}
+                                  >
+                                    <ViewIcon fontSize="small" />
+                                  </IconButton>
+                                </Tooltip>
                               </Box>
                             </Box>
 
@@ -4332,6 +4368,167 @@ const Dashboard = () => {
               {distributionDialog.mode === 'create' ? 'Add Channel' : 'Save Changes'}
             </Button>
           </DialogActions>
+        </Dialog>
+
+        {/* View Campaign Details Dialog */}
+        <Dialog
+          open={viewCampaignDialog}
+          onClose={() => setViewCampaignDialog(false)}
+          maxWidth="md"
+          fullWidth
+          PaperProps={{ sx: { borderRadius: 3 } }}
+        >
+          {selectedCampaign && (
+            <>
+              <DialogTitle>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                  <Avatar sx={{ bgcolor: theme.palette.primary.main }}>
+                    <CampaignIcon />
+                  </Avatar>
+                  <Box>
+                    <Typography variant="h6" fontWeight="600">
+                      {selectedCampaign.name}
+                    </Typography>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                      <Chip
+                        label={selectedCampaign.status}
+                        color={
+                          selectedCampaign.status === 'active' ? 'success' :
+                            selectedCampaign.status === 'paused' ? 'warning' : 'info'
+                        }
+                        size="small"
+                        sx={{ textTransform: 'capitalize', height: 20, fontSize: '0.75rem' }}
+                      />
+                      <Typography variant="caption" color="text.secondary">
+                        ID: {selectedCampaign.id}
+                      </Typography>
+                    </Box>
+                  </Box>
+                </Box>
+              </DialogTitle>
+              <DialogContent dividers>
+                <Grid container spacing={3}>
+                  <Grid item xs={12} md={6}>
+                    <Card variant="outlined" sx={{ height: '100%', borderRadius: 2 }}>
+                      <CardContent>
+                        <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                          Campaign Information
+                        </Typography>
+                        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 2 }}>
+                          <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                            <Typography variant="body2" color="text.secondary">Type</Typography>
+                            <Chip
+                              icon={
+                                selectedCampaign.type === 'email' ? <EmailIcon fontSize="small" /> :
+                                  selectedCampaign.type === 'whatsapp' ? <WhatsAppIcon fontSize="small" /> :
+                                    <SmsIcon fontSize="small" />
+                              }
+                              label={selectedCampaign.type.toUpperCase()}
+                              size="small"
+                              variant="outlined"
+                            />
+                          </Box>
+                          <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                            <Typography variant="body2" color="text.secondary">Source File</Typography>
+                            <Typography variant="body2" fontWeight="500">{selectedCampaign.uploadFilename}</Typography>
+                          </Box>
+                          <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                            <Typography variant="body2" color="text.secondary">Created On</Typography>
+                            <Typography variant="body2" fontWeight="500">{new Date(selectedCampaign.createdAt).toLocaleString()}</Typography>
+                          </Box>
+                          <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                            <Typography variant="body2" color="text.secondary">Scheduled For</Typography>
+                            <Typography variant="body2" fontWeight="500">{new Date(selectedCampaign.scheduledAt).toLocaleString()}</Typography>
+                          </Box>
+                        </Box>
+                      </CardContent>
+                    </Card>
+                  </Grid>
+
+                  <Grid item xs={12} md={6}>
+                    <Card variant="outlined" sx={{ height: '100%', borderRadius: 2 }}>
+                      <CardContent>
+                        <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                          Performance Metrics
+                        </Typography>
+                        <Box sx={{ mt: 2 }}>
+                          <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
+                            <Typography variant="body2">Target Audience</Typography>
+                            <Typography variant="body2" fontWeight="600">{selectedCampaign.targetCount}</Typography>
+                          </Box>
+                          <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
+                            <Typography variant="body2">Successfully Sent</Typography>
+                            <Typography variant="body2" fontWeight="600" color="primary.main">{selectedCampaign.sent}</Typography>
+                          </Box>
+                          <LinearProgress
+                            variant="determinate"
+                            value={(selectedCampaign.sent / selectedCampaign.targetCount) * 100}
+                            sx={{ mb: 2, height: 6, borderRadius: 3 }}
+                          />
+
+                          <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
+                            <Typography variant="body2">Converted</Typography>
+                            <Typography variant="body2" fontWeight="600" color="success.main">{selectedCampaign.converted}</Typography>
+                          </Box>
+                          <LinearProgress
+                            variant="determinate"
+                            color="success"
+                            value={(selectedCampaign.converted / selectedCampaign.sent) * 100 || 0}
+                            sx={{ mb: 2, height: 6, borderRadius: 3 }}
+                          />
+
+                          <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 3 }}>
+                            <Box sx={{ textAlign: 'center' }}>
+                              <Typography variant="h6" color="primary.main">{selectedCampaign.type === 'email' ? selectedCampaign.openRate : selectedCampaign.deliveryRate}%</Typography>
+                              <Typography variant="caption" color="text.secondary">{selectedCampaign.type === 'email' ? 'Open Rate' : 'Delivery Rate'}</Typography>
+                            </Box>
+                            <Divider orientation="vertical" flexItem />
+                            <Box sx={{ textAlign: 'center' }}>
+                              <Typography variant="h6" color="warning.main">{selectedCampaign.type === 'whatsapp' ? selectedCampaign.readRate : selectedCampaign.clickRate}%</Typography>
+                              <Typography variant="caption" color="text.secondary">{selectedCampaign.type === 'whatsapp' ? 'Read Rate' : 'Click Rate'}</Typography>
+                            </Box>
+                            <Divider orientation="vertical" flexItem />
+                            <Box sx={{ textAlign: 'center' }}>
+                              <Typography variant="h6" color="error.main">{selectedCampaign.conversionRate}%</Typography>
+                              <Typography variant="caption" color="text.secondary">Conversion</Typography>
+                            </Box>
+                          </Box>
+                        </Box>
+                      </CardContent>
+                    </Card>
+                  </Grid>
+                </Grid>
+              </DialogContent>
+              <DialogActions sx={{ p: 2 }}>
+                <Button onClick={() => setViewCampaignDialog(false)}>Close</Button>
+                {selectedCampaign.status === 'active' ? (
+                  <Button
+                    variant="contained"
+                    color="warning"
+                    startIcon={<PauseIcon />}
+                    onClick={() => {
+                      handleToggleCampaignStatus(selectedCampaign.id, 'active');
+                      setViewCampaignDialog(false);
+                    }}
+                  >
+                    Pause Campaign
+                  </Button>
+                ) : selectedCampaign.status === 'paused' ? (
+                  <Button
+                    variant="contained"
+                    color="success"
+                    startIcon={<PlayIcon />}
+                    onClick={() => {
+                      handleToggleCampaignStatus(selectedCampaign.id, 'paused');
+                      setViewCampaignDialog(false);
+                    }}
+                  >
+                    Resume Campaign
+                  </Button>
+                ) : null}
+              </DialogActions>
+            </>
+          )}
         </Dialog>
       </Box>
     </Fade>

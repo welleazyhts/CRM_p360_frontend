@@ -2887,6 +2887,7 @@ const Settings = () => {
                 <FormControl fullWidth sx={{ mb: 2 }}>
                   <InputLabel>Email Provider</InputLabel>
                   <Select
+                    label="Email Provider"
                     value={campaignSettings.emailProvider}
                     onChange={(e) => handleCampaignSettingChange('emailProvider', e.target.value)}
                   >
@@ -2911,6 +2912,7 @@ const Settings = () => {
                 <FormControl fullWidth sx={{ mb: 2 }}>
                   <InputLabel>WhatsApp Provider</InputLabel>
                   <Select
+                    label="WhatsApp Provider"
                     value={campaignSettings.whatsappProvider}
                     onChange={(e) => handleCampaignSettingChange('whatsappProvider', e.target.value)}
                   >
@@ -2942,6 +2944,7 @@ const Settings = () => {
                 <FormControl fullWidth sx={{ mb: 2 }}>
                   <InputLabel>SMS Provider</InputLabel>
                   <Select
+                    label="SMS Provider"
                     value={campaignSettings.smsProvider}
                     onChange={(e) => handleCampaignSettingChange('smsProvider', e.target.value)}
                   >
@@ -3215,6 +3218,7 @@ const Settings = () => {
                 <FormControl fullWidth>
                   <InputLabel>Reporting Interval</InputLabel>
                   <Select
+                    label="Reporting Interval"
                     value={campaignSettings.reportingInterval}
                     onChange={(e) => handleCampaignSettingChange('reportingInterval', e.target.value)}
                   >
@@ -3229,6 +3233,7 @@ const Settings = () => {
                 <FormControl fullWidth>
                   <InputLabel>Export Format</InputLabel>
                   <Select
+                    label="Export Format"
                     value={campaignSettings.exportFormat}
                     onChange={(e) => handleCampaignSettingChange('exportFormat', e.target.value)}
                   >

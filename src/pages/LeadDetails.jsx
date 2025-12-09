@@ -90,6 +90,20 @@ const LeadDetails = () => {
   const [documentType, setDocumentType] = useState('vehicle'); // 'vehicle' or 'insurance'
   const [fileUploadDialog, setFileUploadDialog] = useState(false);
   const [followUpDialog, setFollowUpDialog] = useState(false);
+  const [policyViewDialog, setPolicyViewDialog] = useState(false);
+  const [selectedPolicy, setSelectedPolicy] = useState(null);
+  const [documentViewDialog, setDocumentViewDialog] = useState(false);
+  const [selectedDocument, setSelectedDocument] = useState(null);
+
+  // Quote form state
+  const [shareQuoteDialogOpen, setShareQuoteDialogOpen] = useState(false);
+  const [quoteForm, setQuoteForm] = useState({
+    quoteType: 'standard',
+    premium: '',
+    coverage: '',
+    validTill: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+    notes: ''
+  });
 
   // Mock policy history data
   const policyHistoryData = [
@@ -708,6 +722,187 @@ const LeadDetails = () => {
     return matchesSearch && matchesStatus && matchesType;
   });
 
+  // Handle view policy details
+  const handleViewPolicyDetails = (policy) => {
+    setSelectedPolicy(policy);
+    setPolicyViewDialog(true);
+  };
+
+  // Handle download policy
+  const handleDownloadPolicy = (policy) => {
+    // Create policy document content
+    const policyContent = `
+================================================================================
+                           INSURANCE POLICY DOCUMENT
+================================================================================
+
+Policy Number: ${policy.policyNumber}
+Policy Type: ${policy.type}
+Status: ${policy.status}
+
+--------------------------------------------------------------------------------
+                              POLICY PERIOD
+--------------------------------------------------------------------------------
+Start Date: ${new Date(policy.startDate).toLocaleDateString('en-IN', { day: '2-digit', month: 'long', year: 'numeric' })}
+End Date: ${new Date(policy.endDate).toLocaleDateString('en-IN', { day: '2-digit', month: 'long', year: 'numeric' })}
+
+--------------------------------------------------------------------------------
+                            VEHICLE DETAILS
+--------------------------------------------------------------------------------
+Vehicle: ${policy.vehicleDetails}
+
+--------------------------------------------------------------------------------
+                            PREMIUM DETAILS
+--------------------------------------------------------------------------------
+Premium Amount: ₹${policy.premium?.toLocaleString() || '0'}
+No Claim Bonus (NCB): ${policy.ncb}
+Claims History: ${policy.claims} claim(s)
+
+--------------------------------------------------------------------------------
+                           INSURED DETAILS
+--------------------------------------------------------------------------------
+Name: ${lead?.firstName} ${lead?.lastName}
+Email: ${lead?.email}
+Phone: ${lead?.phone}
+Company: ${lead?.company || 'N/A'}
+
+================================================================================
+                              TERMS & CONDITIONS
+================================================================================
+1. This policy is subject to all terms and conditions as per the policy document.
+2. Premium is payable as per the agreed schedule.
+3. Claims should be intimated within 24 hours of the incident.
+4. All renewals must be done before the expiry date to maintain continuity.
+5. NCB benefit is applicable only if no claims are made during the policy period.
+
+================================================================================
+Generated on: ${new Date().toLocaleString('en-IN')}
+Document Reference: ${policy.id}
+================================================================================
+`;
+
+    // Create and download the file
+    const blob = new Blob([policyContent], { type: 'text/plain' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `Policy_${policy.policyNumber.replace(/[^a-zA-Z0-9]/g, '_')}.txt`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    window.URL.revokeObjectURL(url);
+
+    // Add to activities
+    const newActivity = {
+      id: activities.length + 1,
+      type: 'document_downloaded',
+      description: `Policy document downloaded for ${policy.policyNumber}`,
+      timestamp: new Date().toLocaleString(),
+      user: lead?.assignedTo || 'System User'
+    };
+    setActivities([newActivity, ...activities]);
+  };
+
+  // Handle view document details
+  const handleViewDocument = (doc, docType) => {
+    setSelectedDocument({ ...doc, docType });
+    setDocumentViewDialog(true);
+  };
+
+  // Handle Share Quote
+  const handleOpenShareQuote = () => {
+    setQuoteForm({
+      quoteType: 'standard',
+      premium: '',
+      coverage: '',
+      validTill: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+      notes: ''
+    });
+    setShareQuoteDialogOpen(true);
+  };
+
+  const handleShareQuote = () => {
+    // In production, this would generate and share the quote
+    setShareQuoteDialogOpen(false);
+
+    // Add to activities
+    const newActivity = {
+      id: activities.length + 1,
+      type: 'quote_shared',
+      description: `Quote shared with ${lead.firstName} ${lead.lastName} (Amount: ₹${quoteForm.premium})`,
+      timestamp: new Date().toLocaleString(),
+      user: lead?.assignedTo || 'System User'
+    };
+    setActivities([newActivity, ...activities]);
+
+    // Show alert or snackbar
+    alert(`Quote shared successfully with ${lead.firstName} ${lead.lastName}`);
+  };
+
+  // Handle download document
+  const handleDownloadDocument = (doc, docType) => {
+    // Create document content
+    const documentContent = `
+================================================================================
+                           DOCUMENT DETAILS
+================================================================================
+
+Document Name: ${doc.documentName || doc.fileName || 'Unknown'}
+Document Type: ${doc.documentType || docType}
+Status: ${doc.status}
+
+--------------------------------------------------------------------------------
+                              FILE INFORMATION
+--------------------------------------------------------------------------------
+Upload Date: ${doc.uploadDate || doc.uploadedOn || 'N/A'}
+File Size: ${doc.size || 'N/A'}
+${doc.fileType ? `File Format: ${doc.fileType.toUpperCase()}` : ''}
+
+--------------------------------------------------------------------------------
+                           ASSOCIATED LEAD/CUSTOMER
+--------------------------------------------------------------------------------
+Name: ${lead?.firstName} ${lead?.lastName}
+Email: ${lead?.email}
+Phone: ${lead?.phone}
+Company: ${lead?.company || 'N/A'}
+
+--------------------------------------------------------------------------------
+                              VERIFICATION STATUS
+--------------------------------------------------------------------------------
+Current Status: ${doc.status}
+${doc.status === 'Verified' ? '✓ Document has been verified and approved.' : ''}
+${doc.status === 'Pending' ? '⏳ Document is pending verification.' : ''}
+${doc.status === 'Rejected' ? '✗ Document has been rejected. Please upload a valid document.' : ''}
+
+================================================================================
+Generated on: ${new Date().toLocaleString('en-IN')}
+Document Reference: ${doc.id}
+================================================================================
+`;
+
+    // Create and download the file
+    const blob = new Blob([documentContent], { type: 'text/plain' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    const fileName = doc.documentName || doc.fileName || 'document';
+    a.download = `${fileName.replace(/[^a-zA-Z0-9]/g, '_')}_details.txt`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    window.URL.revokeObjectURL(url);
+
+    // Add to activities
+    const newActivity = {
+      id: activities.length + 1,
+      type: 'document_downloaded',
+      description: `Document downloaded: ${doc.documentName || doc.fileName}`,
+      timestamp: new Date().toLocaleString(),
+      user: lead?.assignedTo || 'System User'
+    };
+    setActivities([newActivity, ...activities]);
+  };
+
   if (!lead) {
     return (
       <Box sx={{ p: 3, display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '400px' }}>
@@ -782,7 +977,7 @@ const LeadDetails = () => {
                   <Button
                     variant="contained"
                     startIcon={<MoneyIcon />}
-                    onClick={() => {/* TODO: Implement share quote functionality */ }}
+                    onClick={handleOpenShareQuote}
                     sx={{
                       background: `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.primary.dark} 100%)`,
                     }}
@@ -1238,12 +1433,12 @@ const LeadDetails = () => {
                         </TableCell>
                         <TableCell align="center">
                           <Tooltip title="View Details">
-                            <IconButton size="small">
+                            <IconButton size="small" onClick={() => handleViewPolicyDetails(policy)}>
                               <VisibilityIcon fontSize="small" />
                             </IconButton>
                           </Tooltip>
                           <Tooltip title="Download Policy">
-                            <IconButton size="small">
+                            <IconButton size="small" onClick={() => handleDownloadPolicy(policy)}>
                               <DownloadIcon fontSize="small" />
                             </IconButton>
                           </Tooltip>
@@ -1710,12 +1905,12 @@ const LeadDetails = () => {
                         </TableCell>
                         <TableCell align="center">
                           <Tooltip title="View">
-                            <IconButton size="small">
+                            <IconButton size="small" onClick={() => handleViewDocument(doc, 'Vehicle Document')}>
                               <VisibilityIcon />
                             </IconButton>
                           </Tooltip>
                           <Tooltip title="Download">
-                            <IconButton size="small">
+                            <IconButton size="small" onClick={() => handleDownloadDocument(doc, 'Vehicle Document')}>
                               <DownloadIcon />
                             </IconButton>
                           </Tooltip>
@@ -1782,12 +1977,12 @@ const LeadDetails = () => {
                         </TableCell>
                         <TableCell align="center">
                           <Tooltip title="View">
-                            <IconButton size="small">
+                            <IconButton size="small" onClick={() => handleViewDocument(doc, 'Insurance Document')}>
                               <VisibilityIcon />
                             </IconButton>
                           </Tooltip>
                           <Tooltip title="Download">
-                            <IconButton size="small">
+                            <IconButton size="small" onClick={() => handleDownloadDocument(doc, 'Insurance Document')}>
                               <DownloadIcon />
                             </IconButton>
                           </Tooltip>
@@ -1945,12 +2140,12 @@ const LeadDetails = () => {
                         </TableCell>
                         <TableCell align="center">
                           <Tooltip title="View">
-                            <IconButton size="small">
+                            <IconButton size="small" onClick={() => handleViewDocument(file, 'KYC Document')}>
                               <VisibilityIcon />
                             </IconButton>
                           </Tooltip>
                           <Tooltip title="Download">
-                            <IconButton size="small">
+                            <IconButton size="small" onClick={() => handleDownloadDocument(file, 'KYC Document')}>
                               <DownloadIcon />
                             </IconButton>
                           </Tooltip>
@@ -2221,7 +2416,7 @@ const LeadDetails = () => {
               </FormControl>
             </Grid>
 
-              <Grid item xs={12} sm={6}>
+            <Grid item xs={12} sm={6}>
               <FormControl fullWidth>
                 <InputLabel>Disposition</InputLabel>
                 <Select
@@ -3032,6 +3227,413 @@ const LeadDetails = () => {
             startIcon={<AccessTimeIcon />}
           >
             Schedule Follow-up
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Policy View Details Dialog */}
+      <Dialog
+        open={policyViewDialog}
+        onClose={() => setPolicyViewDialog(false)}
+        maxWidth="md"
+        fullWidth
+      >
+        <DialogTitle sx={{ fontWeight: 600, display: 'flex', alignItems: 'center', gap: 1 }}>
+          <InsuranceDocIcon color="primary" />
+          Policy Details
+        </DialogTitle>
+        <DialogContent dividers>
+          {selectedPolicy && (
+            <Grid container spacing={3}>
+              {/* Policy Information */}
+              <Grid item xs={12}>
+                <Paper sx={{ p: 2, bgcolor: alpha(theme.palette.primary.main, 0.05) }}>
+                  <Typography variant="subtitle1" fontWeight="600" gutterBottom color="primary">
+                    Policy Information
+                  </Typography>
+                  <Grid container spacing={2}>
+                    <Grid item xs={6} md={3}>
+                      <Typography variant="caption" color="text.secondary">Policy Number</Typography>
+                      <Typography variant="body1" fontWeight="500">{selectedPolicy.policyNumber}</Typography>
+                    </Grid>
+                    <Grid item xs={6} md={3}>
+                      <Typography variant="caption" color="text.secondary">Policy Type</Typography>
+                      <Typography variant="body1">{selectedPolicy.type}</Typography>
+                    </Grid>
+                    <Grid item xs={6} md={3}>
+                      <Typography variant="caption" color="text.secondary">Status</Typography>
+                      <Chip
+                        label={selectedPolicy.status}
+                        size="small"
+                        color={selectedPolicy.status === 'Active' ? 'success' : 'default'}
+                      />
+                    </Grid>
+                    <Grid item xs={6} md={3}>
+                      <Typography variant="caption" color="text.secondary">Policy ID</Typography>
+                      <Typography variant="body1">{selectedPolicy.id}</Typography>
+                    </Grid>
+                  </Grid>
+                </Paper>
+              </Grid>
+
+              {/* Policy Period */}
+              <Grid item xs={12} md={6}>
+                <Paper sx={{ p: 2, height: '100%' }}>
+                  <Typography variant="subtitle1" fontWeight="600" gutterBottom>
+                    📅 Policy Period
+                  </Typography>
+                  <Stack spacing={1}>
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                      <Typography variant="body2" color="text.secondary">Start Date:</Typography>
+                      <Typography variant="body2" fontWeight="500">
+                        {new Date(selectedPolicy.startDate).toLocaleDateString('en-IN', { day: '2-digit', month: 'long', year: 'numeric' })}
+                      </Typography>
+                    </Box>
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                      <Typography variant="body2" color="text.secondary">End Date:</Typography>
+                      <Typography variant="body2" fontWeight="500">
+                        {new Date(selectedPolicy.endDate).toLocaleDateString('en-IN', { day: '2-digit', month: 'long', year: 'numeric' })}
+                      </Typography>
+                    </Box>
+                    <Divider sx={{ my: 1 }} />
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                      <Typography variant="body2" color="text.secondary">Duration:</Typography>
+                      <Typography variant="body2" fontWeight="500">
+                        {Math.ceil((new Date(selectedPolicy.endDate) - new Date(selectedPolicy.startDate)) / (1000 * 60 * 60 * 24))} days
+                      </Typography>
+                    </Box>
+                  </Stack>
+                </Paper>
+              </Grid>
+
+              {/* Vehicle Details */}
+              <Grid item xs={12} md={6}>
+                <Paper sx={{ p: 2, height: '100%' }}>
+                  <Typography variant="subtitle1" fontWeight="600" gutterBottom>
+                    🚗 Vehicle Details
+                  </Typography>
+                  <Stack spacing={1}>
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                      <Typography variant="body2" color="text.secondary">Vehicle:</Typography>
+                      <Typography variant="body2" fontWeight="500">{selectedPolicy.vehicleDetails}</Typography>
+                    </Box>
+                    <Divider sx={{ my: 1 }} />
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                      <Typography variant="body2" color="text.secondary">Registration:</Typography>
+                      <Typography variant="body2" fontWeight="500">{lead?.vehicleRegistrationNumber || 'N/A'}</Typography>
+                    </Box>
+                  </Stack>
+                </Paper>
+              </Grid>
+
+              {/* Premium Details */}
+              <Grid item xs={12} md={6}>
+                <Paper sx={{ p: 2, bgcolor: alpha(theme.palette.success.main, 0.05) }}>
+                  <Typography variant="subtitle1" fontWeight="600" gutterBottom color="success.main">
+                    💰 Premium Details
+                  </Typography>
+                  <Stack spacing={1}>
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                      <Typography variant="body2" color="text.secondary">Premium Amount:</Typography>
+                      <Typography variant="body1" fontWeight="600" color="success.main">
+                        ₹{selectedPolicy.premium?.toLocaleString() || '0'}
+                      </Typography>
+                    </Box>
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                      <Typography variant="body2" color="text.secondary">No Claim Bonus (NCB):</Typography>
+                      <Typography variant="body2" fontWeight="500">{selectedPolicy.ncb}</Typography>
+                    </Box>
+                  </Stack>
+                </Paper>
+              </Grid>
+
+              {/* Claims History */}
+              <Grid item xs={12} md={6}>
+                <Paper sx={{ p: 2, bgcolor: alpha(theme.palette.warning.main, 0.05) }}>
+                  <Typography variant="subtitle1" fontWeight="600" gutterBottom color="warning.main">
+                    📋 Claims History
+                  </Typography>
+                  <Stack spacing={1}>
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                      <Typography variant="body2" color="text.secondary">Total Claims:</Typography>
+                      <Typography variant="body1" fontWeight="600">
+                        {selectedPolicy.claims}
+                      </Typography>
+                    </Box>
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                      <Typography variant="body2" color="text.secondary">Claims Status:</Typography>
+                      <Chip
+                        label={selectedPolicy.claims === 0 ? 'No Claims' : `${selectedPolicy.claims} Claim(s)`}
+                        size="small"
+                        color={selectedPolicy.claims === 0 ? 'success' : 'warning'}
+                      />
+                    </Box>
+                  </Stack>
+                </Paper>
+              </Grid>
+
+              {/* Insured Details */}
+              <Grid item xs={12}>
+                <Paper sx={{ p: 2 }}>
+                  <Typography variant="subtitle1" fontWeight="600" gutterBottom>
+                    👤 Insured Details
+                  </Typography>
+                  <Grid container spacing={2}>
+                    <Grid item xs={6} md={3}>
+                      <Typography variant="caption" color="text.secondary">Name</Typography>
+                      <Typography variant="body2" fontWeight="500">{lead?.firstName} {lead?.lastName}</Typography>
+                    </Grid>
+                    <Grid item xs={6} md={3}>
+                      <Typography variant="caption" color="text.secondary">Email</Typography>
+                      <Typography variant="body2">{lead?.email}</Typography>
+                    </Grid>
+                    <Grid item xs={6} md={3}>
+                      <Typography variant="caption" color="text.secondary">Phone</Typography>
+                      <Typography variant="body2">{lead?.phone}</Typography>
+                    </Grid>
+                    <Grid item xs={6} md={3}>
+                      <Typography variant="caption" color="text.secondary">Company</Typography>
+                      <Typography variant="body2">{lead?.company || 'N/A'}</Typography>
+                    </Grid>
+                  </Grid>
+                </Paper>
+              </Grid>
+            </Grid>
+          )}
+        </DialogContent>
+        <DialogActions sx={{ p: 2 }}>
+          <Button onClick={() => setPolicyViewDialog(false)}>Close</Button>
+          <Button
+            variant="contained"
+            startIcon={<DownloadIcon />}
+            onClick={() => {
+              if (selectedPolicy) {
+                handleDownloadPolicy(selectedPolicy);
+              }
+            }}
+          >
+            Download Policy
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Document View Details Dialog */}
+      <Dialog
+        open={documentViewDialog}
+        onClose={() => setDocumentViewDialog(false)}
+        maxWidth="sm"
+        fullWidth
+      >
+        <DialogTitle sx={{ fontWeight: 600, display: 'flex', alignItems: 'center', gap: 1 }}>
+          <DocumentIcon color="primary" />
+          Document Details
+        </DialogTitle>
+        <DialogContent dividers>
+          {selectedDocument && (
+            <Grid container spacing={2}>
+              {/* Document Information */}
+              <Grid item xs={12}>
+                <Paper sx={{ p: 2, bgcolor: alpha(theme.palette.primary.main, 0.05) }}>
+                  <Typography variant="subtitle1" fontWeight="600" gutterBottom color="primary">
+                    Document Information
+                  </Typography>
+                  <Grid container spacing={2}>
+                    <Grid item xs={12} sm={6}>
+                      <Typography variant="caption" color="text.secondary">Document Name</Typography>
+                      <Typography variant="body1" fontWeight="500">
+                        {selectedDocument.documentName || selectedDocument.fileName || 'N/A'}
+                      </Typography>
+                    </Grid>
+                    <Grid item xs={12} sm={6}>
+                      <Typography variant="caption" color="text.secondary">Document Type</Typography>
+                      <Typography variant="body1">
+                        {selectedDocument.documentType || selectedDocument.docType}
+                      </Typography>
+                    </Grid>
+                  </Grid>
+                </Paper>
+              </Grid>
+
+              {/* File Details */}
+              <Grid item xs={12}>
+                <Paper sx={{ p: 2 }}>
+                  <Typography variant="subtitle1" fontWeight="600" gutterBottom>
+                    📁 File Details
+                  </Typography>
+                  <Stack spacing={1}>
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                      <Typography variant="body2" color="text.secondary">Upload Date:</Typography>
+                      <Typography variant="body2" fontWeight="500">
+                        {selectedDocument.uploadDate || selectedDocument.uploadedOn || 'N/A'}
+                      </Typography>
+                    </Box>
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                      <Typography variant="body2" color="text.secondary">File Size:</Typography>
+                      <Typography variant="body2" fontWeight="500">
+                        {selectedDocument.size || 'N/A'}
+                      </Typography>
+                    </Box>
+                    {selectedDocument.fileType && (
+                      <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                        <Typography variant="body2" color="text.secondary">File Format:</Typography>
+                        <Typography variant="body2" fontWeight="500">
+                          {selectedDocument.fileType.toUpperCase()}
+                        </Typography>
+                      </Box>
+                    )}
+                  </Stack>
+                </Paper>
+              </Grid>
+
+              {/* Verification Status */}
+              <Grid item xs={12}>
+                <Paper sx={{
+                  p: 2,
+                  bgcolor: selectedDocument.status === 'Verified'
+                    ? alpha(theme.palette.success.main, 0.05)
+                    : selectedDocument.status === 'Rejected'
+                      ? alpha(theme.palette.error.main, 0.05)
+                      : alpha(theme.palette.warning.main, 0.05)
+                }}>
+                  <Typography variant="subtitle1" fontWeight="600" gutterBottom>
+                    ✓ Verification Status
+                  </Typography>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mt: 1 }}>
+                    <Chip
+                      label={selectedDocument.status}
+                      size="medium"
+                      color={
+                        selectedDocument.status === 'Verified' ? 'success' :
+                          selectedDocument.status === 'Rejected' ? 'error' : 'warning'
+                      }
+                    />
+                    <Typography variant="body2">
+                      {selectedDocument.status === 'Verified' && 'Document has been verified and approved.'}
+                      {selectedDocument.status === 'Pending' && 'Document is pending verification.'}
+                      {selectedDocument.status === 'Rejected' && 'Document has been rejected.'}
+                      {selectedDocument.status === 'Active' && 'Document is currently active.'}
+                    </Typography>
+                  </Box>
+                </Paper>
+              </Grid>
+
+              {/* Associated Lead */}
+              <Grid item xs={12}>
+                <Paper sx={{ p: 2 }}>
+                  <Typography variant="subtitle1" fontWeight="600" gutterBottom>
+                    👤 Associated Lead
+                  </Typography>
+                  <Grid container spacing={2}>
+                    <Grid item xs={6}>
+                      <Typography variant="caption" color="text.secondary">Name</Typography>
+                      <Typography variant="body2" fontWeight="500">{lead?.firstName} {lead?.lastName}</Typography>
+                    </Grid>
+                    <Grid item xs={6}>
+                      <Typography variant="caption" color="text.secondary">Phone</Typography>
+                      <Typography variant="body2">{lead?.phone}</Typography>
+                    </Grid>
+                  </Grid>
+                </Paper>
+              </Grid>
+            </Grid>
+          )}
+        </DialogContent>
+        <DialogActions sx={{ p: 2 }}>
+          <Button onClick={() => setDocumentViewDialog(false)}>Close</Button>
+          <Button
+            variant="contained"
+            startIcon={<DownloadIcon />}
+            onClick={() => {
+              if (selectedDocument) {
+                handleDownloadDocument(selectedDocument, selectedDocument.docType);
+                setDocumentViewDialog(false);
+              }
+            }}
+          >
+            Download Document
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Share Quote Dialog */}
+      <Dialog open={shareQuoteDialogOpen} onClose={() => setShareQuoteDialogOpen(false)} maxWidth="sm" fullWidth>
+        <DialogTitle>
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <MoneyIcon color="warning" />
+              <Typography variant="h6">Share Quote</Typography>
+            </Box>
+            <IconButton onClick={() => setShareQuoteDialogOpen(false)}>
+              <CancelIcon />
+            </IconButton>
+          </Box>
+        </DialogTitle>
+        <DialogContent dividers>
+          <Stack spacing={2}>
+            <Typography variant="body2" color="text.secondary" gutterBottom>
+              Create and share a quote for <strong>{lead?.firstName} {lead?.lastName}</strong>.
+            </Typography>
+            <FormControl fullWidth>
+              <InputLabel>Quote Type</InputLabel>
+              <Select
+                value={quoteForm.quoteType}
+                label="Quote Type"
+                onChange={(e) => setQuoteForm({ ...quoteForm, quoteType: e.target.value })}
+              >
+                <MenuItem value="standard">Standard Quote</MenuItem>
+                <MenuItem value="premium">Premium Quote</MenuItem>
+                <MenuItem value="custom">Custom Quote</MenuItem>
+              </Select>
+            </FormControl>
+            <Grid container spacing={2}>
+              <Grid item xs={6}>
+                <TextField
+                  fullWidth
+                  label="Premium Amount (₹)"
+                  type="number"
+                  value={quoteForm.premium}
+                  onChange={(e) => setQuoteForm({ ...quoteForm, premium: e.target.value })}
+                />
+              </Grid>
+              <Grid item xs={6}>
+                <TextField
+                  fullWidth
+                  label="Coverage Amount (₹)"
+                  type="number"
+                  value={quoteForm.coverage}
+                  onChange={(e) => setQuoteForm({ ...quoteForm, coverage: e.target.value })}
+                />
+              </Grid>
+            </Grid>
+            <TextField
+              fullWidth
+              label="Valid Till"
+              type="date"
+              value={quoteForm.validTill}
+              onChange={(e) => setQuoteForm({ ...quoteForm, validTill: e.target.value })}
+              InputLabelProps={{ shrink: true }}
+            />
+            <TextField
+              fullWidth
+              multiline
+              rows={3}
+              label="Additional Notes"
+              value={quoteForm.notes}
+              onChange={(e) => setQuoteForm({ ...quoteForm, notes: e.target.value })}
+              placeholder="Any special terms or conditions..."
+            />
+          </Stack>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setShareQuoteDialogOpen(false)}>Cancel</Button>
+          <Button
+            variant="contained"
+            color="warning"
+            startIcon={<MoneyIcon />}
+            onClick={handleShareQuote}
+            disabled={!quoteForm.premium || !quoteForm.coverage}
+          >
+            Share Quote
           </Button>
         </DialogActions>
       </Dialog>

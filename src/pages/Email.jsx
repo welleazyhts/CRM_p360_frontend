@@ -164,8 +164,10 @@ const EmailInbox = () => {
   const [, setSenderFilterDialog] = useState({ open: false, sender: '' });
   const [newFolderDialog, setNewFolderDialog] = useState({ open: false });
   const [rulesDialog, setRulesDialog] = useState({ open: false });
-  const [composeDialog, setComposeDialog] = useState({ open: false, mode: 'new', replyTo: null, forwardFrom: null });
+  const [composeDialog, setComposeDialog] = useState({ open: false, mode: 'new', replyTo: null, forwardFrom: null, to: '', subject: '', body: '' });
   const [auditTrailDialog, setAuditTrailDialog] = useState({ open: false, emailId: null });
+  const [drafts, setDrafts] = useState([]);
+  const [sentEmails, setSentEmails] = useState([]);
 
   // AI Integration State
   const [analysisDialog, setAnalysisDialog] = useState({ open: false, loading: false, result: null, email: null });
@@ -971,8 +973,9 @@ Renew-iQ Insurance`,
     showNotification(`Folder "${folderName}" created successfully`, 'success');
   };
 
+
   const handleComposeNew = () => {
-    setComposeDialog({ open: true, mode: 'new', replyTo: null, forwardFrom: null });
+    setComposeDialog({ open: true, mode: 'new', replyTo: null, forwardFrom: null, to: '', subject: '', body: '' });
   };
 
   const handleReplyWithThread = (email) => {
@@ -1101,6 +1104,87 @@ Renew-iQ Insurance`,
     } finally {
       setAiProcessing(false);
     }
+  };
+
+  // Handle Send Email
+  const handleSendEmail = () => {
+    // Validate required fields
+    if (!composeDialog.to) {
+      showNotification('Please enter a recipient email address', 'warning');
+      return;
+    }
+    if (!composeDialog.subject) {
+      showNotification('Please enter an email subject', 'warning');
+      return;
+    }
+    if (!composeDialog.body) {
+      showNotification('Please enter an email message', 'warning');
+      return;
+    }
+
+    // Create sent email object
+    const sentEmail = {
+      id: `SENT-${Date.now()}`,
+      to: composeDialog.to,
+      subject: composeDialog.subject,
+      body: composeDialog.body,
+      mode: composeDialog.mode,
+      sentAt: new Date().toISOString(),
+      status: 'sent'
+    };
+
+    // Add to sent emails
+    setSentEmails(prev => [...prev, sentEmail]);
+
+    // Close dialog and reset
+    setComposeDialog({
+      open: false,
+      mode: 'new',
+      replyTo: null,
+      forwardFrom: null,
+      to: '',
+      subject: '',
+      body: ''
+    });
+
+    showNotification('Email sent successfully!', 'success');
+  };
+
+  // Handle Save Draft
+  const handleSaveDraft = () => {
+    // At least one field should have content
+    if (!composeDialog.to && !composeDialog.subject && !composeDialog.body) {
+      showNotification('Please enter some content to save as draft', 'warning');
+      return;
+    }
+
+    // Create draft object
+    const draft = {
+      id: `DRAFT-${Date.now()}`,
+      to: composeDialog.to || '',
+      subject: composeDialog.subject || '(No Subject)',
+      body: composeDialog.body || '',
+      mode: composeDialog.mode,
+      replyTo: composeDialog.replyTo,
+      forwardFrom: composeDialog.forwardFrom,
+      savedAt: new Date().toISOString()
+    };
+
+    // Add to drafts
+    setDrafts(prev => [...prev, draft]);
+
+    // Close dialog and reset
+    setComposeDialog({
+      open: false,
+      mode: 'new',
+      replyTo: null,
+      forwardFrom: null,
+      to: '',
+      subject: '',
+      body: ''
+    });
+
+    showNotification('Draft saved successfully!', 'success');
   };
 
   return (
@@ -2071,7 +2155,7 @@ Renew-iQ Insurance`,
         {/* Compose Dialog */}
         <Dialog
           open={composeDialog.open}
-          onClose={() => setComposeDialog({ open: false, mode: 'new', replyTo: null, forwardFrom: null })}
+          onClose={() => setComposeDialog({ open: false, mode: 'new', replyTo: null, forwardFrom: null, to: '', subject: '', body: '' })}
           maxWidth="lg"
           fullWidth
         >
@@ -2082,8 +2166,21 @@ Renew-iQ Insurance`,
           </DialogTitle>
           <DialogContent>
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 1 }}>
-              <TextField label="To" fullWidth />
-              <TextField label="Subject" fullWidth />
+              <TextField
+                label="To"
+                fullWidth
+                placeholder="Enter recipient email address"
+                value={composeDialog.to || (composeDialog.mode === 'reply' ? composeDialog.replyTo?.from : '')}
+                onChange={(e) => setComposeDialog({ ...composeDialog, to: e.target.value })}
+              />
+              <TextField
+                label="Subject"
+                fullWidth
+                value={composeDialog.subject ||
+                  (composeDialog.mode === 'reply' ? `Re: ${composeDialog.replyTo?.subject || ''}` :
+                    composeDialog.mode === 'forward' ? `Fwd: ${composeDialog.forwardFrom?.subject || ''}` : '')}
+                onChange={(e) => setComposeDialog({ ...composeDialog, subject: e.target.value })}
+              />
               <TextField
                 label="Message"
                 fullWidth
@@ -2101,9 +2198,17 @@ Renew-iQ Insurance`,
               )}
             </Box>
           </DialogContent>
-          <DialogActions>
-            <Button onClick={() => setComposeDialog({ open: false, mode: 'new', replyTo: null, forwardFrom: null })}>
+          <DialogActions sx={{ p: 2 }}>
+            <Button onClick={() => setComposeDialog({ open: false, mode: 'new', replyTo: null, forwardFrom: null, to: '', subject: '', body: '' })}>
               Cancel
+            </Button>
+            <Button
+              variant="outlined"
+              startIcon={<SaveIcon />}
+              onClick={handleSaveDraft}
+              color="secondary"
+            >
+              Save Draft
             </Button>
             <Button
               variant="outlined"
@@ -2113,7 +2218,11 @@ Renew-iQ Insurance`,
             >
               AI Enhance
             </Button>
-            <Button variant="contained" startIcon={<CreateIcon />}>
+            <Button
+              variant="contained"
+              startIcon={<CreateIcon />}
+              onClick={handleSendEmail}
+            >
               Send
             </Button>
           </DialogActions>
@@ -2313,6 +2422,7 @@ Renew-iQ Insurance`,
                   <FormControl fullWidth>
                     <InputLabel>Category</InputLabel>
                     <Select
+                      label="Category"
                       value={newTemplate.category}
                       onChange={(e) => setNewTemplate(prev => ({ ...prev, category: e.target.value }))}
                     >

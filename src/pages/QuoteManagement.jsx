@@ -187,6 +187,26 @@ const QuoteManagement = () => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
+  // Activity logging helper function
+  const addActivityHistory = (quoteId, action, details = '') => {
+    const activityEntry = {
+      id: `activity-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      quoteId: quoteId,
+      action: action,
+      user: 'Current User',
+      timestamp: new Date().toLocaleString('en-GB', {
+        day: '2-digit',
+        month: 'short',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      }),
+      details: details
+    };
+
+    setMockHistory(prev => [activityEntry, ...prev]);
+  };
+
   // submit with QuoteService.createQuote
   const handleSubmit = async () => {
     // Validate required fields
@@ -261,6 +281,13 @@ const QuoteManagement = () => {
         // Update the quote in the list
         setQuotes(prev => prev.map(q => q.id === selectedQuote.id ? updatePayload : q));
 
+        // Log activity
+        addActivityHistory(
+          selectedQuote.id,
+          'Quote Updated',
+          `Quote details modified for ${formData.customerName}`
+        );
+
         // Clear selected quote
         setSelectedQuote(null);
       } else {
@@ -268,6 +295,13 @@ const QuoteManagement = () => {
         const created = await QuoteService.createQuote(payload);
         // QuoteService mock returns created item; prepend to local list
         setQuotes(prev => [created, ...prev]);
+
+        // Log activity
+        addActivityHistory(
+          created.id,
+          'Quote Created',
+          `New quote created for ${formData.customerName} - ${formData.productType} (${formData.productPlan})`
+        );
       }
 
       // reset form
@@ -326,6 +360,13 @@ const QuoteManagement = () => {
       // update local list and selectedQuote
       setQuotes(prev => prev.map(q => (q.id === updated.id ? updated : q)));
       setSelectedQuote(updated);
+
+      // Log activity
+      addActivityHistory(
+        selectedQuote.id,
+        'Status Changed',
+        `Status changed from ${selectedQuote.status} to ${newStatus}`
+      );
     } catch (err) {
       console.error('changeStatus error', err);
       setError(err.message || 'Failed to change status');
@@ -658,6 +699,14 @@ const QuoteManagement = () => {
     try {
       const created = await QuoteService.createQuote(duplicatedQuote);
       setQuotes(prev => [created, ...prev]);
+
+      // Log activity
+      addActivityHistory(
+        created.id,
+        'Quote Duplicated',
+        `Duplicated from quote ${quote.id} for ${quote.customerName}`
+      );
+
       handleMenuClose();
     } catch (err) {
       console.error('Duplicate quote error', err);
@@ -692,6 +741,13 @@ const QuoteManagement = () => {
   // Confirm Delete Quote
   const handleConfirmDelete = () => {
     if (!selectedQuote) return;
+
+    // Log activity before deleting
+    addActivityHistory(
+      selectedQuote.id,
+      'Quote Deleted',
+      `Quote deleted for ${selectedQuote.customerName} - ${selectedQuote.productType}`
+    );
 
     setQuotes(prev => prev.filter(q => q.id !== selectedQuote.id));
     setDeleteConfirmDialog(false);
@@ -730,6 +786,13 @@ const QuoteManagement = () => {
           result: result
         });
         setEmailPreviewDialog(true);
+
+        // Log activity
+        addActivityHistory(
+          selectedQuote.id,
+          'Quote Sent',
+          `Quote sent via email to ${selectedQuote.customerEmail}`
+        );
       }
 
       handleMenuClose();

@@ -1250,6 +1250,145 @@ Best regards,
     showNotification('Email sent successfully', 'success');
   };
 
+  // Handle Print Email
+  const handlePrintEmail = (email) => {
+    const printContent = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>Email - ${email.subject}</title>
+        <style>
+          body { font-family: Arial, sans-serif; padding: 40px; line-height: 1.6; }
+          .header { border-bottom: 2px solid #1976d2; padding-bottom: 20px; margin-bottom: 20px; }
+          .header h1 { color: #1976d2; margin: 0 0 10px 0; font-size: 24px; }
+          .meta { color: #666; margin: 5px 0; }
+          .meta strong { color: #333; }
+          .content { margin: 30px 0; padding: 20px; background: #f5f5f5; border-radius: 8px; white-space: pre-wrap; }
+          .renewal-info { margin: 20px 0; padding: 15px; background: #e3f2fd; border-radius: 8px; }
+          .renewal-info h3 { margin: 0 0 10px 0; color: #1976d2; }
+          .renewal-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+          .attachments { margin-top: 20px; padding: 15px; background: #fff3e0; border-radius: 8px; }
+          .attachments h3 { margin: 0 0 10px 0; color: #f57c00; }
+          .attachment-item { padding: 5px 10px; background: white; border-radius: 4px; margin: 5px 5px 5px 0; display: inline-block; }
+          .footer { margin-top: 40px; padding-top: 20px; border-top: 1px solid #ddd; color: #666; font-size: 12px; }
+          .priority-badge { display: inline-block; padding: 4px 12px; border-radius: 12px; font-size: 12px; font-weight: bold; text-transform: capitalize; }
+          .priority-high { background: #ffebee; color: #c62828; }
+          .priority-medium { background: #fff3e0; color: #ef6c00; }
+          .priority-normal { background: #e3f2fd; color: #1565c0; }
+        </style>
+      </head>
+      <body>
+        <div class="header">
+          <h1>${email.subject}</h1>
+          <p class="meta"><strong>From:</strong> ${email.from}</p>
+          <p class="meta"><strong>To:</strong> ${email.to}</p>
+          <p class="meta"><strong>Date:</strong> ${email.date.toLocaleString()}</p>
+          <p class="meta">
+            <strong>Priority:</strong> 
+            <span class="priority-badge priority-${email.priority}">${email.priority}</span>
+          </p>
+          ${email.sentiment ? `<p class="meta"><strong>Sentiment:</strong> ${email.sentiment} (${Math.round(email.confidence * 100)}% confidence)</p>` : ''}
+        </div>
+        
+        ${email.renewalContext ? `
+          <div class="renewal-info">
+            <h3>Renewal Information</h3>
+            <div class="renewal-grid">
+              <p><strong>Policy Number:</strong> ${email.renewalContext.policyNumber || 'N/A'}</p>
+              <p><strong>Customer:</strong> ${email.renewalContext.customerName || 'N/A'}</p>
+              <p><strong>Renewal Date:</strong> ${email.renewalContext.renewalDate || 'N/A'}</p>
+              <p><strong>Premium:</strong> ${email.renewalContext.premiumAmount || 'N/A'}</p>
+            </div>
+          </div>
+        ` : ''}
+        
+        <div class="content">
+          ${email.body}
+        </div>
+        
+        ${email.attachments && email.attachments.length > 0 ? `
+          <div class="attachments">
+            <h3>Attachments</h3>
+            ${email.attachments.map(att => `<span class="attachment-item">📎 ${att}</span>`).join(' ')}
+          </div>
+        ` : ''}
+        
+        <div class="footer">
+          <p>Printed on: ${new Date().toLocaleString()}</p>
+          <p>Renew-iQ Email Management System</p>
+        </div>
+      </body>
+      </html>
+    `;
+
+    const printWindow = window.open('', '_blank');
+    printWindow.document.write(printContent);
+    printWindow.document.close();
+    printWindow.focus();
+    setTimeout(() => {
+      printWindow.print();
+    }, 250);
+  };
+
+  // Handle Forward Email
+  const handleForwardEmail = (email) => {
+    setComposeData({
+      ...composeData,
+      to: '',
+      subject: `Fwd: ${email.subject}`,
+      body: `\n\n---------- Forwarded message ---------\nFrom: ${email.from}\nDate: ${email.date.toLocaleString()}\nSubject: ${email.subject}\nTo: ${email.to}\n\n${email.body}`,
+      renewalContext: email.renewalContext
+    });
+    setViewEmailDialog(false);
+    setComposeDialog(true);
+    showNotification('Email ready to forward', 'info');
+  };
+
+  // Handle Save Draft
+  const handleSaveDraft = () => {
+    // At least one field should have content
+    if (!composeData.to && !composeData.subject && !composeData.body) {
+      showNotification('Please enter some content to save as draft', 'warning');
+      return;
+    }
+
+    const draftEmail = {
+      id: Date.now(),
+      type: 'draft',
+      from: currentUser?.email || 'user@company.com',
+      to: composeData.to || '',
+      subject: composeData.subject || '(No Subject)',
+      body: composeData.body || '',
+      date: new Date(),
+      read: true,
+      starred: false,
+      priority: composeData.priority,
+      status: 'draft',
+      attachments: composeData.attachments,
+      renewalContext: composeData.renewalContext,
+      tags: ['draft'],
+      deliveryStatus: 'draft'
+    };
+
+    setEmails(prev => [draftEmail, ...prev]);
+    setComposeDialog(false);
+    setComposeData({
+      to: '', cc: '', bcc: '', subject: '', body: '', template: '',
+      priority: 'normal', scheduledSend: false, scheduleDate: null,
+      attachments: [], signature: '', trackOpens: true, trackClicks: true,
+      requestReadReceipt: false,
+      renewalContext: {
+        policyNumber: '', customerName: '', renewalDate: '', premiumAmount: '',
+        agentName: '', branch: '', customerEmail: '', customerPhone: ''
+      },
+      aiAssistance: {
+        tone: 'professional', language: 'english',
+        includePersonalization: true, suggestSubject: true
+      }
+    });
+    showNotification('Draft saved successfully', 'success');
+  };
+
   const showNotification = (message, severity = 'info') => {
     setNotification({ open: true, message, severity });
   };
@@ -2734,49 +2873,6 @@ Customer Service Team`;
           </CardContent>
         </Card>
 
-        {/* Speed Dial for Quick Actions */}
-        <SpeedDial
-          ariaLabel="Email Actions"
-          sx={{ position: 'fixed', bottom: 16, right: 16 }}
-          icon={<SpeedDialIcon />}
-          onClose={() => setSpeedDialOpen(false)}
-          onOpen={() => setSpeedDialOpen(true)}
-          open={speedDialOpen}
-        >
-          <SpeedDialAction
-            icon={<AddIcon />}
-            tooltipTitle="Compose Email"
-            onClick={() => {
-              setSpeedDialOpen(false);
-              handleCompose();
-            }}
-          />
-          <SpeedDialAction
-            icon={<AnalyticsIcon />}
-            tooltipTitle="View Analytics"
-            onClick={() => {
-              setSpeedDialOpen(false);
-              setAnalyticsDialog(true);
-            }}
-          />
-          <SpeedDialAction
-            icon={<AutoModeIcon />}
-            tooltipTitle="Automation Rules"
-            onClick={() => {
-              setSpeedDialOpen(false);
-              setAutomationDialog(true);
-            }}
-          />
-          <SpeedDialAction
-            icon={<SettingsIcon />}
-            tooltipTitle="Settings"
-            onClick={() => {
-              setSpeedDialOpen(false);
-              setSettingsDialog(true);
-            }}
-          />
-        </SpeedDial>
-
         {/* Enhanced Compose Dialog */}
         <Dialog
           open={composeDialog}
@@ -2922,19 +3018,25 @@ Customer Service Team`;
                 </Typography>
               </Grid>
               <Grid item xs={6}>
-                <FormControl fullWidth>
-                  <InputLabel>Priority</InputLabel>
-                  <Select
-                    value={composeData.priority}
-                    onChange={(e) => setComposeData(prev => ({ ...prev, priority: e.target.value }))}
-                  >
-                    <MenuItem value="low">Low</MenuItem>
-                    <MenuItem value="normal">Normal</MenuItem>
-                    <MenuItem value="medium">Medium</MenuItem>
-                    <MenuItem value="high">High</MenuItem>
-                  </Select>
-                </FormControl>
-              </Grid>
+                  <FormControl fullWidth variant="outlined" size="small">
+                    <InputLabel id="compose-priority-label">Priority</InputLabel>
+                    <Select
+                      labelId="compose-priority-label"
+                      id="compose-priority"
+                      value={composeData.priority}
+                      label="Priority"   // 👈 Required
+                      onChange={(e) =>
+                        setComposeData(prev => ({ ...prev, priority: e.target.value }))
+                      }
+                    >
+                      <MenuItem value="low">Low</MenuItem>
+                      <MenuItem value="normal">Normal</MenuItem>
+                      <MenuItem value="medium">Medium</MenuItem>
+                      <MenuItem value="high">High</MenuItem>
+                    </Select>
+                  </FormControl>
+                </Grid>
+
               <Grid item xs={6}>
                 <FormControlLabel
                   control={
@@ -2996,7 +3098,7 @@ Customer Service Team`;
           </DialogContent>
           <DialogActions>
             <Button onClick={() => setComposeDialog(false)}>Cancel</Button>
-            <Button variant="outlined" startIcon={<DraftsIcon />}>
+            <Button variant="outlined" startIcon={<DraftsIcon />} onClick={handleSaveDraft}>
               Save Draft
             </Button>
             <Button variant="contained" onClick={handleSendEmail} startIcon={<SendIcon />}>
@@ -3161,8 +3263,8 @@ Customer Service Team`;
               </DialogContent>
               <DialogActions>
                 <Button onClick={() => setViewEmailDialog(false)}>Close</Button>
-                <Button startIcon={<PrintIcon />}>Print</Button>
-                <Button startIcon={<ForwardIcon />}>Forward</Button>
+                <Button startIcon={<PrintIcon />} onClick={() => handlePrintEmail(selectedEmail)}>Print</Button>
+                <Button startIcon={<ForwardIcon />} onClick={() => handleForwardEmail(selectedEmail)}>Forward</Button>
                 {selectedEmail.type === 'inbox' && (
                   <Button
                     variant="contained"

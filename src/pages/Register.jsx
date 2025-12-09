@@ -161,7 +161,7 @@ const Register = () => {
       return;
     }
 
-    setLoading(true);
+    setLoading(true);  
     setError('');
 
     try {
@@ -174,14 +174,14 @@ const Register = () => {
         numberOfUsers: formData.numberOfUsers,
         industry: formData.industry,
         password: formData.password,
-        additionalFields: formData.additionalFields
+        additionalFields: formData.additionalFields  
       });
 
       if (result.success) {
         // Registration successful
         // Show success message and redirect to login
         alert(result.message || 'Registration successful! Please login with your credentials.');
-        navigate('/login');
+        navigate('/login');      
       } else {
         setError(result.message || 'Registration failed. Please try again.');
       }

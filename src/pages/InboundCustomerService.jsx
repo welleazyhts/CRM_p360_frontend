@@ -440,6 +440,7 @@ const InboundCustomerService = () => {
                 <FormControl fullWidth>
                   <InputLabel>Call Reason</InputLabel>
                   <Select
+                    label="Call Reason"
                     value={formData.callReason}
                     onChange={(e) => setFormData({ ...formData, callReason: e.target.value })}
                   >
@@ -458,6 +459,7 @@ const InboundCustomerService = () => {
                 <FormControl fullWidth>
                   <InputLabel>Category</InputLabel>
                   <Select
+                    label="Category"
                     value={formData.category}
                     onChange={(e) => setFormData({ ...formData, category: e.target.value })}
                   >
@@ -540,6 +542,7 @@ const InboundCustomerService = () => {
                 <FormControl fullWidth>
                   <InputLabel>Priority</InputLabel>
                   <Select
+                    label="Priority"
                     value={formData.priority}
                     onChange={(e) => setFormData({ ...formData, priority: e.target.value })}
                   >
@@ -553,6 +556,7 @@ const InboundCustomerService = () => {
                 <FormControl fullWidth>
                   <InputLabel>Status</InputLabel>
                   <Select
+                    label="Status"
                     value={formData.status}
                     onChange={(e) => setFormData({ ...formData, status: e.target.value })}
                   >

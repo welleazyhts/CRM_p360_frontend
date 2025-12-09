@@ -89,7 +89,8 @@ import {
   Phone as PhoneForwardedIcon,
   CloudDownload as CloudDownloadIcon,
   VerifiedUser as VerifiedUserIcon,
-  Error as ErrorIcon
+  Error as ErrorIcon,
+  PushPin as PushPinIcon
 } from '@mui/icons-material';
 import { analyzeEmail } from '../services/emailAI';
 
@@ -519,13 +520,13 @@ const calculateLeadScore = (lead) => {
 
     // C-Level / Top Management
     if (position.includes('ceo') || position.includes('cto') || position.includes('cfo') ||
-        position.includes('coo') || position.includes('founder') || position.includes('owner') ||
-        position.includes('president') || position.includes('chairman')) {
+      position.includes('coo') || position.includes('founder') || position.includes('owner') ||
+      position.includes('president') || position.includes('chairman')) {
       authorityScore = 100;
     }
     // VP / Director Level
     else if (position.includes('vp') || position.includes('vice president') ||
-             position.includes('director') || position.includes('head')) {
+      position.includes('director') || position.includes('head')) {
       authorityScore = 90;
     }
     // Manager Level
@@ -538,7 +539,7 @@ const calculateLeadScore = (lead) => {
     }
     // Individual Contributor
     else if (position.includes('executive') || position.includes('specialist') ||
-             position.includes('officer')) {
+      position.includes('officer')) {
       authorityScore = 50;
     }
     // Unknown or junior
@@ -646,6 +647,12 @@ const LeadManagement = () => {
 
   // Bulk operations state
   const [selectedLeads, setSelectedLeads] = useState([]);
+
+  // Pin to top states
+  const [pinnedLeads, setPinnedLeads] = useState(() => {
+    const saved = localStorage.getItem('pinnedLeads');
+    return saved ? JSON.parse(saved) : [];
+  });
   const [bulkAssignmentDialog, setBulkAssignmentDialog] = useState(false);
   const [bulkAssignmentAgent, setBulkAssignmentAgent] = useState('');
   const [agentTableOpen, setAgentTableOpen] = useState(false);
@@ -906,10 +913,10 @@ const LeadManagement = () => {
         const updatedLeads = leads.map(lead =>
           lead.id === editingLead.id
             ? {
-                ...lead,
-                ...formData,
-                updatedAt: new Date().toISOString().split('T')[0]
-              }
+              ...lead,
+              ...formData,
+              updatedAt: new Date().toISOString().split('T')[0]
+            }
             : lead
         );
         setLeads(updatedLeads);
@@ -956,45 +963,45 @@ const LeadManagement = () => {
   // Auto-assign agent based on language matching with enhanced logic
   const autoAssignByLanguage = (leadIds) => {
     console.log('🔍 Starting language assignment for leads:', leadIds);
-    
+
     const leadsToAssign = leads.filter(lead => leadIds.includes(lead.id));
     console.log('📋 Leads to process:', leadsToAssign.map(l => ({ id: l.id, name: `${l.firstName} ${l.lastName}`, language: l.preferredLanguage, assigned: l.assignedTo })));
-    
+
     let assignmentResults = {
       assigned: 0,
       languageMatched: 0,
       fallbackAssigned: 0,
       unassigned: 0
     };
-    
+
     const updatedLeads = leads.map(lead => {
       // Check if lead is in selection and not already assigned (empty string or null/undefined)
       if (leadIds.includes(lead.id) && (!lead.assignedTo || lead.assignedTo.trim() === '')) {
         const leadLanguage = lead.preferredLanguage || 'English';
         console.log(`🌐 Processing ${lead.firstName} ${lead.lastName} - Language: ${leadLanguage}`);
-        
+
         // Find agents who can communicate in the lead's preferred language
-        const compatibleAgents = agents.filter(agent => 
+        const compatibleAgents = agents.filter(agent =>
           agent.languages && agent.languages.includes(leadLanguage)
         );
         console.log(`👥 Compatible agents for ${leadLanguage}:`, compatibleAgents.map(a => a.name));
-        
+
         if (compatibleAgents.length > 0) {
           // Sort by rating and current workload for language-compatible agents
           const bestAgent = compatibleAgents.reduce((best, current) => {
             const bestWorkload = leads.filter(l => l.assignedToId === best.id).length;
             const currentWorkload = leads.filter(l => l.assignedToId === current.id).length;
-            
+
             // Prefer higher rating, then lower workload
             if (current.rating > best.rating) return current;
             if (current.rating === best.rating && currentWorkload < bestWorkload) return current;
             return best;
           });
-          
+
           console.log(`✅ Perfect match: ${lead.firstName} → ${bestAgent.name} (${leadLanguage})`);
           assignmentResults.assigned++;
           assignmentResults.languageMatched++;
-          
+
           return {
             ...lead,
             assignedTo: bestAgent.name,
@@ -1004,24 +1011,24 @@ const LeadManagement = () => {
           };
         } else {
           // Fallback: Assign to English-speaking agent if no language match
-          const englishAgents = agents.filter(agent => 
+          const englishAgents = agents.filter(agent =>
             agent.languages && agent.languages.includes('English')
           );
-          
+
           if (englishAgents.length > 0) {
             const bestEnglishAgent = englishAgents.reduce((best, current) => {
               const bestWorkload = leads.filter(l => l.assignedToId === best.id).length;
               const currentWorkload = leads.filter(l => l.assignedToId === current.id).length;
-              
+
               if (current.rating > best.rating) return current;
               if (current.rating === best.rating && currentWorkload < bestWorkload) return current;
               return best;
             });
-            
+
             console.log(`⚠️ Fallback assignment: ${lead.firstName} → ${bestEnglishAgent.name} (English fallback)`);
             assignmentResults.assigned++;
             assignmentResults.fallbackAssigned++;
-            
+
             return {
               ...lead,
               assignedTo: bestEnglishAgent.name,
@@ -1039,10 +1046,10 @@ const LeadManagement = () => {
       }
       return lead;
     });
-    
+
     console.log('📊 Assignment Results:', assignmentResults);
     setLeads(updatedLeads);
-    
+
     // Show detailed assignment results
     if (assignmentResults.assigned > 0) {
       let message = `${assignmentResults.assigned} leads assigned: `;
@@ -1055,7 +1062,7 @@ const LeadManagement = () => {
       if (assignmentResults.unassigned > 0) {
         message += `. ${assignmentResults.unassigned} could not be assigned.`;
       }
-      
+
       setSnackbar({
         open: true,
         message: message,
@@ -1072,53 +1079,53 @@ const LeadManagement = () => {
 
   // Enhanced bulk operations handlers with language-based assignment
   const handleSelectLead = (leadId) => {
-    const newSelectedLeads = selectedLeads.includes(leadId) 
+    const newSelectedLeads = selectedLeads.includes(leadId)
       ? selectedLeads.filter(id => id !== leadId)
       : [...selectedLeads, leadId];
-    
+
     setSelectedLeads(newSelectedLeads);
   };
-  
+
   // Manual language-based assignment trigger with preview
   const handleLanguageBasedAssignment = () => {
     if (selectedLeads.length === 0) {
       setSnackbar({ open: true, message: 'Please select leads to assign', severity: 'warning' });
       return;
     }
-    
+
     // Generate assignment preview
     const preview = selectedLeads.map(leadId => {
       const lead = leads.find(l => l.id === leadId);
       // Check if lead exists and is not already assigned (empty string or null/undefined)
       if (!lead || (lead.assignedTo && lead.assignedTo.trim() !== '')) return null;
-      
+
       const leadLanguage = lead.preferredLanguage || 'English';
-      const compatibleAgents = agents.filter(agent => 
+      const compatibleAgents = agents.filter(agent =>
         agent.languages && agent.languages.includes(leadLanguage)
       );
-      
+
       let recommendedAgent = null;
       let matchType = 'no-match';
-      
+
       if (compatibleAgents.length > 0) {
         recommendedAgent = compatibleAgents.reduce((best, current) => {
           const bestWorkload = leads.filter(l => l.assignedToId === best.id).length;
           const currentWorkload = leads.filter(l => l.assignedToId === current.id).length;
-          
+
           if (current.rating > best.rating) return current;
           if (current.rating === best.rating && currentWorkload < bestWorkload) return current;
           return best;
         });
         matchType = 'language-match';
       } else {
-        const englishAgents = agents.filter(agent => 
+        const englishAgents = agents.filter(agent =>
           agent.languages && agent.languages.includes('English')
         );
         if (englishAgents.length > 0) {
           recommendedAgent = englishAgents.reduce((best, current) => {
             const bestWorkload = leads.filter(l => l.assignedToId === best.id).length;
             const currentWorkload = leads.filter(l => l.assignedToId === current.id).length;
-            
+
             if (current.rating > best.rating) return current;
             if (current.rating === best.rating && currentWorkload < bestWorkload) return current;
             return best;
@@ -1126,7 +1133,7 @@ const LeadManagement = () => {
           matchType = 'fallback';
         }
       }
-      
+
       return {
         lead,
         leadLanguage,
@@ -1134,20 +1141,20 @@ const LeadManagement = () => {
         matchType
       };
     }).filter(Boolean);
-    
+
     if (preview.length === 0) {
-      setSnackbar({ 
-        open: true, 
-        message: 'No unassigned leads found in selection. All selected leads may already have agents assigned.', 
-        severity: 'info' 
+      setSnackbar({
+        open: true,
+        message: 'No unassigned leads found in selection. All selected leads may already have agents assigned.',
+        severity: 'info'
       });
       return;
     }
-    
+
     setAssignmentPreview(preview);
     setLanguageAssignDialog(true);
   };
-  
+
   const confirmLanguageAssignment = () => {
     autoAssignByLanguage(selectedLeads);
     setSelectedLeads([]);
@@ -1161,6 +1168,27 @@ const LeadManagement = () => {
     } else {
       setSelectedLeads(currentLeads.map(lead => lead.id));
     }
+  };
+
+  // Pin to top handlers
+  const handlePinToTop = () => {
+    const newPinnedLeads = [...new Set([...pinnedLeads, ...selectedLeads])];
+    if (newPinnedLeads.length > 5) {
+      setSnackbar({ open: true, message: 'Maximum 5 leads can be pinned to top', severity: 'error' });
+      return;
+    }
+    setPinnedLeads(newPinnedLeads);
+    localStorage.setItem('pinnedLeads', JSON.stringify(newPinnedLeads));
+    setSnackbar({ open: true, message: `${selectedLeads.length} lead(s) pinned to top`, severity: 'success' });
+    setSelectedLeads([]);
+  };
+
+  const handleBulkUnpin = () => {
+    const newPinnedLeads = pinnedLeads.filter(id => !selectedLeads.includes(id));
+    setPinnedLeads(newPinnedLeads);
+    localStorage.setItem('pinnedLeads', JSON.stringify(newPinnedLeads));
+    setSnackbar({ open: true, message: `${selectedLeads.length} lead(s) unpinned`, severity: 'success' });
+    setSelectedLeads([]);
   };
 
   const handleBulkAssignment = () => {
@@ -1231,7 +1259,7 @@ const LeadManagement = () => {
       setSnackbar({ open: true, message: 'Please enter vehicle number', severity: 'warning' });
       return;
     }
-    
+
     const vehicleData = mockVehicleData[vehicleNumber.toUpperCase()];
     if (vehicleData) {
       setVehicleDetails(vehicleData);
@@ -1269,7 +1297,7 @@ const LeadManagement = () => {
     const today = new Date();
     const expiry = new Date(expiryDate);
     const daysUntilExpiry = Math.ceil((expiry - today) / (1000 * 60 * 60 * 24));
-    
+
     if (daysUntilExpiry < 0) return 'Expired';
     if (daysUntilExpiry <= 30) return 'Due Soon';
     return 'Active';
@@ -1299,10 +1327,10 @@ const LeadManagement = () => {
       return;
     }
     // Here you would integrate with your dialer system
-    setSnackbar({ 
-      open: true, 
-      message: `${selectedLeads.length} leads pushed to dialer successfully`, 
-      severity: 'success' 
+    setSnackbar({
+      open: true,
+      message: `${selectedLeads.length} leads pushed to dialer successfully`,
+      severity: 'success'
     });
   };
 
@@ -1313,12 +1341,12 @@ const LeadManagement = () => {
     }
 
     const agent = agents.find(u => u.id === bulkAssignmentAgent);
-    const updatedLeads = leads.map(lead => 
-      selectedLeads.includes(lead.id) 
+    const updatedLeads = leads.map(lead =>
+      selectedLeads.includes(lead.id)
         ? { ...lead, assignedTo: agent.name, assignedToId: agent.id, updatedAt: new Date().toISOString().split('T')[0] }
         : lead
     );
-    
+
     setLeads(updatedLeads);
     setSelectedLeads([]);
     setBulkAssignmentDialog(false);
@@ -1336,7 +1364,7 @@ const LeadManagement = () => {
 
     // Sort agents by rating (highest first)
     const topAgents = [...agents].sort((a, b) => b.rating - a.rating);
-    
+
     const updatedLeads = leads.map(lead => {
       if (lead.leadType === 'Premium' && !lead.assignedTo) {
         // Assign to top-rated agent with least current workload
@@ -1345,7 +1373,7 @@ const LeadManagement = () => {
           const currentWorkload = leads.filter(l => l.assignedToId === current.id).length;
           return currentWorkload < bestWorkload ? current : best;
         });
-        
+
         return {
           ...lead,
           assignedTo: bestAgent.name,
@@ -1358,10 +1386,10 @@ const LeadManagement = () => {
 
     setLeads(updatedLeads);
     setAutoAssignDialog(false);
-    setSnackbar({ 
-      open: true, 
-      message: `${premiumLeads.length} Premium leads auto-assigned to top-rated agents`, 
-      severity: 'success' 
+    setSnackbar({
+      open: true,
+      message: `${premiumLeads.length} Premium leads auto-assigned to top-rated agents`,
+      severity: 'success'
     });
   };
 
@@ -1472,19 +1500,19 @@ const LeadManagement = () => {
 
   const handleSaveQuickUpdate = () => {
     if (!selectedLead) return;
-    
-    const updatedLeads = leads.map(lead => 
-      lead.id === selectedLead.id 
+
+    const updatedLeads = leads.map(lead =>
+      lead.id === selectedLead.id
         ? {
-            ...lead,
-            status: quickUpdateData.status,
-            notes: quickUpdateData.notes,
-            followUpDate: quickUpdateData.followUpDate,
-            updatedAt: new Date().toISOString().split('T')[0]
-          }
+          ...lead,
+          status: quickUpdateData.status,
+          notes: quickUpdateData.notes,
+          followUpDate: quickUpdateData.followUpDate,
+          updatedAt: new Date().toISOString().split('T')[0]
+        }
         : lead
     );
-    
+
     setLeads(updatedLeads);
     setQuickUpdateDialog(false);
     setQuickUpdateData({ notes: '', status: '', followUpDate: '' });
@@ -1529,11 +1557,18 @@ const LeadManagement = () => {
     navigate(`/lead-management/${lead.id}`);
   };
 
-  // Pagination
-  const totalPages = Math.ceil(filteredLeads.length / itemsPerPage);
+  // Pagination with pinned leads sorting
+  const sortedFilteredLeads = [...filteredLeads].sort((a, b) => {
+    const aIsPinned = pinnedLeads.includes(a.id);
+    const bIsPinned = pinnedLeads.includes(b.id);
+    if (aIsPinned && !bIsPinned) return -1;
+    if (!aIsPinned && bIsPinned) return 1;
+    return 0;
+  });
+  const totalPages = Math.ceil(sortedFilteredLeads.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
   const endIndex = startIndex + itemsPerPage;
-  const currentLeads = filteredLeads.slice(startIndex, endIndex);
+  const currentLeads = sortedFilteredLeads.slice(startIndex, endIndex);
 
   // Statistics
   const stats = {
@@ -1548,1700 +1583,1763 @@ const LeadManagement = () => {
     <LocalizationProvider dateAdapter={AdapterDateFns}>
       <Box sx={{ p: 3 }}>
         {/* Header */}
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-        <Box>
-          <Typography variant="h4" fontWeight="600" gutterBottom>
-            All Leads
-          </Typography>
-          <Typography variant="body1" color="text.secondary">
-            View and manage all sales leads
-          </Typography>
-        </Box>
-        <Stack direction="row" spacing={2}>
-          <Box sx={{ display: 'flex', gap: 1 }}>
-            <Button
-              variant="outlined"
-              startIcon={<CloudUploadIcon />}
-              onClick={() => setUploadDialog(true)}
-            >
-              Data Provider Upload
-            </Button>
-            <Button
-              variant="outlined"
-              startIcon={<CloudUploadIcon />}
-              onClick={() => setBulkUploadOpen(true)}
-            >
-              Bulk Upload
-            </Button>
-            <Button
-              variant="outlined"
-              startIcon={<HistoryIcon />}
-              onClick={() => setShowUploadHistory(!showUploadHistory)}
-            >
-              Upload History
-            </Button>
-            <Button
-              variant="outlined"
-              startIcon={<GroupIcon />}
-              onClick={() => setAgentTableOpen(true)}
-            >
-              View Agents
-            </Button>
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+          <Box>
+            <Typography variant="h4" fontWeight="600" gutterBottom>
+              All Leads
+            </Typography>
+            <Typography variant="body1" color="text.secondary">
+              View and manage all sales leads
+            </Typography>
           </Box>
-          <Button
-            variant="contained"
-            startIcon={<AddIcon />}
-            onClick={() => handleOpenDialog()}
-            sx={{
-              background: `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.secondary.main} 100%)`,
-              boxShadow: '0 4px 15px rgba(164, 215, 225, 0.3)',
-              '&:hover': {
-                background: `linear-gradient(135deg, ${theme.palette.secondary.main} 0%, ${theme.palette.primary.main} 100%)`,
-                transform: 'translateY(-1px)',
-                boxShadow: '0 6px 20px rgba(164, 215, 225, 0.4)',
-              }
-            }}
-          >
-            Add Lead
-          </Button>
-        </Stack>
-      </Box>
+          <Stack direction="row" spacing={2}>
+            <Box sx={{ display: 'flex', gap: 1 }}>
+              <Button
+                variant="outlined"
+                startIcon={<CloudUploadIcon />}
+                onClick={() => setUploadDialog(true)}
+              >
+                Data Provider Upload
+              </Button>
+              <Button
+                variant="outlined"
+                startIcon={<CloudUploadIcon />}
+                onClick={() => setBulkUploadOpen(true)}
+              >
+                Bulk Upload
+              </Button>
+              <Button
+                variant="outlined"
+                startIcon={<HistoryIcon />}
+                onClick={() => setShowUploadHistory(!showUploadHistory)}
+              >
+                Upload History
+              </Button>
+              <Button
+                variant="outlined"
+                startIcon={<GroupIcon />}
+                onClick={() => setAgentTableOpen(true)}
+              >
+                View Agents
+              </Button>
+            </Box>
+            <Button
+              variant="contained"
+              startIcon={<AddIcon />}
+              onClick={() => handleOpenDialog()}
+              sx={{
+                background: `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.secondary.main} 100%)`,
+                boxShadow: '0 4px 15px rgba(164, 215, 225, 0.3)',
+                '&:hover': {
+                  background: `linear-gradient(135deg, ${theme.palette.secondary.main} 0%, ${theme.palette.primary.main} 100%)`,
+                  transform: 'translateY(-1px)',
+                  boxShadow: '0 6px 20px rgba(164, 215, 225, 0.4)',
+                }
+              }}
+            >
+              Add Lead
+            </Button>
+          </Stack>
+        </Box>
 
-      {/* Upload History Section */}
-      {showUploadHistory && (
+        {/* Upload History Section */}
+        {showUploadHistory && (
+          <Card className="healthcare-card" sx={{ mb: 3 }}>
+            <CardContent>
+              <FailedRecordsViewer source="leads" limit={10} />
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Statistics Cards */}
+        <Grid container spacing={3} sx={{ mb: 3 }}>
+          <Grid item xs={12} sm={6} md={2.4}>
+            <Card className="healthcare-card">
+              <CardContent sx={{ textAlign: 'center' }}>
+                <Typography variant="h4" fontWeight="600" color="primary">
+                  {stats.total}
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  Total Leads
+                </Typography>
+              </CardContent>
+            </Card>
+          </Grid>
+          <Grid item xs={12} sm={6} md={2.4}>
+            <Card className="healthcare-card">
+              <CardContent sx={{ textAlign: 'center' }}>
+                <Typography variant="h4" fontWeight="600" color="info.main">
+                  {stats.new}
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  New Leads
+                </Typography>
+              </CardContent>
+            </Card>
+          </Grid>
+          <Grid item xs={12} sm={6} md={2.4}>
+            <Card className="healthcare-card">
+              <CardContent sx={{ textAlign: 'center' }}>
+                <Typography variant="h4" fontWeight="600" color="secondary.main">
+                  {stats.qualified}
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  Qualified
+                </Typography>
+              </CardContent>
+            </Card>
+          </Grid>
+          <Grid item xs={12} sm={6} md={2.4}>
+            <Card className="healthcare-card">
+              <CardContent sx={{ textAlign: 'center' }}>
+                <Typography variant="h4" fontWeight="600" color="success.main">
+                  {stats.closedWon}
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  Closed Won
+                </Typography>
+              </CardContent>
+            </Card>
+          </Grid>
+          <Grid item xs={12} sm={6} md={2.4}>
+            <Card className="healthcare-card">
+              <CardContent sx={{ textAlign: 'center' }}>
+                <Typography variant="h4" fontWeight="600" color="warning.main">
+                  ₹{stats.totalValue.toLocaleString()}
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  Total Value
+                </Typography>
+              </CardContent>
+            </Card>
+          </Grid>
+        </Grid>
+
+
+
+
+
+        {/* Filters and Search */}
         <Card className="healthcare-card" sx={{ mb: 3 }}>
           <CardContent>
-            <FailedRecordsViewer source="leads" limit={10} />
+            <Grid container spacing={2} alignItems="center">
+              <Grid item xs={12} md={4}>
+                <TextField
+                  fullWidth
+                  placeholder="Search leads..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <SearchIcon />
+                      </InputAdornment>
+                    ),
+                  }}
+                />
+              </Grid>
+              <Grid item xs={12} md={2}>
+                <FormControl fullWidth>
+                  <InputLabel>Status</InputLabel>
+                  <Select
+                    value={statusFilter}
+                    label="Status"
+                    onChange={(e) => setStatusFilter(e.target.value)}
+                  >
+                    <MenuItem value="All">All Status</MenuItem>
+                    {statusOptions.map(status => (
+                      <MenuItem key={status} value={status}>{status}</MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+              </Grid>
+              <Grid item xs={12} md={2}>
+                <FormControl fullWidth>
+                  <InputLabel>Priority</InputLabel>
+                  <Select
+                    value={priorityFilter}
+                    label="Priority"
+                    onChange={(e) => setPriorityFilter(e.target.value)}
+                  >
+                    <MenuItem value="All">All Priority</MenuItem>
+                    {priorityOptions.map(priority => (
+                      <MenuItem key={priority} value={priority}>{priority}</MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+              </Grid>
+              <Grid item xs={12} md={1.5}>
+                <FormControl fullWidth>
+                  <InputLabel>Assigned To</InputLabel>
+                  <Select
+                    value={assignedFilter}
+                    label="Assigned To"
+                    onChange={(e) => setAssignedFilter(e.target.value)}
+                  >
+                    <MenuItem value="All">All Users</MenuItem>
+                    {users.map(user => (
+                      <MenuItem key={user.id} value={user.name}>{user.name}</MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+              </Grid>
+              <Grid item xs={12} md={1.5}>
+                <FormControl fullWidth>
+                  <InputLabel>Lead Type</InputLabel>
+                  <Select
+                    value={leadTypeFilter}
+                    label="Lead Type"
+                    onChange={(e) => setLeadTypeFilter(e.target.value)}
+                  >
+                    <MenuItem value="All">All Types</MenuItem>
+                    {leadTypeOptions.map(type => (
+                      <MenuItem key={type} value={type}>{type}</MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+              </Grid>
+              <Grid item xs={12} md={1}>
+                <Button
+                  fullWidth
+                  variant="outlined"
+                  startIcon={<RefreshIcon />}
+                  onClick={() => {
+                    setSearchTerm('');
+                    setStatusFilter('All');
+                    setPriorityFilter('All');
+                    setAssignedFilter('All');
+                    setLeadTypeFilter('All');
+                  }}
+                >
+                  Reset
+                </Button>
+              </Grid>
+            </Grid>
           </CardContent>
         </Card>
-      )}
 
-      {/* Statistics Cards */}
-      <Grid container spacing={3} sx={{ mb: 3 }}>
-        <Grid item xs={12} sm={6} md={2.4}>
-          <Card className="healthcare-card">
-            <CardContent sx={{ textAlign: 'center' }}>
-              <Typography variant="h4" fontWeight="600" color="primary">
-                {stats.total}
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                Total Leads
-              </Typography>
-            </CardContent>
-          </Card>
-        </Grid>
-        <Grid item xs={12} sm={6} md={2.4}>
-          <Card className="healthcare-card">
-            <CardContent sx={{ textAlign: 'center' }}>
-              <Typography variant="h4" fontWeight="600" color="info.main">
-                {stats.new}
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                New Leads
-              </Typography>
-            </CardContent>
-          </Card>
-        </Grid>
-        <Grid item xs={12} sm={6} md={2.4}>
-          <Card className="healthcare-card">
-            <CardContent sx={{ textAlign: 'center' }}>
-              <Typography variant="h4" fontWeight="600" color="secondary.main">
-                {stats.qualified}
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                Qualified
-              </Typography>
-            </CardContent>
-          </Card>
-        </Grid>
-        <Grid item xs={12} sm={6} md={2.4}>
-          <Card className="healthcare-card">
-            <CardContent sx={{ textAlign: 'center' }}>
-              <Typography variant="h4" fontWeight="600" color="success.main">
-                {stats.closedWon}
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                Closed Won
-              </Typography>
-            </CardContent>
-          </Card>
-        </Grid>
-        <Grid item xs={12} sm={6} md={2.4}>
-          <Card className="healthcare-card">
-            <CardContent sx={{ textAlign: 'center' }}>
-              <Typography variant="h4" fontWeight="600" color="warning.main">
-                ₹{stats.totalValue.toLocaleString()}
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                Total Value
-              </Typography>
-            </CardContent>
-          </Card>
-        </Grid>
-      </Grid>
-
-
-
-
-
-      {/* Filters and Search */}
-      <Card className="healthcare-card" sx={{ mb: 3 }}>
-        <CardContent>
-          <Grid container spacing={2} alignItems="center">
-            <Grid item xs={12} md={4}>
-              <TextField
-                fullWidth
-                placeholder="Search leads..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <SearchIcon />
-                    </InputAdornment>
-                  ),
-                }}
-              />
-            </Grid>
-            <Grid item xs={12} md={2}>
-              <FormControl fullWidth>
-                <InputLabel>Status</InputLabel>
-                <Select
-                  value={statusFilter}
-                  label="Status"
-                  onChange={(e) => setStatusFilter(e.target.value)}
-                >
-                  <MenuItem value="All">All Status</MenuItem>
-                  {statusOptions.map(status => (
-                    <MenuItem key={status} value={status}>{status}</MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-            </Grid>
-            <Grid item xs={12} md={2}>
-              <FormControl fullWidth>
-                <InputLabel>Priority</InputLabel>
-                <Select
-                  value={priorityFilter}
-                  label="Priority"
-                  onChange={(e) => setPriorityFilter(e.target.value)}
-                >
-                  <MenuItem value="All">All Priority</MenuItem>
-                  {priorityOptions.map(priority => (
-                    <MenuItem key={priority} value={priority}>{priority}</MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-            </Grid>
-            <Grid item xs={12} md={1.5}>
-              <FormControl fullWidth>
-                <InputLabel>Assigned To</InputLabel>
-                <Select
-                  value={assignedFilter}
-                  label="Assigned To"
-                  onChange={(e) => setAssignedFilter(e.target.value)}
-                >
-                  <MenuItem value="All">All Users</MenuItem>
-                  {users.map(user => (
-                    <MenuItem key={user.id} value={user.name}>{user.name}</MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-            </Grid>
-            <Grid item xs={12} md={1.5}>
-              <FormControl fullWidth>
-                <InputLabel>Lead Type</InputLabel>
-                <Select
-                  value={leadTypeFilter}
-                  label="Lead Type"
-                  onChange={(e) => setLeadTypeFilter(e.target.value)}
-                >
-                  <MenuItem value="All">All Types</MenuItem>
-                  {leadTypeOptions.map(type => (
-                    <MenuItem key={type} value={type}>{type}</MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-            </Grid>
-            <Grid item xs={12} md={1}>
-              <Button
-                fullWidth
-                variant="outlined"
-                startIcon={<RefreshIcon />}
-                onClick={() => {
-                  setSearchTerm('');
-                  setStatusFilter('All');
-                  setPriorityFilter('All');
-                  setAssignedFilter('All');
-                  setLeadTypeFilter('All');
-                }}
-              >
-                Reset
-              </Button>
-            </Grid>
-          </Grid>
-        </CardContent>
-      </Card>
-
-      {/* Bulk Actions Toolbar */}
-      {selectedLeads.length > 0 && (
-        <Card className="healthcare-card" sx={{ mb: 2 }}>
-          <CardContent>
-            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-              <Typography variant="subtitle1" color="primary">
-                {selectedLeads.length} lead(s) selected
-              </Typography>
-              <Box sx={{ display: 'flex', gap: 1 }}>
-                <Button
-                  variant="outlined"
-                  startIcon={<GroupIcon />}
-                  onClick={handleBulkAssignment}
-                  size="small"
-                >
-                  Manual Assign
-                </Button>
-                <Button
-                  variant="contained"
-                  startIcon={<span style={{ fontSize: '1rem' }}>🌐</span>}
-                  onClick={() => {
-                    console.log('🚀 Language Match button clicked');
-                    console.log('Selected leads:', selectedLeads);
-                    handleLanguageBasedAssignment();
-                  }}
-                  size="small"
-                  sx={{
-                    background: 'linear-gradient(135deg, #4CAF50 0%, #2E7D32 100%)',
-                    '&:hover': {
-                      background: 'linear-gradient(135deg, #2E7D32 0%, #4CAF50 100%)',
+        {/* Bulk Actions Toolbar */}
+        {selectedLeads.length > 0 && (
+          <Card className="healthcare-card" sx={{ mb: 2 }}>
+            <CardContent>
+              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <Typography variant="subtitle1" color="primary">
+                  {selectedLeads.length} lead(s) selected
+                </Typography>
+                <Box sx={{ display: 'flex', gap: 1 }}>
+                  <Tooltip
+                    title={
+                      selectedLeads.some(id => pinnedLeads.includes(id))
+                        ? "Unpin selected leads"
+                        : pinnedLeads.length + selectedLeads.length > 5
+                          ? "Maximum 5 leads can be pinned"
+                          : "Pin selected leads to top"
                     }
-                  }}
-                >
-                  Language Match
-                </Button>
-                <Button
-                  variant="contained"
-                  startIcon={<PersonIcon />}
-                  onClick={() => setAutoAssignDialog(true)}
-                  size="small"
-                  sx={{
-                    background: 'linear-gradient(135deg, #FFD700 0%, #FFA000 100%)',
-                    color: '#000',
-                    '&:hover': {
-                      background: 'linear-gradient(135deg, #FFA000 0%, #FFD700 100%)',
-                    }
-                  }}
-                >
-                  Auto Assign Premium
-                </Button>
-                <Button
-                  variant="outlined"
-                  startIcon={<PhoneForwardedIcon />}
-                  onClick={handlePushToDialer}
-                  size="small"
-                  color="primary"
-                >
-                  Push to Dialer
-                </Button>
-                <Button
-                  variant="outlined"
-                  startIcon={<VehicleIcon />}
-                  onClick={handleBulkPushToVahan}
-                  size="small"
-                  color="secondary"
-                  disabled={vahanLoading}
-                >
-                  {vahanLoading ? 'Verifying...' : 'Push to Vahan'}
-                </Button>
-                <Button
-                  variant="outlined"
-                  startIcon={<ArchiveIcon />}
-                  onClick={() => {
-                    const updatedLeads = leads.filter(lead => !selectedLeads.includes(lead.id));
-                    setLeads(updatedLeads);
-                    setSelectedLeads([]);
-                    setSnackbar({ open: true, message: `${selectedLeads.length} leads archived`, severity: 'success' });
-                  }}
-                  size="small"
-                  color="warning"
-                >
-                  Archive Selected
-                </Button>
+                    arrow
+                  >
+                    <span>
+                      <Button
+                        variant="outlined"
+                        startIcon={<PushPinIcon />}
+                        onClick={selectedLeads.some(id => pinnedLeads.includes(id)) ? handleBulkUnpin : handlePinToTop}
+                        disabled={!selectedLeads.some(id => pinnedLeads.includes(id)) && pinnedLeads.length + selectedLeads.length > 5}
+                        size="small"
+                        sx={{
+                          borderColor: selectedLeads.some(id => pinnedLeads.includes(id)) ? 'warning.main' : 'secondary.main',
+                          color: selectedLeads.some(id => pinnedLeads.includes(id)) ? 'warning.main' : 'secondary.main',
+                          '&:hover': {
+                            borderColor: selectedLeads.some(id => pinnedLeads.includes(id)) ? 'warning.dark' : 'secondary.dark',
+                            bgcolor: selectedLeads.some(id => pinnedLeads.includes(id))
+                              ? alpha(theme.palette.warning.main, 0.1)
+                              : alpha(theme.palette.secondary.main, 0.1)
+                          },
+                          '&:disabled': {
+                            opacity: 0.5
+                          }
+                        }}
+                      >
+                        {selectedLeads.some(id => pinnedLeads.includes(id)) ? 'Unpin' : 'Pin to Top'}
+                      </Button>
+                    </span>
+                  </Tooltip>
+                  <Button
+                    variant="outlined"
+                    startIcon={<GroupIcon />}
+                    onClick={handleBulkAssignment}
+                    size="small"
+                  >
+                    Manual Assign
+                  </Button>
+                  <Button
+                    variant="contained"
+                    startIcon={<span style={{ fontSize: '1rem' }}>🌐</span>}
+                    onClick={() => {
+                      console.log('🚀 Language Match button clicked');
+                      console.log('Selected leads:', selectedLeads);
+                      handleLanguageBasedAssignment();
+                    }}
+                    size="small"
+                    sx={{
+                      background: 'linear-gradient(135deg, #4CAF50 0%, #2E7D32 100%)',
+                      '&:hover': {
+                        background: 'linear-gradient(135deg, #2E7D32 0%, #4CAF50 100%)',
+                      }
+                    }}
+                  >
+                    Language Match
+                  </Button>
+                  <Button
+                    variant="contained"
+                    startIcon={<PersonIcon />}
+                    onClick={() => setAutoAssignDialog(true)}
+                    size="small"
+                    sx={{
+                      background: 'linear-gradient(135deg, #FFD700 0%, #FFA000 100%)',
+                      color: '#000',
+                      '&:hover': {
+                        background: 'linear-gradient(135deg, #FFA000 0%, #FFD700 100%)',
+                      }
+                    }}
+                  >
+                    Auto Assign Premium
+                  </Button>
+                  <Button
+                    variant="outlined"
+                    startIcon={<PhoneForwardedIcon />}
+                    onClick={handlePushToDialer}
+                    size="small"
+                    color="primary"
+                  >
+                    Push to Dialer
+                  </Button>
+                  <Button
+                    variant="outlined"
+                    startIcon={<VehicleIcon />}
+                    onClick={handleBulkPushToVahan}
+                    size="small"
+                    color="secondary"
+                    disabled={vahanLoading}
+                  >
+                    {vahanLoading ? 'Verifying...' : 'Push to Vahan'}
+                  </Button>
+                  <Button
+                    variant="outlined"
+                    startIcon={<ArchiveIcon />}
+                    onClick={() => {
+                      const updatedLeads = leads.filter(lead => !selectedLeads.includes(lead.id));
+                      setLeads(updatedLeads);
+                      setSelectedLeads([]);
+                      setSnackbar({ open: true, message: `${selectedLeads.length} leads archived`, severity: 'success' });
+                    }}
+                    size="small"
+                    color="warning"
+                  >
+                    Archive Selected
+                  </Button>
+                </Box>
               </Box>
-            </Box>
-          </CardContent>
-        </Card>
-      )}
+            </CardContent>
+          </Card>
+        )}
 
-      {/* Leads Table */}
-      <Card className="healthcare-card">
-        <CardContent>
-          <TableContainer>
-            <Table>
-              <TableHead>
-                <TableRow>
-                  <TableCell padding="checkbox">
-                    <Checkbox
-                      checked={selectedLeads.length === currentLeads.length && currentLeads.length > 0}
-                      indeterminate={selectedLeads.length > 0 && selectedLeads.length < currentLeads.length}
-                      onChange={handleSelectAllLeads}
-                    />
-                  </TableCell>
-                  <TableCell>Lead</TableCell>
-                  <TableCell>Company</TableCell>
-                  <TableCell>Type</TableCell>
-                  <TableCell>Status</TableCell>
-                  <TableCell>Score</TableCell>
-                  <TableCell>Priority</TableCell>
-                  <TableCell>Assigned To</TableCell>
-                  <TableCell>Language</TableCell>
-                  <TableCell>Total Calls</TableCell>
-                  <TableCell>Value</TableCell>
-                  <TableCell>Last Contact</TableCell>
-                  <TableCell align="center">Vahan</TableCell>
-                  <TableCell align="center">Actions</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {currentLeads.map((lead) => (
-                  <TableRow key={lead.id} hover>
+        {/* Leads Table */}
+        <Card className="healthcare-card">
+          <CardContent>
+            <TableContainer>
+              <Table>
+                <TableHead>
+                  <TableRow>
                     <TableCell padding="checkbox">
                       <Checkbox
-                        checked={selectedLeads.includes(lead.id)}
-                        onChange={() => handleSelectLead(lead.id)}
+                        checked={selectedLeads.length === currentLeads.length && currentLeads.length > 0}
+                        indeterminate={selectedLeads.length > 0 && selectedLeads.length < currentLeads.length}
+                        onChange={handleSelectAllLeads}
                       />
                     </TableCell>
-                    <TableCell>
-                      <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                        <Avatar sx={{ 
-                          mr: 2, 
-                          bgcolor: lead.leadType === 'Premium' ? '#FFD700' : theme.palette.primary.main,
-                          color: lead.leadType === 'Premium' ? '#000' : '#fff',
-                          border: lead.leadType === 'Premium' ? '2px solid #FFA000' : 'none'
-                        }}>
-                          {lead.firstName.charAt(0)}{lead.lastName.charAt(0)}
-                        </Avatar>
-                        <Box>
-                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                            <Typography variant="subtitle2" fontWeight="600" sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                              <span style={{ fontSize: '0.9rem' }}>{getLeadTypeIcon(lead.leadType)}</span>
-                              {lead.firstName} {lead.lastName}
-                            </Typography>
-                            {lead.leadType === 'Premium' && (
-                              <Chip
-                                label="PREMIUM"
-                                size="small"
-                                sx={{
-                                  backgroundColor: '#FFD700',
-                                  color: '#000',
-                                  fontWeight: 'bold',
-                                  fontSize: '0.65rem',
-                                  height: '18px'
-                                }}
-                              />
-                            )}
-                          </Box>
-                          <Typography variant="body2" color="text.secondary">
-                            {lead.email}
-                          </Typography>
-                          <Typography variant="body2" color="text.secondary">
-                            {lead.phone}
-                          </Typography>
-                        </Box>
-                      </Box>
-                    </TableCell>
-                    <TableCell>
-                      <Box>
-                        <Typography variant="subtitle2" fontWeight="600">
-                          {lead.company}
-                        </Typography>
-                        <Typography variant="body2" color="text.secondary">
-                          {lead.position}
-                        </Typography>
-                      </Box>
-                    </TableCell>
-                    <TableCell>
-                      <Chip
-                        label={lead.leadType}
-                        size="small"
-                        icon={<span style={{ fontSize: '0.8rem' }}>{getLeadTypeIcon(lead.leadType)}</span>}
-                        sx={{
-                          backgroundColor: alpha(getLeadTypeBadgeColor(lead.leadType), 0.2),
-                          color: lead.leadType === 'Premium' ? '#B8860B' : theme.palette.primary.main,
-                          border: `1px solid ${getLeadTypeBadgeColor(lead.leadType)}`,
-                          fontWeight: 600
-                        }}
-                      />
-                    </TableCell>
-                    <TableCell>
-                      <Chip
-                        label={lead.status}
-                        size="small"
-                        sx={{
-                          backgroundColor: alpha(getStatusColor(lead.status), 0.1),
-                          color: getStatusColor(lead.status),
-                          border: `1px solid ${alpha(getStatusColor(lead.status), 0.3)}`
-                        }}
-                      />
-                    </TableCell>
-                    <TableCell>
-                      <LeadScoringIndicator
-                        score={lead.score || calculateLeadScore(lead)}
-                        stage={lead.status}
-                        showDetails={false}
-                        scoreBreakdown={lead.scoreBreakdown}
-                      />
-                    </TableCell>
-                    <TableCell>
-                      <PriorityIndicator
-                        priority={normalizePriority(lead.priority)}
-                        compact={true}
-                      />
-                    </TableCell>
-                    <TableCell>
-                      <Box>
-                        <Typography variant="body2" fontWeight={lead.assignedTo ? 600 : 400}>
-                          {lead.assignedTo || 'Unassigned'}
-                        </Typography>
-                        {lead.assignmentReason && (
-                          <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.65rem' }}>
-                            {lead.assignmentReason}
-                          </Typography>
-                        )}
-                      </Box>
-                    </TableCell>
-                    <TableCell>
-                      <Chip
-                        label={lead.preferredLanguage || 'English'}
-                        size="small"
-                        variant="outlined"
-                        sx={{ fontSize: '0.7rem' }}
-                      />
-                    </TableCell>
-                    <TableCell>
-                      <Typography variant="body2" fontWeight="600">
-                        {lead.totalCalls || 0}
-                      </Typography>
-                    </TableCell>
-                    <TableCell>
-                      <Typography variant="body2" fontWeight="600">
-                        ₹{lead.value?.toLocaleString() || '0'}
-                      </Typography>
-                    </TableCell>
-                    <TableCell>
-                      <Typography variant="body2" color="text.secondary">
-                        {lead.lastContactDate || 'Never'}
-                      </Typography>
-                    </TableCell>
-                    <TableCell align="center">
-                      {lead.vehicleRegistrationNumber ? (
-                        (() => {
-                          const vahanStatus = getVahanStatus(lead.id);
-                          if (vahanStatus) {
-                            if (vahanStatus.status === 'verified') {
-                              return (
-                                <Tooltip title={`Verified on ${new Date(vahanStatus.verifiedAt).toLocaleDateString()}`}>
-                                  <Chip
-                                    icon={<VerifiedUserIcon />}
-                                    label="Verified"
-                                    color="success"
-                                    size="small"
-                                  />
-                                </Tooltip>
-                              );
-                            } else if (vahanStatus.status === 'failed') {
-                              return (
-                                <Tooltip title="Verification failed">
-                                  <Chip
-                                    icon={<ErrorIcon />}
-                                    label="Failed"
-                                    color="error"
-                                    size="small"
-                                  />
-                                </Tooltip>
-                              );
-                            }
-                          }
-                          return (
-                            <Tooltip title="Click to verify vehicle">
-                              <IconButton
-                                size="small"
-                                onClick={() => handlePushToVahan(lead)}
-                                color="primary"
-                              >
-                                <VehicleIcon />
-                              </IconButton>
-                            </Tooltip>
-                          );
-                        })()
-                      ) : (
-                        <Typography variant="caption" color="text.secondary">
-                          N/A
-                        </Typography>
-                      )}
-                    </TableCell>
-                    <TableCell align="center">
-                      <Box sx={{ display: 'flex', gap: 1, justifyContent: 'center' }}>
-                        <Tooltip title="Call Lead">
-                          <IconButton
-                            size="small"
-                            onClick={() => {
-                              setSelectedCallLead(lead);
-                              setCallDialogOpen(true);
-                            }}
-                            sx={{
-                              color: theme.palette.success.main,
-                              '&:hover': {
-                                bgcolor: alpha(theme.palette.success.main, 0.1)
-                              }
-                            }}
-                          >
-                            <CallIcon />
-                          </IconButton>
-                        </Tooltip>
-                        <Tooltip title="View Details">
-                          <IconButton size="small" onClick={() => handleViewDetails(lead)}>
-                            <ViewIcon />
-                          </IconButton>
-                        </Tooltip>
-                        <Tooltip title="Quick Update">
-                          <IconButton size="small" onClick={() => handleQuickUpdate(lead)}>
-                            <NoteIcon />
-                          </IconButton>
-                        </Tooltip>
-                        <Tooltip title="More Actions">
-                          <IconButton size="small" onClick={(e) => handleMenuOpen(e, lead)}>
-                            <MoreVertIcon />
-                          </IconButton>
-                        </Tooltip>
-                      </Box>
-                    </TableCell>
+                    <TableCell>Lead</TableCell>
+                    <TableCell>Company</TableCell>
+                    <TableCell>Type</TableCell>
+                    <TableCell>Status</TableCell>
+                    <TableCell>Score</TableCell>
+                    <TableCell>Priority</TableCell>
+                    <TableCell>Assigned To</TableCell>
+                    <TableCell>Language</TableCell>
+                    <TableCell>Total Calls</TableCell>
+                    <TableCell>Value</TableCell>
+                    <TableCell>Last Contact</TableCell>
+                    <TableCell align="center">Vahan</TableCell>
+                    <TableCell align="center">Actions</TableCell>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </TableContainer>
-
-          {/* Pagination */}
-          {totalPages > 1 && (
-            <Box sx={{ display: 'flex', justifyContent: 'center', mt: 3 }}>
-              <Pagination
-                count={totalPages}
-                page={currentPage}
-                onChange={(event, value) => setCurrentPage(value)}
-                color="primary"
-              />
-            </Box>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* Add/Edit Lead Dialog */}
-      <Dialog open={openDialog} onClose={handleCloseDialog} maxWidth="md" fullWidth>
-        <DialogTitle>
-          {editingLead ? 'Edit Lead' : 'Add New Lead'}
-        </DialogTitle>
-        <DialogContent>
-          <Grid container spacing={2} sx={{ mt: 1 }}>
-            <Grid item xs={12} sm={6}>
-              <TextField
-                fullWidth
-                label="First Name"
-                value={formData.firstName}
-                onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
-                required
-              />
-            </Grid>
-            <Grid item xs={12} sm={6}>
-              <TextField
-                fullWidth
-                label="Last Name"
-                value={formData.lastName}
-                onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
-                required
-              />
-            </Grid>
-            <Grid item xs={12} sm={6}>
-              <TextField
-                fullWidth
-                label="Email"
-                type="email"
-                value={formData.email}
-                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                required
-              />
-            </Grid>
-            {/* Multi-Phone Mapping */}
-            <Grid item xs={12}>
-              <Typography variant="subtitle2" fontWeight="600" gutterBottom>
-                📞 Phone Numbers
-              </Typography>
-              {phoneNumbers.map((phone, index) => (
-                <Box key={index} sx={{ display: 'flex', gap: 1, mb: 1 }}>
-                  <TextField
-                    fullWidth
-                    label={`Phone ${index + 1}`}
-                    value={phone}
-                    onChange={(e) => handlePhoneChange(index, e.target.value)}
-                    placeholder="+91-XXXXXXXXXX"
-                  />
-                  {phoneNumbers.length > 1 && (
-                    <IconButton onClick={() => handleRemovePhone(index)} color="error">
-                      <DeleteIcon />
-                    </IconButton>
-                  )}
-                </Box>
-              ))}
-              <Button
-                startIcon={<AddIcon />}
-                onClick={handleAddPhone}
-                size="small"
-                variant="outlined"
-              >
-                Add Phone
-              </Button>
-            </Grid>
-            <Grid item xs={12} sm={6}>
-              <TextField
-                fullWidth
-                label="Company"
-                value={formData.company}
-                onChange={(e) => setFormData({ ...formData, company: e.target.value })}
-              />
-            </Grid>
-            <Grid item xs={12} sm={6}>
-              <TextField
-                fullWidth
-                label="Position"
-                value={formData.position}
-                onChange={(e) => setFormData({ ...formData, position: e.target.value })}
-              />
-            </Grid>
-            <Grid item xs={12} sm={6}>
-              <FormControl fullWidth>
-                <InputLabel>Source</InputLabel>
-                <Select
-                  value={formData.source}
-                  label="Source"
-                  onChange={(e) => setFormData({ ...formData, source: e.target.value })}
-                >
-                  {sourceOptions.map(source => (
-                    <MenuItem key={source} value={source}>{source}</MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-            </Grid>
-            <Grid item xs={12} sm={6}>
-              <FormControl fullWidth>
-                <InputLabel>Status</InputLabel>
-                <Select
-                  value={formData.status}
-                  label="Status"
-                  onChange={(e) => setFormData({ ...formData, status: e.target.value })}
-                >
-                  {statusOptions.map(status => (
-                    <MenuItem key={status} value={status}>{status}</MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-            </Grid>
-            <Grid item xs={12} sm={6}>
-              <FormControl fullWidth>
-                <InputLabel>Priority</InputLabel>
-                <Select
-                  value={formData.priority}
-                  label="Priority"
-                  onChange={(e) => setFormData({ ...formData, priority: e.target.value })}
-                >
-                  {priorityOptions.map(priority => (
-                    <MenuItem key={priority} value={priority}>{priority}</MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-            </Grid>
-            <Grid item xs={12} sm={6}>
-              <FormControl fullWidth>
-                <InputLabel>Lead Type</InputLabel>
-                <Select
-                  value={formData.leadType}
-                  label="Lead Type"
-                  onChange={(e) => setFormData({ ...formData, leadType: e.target.value })}
-                >
-                  {leadTypeOptions.map(type => (
-                    <MenuItem key={type} value={type}>
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                        <span>{getLeadTypeIcon(type)}</span>
-                        {type}
-                      </Box>
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-            </Grid>
-            
-            {/* Lead Tagging */}
-            <Grid item xs={12} sm={6}>
-              <FormControl fullWidth>
-                <InputLabel>🏷 Lead Tag</InputLabel>
-                <Select
-                  value={leadTag}
-                  label="🏷 Lead Tag"
-                  onChange={(e) => setLeadTag(e.target.value)}
-                >
-                  {leadTagOptions.map(tag => (
-                    <MenuItem key={tag} value={tag}>{tag}</MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-            </Grid>
-            <Grid item xs={12} sm={6}>
-              <FormControl fullWidth>
-                <InputLabel>Assigned To</InputLabel>
-                <Select
-                  value={formData.assignedToId}
-                  label="Assigned To"
-                  onChange={(e) => {
-                    const agent = agents.find(u => u.id === e.target.value);
-                    setFormData({ 
-                      ...formData, 
-                      assignedToId: e.target.value,
-                      assignedTo: agent?.name || ''
-                    });
-                  }}
-                >
-                  {users.map(user => (
-                    <MenuItem key={user.id} value={user.id}>{user.name}</MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-            </Grid>
-            <Grid item xs={12} sm={6}>
-              <TextField
-                fullWidth
-                label="Value (₹)"
-                type="number"
-                value={formData.value}
-                onChange={(e) => setFormData({ ...formData, value: parseFloat(e.target.value) || 0 })}
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">₹</InputAdornment>
-                  ),
-                }}
-              />
-            </Grid>
-            <Grid item xs={12} sm={6}>
-              <TextField
-                fullWidth
-                label="Expected Close Date"
-                type="date"
-                value={formData.expectedCloseDate}
-                onChange={(e) => setFormData({ ...formData, expectedCloseDate: e.target.value })}
-                InputLabelProps={{ shrink: true }}
-              />
-            </Grid>
-
-            {/* Product and Insurance Fields */}
-            <Grid item xs={12} sm={6}>
-              <FormControl fullWidth>
-                <InputLabel>Product</InputLabel>
-                <Select
-                  value={formData.product}
-                  label="Product"
-                  onChange={(e) => setFormData({ ...formData, product: e.target.value })}
-                >
-                  {productOptions.map(product => (
-                    <MenuItem key={product} value={product}>{product}</MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-            </Grid>
-            <Grid item xs={12} sm={6}>
-              <FormControl fullWidth>
-                <InputLabel>Sub Product</InputLabel>
-                <Select
-                  value={formData.subProduct}
-                  label="Sub Product"
-                  onChange={(e) => {
-                    const newSubProduct = e.target.value;
-                    setFormData({
-                      ...formData,
-                      subProduct: newSubProduct,
-                      // Clear vehicle fields if not Vehicle Insurance
-                      vehicleRegistrationNumber: newSubProduct === 'Vehicle Insurance' ? formData.vehicleRegistrationNumber : '',
-                      vehicleType: newSubProduct === 'Vehicle Insurance' ? formData.vehicleType : ''
-                    });
-                  }}
-                >
-                  {subProductOptions.map(subProduct => (
-                    <MenuItem key={subProduct} value={subProduct}>{subProduct}</MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-            </Grid>
-
-            {/* Vehicle Insurance Fields - Only show when Vehicle Insurance is selected */}
-            {formData.subProduct === 'Vehicle Insurance' && (
-              <>
-                <Grid item xs={12} sm={6}>
-                  <TextField
-                    fullWidth
-                    label="Vehicle Registration Number"
-                    value={formData.vehicleRegistrationNumber}
-                    onChange={(e) => setFormData({ ...formData, vehicleRegistrationNumber: e.target.value })}
-                    placeholder="e.g., MH12AB1234"
-                  />
-                </Grid>
-                <Grid item xs={12} sm={6}>
-                  <FormControl fullWidth>
-                    <InputLabel>Vehicle Type</InputLabel>
-                    <Select
-                      value={formData.vehicleType}
-                      label="Vehicle Type"
-                      onChange={(e) => setFormData({ ...formData, vehicleType: e.target.value })}
+                </TableHead>
+                <TableBody>
+                  {currentLeads.map((lead) => (
+                    <TableRow
+                      key={lead.id}
+                      hover
+                      sx={{
+                        bgcolor: pinnedLeads.includes(lead.id)
+                          ? alpha(theme.palette.secondary.main, 0.08)
+                          : 'transparent',
+                        borderLeft: pinnedLeads.includes(lead.id)
+                          ? `4px solid ${theme.palette.secondary.main}`
+                          : 'none',
+                        '&:hover': {
+                          bgcolor: pinnedLeads.includes(lead.id)
+                            ? alpha(theme.palette.secondary.main, 0.15)
+                            : alpha(theme.palette.action.hover, 1)
+                        }
+                      }}
                     >
-                      {vehicleTypeOptions.map(type => (
-                        <MenuItem key={type} value={type}>{type}</MenuItem>
-                      ))}
-                    </Select>
-                  </FormControl>
-                </Grid>
-              </>
-            )}
-
-            <Grid item xs={12} sm={6}>
-              <FormControl fullWidth>
-                <InputLabel>Preferred Language</InputLabel>
-                <Select
-                  value={formData.preferredLanguage || 'English'}
-                  label="Preferred Language"
-                  onChange={(e) => setFormData({ ...formData, preferredLanguage: e.target.value })}
-                >
-                  <MenuItem value="English">English</MenuItem>
-                  <MenuItem value="Hindi">Hindi</MenuItem>
-                  <MenuItem value="Bengali">Bengali</MenuItem>
-                  <MenuItem value="Tamil">Tamil</MenuItem>
-                  <MenuItem value="Telugu">Telugu</MenuItem>
-                  <MenuItem value="Marathi">Marathi</MenuItem>
-                  <MenuItem value="Gujarati">Gujarati</MenuItem>
-                  <MenuItem value="Kannada">Kannada</MenuItem>
-                  <MenuItem value="Punjabi">Punjabi</MenuItem>
-                  <MenuItem value="Urdu">Urdu</MenuItem>
-                </Select>
-              </FormControl>
-            </Grid>
-            <Grid item xs={12}>
-              <TextField
-                fullWidth
-                label="Notes"
-                multiline
-                rows={3}
-                value={formData.notes}
-                onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-              />
-            </Grid>
-          </Grid>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={handleCloseDialog}>Cancel</Button>
-          <Button
-            onClick={handleSaveLead}
-            variant="contained"
-            disabled={loading}
-            startIcon={loading ? <CircularProgress size={20} /> : null}
-          >
-            {loading ? 'Saving...' : (editingLead ? 'Update' : 'Save')}
-          </Button>
-        </DialogActions>
-      </Dialog>
-
-      {/* Bulk Assignment Dialog */}
-      <Dialog open={bulkAssignmentDialog} onClose={() => setBulkAssignmentDialog(false)}>
-        <DialogTitle>Bulk Assign Leads</DialogTitle>
-        <DialogContent>
-          <Typography variant="body2" sx={{ mb: 2 }}>
-            Assign {selectedLeads.length} selected lead(s) to an agent:
-          </Typography>
-          <FormControl fullWidth>
-            <InputLabel>Select Agent</InputLabel>
-            <Select
-              value={bulkAssignmentAgent}
-              label="Select Agent"
-              onChange={(e) => setBulkAssignmentAgent(e.target.value)}
-            >
-              {agents.map(agent => (
-                <MenuItem key={agent.id} value={agent.id}>
-                  <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
-                    <span>{agent.name}</span>
-                    <Chip
-                      label={`⭐ ${agent.rating}`}
-                      size="small"
-                      sx={{ ml: 1, fontSize: '0.7rem', height: '20px' }}
-                    />
-                  </Box>
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setBulkAssignmentDialog(false)}>Cancel</Button>
-          <Button onClick={handleConfirmBulkAssignment} variant="contained">
-            Assign Leads
-          </Button>
-        </DialogActions>
-      </Dialog>
-
-      {/* Quick Update Dialog */}
-      <Dialog open={quickUpdateDialog} onClose={() => setQuickUpdateDialog(false)} maxWidth="sm" fullWidth>
-        <DialogTitle>Quick Update - {selectedLead?.firstName} {selectedLead?.lastName}</DialogTitle>
-        <DialogContent>
-          <Grid container spacing={2} sx={{ mt: 1 }}>
-            <Grid item xs={12}>
-              <FormControl fullWidth>
-                <InputLabel>Status</InputLabel>
-                <Select
-                  value={quickUpdateData.status}
-                  label="Status"
-                  onChange={(e) => setQuickUpdateData({ ...quickUpdateData, status: e.target.value })}
-                >
-                  {statusOptions.map(status => (
-                    <MenuItem key={status} value={status}>{status}</MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-            </Grid>
-            <Grid item xs={12}>
-              <TextField
-                fullWidth
-                label="Follow-up Date"
-                type="date"
-                value={quickUpdateData.followUpDate}
-                onChange={(e) => setQuickUpdateData({ ...quickUpdateData, followUpDate: e.target.value })}
-                InputLabelProps={{ shrink: true }}
-              />
-            </Grid>
-            <Grid item xs={12}>
-              <TextField
-                fullWidth
-                multiline
-                rows={4}
-                label="Notes"
-                value={quickUpdateData.notes}
-                onChange={(e) => setQuickUpdateData({ ...quickUpdateData, notes: e.target.value })}
-                placeholder="Add notes about this lead..."
-              />
-            </Grid>
-          </Grid>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setQuickUpdateDialog(false)}>Cancel</Button>
-          <Button onClick={handleSaveQuickUpdate} variant="contained">
-            Save Updates
-          </Button>
-        </DialogActions>
-      </Dialog>
-
-      {/* Actions Menu */}
-      <Menu
-        anchorEl={anchorEl}
-        open={Boolean(anchorEl)}
-        onClose={handleMenuClose}
-      >
-        <MenuItem onClick={() => {
-          handleSendEmail(selectedLead);
-          handleMenuClose();
-        }}>
-          <ListItemIcon>
-            <EmailIcon fontSize="small" />
-          </ListItemIcon>
-          <ListItemText>Send Email</ListItemText>
-        </MenuItem>
-        <Divider />
-        <MenuItem onClick={() => {
-          handleArchiveLead(selectedLead?.id);
-          handleMenuClose();
-        }}>
-          <ListItemIcon>
-            <ArchiveIcon fontSize="small" />
-          </ListItemIcon>
-          <ListItemText>Archive</ListItemText>
-        </MenuItem>
-      </Menu>
-
-      {/* Data Provider Upload Dialog */}
-      <Dialog open={uploadDialog} onClose={() => setUploadDialog(false)} maxWidth="sm" fullWidth>
-        <DialogTitle>Data Provider Upload</DialogTitle>
-        <DialogContent>
-          <Box sx={{ mt: 2 }}>
-            <Typography variant="body2" color="text.secondary" gutterBottom>
-              Upload Excel/CSV file from data provider
-            </Typography>
-            <Button
-              variant="outlined"
-              component="label"
-              fullWidth
-              startIcon={<CloudUploadIcon />}
-              sx={{ mt: 2, mb: 2 }}
-            >
-              Choose File (Excel/CSV)
-              <input
-                type="file"
-                hidden
-                accept=".xlsx,.xls,.csv"
-                onChange={handleFileUpload}
-              />
-            </Button>
-            {uploadFile && (
-              <Typography variant="body2" color="primary" gutterBottom>
-                Selected: {uploadFile.name}
-              </Typography>
-            )}
-            {loading && (
-              <Box sx={{ mt: 2 }}>
-                <LinearProgress variant="determinate" value={uploadProgress} />
-                <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-                  Uploading... {uploadProgress}%
-                </Typography>
-              </Box>
-            )}
-            {uploadSuccess && (
-              <Alert severity="success" sx={{ mt: 2 }}>
-                ✅ Upload Success! File processed successfully.
-              </Alert>
-            )}
-          </Box>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setUploadDialog(false)}>Cancel</Button>
-          <Button
-            onClick={handleUploadSubmit}
-            variant="contained"
-            disabled={!uploadFile || loading}
-          >
-            Upload
-          </Button>
-        </DialogActions>
-      </Dialog>
-
-      {/* Expiry Check Dialog */}
-      <Dialog open={expiryCheckDialog} onClose={() => setExpiryCheckDialog(false)} maxWidth="sm" fullWidth>
-        <DialogTitle>
-          📅 Policy Expiry Verification
-        </DialogTitle>
-        <DialogContent>
-          {selectedPolicy && (
-            <Box sx={{ mt: 2 }}>
-              <Typography variant="h6" gutterBottom>
-                {selectedPolicy.policyNumber}
-              </Typography>
-              
-              <Grid container spacing={2} sx={{ mb: 3 }}>
-                <Grid item xs={6}>
-                  <Paper sx={{ p: 2, bgcolor: 'primary.light', color: 'primary.contrastText' }}>
-                    <Typography variant="caption">CRM System</Typography>
-                    <Typography variant="h6">{selectedPolicy.crmExpiryDate}</Typography>
-                  </Paper>
-                </Grid>
-                <Grid item xs={6}>
-                  <Paper sx={{ p: 2, bgcolor: 'secondary.light', color: 'secondary.contrastText' }}>
-                    <Typography variant="caption">NAV System</Typography>
-                    <Typography variant="h6">{selectedPolicy.navExpiryDate}</Typography>
-                  </Paper>
-                </Grid>
-              </Grid>
-              
-              <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                <Typography variant="body1" sx={{ mr: 1 }}>Status:</Typography>
-                <Typography variant="h6">
-                  {getStatusIcon(getExpiryStatus(selectedPolicy.crmExpiryDate))}
-                </Typography>
-                <Typography variant="body1" sx={{ ml: 1, fontWeight: 600 }}>
-                  {getExpiryStatus(selectedPolicy.crmExpiryDate)}
-                </Typography>
-              </Box>
-              
-              <Typography variant="body2" color="text.secondary" gutterBottom>
-                Customer: {selectedPolicy.customerName}
-              </Typography>
-              
-              <Typography variant="body2" color="text.secondary">
-                Vehicle: {selectedPolicy.vehicleNumber}
-              </Typography>
-              
-              {navCheckLoading && (
-                <Box sx={{ mt: 2, display: 'flex', alignItems: 'center' }}>
-                  <CircularProgress size={20} sx={{ mr: 1 }} />
-                  <Typography variant="body2">Verifying with NAV system...</Typography>
-                </Box>
-              )}
-            </Box>
-          )}
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setExpiryCheckDialog(false)}>Close</Button>
-          <Button 
-            onClick={handleNavVerification} 
-            variant="contained"
-            disabled={navCheckLoading}
-            startIcon={navCheckLoading ? <CircularProgress size={16} /> : null}
-          >
-            {navCheckLoading ? 'Verifying...' : 'Verify with NAV'}
-          </Button>
-        </DialogActions>
-      </Dialog>
-
-      {/* Snackbar */}
-      <Snackbar
-        open={snackbar.open}
-        autoHideDuration={6000}
-        onClose={() => setSnackbar({ ...snackbar, open: false })}
-      >
-        <Alert
-          onClose={() => setSnackbar({ ...snackbar, open: false })}
-          severity={snackbar.severity}
-          sx={{ width: '100%' }}
-        >
-          {snackbar.message}
-        </Alert>
-      </Snackbar>
-
-      {/* Bulk Upload Component */}
-      <BulkUpload
-        open={bulkUploadOpen}
-        onClose={() => setBulkUploadOpen(false)}
-        title="Bulk Upload Leads"
-        source="leads"
-        existingData={leads}
-        requiredFields={['firstName', 'lastName', 'email', 'phone']}
-        fieldMapping={{
-          'First Name': 'firstName',
-          'Last Name': 'lastName',
-          'Email': 'email',
-          'Phone': 'phone',
-          'Company': 'company',
-          'Position': 'position',
-          'Source': 'source',
-          'Status': 'status',
-          'Priority': 'priority',
-          'Value': 'value',
-          'Expected Close Date': 'expectedCloseDate',
-          'Notes': 'notes',
-          'Product': 'product',
-          'Sub Product': 'subProduct',
-          'Vehicle Registration Number': 'vehicleRegistrationNumber',
-          'Vehicle Type': 'vehicleType'
-        }}
-        onUploadComplete={(validRecords, failedRecords) => {
-          // Add uploaded leads to the list
-          const newLeads = validRecords.map((record, index) => ({
-            id: Math.max(...leads.map(l => l.id)) + index + 1,
-            ...record.record,
-            createdAt: new Date().toISOString().split('T')[0],
-            updatedAt: new Date().toISOString().split('T')[0],
-            lastContactDate: null,
-            tags: []
-          }));
-
-          setLeads([...leads, ...newLeads]);
-          setBulkUploadOpen(false);
-          setSnackbar({
-            open: true,
-            message: `${validRecords.length} leads uploaded successfully! ${failedRecords.length > 0 ? `${failedRecords.length} records failed.` : ''}`,
-            severity: 'success'
-          });
-
-          // Show upload history if there were failures
-          if (failedRecords.length > 0) {
-            setShowUploadHistory(true);
-          }
-        }}
-        allowOverride={true}
-      />
-
-      {/* Agent Table Dialog */}
-      <Dialog open={agentTableOpen} onClose={() => setAgentTableOpen(false)} maxWidth="md" fullWidth>
-        <DialogTitle>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            <GroupIcon color="primary" />
-            <Typography variant="h6" fontWeight="600">Agent Performance Dashboard</Typography>
-          </Box>
-        </DialogTitle>
-        <DialogContent>
-          <TableContainer>
-            <Table>
-              <TableHead>
-                <TableRow>
-                  <TableCell>Agent</TableCell>
-                  <TableCell>Rating</TableCell>
-                  <TableCell>Total Leads</TableCell>
-                  <TableCell>Closed Deals</TableCell>
-                  <TableCell>Success Rate</TableCell>
-                  <TableCell>Languages</TableCell>
-                  <TableCell>Specialization</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {agents.map((agent) => {
-                  const successRate = ((agent.closedDeals / agent.totalLeads) * 100).toFixed(1);
-                  const currentWorkload = leads.filter(l => l.assignedToId === agent.id).length;
-                  return (
-                    <TableRow key={agent.id} hover>
+                      <TableCell padding="checkbox">
+                        <Checkbox
+                          checked={selectedLeads.includes(lead.id)}
+                          onChange={() => handleSelectLead(lead.id)}
+                        />
+                      </TableCell>
                       <TableCell>
                         <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                          <Avatar sx={{ mr: 2, bgcolor: theme.palette.primary.main }}>
-                            {agent.name.charAt(0)}
+                          <Avatar sx={{
+                            mr: 2,
+                            bgcolor: lead.leadType === 'Premium' ? '#FFD700' : theme.palette.primary.main,
+                            color: lead.leadType === 'Premium' ? '#000' : '#fff',
+                            border: lead.leadType === 'Premium' ? '2px solid #FFA000' : 'none'
+                          }}>
+                            {lead.firstName.charAt(0)}{lead.lastName.charAt(0)}
                           </Avatar>
                           <Box>
-                            <Typography variant="subtitle2" fontWeight="600">
-                              {agent.name}
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                              <Typography variant="subtitle2" fontWeight="600" sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                                <span style={{ fontSize: '0.9rem' }}>{getLeadTypeIcon(lead.leadType)}</span>
+                                {lead.firstName} {lead.lastName}
+                              </Typography>
+                              {pinnedLeads.includes(lead.id) && (
+                                <Tooltip title="Pinned to top" arrow>
+                                  <PushPinIcon
+                                    fontSize="small"
+                                    sx={{
+                                      color: theme.palette.secondary.main,
+                                      transform: 'rotate(45deg)',
+                                      fontSize: '1rem'
+                                    }}
+                                  />
+                                </Tooltip>
+                              )}
+                              {lead.leadType === 'Premium' && (
+                                <Chip
+                                  label="PREMIUM"
+                                  size="small"
+                                  sx={{
+                                    backgroundColor: '#FFD700',
+                                    color: '#000',
+                                    fontWeight: 'bold',
+                                    fontSize: '0.65rem',
+                                    height: '18px'
+                                  }}
+                                />
+                              )}
+                            </Box>
+                            <Typography variant="body2" color="text.secondary">
+                              {lead.email}
                             </Typography>
-                            <Typography variant="caption" color="text.secondary">
-                              Current: {currentWorkload} leads
+                            <Typography variant="body2" color="text.secondary">
+                              {lead.phone}
                             </Typography>
                           </Box>
                         </Box>
                       </TableCell>
                       <TableCell>
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                          <Typography variant="h6" fontWeight="600" color="warning.main">
-                            ⭐ {agent.rating}
+                        <Box>
+                          <Typography variant="subtitle2" fontWeight="600">
+                            {lead.company}
                           </Typography>
-                          <LinearProgress
-                            variant="determinate"
-                            value={(agent.rating / 5) * 100}
-                            sx={{ width: 60, height: 6, borderRadius: 3 }}
-                          />
+                          <Typography variant="body2" color="text.secondary">
+                            {lead.position}
+                          </Typography>
                         </Box>
-                      </TableCell>
-                      <TableCell>
-                        <Typography variant="body2" fontWeight="600">
-                          {agent.totalLeads}
-                        </Typography>
-                      </TableCell>
-                      <TableCell>
-                        <Typography variant="body2" fontWeight="600" color="success.main">
-                          {agent.closedDeals}
-                        </Typography>
                       </TableCell>
                       <TableCell>
                         <Chip
-                          label={`${successRate}%`}
+                          label={lead.leadType}
                           size="small"
+                          icon={<span style={{ fontSize: '0.8rem' }}>{getLeadTypeIcon(lead.leadType)}</span>}
                           sx={{
-                            backgroundColor: successRate >= 70 ? alpha(theme.palette.success.main, 0.1) : 
-                                           successRate >= 50 ? alpha(theme.palette.warning.main, 0.1) : 
-                                           alpha(theme.palette.error.main, 0.1),
-                            color: successRate >= 70 ? theme.palette.success.main : 
-                                  successRate >= 50 ? theme.palette.warning.main : 
-                                  theme.palette.error.main,
+                            backgroundColor: alpha(getLeadTypeBadgeColor(lead.leadType), 0.2),
+                            color: lead.leadType === 'Premium' ? '#B8860B' : theme.palette.primary.main,
+                            border: `1px solid ${getLeadTypeBadgeColor(lead.leadType)}`,
                             fontWeight: 600
                           }}
                         />
                       </TableCell>
                       <TableCell>
-                        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5, maxWidth: 200 }}>
-                          {agent.languages.map(language => (
-                            <Chip
-                              key={language}
-                              label={language}
-                              size="small"
-                              variant={language === 'English' ? 'filled' : 'outlined'}
-                              color={language === 'English' ? 'primary' : 'default'}
-                              sx={{ 
-                                fontSize: '0.65rem', 
-                                height: '20px',
-                                fontWeight: language === 'English' ? 600 : 400
-                              }}
-                            />
-                          ))}
+                        <Chip
+                          label={lead.status}
+                          size="small"
+                          sx={{
+                            backgroundColor: alpha(getStatusColor(lead.status), 0.1),
+                            color: getStatusColor(lead.status),
+                            border: `1px solid ${alpha(getStatusColor(lead.status), 0.3)}`
+                          }}
+                        />
+                      </TableCell>
+                      <TableCell>
+                        <LeadScoringIndicator
+                          score={lead.score || calculateLeadScore(lead)}
+                          stage={lead.status}
+                          showDetails={false}
+                          scoreBreakdown={lead.scoreBreakdown}
+                        />
+                      </TableCell>
+                      <TableCell>
+                        <PriorityIndicator
+                          priority={normalizePriority(lead.priority)}
+                          compact={true}
+                        />
+                      </TableCell>
+                      <TableCell>
+                        <Box>
+                          <Typography variant="body2" fontWeight={lead.assignedTo ? 600 : 400}>
+                            {lead.assignedTo || 'Unassigned'}
+                          </Typography>
+                          {lead.assignmentReason && (
+                            <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.65rem' }}>
+                              {lead.assignmentReason}
+                            </Typography>
+                          )}
                         </Box>
                       </TableCell>
                       <TableCell>
-                        <Typography variant="body2" color="text.secondary">
-                          {agent.specialization}
+                        <Chip
+                          label={lead.preferredLanguage || 'English'}
+                          size="small"
+                          variant="outlined"
+                          sx={{ fontSize: '0.7rem' }}
+                        />
+                      </TableCell>
+                      <TableCell>
+                        <Typography variant="body2" fontWeight="600">
+                          {lead.totalCalls || 0}
                         </Typography>
                       </TableCell>
+                      <TableCell>
+                        <Typography variant="body2" fontWeight="600">
+                          ₹{lead.value?.toLocaleString() || '0'}
+                        </Typography>
+                      </TableCell>
+                      <TableCell>
+                        <Typography variant="body2" color="text.secondary">
+                          {lead.lastContactDate || 'Never'}
+                        </Typography>
+                      </TableCell>
+                      <TableCell align="center">
+                        {lead.vehicleRegistrationNumber ? (
+                          (() => {
+                            const vahanStatus = getVahanStatus(lead.id);
+                            if (vahanStatus) {
+                              if (vahanStatus.status === 'verified') {
+                                return (
+                                  <Tooltip title={`Verified on ${new Date(vahanStatus.verifiedAt).toLocaleDateString()}`}>
+                                    <Chip
+                                      icon={<VerifiedUserIcon />}
+                                      label="Verified"
+                                      color="success"
+                                      size="small"
+                                    />
+                                  </Tooltip>
+                                );
+                              } else if (vahanStatus.status === 'failed') {
+                                return (
+                                  <Tooltip title="Verification failed">
+                                    <Chip
+                                      icon={<ErrorIcon />}
+                                      label="Failed"
+                                      color="error"
+                                      size="small"
+                                    />
+                                  </Tooltip>
+                                );
+                              }
+                            }
+                            return (
+                              <Tooltip title="Click to verify vehicle">
+                                <IconButton
+                                  size="small"
+                                  onClick={() => handlePushToVahan(lead)}
+                                  color="primary"
+                                >
+                                  <VehicleIcon />
+                                </IconButton>
+                              </Tooltip>
+                            );
+                          })()
+                        ) : (
+                          <Typography variant="caption" color="text.secondary">
+                            N/A
+                          </Typography>
+                        )}
+                      </TableCell>
+                      <TableCell align="center">
+                        <Box sx={{ display: 'flex', gap: 1, justifyContent: 'center' }}>
+                          <Tooltip title="Call Lead">
+                            <IconButton
+                              size="small"
+                              onClick={() => {
+                                setSelectedCallLead(lead);
+                                setCallDialogOpen(true);
+                              }}
+                              sx={{
+                                color: theme.palette.success.main,
+                                '&:hover': {
+                                  bgcolor: alpha(theme.palette.success.main, 0.1)
+                                }
+                              }}
+                            >
+                              <CallIcon />
+                            </IconButton>
+                          </Tooltip>
+                          <Tooltip title="View Details">
+                            <IconButton size="small" onClick={() => handleViewDetails(lead)}>
+                              <ViewIcon />
+                            </IconButton>
+                          </Tooltip>
+                          <Tooltip title="Quick Update">
+                            <IconButton size="small" onClick={() => handleQuickUpdate(lead)}>
+                              <NoteIcon />
+                            </IconButton>
+                          </Tooltip>
+                          <Tooltip title="More Actions">
+                            <IconButton size="small" onClick={(e) => handleMenuOpen(e, lead)}>
+                              <MoreVertIcon />
+                            </IconButton>
+                          </Tooltip>
+                        </Box>
+                      </TableCell>
                     </TableRow>
-                  );
-                })}
-              </TableBody>
-            </Table>
-          </TableContainer>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setAgentTableOpen(false)}>Close</Button>
-        </DialogActions>
-      </Dialog>
+                  ))}
+                </TableBody>
+              </Table>
+            </TableContainer>
 
-      {/* Auto Assignment Dialog */}
-      <Dialog open={autoAssignDialog} onClose={() => setAutoAssignDialog(false)} maxWidth="sm" fullWidth>
-        <DialogTitle>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            <span style={{ fontSize: '1.5rem' }}>👑</span>
-            <Typography variant="h6" fontWeight="600">Auto-Assign Premium Leads</Typography>
-          </Box>
-        </DialogTitle>
-        <DialogContent>
-          <Box sx={{ mt: 2 }}>
-            <Typography variant="body1" gutterBottom>
-              This will automatically assign all unassigned Premium leads to the top-rated agents based on:
+            {/* Pagination */}
+            {totalPages > 1 && (
+              <Box sx={{ display: 'flex', justifyContent: 'center', mt: 3 }}>
+                <Pagination
+                  count={totalPages}
+                  page={currentPage}
+                  onChange={(event, value) => setCurrentPage(value)}
+                  color="primary"
+                />
+              </Box>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Add/Edit Lead Dialog */}
+        <Dialog open={openDialog} onClose={handleCloseDialog} maxWidth="md" fullWidth>
+          <DialogTitle>
+            {editingLead ? 'Edit Lead' : 'Add New Lead'}
+          </DialogTitle>
+          <DialogContent>
+            <Grid container spacing={2} sx={{ mt: 1 }}>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  fullWidth
+                  label="First Name"
+                  value={formData.firstName}
+                  onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
+                  required
+                />
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  fullWidth
+                  label="Last Name"
+                  value={formData.lastName}
+                  onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
+                  required
+                />
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  fullWidth
+                  label="Email"
+                  type="email"
+                  value={formData.email}
+                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                  required
+                />
+              </Grid>
+              {/* Multi-Phone Mapping */}
+              <Grid item xs={12}>
+                <Typography variant="subtitle2" fontWeight="600" gutterBottom>
+                  📞 Phone Numbers
+                </Typography>
+                {phoneNumbers.map((phone, index) => (
+                  <Box key={index} sx={{ display: 'flex', gap: 1, mb: 1 }}>
+                    <TextField
+                      fullWidth
+                      label={`Phone ${index + 1}`}
+                      value={phone}
+                      onChange={(e) => handlePhoneChange(index, e.target.value)}
+                      placeholder="+91-XXXXXXXXXX"
+                    />
+                    {phoneNumbers.length > 1 && (
+                      <IconButton onClick={() => handleRemovePhone(index)} color="error">
+                        <DeleteIcon />
+                      </IconButton>
+                    )}
+                  </Box>
+                ))}
+                <Button
+                  startIcon={<AddIcon />}
+                  onClick={handleAddPhone}
+                  size="small"
+                  variant="outlined"
+                >
+                  Add Phone
+                </Button>
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  fullWidth
+                  label="Company"
+                  value={formData.company}
+                  onChange={(e) => setFormData({ ...formData, company: e.target.value })}
+                />
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  fullWidth
+                  label="Position"
+                  value={formData.position}
+                  onChange={(e) => setFormData({ ...formData, position: e.target.value })}
+                />
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <FormControl fullWidth>
+                  <InputLabel>Source</InputLabel>
+                  <Select
+                    value={formData.source}
+                    label="Source"
+                    onChange={(e) => setFormData({ ...formData, source: e.target.value })}
+                  >
+                    {sourceOptions.map(source => (
+                      <MenuItem key={source} value={source}>{source}</MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <FormControl fullWidth>
+                  <InputLabel>Status</InputLabel>
+                  <Select
+                    value={formData.status}
+                    label="Status"
+                    onChange={(e) => setFormData({ ...formData, status: e.target.value })}
+                  >
+                    {statusOptions.map(status => (
+                      <MenuItem key={status} value={status}>{status}</MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <FormControl fullWidth>
+                  <InputLabel>Priority</InputLabel>
+                  <Select
+                    value={formData.priority}
+                    label="Priority"
+                    onChange={(e) => setFormData({ ...formData, priority: e.target.value })}
+                  >
+                    {priorityOptions.map(priority => (
+                      <MenuItem key={priority} value={priority}>{priority}</MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <FormControl fullWidth>
+                  <InputLabel>Lead Type</InputLabel>
+                  <Select
+                    value={formData.leadType}
+                    label="Lead Type"
+                    onChange={(e) => setFormData({ ...formData, leadType: e.target.value })}
+                  >
+                    {leadTypeOptions.map(type => (
+                      <MenuItem key={type} value={type}>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                          <span>{getLeadTypeIcon(type)}</span>
+                          {type}
+                        </Box>
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+              </Grid>
+
+              {/* Lead Tagging */}
+              <Grid item xs={12} sm={6}>
+                <FormControl fullWidth>
+                  <InputLabel>🏷 Lead Tag</InputLabel>
+                  <Select
+                    value={leadTag}
+                    label="🏷 Lead Tag"
+                    onChange={(e) => setLeadTag(e.target.value)}
+                  >
+                    {leadTagOptions.map(tag => (
+                      <MenuItem key={tag} value={tag}>{tag}</MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <FormControl fullWidth>
+                  <InputLabel>Assigned To</InputLabel>
+                  <Select
+                    value={formData.assignedToId}
+                    label="Assigned To"
+                    onChange={(e) => {
+                      const agent = agents.find(u => u.id === e.target.value);
+                      setFormData({
+                        ...formData,
+                        assignedToId: e.target.value,
+                        assignedTo: agent?.name || ''
+                      });
+                    }}
+                  >
+                    {users.map(user => (
+                      <MenuItem key={user.id} value={user.id}>{user.name}</MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  fullWidth
+                  label="Value (₹)"
+                  type="number"
+                  value={formData.value}
+                  onChange={(e) => setFormData({ ...formData, value: parseFloat(e.target.value) || 0 })}
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start">₹</InputAdornment>
+                    ),
+                  }}
+                />
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  fullWidth
+                  label="Expected Close Date"
+                  type="date"
+                  value={formData.expectedCloseDate}
+                  onChange={(e) => setFormData({ ...formData, expectedCloseDate: e.target.value })}
+                  InputLabelProps={{ shrink: true }}
+                />
+              </Grid>
+
+              {/* Product and Insurance Fields */}
+              <Grid item xs={12} sm={6}>
+                <FormControl fullWidth>
+                  <InputLabel>Product</InputLabel>
+                  <Select
+                    value={formData.product}
+                    label="Product"
+                    onChange={(e) => setFormData({ ...formData, product: e.target.value })}
+                  >
+                    {productOptions.map(product => (
+                      <MenuItem key={product} value={product}>{product}</MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <FormControl fullWidth>
+                  <InputLabel>Sub Product</InputLabel>
+                  <Select
+                    value={formData.subProduct}
+                    label="Sub Product"
+                    onChange={(e) => {
+                      const newSubProduct = e.target.value;
+                      setFormData({
+                        ...formData,
+                        subProduct: newSubProduct,
+                        // Clear vehicle fields if not Vehicle Insurance
+                        vehicleRegistrationNumber: newSubProduct === 'Vehicle Insurance' ? formData.vehicleRegistrationNumber : '',
+                        vehicleType: newSubProduct === 'Vehicle Insurance' ? formData.vehicleType : ''
+                      });
+                    }}
+                  >
+                    {subProductOptions.map(subProduct => (
+                      <MenuItem key={subProduct} value={subProduct}>{subProduct}</MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+              </Grid>
+
+              {/* Vehicle Insurance Fields - Only show when Vehicle Insurance is selected */}
+              {formData.subProduct === 'Vehicle Insurance' && (
+                <>
+                  <Grid item xs={12} sm={6}>
+                    <TextField
+                      fullWidth
+                      label="Vehicle Registration Number"
+                      value={formData.vehicleRegistrationNumber}
+                      onChange={(e) => setFormData({ ...formData, vehicleRegistrationNumber: e.target.value })}
+                      placeholder="e.g., MH12AB1234"
+                    />
+                  </Grid>
+                  <Grid item xs={12} sm={6}>
+                    <FormControl fullWidth>
+                      <InputLabel>Vehicle Type</InputLabel>
+                      <Select
+                        value={formData.vehicleType}
+                        label="Vehicle Type"
+                        onChange={(e) => setFormData({ ...formData, vehicleType: e.target.value })}
+                      >
+                        {vehicleTypeOptions.map(type => (
+                          <MenuItem key={type} value={type}>{type}</MenuItem>
+                        ))}
+                      </Select>
+                    </FormControl>
+                  </Grid>
+                </>
+              )}
+
+              <Grid item xs={12} sm={6}>
+                <FormControl fullWidth>
+                  <InputLabel>Preferred Language</InputLabel>
+                  <Select
+                    value={formData.preferredLanguage || 'English'}
+                    label="Preferred Language"
+                    onChange={(e) => setFormData({ ...formData, preferredLanguage: e.target.value })}
+                  >
+                    <MenuItem value="English">English</MenuItem>
+                    <MenuItem value="Hindi">Hindi</MenuItem>
+                    <MenuItem value="Bengali">Bengali</MenuItem>
+                    <MenuItem value="Tamil">Tamil</MenuItem>
+                    <MenuItem value="Telugu">Telugu</MenuItem>
+                    <MenuItem value="Marathi">Marathi</MenuItem>
+                    <MenuItem value="Gujarati">Gujarati</MenuItem>
+                    <MenuItem value="Kannada">Kannada</MenuItem>
+                    <MenuItem value="Punjabi">Punjabi</MenuItem>
+                    <MenuItem value="Urdu">Urdu</MenuItem>
+                  </Select>
+                </FormControl>
+              </Grid>
+              <Grid item xs={12}>
+                <TextField
+                  fullWidth
+                  label="Notes"
+                  multiline
+                  rows={3}
+                  value={formData.notes}
+                  onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+                />
+              </Grid>
+            </Grid>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={handleCloseDialog}>Cancel</Button>
+            <Button
+              onClick={handleSaveLead}
+              variant="contained"
+              disabled={loading}
+              startIcon={loading ? <CircularProgress size={20} /> : null}
+            >
+              {loading ? 'Saving...' : (editingLead ? 'Update' : 'Save')}
+            </Button>
+          </DialogActions>
+        </Dialog>
+
+        {/* Bulk Assignment Dialog */}
+        <Dialog open={bulkAssignmentDialog} onClose={() => setBulkAssignmentDialog(false)}>
+          <DialogTitle>Bulk Assign Leads</DialogTitle>
+          <DialogContent>
+            <Typography variant="body2" sx={{ mb: 2 }}>
+              Assign {selectedLeads.length} selected lead(s) to an agent:
             </Typography>
-            <Box sx={{ ml: 2, mt: 2 }}>
-              <Typography variant="body2" sx={{ mb: 1 }}>• Agent rating (highest first)</Typography>
-              <Typography variant="body2" sx={{ mb: 1 }}>• Current workload (balanced distribution)</Typography>
-              <Typography variant="body2" sx={{ mb: 1 }}>• Agent specialization</Typography>
-            </Box>
-            
-            <Box sx={{ mt: 3, p: 2, bgcolor: 'info.light', borderRadius: 1 }}>
-              <Typography variant="subtitle2" fontWeight="600" gutterBottom>
-                Premium Leads to Assign:
-              </Typography>
-              <Typography variant="h4" color="primary" fontWeight="600">
-                {leads.filter(lead => lead.leadType === 'Premium' && !lead.assignedTo).length}
-              </Typography>
-            </Box>
-
-            <Box sx={{ mt: 2, p: 2, bgcolor: 'warning.light', borderRadius: 1 }}>
-              <Typography variant="subtitle2" fontWeight="600" gutterBottom>
-                Top Agents by Rating:
-              </Typography>
-              {[...agents].sort((a, b) => b.rating - a.rating).slice(0, 3).map((agent, index) => (
-                <Box key={agent.id} sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
-                  <Typography variant="body2">{index + 1}. {agent.name}</Typography>
-                  <Typography variant="body2" fontWeight="600">⭐ {agent.rating}</Typography>
-                </Box>
-              ))}
-            </Box>
-          </Box>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setAutoAssignDialog(false)}>Cancel</Button>
-          <Button 
-            onClick={handleAutoAssign} 
-            variant="contained"
-            sx={{
-              background: 'linear-gradient(135deg, #FFD700 0%, #FFA000 100%)',
-              color: '#000',
-              '&:hover': {
-                background: 'linear-gradient(135deg, #FFA000 0%, #FFD700 100%)',
-              }
-            }}
-          >
-            Auto-Assign Premium Leads
-          </Button>
-        </DialogActions>
-      </Dialog>
-
-      {/* Language Assignment Preview Dialog */}
-      <Dialog open={languageAssignDialog} onClose={() => setLanguageAssignDialog(false)} maxWidth="md" fullWidth>
-        <DialogTitle>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            <span style={{ fontSize: '1.5rem' }}>🌐</span>
-            <Typography variant="h6" fontWeight="600">Language-Based Assignment Preview</Typography>
-          </Box>
-        </DialogTitle>
-        <DialogContent>
-          <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-            Review the proposed assignments based on language preferences:
-          </Typography>
-          
-          <TableContainer component={Paper} sx={{ maxHeight: 400 }}>
-            <Table stickyHeader>
-              <TableHead>
-                <TableRow>
-                  <TableCell>Lead</TableCell>
-                  <TableCell>Language</TableCell>
-                  <TableCell>Recommended Agent</TableCell>
-                  <TableCell>Agent Languages</TableCell>
-                  <TableCell>Match Type</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {assignmentPreview.map((item, index) => (
-                  <TableRow key={index}>
-                    <TableCell>
-                      <Box>
-                        <Typography variant="subtitle2" fontWeight="600">
-                          {item.lead.firstName} {item.lead.lastName}
-                        </Typography>
-                        <Typography variant="caption" color="text.secondary">
-                          {item.lead.company}
-                        </Typography>
-                      </Box>
-                    </TableCell>
-                    <TableCell>
+            <FormControl fullWidth>
+              <InputLabel>Select Agent</InputLabel>
+              <Select
+                value={bulkAssignmentAgent}
+                label="Select Agent"
+                onChange={(e) => setBulkAssignmentAgent(e.target.value)}
+              >
+                {agents.map(agent => (
+                  <MenuItem key={agent.id} value={agent.id}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
+                      <span>{agent.name}</span>
                       <Chip
-                        label={item.leadLanguage}
+                        label={`⭐ ${agent.rating}`}
                         size="small"
-                        variant="outlined"
-                        sx={{ fontWeight: 600 }}
+                        sx={{ ml: 1, fontSize: '0.7rem', height: '20px' }}
                       />
-                    </TableCell>
-                    <TableCell>
-                      {item.recommendedAgent ? (
-                        <Box>
+                    </Box>
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => setBulkAssignmentDialog(false)}>Cancel</Button>
+            <Button onClick={handleConfirmBulkAssignment} variant="contained">
+              Assign Leads
+            </Button>
+          </DialogActions>
+        </Dialog>
+
+        {/* Quick Update Dialog */}
+        <Dialog open={quickUpdateDialog} onClose={() => setQuickUpdateDialog(false)} maxWidth="sm" fullWidth>
+          <DialogTitle>Quick Update - {selectedLead?.firstName} {selectedLead?.lastName}</DialogTitle>
+          <DialogContent>
+            <Grid container spacing={2} sx={{ mt: 1 }}>
+              <Grid item xs={12}>
+                <FormControl fullWidth>
+                  <InputLabel>Status</InputLabel>
+                  <Select
+                    value={quickUpdateData.status}
+                    label="Status"
+                    onChange={(e) => setQuickUpdateData({ ...quickUpdateData, status: e.target.value })}
+                  >
+                    {statusOptions.map(status => (
+                      <MenuItem key={status} value={status}>{status}</MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+              </Grid>
+              <Grid item xs={12}>
+                <TextField
+                  fullWidth
+                  label="Follow-up Date"
+                  type="date"
+                  value={quickUpdateData.followUpDate}
+                  onChange={(e) => setQuickUpdateData({ ...quickUpdateData, followUpDate: e.target.value })}
+                  InputLabelProps={{ shrink: true }}
+                />
+              </Grid>
+              <Grid item xs={12}>
+                <TextField
+                  fullWidth
+                  multiline
+                  rows={4}
+                  label="Notes"
+                  value={quickUpdateData.notes}
+                  onChange={(e) => setQuickUpdateData({ ...quickUpdateData, notes: e.target.value })}
+                  placeholder="Add notes about this lead..."
+                />
+              </Grid>
+            </Grid>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => setQuickUpdateDialog(false)}>Cancel</Button>
+            <Button onClick={handleSaveQuickUpdate} variant="contained">
+              Save Updates
+            </Button>
+          </DialogActions>
+        </Dialog>
+
+        {/* Actions Menu */}
+        <Menu
+          anchorEl={anchorEl}
+          open={Boolean(anchorEl)}
+          onClose={handleMenuClose}
+        >
+          <MenuItem onClick={() => {
+            handleSendEmail(selectedLead);
+            handleMenuClose();
+          }}>
+            <ListItemIcon>
+              <EmailIcon fontSize="small" />
+            </ListItemIcon>
+            <ListItemText>Send Email</ListItemText>
+          </MenuItem>
+          <Divider />
+          <MenuItem onClick={() => {
+            handleArchiveLead(selectedLead?.id);
+            handleMenuClose();
+          }}>
+            <ListItemIcon>
+              <ArchiveIcon fontSize="small" />
+            </ListItemIcon>
+            <ListItemText>Archive</ListItemText>
+          </MenuItem>
+        </Menu>
+
+        {/* Data Provider Upload Dialog */}
+        <Dialog open={uploadDialog} onClose={() => setUploadDialog(false)} maxWidth="sm" fullWidth>
+          <DialogTitle>Data Provider Upload</DialogTitle>
+          <DialogContent>
+            <Box sx={{ mt: 2 }}>
+              <Typography variant="body2" color="text.secondary" gutterBottom>
+                Upload Excel/CSV file from data provider
+              </Typography>
+              <Button
+                variant="outlined"
+                component="label"
+                fullWidth
+                startIcon={<CloudUploadIcon />}
+                sx={{ mt: 2, mb: 2 }}
+              >
+                Choose File (Excel/CSV)
+                <input
+                  type="file"
+                  hidden
+                  accept=".xlsx,.xls,.csv"
+                  onChange={handleFileUpload}
+                />
+              </Button>
+              {uploadFile && (
+                <Typography variant="body2" color="primary" gutterBottom>
+                  Selected: {uploadFile.name}
+                </Typography>
+              )}
+              {loading && (
+                <Box sx={{ mt: 2 }}>
+                  <LinearProgress variant="determinate" value={uploadProgress} />
+                  <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+                    Uploading... {uploadProgress}%
+                  </Typography>
+                </Box>
+              )}
+              {uploadSuccess && (
+                <Alert severity="success" sx={{ mt: 2 }}>
+                  ✅ Upload Success! File processed successfully.
+                </Alert>
+              )}
+            </Box>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => setUploadDialog(false)}>Cancel</Button>
+            <Button
+              onClick={handleUploadSubmit}
+              variant="contained"
+              disabled={!uploadFile || loading}
+            >
+              Upload
+            </Button>
+          </DialogActions>
+        </Dialog>
+
+        {/* Expiry Check Dialog */}
+        <Dialog open={expiryCheckDialog} onClose={() => setExpiryCheckDialog(false)} maxWidth="sm" fullWidth>
+          <DialogTitle>
+            📅 Policy Expiry Verification
+          </DialogTitle>
+          <DialogContent>
+            {selectedPolicy && (
+              <Box sx={{ mt: 2 }}>
+                <Typography variant="h6" gutterBottom>
+                  {selectedPolicy.policyNumber}
+                </Typography>
+
+                <Grid container spacing={2} sx={{ mb: 3 }}>
+                  <Grid item xs={6}>
+                    <Paper sx={{ p: 2, bgcolor: 'primary.light', color: 'primary.contrastText' }}>
+                      <Typography variant="caption">CRM System</Typography>
+                      <Typography variant="h6">{selectedPolicy.crmExpiryDate}</Typography>
+                    </Paper>
+                  </Grid>
+                  <Grid item xs={6}>
+                    <Paper sx={{ p: 2, bgcolor: 'secondary.light', color: 'secondary.contrastText' }}>
+                      <Typography variant="caption">NAV System</Typography>
+                      <Typography variant="h6">{selectedPolicy.navExpiryDate}</Typography>
+                    </Paper>
+                  </Grid>
+                </Grid>
+
+                <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                  <Typography variant="body1" sx={{ mr: 1 }}>Status:</Typography>
+                  <Typography variant="h6">
+                    {getStatusIcon(getExpiryStatus(selectedPolicy.crmExpiryDate))}
+                  </Typography>
+                  <Typography variant="body1" sx={{ ml: 1, fontWeight: 600 }}>
+                    {getExpiryStatus(selectedPolicy.crmExpiryDate)}
+                  </Typography>
+                </Box>
+
+                <Typography variant="body2" color="text.secondary" gutterBottom>
+                  Customer: {selectedPolicy.customerName}
+                </Typography>
+
+                <Typography variant="body2" color="text.secondary">
+                  Vehicle: {selectedPolicy.vehicleNumber}
+                </Typography>
+
+                {navCheckLoading && (
+                  <Box sx={{ mt: 2, display: 'flex', alignItems: 'center' }}>
+                    <CircularProgress size={20} sx={{ mr: 1 }} />
+                    <Typography variant="body2">Verifying with NAV system...</Typography>
+                  </Box>
+                )}
+              </Box>
+            )}
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => setExpiryCheckDialog(false)}>Close</Button>
+            <Button
+              onClick={handleNavVerification}
+              variant="contained"
+              disabled={navCheckLoading}
+              startIcon={navCheckLoading ? <CircularProgress size={16} /> : null}
+            >
+              {navCheckLoading ? 'Verifying...' : 'Verify with NAV'}
+            </Button>
+          </DialogActions>
+        </Dialog>
+
+        {/* Snackbar */}
+        <Snackbar
+          open={snackbar.open}
+          autoHideDuration={6000}
+          onClose={() => setSnackbar({ ...snackbar, open: false })}
+        >
+          <Alert
+            onClose={() => setSnackbar({ ...snackbar, open: false })}
+            severity={snackbar.severity}
+            sx={{ width: '100%' }}
+          >
+            {snackbar.message}
+          </Alert>
+        </Snackbar>
+
+        {/* Bulk Upload Component */}
+        <BulkUpload
+          open={bulkUploadOpen}
+          onClose={() => setBulkUploadOpen(false)}
+          title="Bulk Upload Leads"
+          source="leads"
+          existingData={leads}
+          requiredFields={['firstName', 'lastName', 'email', 'phone']}
+          fieldMapping={{
+            'First Name': 'firstName',
+            'Last Name': 'lastName',
+            'Email': 'email',
+            'Phone': 'phone',
+            'Company': 'company',
+            'Position': 'position',
+            'Source': 'source',
+            'Status': 'status',
+            'Priority': 'priority',
+            'Value': 'value',
+            'Expected Close Date': 'expectedCloseDate',
+            'Notes': 'notes',
+            'Product': 'product',
+            'Sub Product': 'subProduct',
+            'Vehicle Registration Number': 'vehicleRegistrationNumber',
+            'Vehicle Type': 'vehicleType'
+          }}
+          onUploadComplete={(validRecords, failedRecords) => {
+            // Add uploaded leads to the list
+            const newLeads = validRecords.map((record, index) => ({
+              id: Math.max(...leads.map(l => l.id)) + index + 1,
+              ...record.record,
+              createdAt: new Date().toISOString().split('T')[0],
+              updatedAt: new Date().toISOString().split('T')[0],
+              lastContactDate: null,
+              tags: []
+            }));
+
+            setLeads([...leads, ...newLeads]);
+            setBulkUploadOpen(false);
+            setSnackbar({
+              open: true,
+              message: `${validRecords.length} leads uploaded successfully! ${failedRecords.length > 0 ? `${failedRecords.length} records failed.` : ''}`,
+              severity: 'success'
+            });
+
+            // Show upload history if there were failures
+            if (failedRecords.length > 0) {
+              setShowUploadHistory(true);
+            }
+          }}
+          allowOverride={true}
+        />
+
+        {/* Agent Table Dialog */}
+        <Dialog open={agentTableOpen} onClose={() => setAgentTableOpen(false)} maxWidth="md" fullWidth>
+          <DialogTitle>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <GroupIcon color="primary" />
+              <Typography variant="h6" fontWeight="600">Agent Performance Dashboard</Typography>
+            </Box>
+          </DialogTitle>
+          <DialogContent>
+            <TableContainer>
+              <Table>
+                <TableHead>
+                  <TableRow>
+                    <TableCell>Agent</TableCell>
+                    <TableCell>Rating</TableCell>
+                    <TableCell>Total Leads</TableCell>
+                    <TableCell>Closed Deals</TableCell>
+                    <TableCell>Success Rate</TableCell>
+                    <TableCell>Languages</TableCell>
+                    <TableCell>Specialization</TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {agents.map((agent) => {
+                    const successRate = ((agent.closedDeals / agent.totalLeads) * 100).toFixed(1);
+                    const currentWorkload = leads.filter(l => l.assignedToId === agent.id).length;
+                    return (
+                      <TableRow key={agent.id} hover>
+                        <TableCell>
+                          <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                            <Avatar sx={{ mr: 2, bgcolor: theme.palette.primary.main }}>
+                              {agent.name.charAt(0)}
+                            </Avatar>
+                            <Box>
+                              <Typography variant="subtitle2" fontWeight="600">
+                                {agent.name}
+                              </Typography>
+                              <Typography variant="caption" color="text.secondary">
+                                Current: {currentWorkload} leads
+                              </Typography>
+                            </Box>
+                          </Box>
+                        </TableCell>
+                        <TableCell>
+                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                            <Typography variant="h6" fontWeight="600" color="warning.main">
+                              ⭐ {agent.rating}
+                            </Typography>
+                            <LinearProgress
+                              variant="determinate"
+                              value={(agent.rating / 5) * 100}
+                              sx={{ width: 60, height: 6, borderRadius: 3 }}
+                            />
+                          </Box>
+                        </TableCell>
+                        <TableCell>
                           <Typography variant="body2" fontWeight="600">
-                            {item.recommendedAgent.name}
+                            {agent.totalLeads}
+                          </Typography>
+                        </TableCell>
+                        <TableCell>
+                          <Typography variant="body2" fontWeight="600" color="success.main">
+                            {agent.closedDeals}
+                          </Typography>
+                        </TableCell>
+                        <TableCell>
+                          <Chip
+                            label={`${successRate}%`}
+                            size="small"
+                            sx={{
+                              backgroundColor: successRate >= 70 ? alpha(theme.palette.success.main, 0.1) :
+                                successRate >= 50 ? alpha(theme.palette.warning.main, 0.1) :
+                                  alpha(theme.palette.error.main, 0.1),
+                              color: successRate >= 70 ? theme.palette.success.main :
+                                successRate >= 50 ? theme.palette.warning.main :
+                                  theme.palette.error.main,
+                              fontWeight: 600
+                            }}
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5, maxWidth: 200 }}>
+                            {agent.languages.map(language => (
+                              <Chip
+                                key={language}
+                                label={language}
+                                size="small"
+                                variant={language === 'English' ? 'filled' : 'outlined'}
+                                color={language === 'English' ? 'primary' : 'default'}
+                                sx={{
+                                  fontSize: '0.65rem',
+                                  height: '20px',
+                                  fontWeight: language === 'English' ? 600 : 400
+                                }}
+                              />
+                            ))}
+                          </Box>
+                        </TableCell>
+                        <TableCell>
+                          <Typography variant="body2" color="text.secondary">
+                            {agent.specialization}
+                          </Typography>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+              </Table>
+            </TableContainer>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => setAgentTableOpen(false)}>Close</Button>
+          </DialogActions>
+        </Dialog>
+
+        {/* Auto Assignment Dialog */}
+        <Dialog open={autoAssignDialog} onClose={() => setAutoAssignDialog(false)} maxWidth="sm" fullWidth>
+          <DialogTitle>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <span style={{ fontSize: '1.5rem' }}>👑</span>
+              <Typography variant="h6" fontWeight="600">Auto-Assign Premium Leads</Typography>
+            </Box>
+          </DialogTitle>
+          <DialogContent>
+            <Box sx={{ mt: 2 }}>
+              <Typography variant="body1" gutterBottom>
+                This will automatically assign all unassigned Premium leads to the top-rated agents based on:
+              </Typography>
+              <Box sx={{ ml: 2, mt: 2 }}>
+                <Typography variant="body2" sx={{ mb: 1 }}>• Agent rating (highest first)</Typography>
+                <Typography variant="body2" sx={{ mb: 1 }}>• Current workload (balanced distribution)</Typography>
+                <Typography variant="body2" sx={{ mb: 1 }}>• Agent specialization</Typography>
+              </Box>
+
+              <Box sx={{ mt: 3, p: 2, bgcolor: 'info.light', borderRadius: 1 }}>
+                <Typography variant="subtitle2" fontWeight="600" gutterBottom>
+                  Premium Leads to Assign:
+                </Typography>
+                <Typography variant="h4" color="primary" fontWeight="600">
+                  {leads.filter(lead => lead.leadType === 'Premium' && !lead.assignedTo).length}
+                </Typography>
+              </Box>
+
+              <Box sx={{ mt: 2, p: 2, bgcolor: 'warning.light', borderRadius: 1 }}>
+                <Typography variant="subtitle2" fontWeight="600" gutterBottom>
+                  Top Agents by Rating:
+                </Typography>
+                {[...agents].sort((a, b) => b.rating - a.rating).slice(0, 3).map((agent, index) => (
+                  <Box key={agent.id} sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
+                    <Typography variant="body2">{index + 1}. {agent.name}</Typography>
+                    <Typography variant="body2" fontWeight="600">⭐ {agent.rating}</Typography>
+                  </Box>
+                ))}
+              </Box>
+            </Box>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => setAutoAssignDialog(false)}>Cancel</Button>
+            <Button
+              onClick={handleAutoAssign}
+              variant="contained"
+              sx={{
+                background: 'linear-gradient(135deg, #FFD700 0%, #FFA000 100%)',
+                color: '#000',
+                '&:hover': {
+                  background: 'linear-gradient(135deg, #FFA000 0%, #FFD700 100%)',
+                }
+              }}
+            >
+              Auto-Assign Premium Leads
+            </Button>
+          </DialogActions>
+        </Dialog>
+
+        {/* Language Assignment Preview Dialog */}
+        <Dialog open={languageAssignDialog} onClose={() => setLanguageAssignDialog(false)} maxWidth="md" fullWidth>
+          <DialogTitle>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <span style={{ fontSize: '1.5rem' }}>🌐</span>
+              <Typography variant="h6" fontWeight="600">Language-Based Assignment Preview</Typography>
+            </Box>
+          </DialogTitle>
+          <DialogContent>
+            <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+              Review the proposed assignments based on language preferences:
+            </Typography>
+
+            <TableContainer component={Paper} sx={{ maxHeight: 400 }}>
+              <Table stickyHeader>
+                <TableHead>
+                  <TableRow>
+                    <TableCell>Lead</TableCell>
+                    <TableCell>Language</TableCell>
+                    <TableCell>Recommended Agent</TableCell>
+                    <TableCell>Agent Languages</TableCell>
+                    <TableCell>Match Type</TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {assignmentPreview.map((item, index) => (
+                    <TableRow key={index}>
+                      <TableCell>
+                        <Box>
+                          <Typography variant="subtitle2" fontWeight="600">
+                            {item.lead.firstName} {item.lead.lastName}
                           </Typography>
                           <Typography variant="caption" color="text.secondary">
-                            ⭐ {item.recommendedAgent.rating} | {item.recommendedAgent.specialization}
+                            {item.lead.company}
                           </Typography>
                         </Box>
-                      ) : (
-                        <Typography variant="body2" color="error">
-                          No agent available
-                        </Typography>
-                      )}
-                    </TableCell>
-                    <TableCell>
-                      {item.recommendedAgent && (
-                        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-                          {item.recommendedAgent.languages.map(lang => (
-                            <Chip
-                              key={lang}
-                              label={lang}
-                              size="small"
-                              variant={lang === item.leadLanguage ? 'filled' : 'outlined'}
-                              color={lang === item.leadLanguage ? 'primary' : 'default'}
-                              sx={{ fontSize: '0.65rem', height: '20px' }}
-                            />
-                          ))}
-                        </Box>
-                      )}
-                    </TableCell>
-                    <TableCell>
-                      <Chip
-                        label={
-                          item.matchType === 'language-match' ? 'Perfect Match' :
-                          item.matchType === 'fallback' ? 'Fallback (English)' :
-                          'No Match'
-                        }
-                        size="small"
-                        color={
-                          item.matchType === 'language-match' ? 'success' :
-                          item.matchType === 'fallback' ? 'warning' :
-                          'error'
-                        }
-                        sx={{ fontWeight: 600 }}
-                      />
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </TableContainer>
-          
-          <Box sx={{ mt: 3, p: 2, bgcolor: 'info.light', borderRadius: 1 }}>
-            <Typography variant="subtitle2" fontWeight="600" gutterBottom>
-              Assignment Summary:
-            </Typography>
-            <Typography variant="body2">
-              • Perfect Matches: {assignmentPreview.filter(item => item.matchType === 'language-match').length}
-            </Typography>
-            <Typography variant="body2">
-              • Fallback Assignments: {assignmentPreview.filter(item => item.matchType === 'fallback').length}
-            </Typography>
-            <Typography variant="body2">
-              • Unassignable: {assignmentPreview.filter(item => item.matchType === 'no-match').length}
-            </Typography>
-          </Box>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setLanguageAssignDialog(false)}>Cancel</Button>
-          <Button 
-            onClick={confirmLanguageAssignment}
-            variant="contained"
-            disabled={assignmentPreview.filter(item => item.recommendedAgent).length === 0}
-            sx={{
-              background: 'linear-gradient(135deg, #4CAF50 0%, #2E7D32 100%)',
-              '&:hover': {
-                background: 'linear-gradient(135deg, #2E7D32 0%, #4CAF50 100%)',
-              }
-            }}
-          >
-            Confirm Assignments
-          </Button>
-        </DialogActions>
-      </Dialog>
+                      </TableCell>
+                      <TableCell>
+                        <Chip
+                          label={item.leadLanguage}
+                          size="small"
+                          variant="outlined"
+                          sx={{ fontWeight: 600 }}
+                        />
+                      </TableCell>
+                      <TableCell>
+                        {item.recommendedAgent ? (
+                          <Box>
+                            <Typography variant="body2" fontWeight="600">
+                              {item.recommendedAgent.name}
+                            </Typography>
+                            <Typography variant="caption" color="text.secondary">
+                              ⭐ {item.recommendedAgent.rating} | {item.recommendedAgent.specialization}
+                            </Typography>
+                          </Box>
+                        ) : (
+                          <Typography variant="body2" color="error">
+                            No agent available
+                          </Typography>
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        {item.recommendedAgent && (
+                          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                            {item.recommendedAgent.languages.map(lang => (
+                              <Chip
+                                key={lang}
+                                label={lang}
+                                size="small"
+                                variant={lang === item.leadLanguage ? 'filled' : 'outlined'}
+                                color={lang === item.leadLanguage ? 'primary' : 'default'}
+                                sx={{ fontSize: '0.65rem', height: '20px' }}
+                              />
+                            ))}
+                          </Box>
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        <Chip
+                          label={
+                            item.matchType === 'language-match' ? 'Perfect Match' :
+                              item.matchType === 'fallback' ? 'Fallback (English)' :
+                                'No Match'
+                          }
+                          size="small"
+                          color={
+                            item.matchType === 'language-match' ? 'success' :
+                              item.matchType === 'fallback' ? 'warning' :
+                                'error'
+                          }
+                          sx={{ fontWeight: 600 }}
+                        />
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </TableContainer>
 
-      {/* Call Dialog */}
-      <Dialog open={callDialogOpen} onClose={() => setCallDialogOpen(false)} maxWidth="sm" fullWidth>
-        <DialogTitle>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            <CallIcon color="success" />
-            <Typography variant="h6" fontWeight="600">Contact Lead</Typography>
-          </Box>
-        </DialogTitle>
-        <DialogContent>
-          <Stack spacing={3} sx={{ mt: 2 }}>
-            {/* Lead ID */}
-            <Box>
-              <Typography variant="caption" color="text.secondary" fontWeight="600">Lead ID</Typography>
-              <Typography variant="body1" fontWeight="600" color="primary">
-                LD{new Date().getFullYear()}{String(selectedCallLead?.id || 0).padStart(6, '0')}
+            <Box sx={{ mt: 3, p: 2, bgcolor: 'info.light', borderRadius: 1 }}>
+              <Typography variant="subtitle2" fontWeight="600" gutterBottom>
+                Assignment Summary:
+              </Typography>
+              <Typography variant="body2">
+                • Perfect Matches: {assignmentPreview.filter(item => item.matchType === 'language-match').length}
+              </Typography>
+              <Typography variant="body2">
+                • Fallback Assignments: {assignmentPreview.filter(item => item.matchType === 'fallback').length}
+              </Typography>
+              <Typography variant="body2">
+                • Unassignable: {assignmentPreview.filter(item => item.matchType === 'no-match').length}
               </Typography>
             </Box>
-
-            {/* Lead Name */}
-            <Box>
-              <Typography variant="caption" color="text.secondary" fontWeight="600">Lead Name</Typography>
-              <Typography variant="body1" fontWeight="600">
-                {selectedCallLead?.firstName} {selectedCallLead?.lastName}
-              </Typography>
-            </Box>
-
-            {/* Company & Position */}
-            <Box>
-              <Typography variant="caption" color="text.secondary" fontWeight="600">Company</Typography>
-              <Typography variant="body1">
-                {selectedCallLead?.company}
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                {selectedCallLead?.position}
-              </Typography>
-            </Box>
-
-            {/* Status & Priority */}
-            <Box sx={{ display: 'flex', gap: 2 }}>
-              <Box sx={{ flex: 1 }}>
-                <Typography variant="caption" color="text.secondary" fontWeight="600">Status</Typography>
-                <Chip
-                  label={selectedCallLead?.status}
-                  size="small"
-                  sx={{
-                    mt: 0.5,
-                    backgroundColor: alpha(getStatusColor(selectedCallLead?.status), 0.1),
-                    color: getStatusColor(selectedCallLead?.status)
-                  }}
-                />
-              </Box>
-              <Box sx={{ flex: 1 }}>
-                <Typography variant="caption" color="text.secondary" fontWeight="600">Priority</Typography>
-                <Chip
-                  label={selectedCallLead?.priority}
-                  size="small"
-                  sx={{
-                    mt: 0.5,
-                    backgroundColor: alpha(getPriorityColor(selectedCallLead?.priority), 0.1),
-                    color: getPriorityColor(selectedCallLead?.priority)
-                  }}
-                />
-              </Box>
-            </Box>
-
-            <Divider />
-
-            {/* Phone Number */}
-            <Box>
-              <Typography variant="caption" color="text.secondary" fontWeight="600" gutterBottom>
-                Phone Number
-              </Typography>
-              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mt: 1 }}>
-                <Typography variant="h6" fontWeight="600">
-                  {selectedCallLead?.phone}
-                </Typography>
-                <Button
-                  variant="contained"
-                  size="small"
-                  component="a"
-                  href={`tel:${selectedCallLead?.phone}`}
-                  startIcon={<CallIcon />}
-                  sx={{
-                    background: `linear-gradient(135deg, ${theme.palette.success.main} 0%, ${theme.palette.success.dark} 100%)`,
-                  }}
-                >
-                  Dial
-                </Button>
-              </Box>
-            </Box>
-
-            {/* Email */}
-            <Box>
-              <Typography variant="caption" color="text.secondary" fontWeight="600">Email</Typography>
-              <Typography variant="body1">
-                {selectedCallLead?.email}
-              </Typography>
-            </Box>
-          </Stack>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setCallDialogOpen(false)}>Close</Button>
-        </DialogActions>
-      </Dialog>
-
-      {/* Vahan Verification Dialog */}
-      <Dialog
-        open={vahanDialog}
-        onClose={() => {
-          setVahanDialog(false);
-          setVahanVerificationLead(null);
-          setVahanVehicleNumber('');
-        }}
-        maxWidth="sm"
-        fullWidth
-      >
-        <DialogTitle>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            <VehicleIcon color="primary" />
-            <Typography variant="h6">Vahan Vehicle Verification</Typography>
-          </Box>
-        </DialogTitle>
-        <DialogContent>
-          <Box sx={{ pt: 2 }}>
-            {vahanVerificationLead && (
-              <Alert severity="info" sx={{ mb: 2 }}>
-                Verifying vehicle for: <strong>{vahanVerificationLead.firstName} {vahanVerificationLead.lastName}</strong>
-              </Alert>
-            )}
-
-            <TextField
-              fullWidth
-              label="Vehicle Registration Number"
-              value={vahanVehicleNumber}
-              onChange={(e) => setVahanVehicleNumber(e.target.value.toUpperCase())}
-              placeholder="e.g., MH12AB1234"
-              helperText="Enter the vehicle registration number to verify with Vahan API"
-              disabled={vahanLoading}
-              InputProps={{
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <VehicleIcon />
-                  </InputAdornment>
-                ),
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => setLanguageAssignDialog(false)}>Cancel</Button>
+            <Button
+              onClick={confirmLanguageAssignment}
+              variant="contained"
+              disabled={assignmentPreview.filter(item => item.recommendedAgent).length === 0}
+              sx={{
+                background: 'linear-gradient(135deg, #4CAF50 0%, #2E7D32 100%)',
+                '&:hover': {
+                  background: 'linear-gradient(135deg, #2E7D32 0%, #4CAF50 100%)',
+                }
               }}
-            />
+            >
+              Confirm Assignments
+            </Button>
+          </DialogActions>
+        </Dialog>
 
-            {vahanLoading && (
-              <Box sx={{ mt: 2 }}>
-                <LinearProgress />
-                <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block', textAlign: 'center' }}>
-                  Verifying with Vahan database...
+        {/* Call Dialog */}
+        <Dialog open={callDialogOpen} onClose={() => setCallDialogOpen(false)} maxWidth="sm" fullWidth>
+          <DialogTitle>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <CallIcon color="success" />
+              <Typography variant="h6" fontWeight="600">Contact Lead</Typography>
+            </Box>
+          </DialogTitle>
+          <DialogContent>
+            <Stack spacing={3} sx={{ mt: 2 }}>
+              {/* Lead ID */}
+              <Box>
+                <Typography variant="caption" color="text.secondary" fontWeight="600">Lead ID</Typography>
+                <Typography variant="body1" fontWeight="600" color="primary">
+                  LD{new Date().getFullYear()}{String(selectedCallLead?.id || 0).padStart(6, '0')}
                 </Typography>
               </Box>
-            )}
-          </Box>
-        </DialogContent>
-        <DialogActions>
-          <Button
-            onClick={() => {
-              setVahanDialog(false);
-              setVahanVerificationLead(null);
-              setVahanVehicleNumber('');
-            }}
-            disabled={vahanLoading}
-          >
-            Cancel
-          </Button>
-          <Button
-            onClick={handleConfirmVahanVerification}
-            variant="contained"
-            disabled={!vahanVehicleNumber || vahanLoading}
-            startIcon={vahanLoading ? <CircularProgress size={16} /> : <VerifiedUserIcon />}
-          >
-            {vahanLoading ? 'Verifying...' : 'Verify Vehicle'}
-          </Button>
-        </DialogActions>
-      </Dialog>
-    </Box>
+
+              {/* Lead Name */}
+              <Box>
+                <Typography variant="caption" color="text.secondary" fontWeight="600">Lead Name</Typography>
+                <Typography variant="body1" fontWeight="600">
+                  {selectedCallLead?.firstName} {selectedCallLead?.lastName}
+                </Typography>
+              </Box>
+
+              {/* Company & Position */}
+              <Box>
+                <Typography variant="caption" color="text.secondary" fontWeight="600">Company</Typography>
+                <Typography variant="body1">
+                  {selectedCallLead?.company}
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  {selectedCallLead?.position}
+                </Typography>
+              </Box>
+
+              {/* Status & Priority */}
+              <Box sx={{ display: 'flex', gap: 2 }}>
+                <Box sx={{ flex: 1 }}>
+                  <Typography variant="caption" color="text.secondary" fontWeight="600">Status</Typography>
+                  <Chip
+                    label={selectedCallLead?.status}
+                    size="small"
+                    sx={{
+                      mt: 0.5,
+                      backgroundColor: alpha(getStatusColor(selectedCallLead?.status), 0.1),
+                      color: getStatusColor(selectedCallLead?.status)
+                    }}
+                  />
+                </Box>
+                <Box sx={{ flex: 1 }}>
+                  <Typography variant="caption" color="text.secondary" fontWeight="600">Priority</Typography>
+                  <Chip
+                    label={selectedCallLead?.priority}
+                    size="small"
+                    sx={{
+                      mt: 0.5,
+                      backgroundColor: alpha(getPriorityColor(selectedCallLead?.priority), 0.1),
+                      color: getPriorityColor(selectedCallLead?.priority)
+                    }}
+                  />
+                </Box>
+              </Box>
+
+              <Divider />
+
+              {/* Phone Number */}
+              <Box>
+                <Typography variant="caption" color="text.secondary" fontWeight="600" gutterBottom>
+                  Phone Number
+                </Typography>
+                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mt: 1 }}>
+                  <Typography variant="h6" fontWeight="600">
+                    {selectedCallLead?.phone}
+                  </Typography>
+                  <Button
+                    variant="contained"
+                    size="small"
+                    component="a"
+                    href={`tel:${selectedCallLead?.phone}`}
+                    startIcon={<CallIcon />}
+                    sx={{
+                      background: `linear-gradient(135deg, ${theme.palette.success.main} 0%, ${theme.palette.success.dark} 100%)`,
+                    }}
+                  >
+                    Dial
+                  </Button>
+                </Box>
+              </Box>
+
+              {/* Email */}
+              <Box>
+                <Typography variant="caption" color="text.secondary" fontWeight="600">Email</Typography>
+                <Typography variant="body1">
+                  {selectedCallLead?.email}
+                </Typography>
+              </Box>
+            </Stack>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => setCallDialogOpen(false)}>Close</Button>
+          </DialogActions>
+        </Dialog>
+
+        {/* Vahan Verification Dialog */}
+        <Dialog
+          open={vahanDialog}
+          onClose={() => {
+            setVahanDialog(false);
+            setVahanVerificationLead(null);
+            setVahanVehicleNumber('');
+          }}
+          maxWidth="sm"
+          fullWidth
+        >
+          <DialogTitle>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <VehicleIcon color="primary" />
+              <Typography variant="h6">Vahan Vehicle Verification</Typography>
+            </Box>
+          </DialogTitle>
+          <DialogContent>
+            <Box sx={{ pt: 2 }}>
+              {vahanVerificationLead && (
+                <Alert severity="info" sx={{ mb: 2 }}>
+                  Verifying vehicle for: <strong>{vahanVerificationLead.firstName} {vahanVerificationLead.lastName}</strong>
+                </Alert>
+              )}
+
+              <TextField
+                fullWidth
+                label="Vehicle Registration Number"
+                value={vahanVehicleNumber}
+                onChange={(e) => setVahanVehicleNumber(e.target.value.toUpperCase())}
+                placeholder="e.g., MH12AB1234"
+                helperText="Enter the vehicle registration number to verify with Vahan API"
+                disabled={vahanLoading}
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <VehicleIcon />
+                    </InputAdornment>
+                  ),
+                }}
+              />
+
+              {vahanLoading && (
+                <Box sx={{ mt: 2 }}>
+                  <LinearProgress />
+                  <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block', textAlign: 'center' }}>
+                    Verifying with Vahan database...
+                  </Typography>
+                </Box>
+              )}
+            </Box>
+          </DialogContent>
+          <DialogActions>
+            <Button
+              onClick={() => {
+                setVahanDialog(false);
+                setVahanVerificationLead(null);
+                setVahanVehicleNumber('');
+              }}
+              disabled={vahanLoading}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleConfirmVahanVerification}
+              variant="contained"
+              disabled={!vahanVehicleNumber || vahanLoading}
+              startIcon={vahanLoading ? <CircularProgress size={16} /> : <VerifiedUserIcon />}
+            >
+              {vahanLoading ? 'Verifying...' : 'Verify Vehicle'}
+            </Button>
+          </DialogActions>
+        </Dialog>
+      </Box>
     </LocalizationProvider>
   );
 };

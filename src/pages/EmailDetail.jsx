@@ -64,7 +64,8 @@ import {
   Reply as ReplyIcon,
   Forward as ForwardIcon,
   Send as SendIcon,
-  Email as EmailIcon
+  Email as EmailIcon,
+  Print as PrintIcon
 } from '@mui/icons-material';
 import { useNavigate, useParams } from 'react-router-dom';
 
@@ -400,6 +401,74 @@ Phone: +1 (555) 123-4567`
     }
   };
 
+  // Handle Print
+  const handlePrint = () => {
+    const printContent = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>Email - ${email.subject}</title>
+        <style>
+          body { font-family: Arial, sans-serif; padding: 40px; line-height: 1.6; }
+          .header { border-bottom: 2px solid #1976d2; padding-bottom: 20px; margin-bottom: 20px; }
+          .header h1 { color: #1976d2; margin: 0 0 10px 0; font-size: 24px; }
+          .meta { color: #666; margin: 5px 0; }
+          .meta strong { color: #333; }
+          .content { margin: 30px 0; padding: 20px; background: #f5f5f5; border-radius: 8px; }
+          .attachments { margin-top: 20px; padding: 15px; background: #e3f2fd; border-radius: 8px; }
+          .attachments h3 { margin: 0 0 10px 0; color: #1976d2; }
+          .attachment-item { padding: 5px 10px; background: white; border-radius: 4px; margin: 5px 0; display: inline-block; }
+          .footer { margin-top: 40px; padding-top: 20px; border-top: 1px solid #ddd; color: #666; font-size: 12px; }
+          .status-badge { display: inline-block; padding: 4px 12px; border-radius: 12px; font-size: 12px; font-weight: bold; }
+          .status-new { background: #e3f2fd; color: #1976d2; }
+          .status-in_progress { background: #fff3e0; color: #f57c00; }
+          .status-resolved { background: #e8f5e9; color: #388e3c; }
+        </style>
+      </head>
+      <body>
+        <div class="header">
+          <h1>${email.subject}</h1>
+          <p class="meta"><strong>From:</strong> ${email.from}</p>
+          <p class="meta"><strong>To:</strong> ${email.to}</p>
+          <p class="meta"><strong>Date:</strong> ${formatDate(email.dateReceived)}</p>
+          <p class="meta"><strong>Email ID:</strong> ${email.id}</p>
+          <p class="meta">
+            <strong>Status:</strong> 
+            <span class="status-badge status-${email.status}">${email.status.toUpperCase().replace('_', ' ')}</span>
+          </p>
+          <p class="meta"><strong>Priority:</strong> ${email.priority.toUpperCase()}</p>
+          <p class="meta"><strong>Category:</strong> ${email.category.toUpperCase()}</p>
+        </div>
+        
+        <div class="content">
+          ${email.body}
+        </div>
+        
+        ${email.attachments && email.attachments.length > 0 ? `
+          <div class="attachments">
+            <h3>Attachments</h3>
+            ${email.attachments.map(att => `<span class="attachment-item">📎 ${att.name} (${att.size})</span>`).join(' ')}
+          </div>
+        ` : ''}
+        
+        <div class="footer">
+          <p>Printed on: ${new Date().toLocaleString()}</p>
+          <p>Renew-iQ Email Management System</p>
+        </div>
+      </body>
+      </html>
+    `;
+
+    const printWindow = window.open('', '_blank');
+    printWindow.document.write(printContent);
+    printWindow.document.close();
+    printWindow.focus();
+    setTimeout(() => {
+      printWindow.print();
+    }, 250);
+  };
+
+  // Handle Forward (functionality already exists via dialog)
   // AI Intent Tagging Component
   const AIIntentTagging = ({ aiIntent }) => (
     <Card sx={{
@@ -776,6 +845,14 @@ Phone: +1 (555) 123-4567`
               sx={{ borderRadius: 2 }}
             >
               Forward
+            </Button>
+            <Button
+              startIcon={<PrintIcon />}
+              variant="outlined"
+              onClick={handlePrint}
+              sx={{ borderRadius: 2 }}
+            >
+              Print
             </Button>
             <Button
               startIcon={<AssignIcon />}

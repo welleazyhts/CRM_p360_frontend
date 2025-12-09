@@ -6,10 +6,12 @@ import {
   FormControl, InputLabel, Select, MenuItem, TextField, Button,
   IconButton, Tooltip, Chip, Tabs, Tab, Dialog, DialogTitle,
   DialogContent, DialogActions, Badge,
-  Avatar, InputAdornment, Alert, LinearProgress, CircularProgress
+  Avatar, InputAdornment, Alert, LinearProgress, CircularProgress,
+  Snackbar
 } from '@mui/material';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { LocalizationProvider, DatePicker } from '@mui/x-date-pickers';
+import { jsPDF } from 'jspdf';
 import {
   Receipt as ReceiptIcon,
   FilterList as FilterIcon,
@@ -93,6 +95,22 @@ const Billing = () => {
   // Sample invoice data with enhanced receivable information
   const [invoices, setInvoices] = useState([]);
 
+  // View Invoice Dialog state
+  const [viewInvoiceDialog, setViewInvoiceDialog] = useState({
+    open: false,
+    invoice: null
+  });
+
+  // Snackbar state
+  const [snackbar, setSnackbar] = useState({
+    open: false,
+    message: '',
+    severity: 'success'
+  });
+
+  // Filter applied state
+  const [filtersApplied, setFiltersApplied] = useState(false);
+
   // Months array for dropdown
   const months = [
     'January', 'February', 'March', 'April', 'May', 'June',
@@ -171,21 +189,281 @@ const Billing = () => {
     window.print();
   };
 
+  // Apply filters handler
+  const handleApplyFilters = () => {
+    // Filter invoices based on selected criteria
+    let filtered = [...invoices];
+
+    if (filterType === 'month') {
+      filtered = invoices.filter(invoice => {
+        const invoiceDate = new Date(invoice.date);
+        return invoiceDate.getMonth() === selectedMonth &&
+          invoiceDate.getFullYear() === selectedYear;
+      });
+    } else if (startDate && endDate) {
+      filtered = invoices.filter(invoice => {
+        const invoiceDate = new Date(invoice.date);
+        return invoiceDate >= startDate && invoiceDate <= endDate;
+      });
+    }
+
+    // Update filtered data with actual billing calculations
+    const totalUtilization = settings.billing.utilization.reduce((sum, item) => sum + item.cost, 0);
+    const totalPlatform = settings.billing.platform.reduce((sum, item) => sum + item.cost, 0);
+
+    setFilteredData({
+      utilization: settings.billing.utilization,
+      platform: settings.billing.platform,
+      totalMonthly: totalUtilization + totalPlatform
+    });
+
+    setFiltersApplied(true);
+    setSnackbar({
+      open: true,
+      message: `Filters applied successfully! Showing data for ${filterType === 'month' ? `${months[selectedMonth]} ${selectedYear}` : `${startDate?.toLocaleDateString()} - ${endDate?.toLocaleDateString()}`}`,
+      severity: 'success'
+    });
+  };
+
+  // Download billing summary as PDF
   const handleDownload = () => {
-    // In a real app, this would generate and download a PDF or CSV
-    alert('Download functionality would be implemented here');
+    const doc = new jsPDF();
+    const pageWidth = doc.internal.pageSize.getWidth();
+
+    // Title
+    doc.setFontSize(20);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Billing Summary Report', pageWidth / 2, 20, { align: 'center' });
+
+    // Date range
+    doc.setFontSize(12);
+    doc.setFont('helvetica', 'normal');
+    const dateRange = filterType === 'month'
+      ? `${months[selectedMonth]} ${selectedYear}`
+      : startDate && endDate
+        ? `${startDate.toLocaleDateString()} - ${endDate.toLocaleDateString()}`
+        : 'All Time';
+    doc.text(`Period: ${dateRange}`, pageWidth / 2, 30, { align: 'center' });
+    doc.text(`Generated: ${new Date().toLocaleDateString()}`, pageWidth / 2, 37, { align: 'center' });
+
+    // Add line
+    doc.setLineWidth(0.5);
+    doc.line(20, 42, pageWidth - 20, 42);
+
+    // Utilization Charges Section
+    doc.setFontSize(14);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Portal Usage - Utilization Charges', 20, 52);
+
+    // Table headers
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'bold');
+    let yPos = 62;
+    doc.text('Service', 20, yPos);
+    doc.text('Count', 100, yPos);
+    doc.text('Cost (₹)', 160, yPos);
+
+    // Utilization data
+    doc.setFont('helvetica', 'normal');
+    yPos += 8;
+    filteredData.utilization.forEach((item) => {
+      doc.text(item.service, 20, yPos);
+      doc.text(item.count.toLocaleString(), 100, yPos);
+      doc.text(item.cost.toFixed(2), 160, yPos);
+      yPos += 7;
+    });
+
+    // Platform Charges Section
+    yPos += 10;
+    doc.setFontSize(14);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Platform Charges', 20, yPos);
+
+    // Table headers
+    yPos += 10;
+    doc.setFontSize(10);
+    doc.text('Service', 20, yPos);
+    doc.text('Period', 100, yPos);
+    doc.text('Cost (₹)', 160, yPos);
+
+    // Platform data
+    doc.setFont('helvetica', 'normal');
+    yPos += 8;
+    filteredData.platform.forEach((item) => {
+      doc.text(item.service, 20, yPos);
+      doc.text(item.period, 100, yPos);
+      doc.text(item.cost.toFixed(2), 160, yPos);
+      yPos += 7;
+    });
+
+    // Total
+    yPos += 10;
+    doc.setLineWidth(0.3);
+    doc.line(20, yPos - 5, pageWidth - 20, yPos - 5);
+    doc.setFontSize(12);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Total Monthly Charges:', 20, yPos);
+    doc.text(`₹${filteredData.totalMonthly.toFixed(2)}`, 160, yPos);
+
+    // Footer
+    yPos += 20;
+    doc.setFontSize(8);
+    doc.setFont('helvetica', 'italic');
+    doc.text('This is a system generated document.', pageWidth / 2, yPos, { align: 'center' });
+
+    // Save the PDF
+    doc.save(`Billing_Summary_${dateRange.replace(/[\s\/]/g, '_')}.pdf`);
+
+    setSnackbar({
+      open: true,
+      message: 'Billing summary PDF downloaded successfully!',
+      severity: 'success'
+    });
   };
 
-  // Handle view invoice
+  // Handle view invoice - opens dialog with invoice details
   const handleViewInvoice = (invoiceId) => {
-    // In a real app, this would open a modal or navigate to an invoice detail page
-    alert(`Viewing invoice ${invoiceId}`);
+    const invoice = invoices.find(inv => inv.id === invoiceId);
+    if (invoice) {
+      setViewInvoiceDialog({
+        open: true,
+        invoice: invoice
+      });
+    }
   };
 
-  // Handle download invoice
+  // Close view invoice dialog
+  const handleCloseViewInvoice = () => {
+    setViewInvoiceDialog({
+      open: false,
+      invoice: null
+    });
+  };
+
+  // Handle download invoice as PDF
   const handleDownloadInvoice = (invoiceId) => {
-    // In a real app, this would download the invoice PDF
-    alert(`Downloading invoice ${invoiceId}`);
+    const invoice = invoices.find(inv => inv.id === invoiceId);
+    if (!invoice) return;
+
+    const doc = new jsPDF();
+    const pageWidth = doc.internal.pageSize.getWidth();
+
+    // Header
+    doc.setFontSize(24);
+    doc.setFont('helvetica', 'bold');
+    doc.text('INVOICE', pageWidth / 2, 25, { align: 'center' });
+
+    // Invoice details box
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'normal');
+    doc.rect(pageWidth - 80, 35, 60, 30);
+    doc.text(`Invoice #: ${invoice.id}`, pageWidth - 75, 43);
+    doc.text(`Date: ${new Date(invoice.date).toLocaleDateString()}`, pageWidth - 75, 51);
+    doc.text(`Status: ${invoice.status}`, pageWidth - 75, 59);
+
+    // Company info
+    doc.setFontSize(12);
+    doc.setFont('helvetica', 'bold');
+    doc.text('From:', 20, 45);
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(10);
+    doc.text('CRM Portal Services', 20, 53);
+    doc.text('Insurance Management Platform', 20, 60);
+    doc.text('support@crmportal.com', 20, 67);
+
+    // Billing info
+    let yPos = 85;
+    doc.setFontSize(12);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Bill To:', 20, yPos);
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(10);
+    yPos += 8;
+    if (invoice.receivableInfo) {
+      doc.text(invoice.receivableInfo.contactPerson || 'Customer', 20, yPos);
+      yPos += 7;
+      if (invoice.receivableInfo.billingAddress) {
+        doc.text(invoice.receivableInfo.billingAddress, 20, yPos);
+        yPos += 7;
+      }
+      if (invoice.receivableInfo.contactEmail) {
+        doc.text(invoice.receivableInfo.contactEmail, 20, yPos);
+        yPos += 7;
+      }
+    }
+
+    // Line separator
+    yPos += 10;
+    doc.setLineWidth(0.5);
+    doc.line(20, yPos, pageWidth - 20, yPos);
+
+    // Invoice items table header
+    yPos += 15;
+    doc.setFillColor(240, 240, 240);
+    doc.rect(20, yPos - 5, pageWidth - 40, 10, 'F');
+    doc.setFont('helvetica', 'bold');
+    doc.text('Description', 25, yPos);
+    doc.text('Amount', 160, yPos);
+
+    // Invoice items
+    yPos += 12;
+    doc.setFont('helvetica', 'normal');
+    doc.text(invoice.description || 'Monthly Service Charges', 25, yPos);
+    doc.text(`₹${invoice.amount.toFixed(2)}`, 160, yPos);
+
+    // Subtotal and Total
+    yPos += 20;
+    doc.setLineWidth(0.3);
+    doc.line(120, yPos, pageWidth - 20, yPos);
+    yPos += 10;
+    doc.text('Subtotal:', 120, yPos);
+    doc.text(`₹${invoice.amount.toFixed(2)}`, 160, yPos);
+    yPos += 8;
+    doc.text('Tax (18% GST):', 120, yPos);
+    doc.text(`₹${(invoice.amount * 0.18).toFixed(2)}`, 160, yPos);
+    yPos += 10;
+    doc.setLineWidth(0.5);
+    doc.line(120, yPos - 3, pageWidth - 20, yPos - 3);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Total:', 120, yPos + 5);
+    doc.setFontSize(12);
+    doc.text(`₹${(invoice.amount * 1.18).toFixed(2)}`, 160, yPos + 5);
+
+    // Payment terms
+    yPos += 25;
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Payment Terms:', 20, yPos);
+    doc.setFont('helvetica', 'normal');
+    yPos += 7;
+    doc.text(invoice.receivableInfo?.paymentTerms || 'Net 30', 20, yPos);
+
+    // Bank details if available
+    if (invoice.receivableInfo?.bankDetails?.bankName) {
+      yPos += 15;
+      doc.setFont('helvetica', 'bold');
+      doc.text('Bank Details:', 20, yPos);
+      doc.setFont('helvetica', 'normal');
+      yPos += 7;
+      doc.text(`Bank: ${invoice.receivableInfo.bankDetails.bankName}`, 20, yPos);
+      yPos += 7;
+      doc.text(`Account: ${invoice.receivableInfo.bankDetails.accountNumber}`, 20, yPos);
+    }
+
+    // Footer
+    doc.setFontSize(8);
+    doc.setFont('helvetica', 'italic');
+    doc.text('Thank you for your business!', pageWidth / 2, 270, { align: 'center' });
+    doc.text('This is a computer generated invoice.', pageWidth / 2, 277, { align: 'center' });
+
+    // Save the PDF
+    doc.save(`Invoice_${invoice.id}.pdf`);
+
+    setSnackbar({
+      open: true,
+      message: `Invoice ${invoice.id} downloaded successfully!`,
+      severity: 'success'
+    });
   };
 
   // Payment gateway state
@@ -558,8 +836,7 @@ const Billing = () => {
                         label="Start Date"
                         value={startDate}
                         onChange={(newValue) => setStartDate(newValue)}
-                        slots={{ textField: TextField }}
-                        slotProps={{ textField: { fullWidth: true } }}
+                        renderInput={(params) => <TextField {...params} fullWidth />}
                       />
                     </LocalizationProvider>
                   </Grid>
@@ -569,8 +846,7 @@ const Billing = () => {
                         label="End Date"
                         value={endDate}
                         onChange={(newValue) => setEndDate(newValue)}
-                        slots={{ textField: TextField }}
-                        slotProps={{ textField: { fullWidth: true } }}
+                        renderInput={(params) => <TextField {...params} fullWidth />}
                         minDate={startDate}
                       />
                     </LocalizationProvider>
@@ -583,6 +859,7 @@ const Billing = () => {
                   variant="contained"
                   color="primary"
                   fullWidth
+                  onClick={handleApplyFilters}
                   sx={{
                     py: 1.7,
                     borderRadius: 2,
@@ -1578,8 +1855,7 @@ const Billing = () => {
                   label="Due Date"
                   value={quickEditDialog.receivableInfo.dueDate ? new Date(quickEditDialog.receivableInfo.dueDate) : null}
                   onChange={(newValue) => handleReceivableInfoChange('dueDate', newValue?.toISOString().split('T')[0])}
-                  slots={{ textField: TextField }}
-                  slotProps={{ textField: { fullWidth: true } }}
+                  renderInput={(params) => <TextField {...params} fullWidth />}
                 />
               </LocalizationProvider>
             </Grid>
@@ -2059,6 +2335,201 @@ const Billing = () => {
           </Button>
         </DialogContent>
       </Dialog>
+
+      {/* View Invoice Dialog */}
+      <Dialog
+        open={viewInvoiceDialog.open}
+        onClose={handleCloseViewInvoice}
+        maxWidth="md"
+        fullWidth
+        PaperProps={{
+          sx: { borderRadius: 3 }
+        }}
+      >
+        <DialogTitle sx={{ bgcolor: 'primary.main', color: 'white', pb: 2 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <Box sx={{ display: 'flex', alignItems: 'center' }}>
+              <ReceiptIcon sx={{ mr: 1 }} />
+              <Typography variant="h6" fontWeight="600">
+                Invoice Details
+              </Typography>
+            </Box>
+            <IconButton onClick={handleCloseViewInvoice} sx={{ color: 'white' }}>
+              <CancelIcon />
+            </IconButton>
+          </Box>
+        </DialogTitle>
+        <DialogContent dividers>
+          {viewInvoiceDialog.invoice && (
+            <Box>
+              {/* Invoice Header */}
+              <Grid container spacing={3} sx={{ mb: 3 }}>
+                <Grid item xs={12} md={6}>
+                  <Typography variant="h4" fontWeight="700" color="primary">
+                    {viewInvoiceDialog.invoice.id}
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    Invoice Number
+                  </Typography>
+                </Grid>
+                <Grid item xs={12} md={6} sx={{ textAlign: { md: 'right' } }}>
+                  <Chip
+                    label={viewInvoiceDialog.invoice.status}
+                    color={viewInvoiceDialog.invoice.status === 'Paid' ? 'success' : 'warning'}
+                    sx={{ fontWeight: 600, fontSize: '1rem', px: 2, py: 2.5 }}
+                  />
+                </Grid>
+              </Grid>
+
+              <Divider sx={{ mb: 3 }} />
+
+              {/* Invoice Details */}
+              <Grid container spacing={3}>
+                <Grid item xs={12} md={6}>
+                  <Card elevation={0} sx={{ bgcolor: alpha(theme.palette.primary.main, 0.05), p: 2, borderRadius: 2 }}>
+                    <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                      Invoice Date
+                    </Typography>
+                    <Typography variant="h6" fontWeight="600">
+                      {new Date(viewInvoiceDialog.invoice.date).toLocaleDateString('en-IN', {
+                        weekday: 'long',
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric'
+                      })}
+                    </Typography>
+                  </Card>
+                </Grid>
+                <Grid item xs={12} md={6}>
+                  <Card elevation={0} sx={{ bgcolor: alpha(theme.palette.success.main, 0.05), p: 2, borderRadius: 2 }}>
+                    <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                      Amount
+                    </Typography>
+                    <Typography variant="h6" fontWeight="600" color="success.main">
+                      ₹{viewInvoiceDialog.invoice.amount.toFixed(2)}
+                    </Typography>
+                  </Card>
+                </Grid>
+              </Grid>
+
+              {/* Description */}
+              <Box sx={{ mt: 3, p: 2, bgcolor: 'grey.50', borderRadius: 2 }}>
+                <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                  Description
+                </Typography>
+                <Typography variant="body1">
+                  {viewInvoiceDialog.invoice.description || 'Monthly Service Charges for CRM Portal Usage'}
+                </Typography>
+              </Box>
+
+              {/* Receivable Info */}
+              {viewInvoiceDialog.invoice.receivableInfo && (
+                <Box sx={{ mt: 3 }}>
+                  <Typography variant="subtitle1" fontWeight="600" gutterBottom>
+                    Billing Information
+                  </Typography>
+                  <Grid container spacing={2}>
+                    {viewInvoiceDialog.invoice.receivableInfo.contactPerson && (
+                      <Grid item xs={12} md={6}>
+                        <Typography variant="body2" color="text.secondary">Contact Person</Typography>
+                        <Typography variant="body1">{viewInvoiceDialog.invoice.receivableInfo.contactPerson}</Typography>
+                      </Grid>
+                    )}
+                    {viewInvoiceDialog.invoice.receivableInfo.contactEmail && (
+                      <Grid item xs={12} md={6}>
+                        <Typography variant="body2" color="text.secondary">Email</Typography>
+                        <Typography variant="body1">{viewInvoiceDialog.invoice.receivableInfo.contactEmail}</Typography>
+                      </Grid>
+                    )}
+                    {viewInvoiceDialog.invoice.receivableInfo.contactPhone && (
+                      <Grid item xs={12} md={6}>
+                        <Typography variant="body2" color="text.secondary">Phone</Typography>
+                        <Typography variant="body1">{viewInvoiceDialog.invoice.receivableInfo.contactPhone}</Typography>
+                      </Grid>
+                    )}
+                    {viewInvoiceDialog.invoice.receivableInfo.billingAddress && (
+                      <Grid item xs={12} md={6}>
+                        <Typography variant="body2" color="text.secondary">Billing Address</Typography>
+                        <Typography variant="body1">{viewInvoiceDialog.invoice.receivableInfo.billingAddress}</Typography>
+                      </Grid>
+                    )}
+                    {viewInvoiceDialog.invoice.receivableInfo.paymentTerms && (
+                      <Grid item xs={12} md={6}>
+                        <Typography variant="body2" color="text.secondary">Payment Terms</Typography>
+                        <Typography variant="body1">{viewInvoiceDialog.invoice.receivableInfo.paymentTerms}</Typography>
+                      </Grid>
+                    )}
+                    {viewInvoiceDialog.invoice.receivableInfo.dueDate && (
+                      <Grid item xs={12} md={6}>
+                        <Typography variant="body2" color="text.secondary">Due Date</Typography>
+                        <Typography variant="body1">
+                          {new Date(viewInvoiceDialog.invoice.receivableInfo.dueDate).toLocaleDateString()}
+                        </Typography>
+                      </Grid>
+                    )}
+                  </Grid>
+                </Box>
+              )}
+
+              {/* Amount Breakdown */}
+              <Box sx={{ mt: 3, p: 2, bgcolor: alpha(theme.palette.primary.main, 0.02), borderRadius: 2, border: `1px solid ${alpha(theme.palette.divider, 0.5)}` }}>
+                <Typography variant="subtitle1" fontWeight="600" gutterBottom>
+                  Amount Breakdown
+                </Typography>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
+                  <Typography variant="body1">Subtotal</Typography>
+                  <Typography variant="body1">₹{viewInvoiceDialog.invoice.amount.toFixed(2)}</Typography>
+                </Box>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
+                  <Typography variant="body1">GST (18%)</Typography>
+                  <Typography variant="body1">₹{(viewInvoiceDialog.invoice.amount * 0.18).toFixed(2)}</Typography>
+                </Box>
+                <Divider sx={{ my: 1 }} />
+                <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <Typography variant="h6" fontWeight="600">Total</Typography>
+                  <Typography variant="h6" fontWeight="600" color="primary">
+                    ₹{(viewInvoiceDialog.invoice.amount * 1.18).toFixed(2)}
+                  </Typography>
+                </Box>
+              </Box>
+            </Box>
+          )}
+        </DialogContent>
+        <DialogActions sx={{ p: 2, gap: 1 }}>
+          <Button
+            onClick={() => handleDownloadInvoice(viewInvoiceDialog.invoice?.id)}
+            variant="outlined"
+            startIcon={<FileDownloadIcon />}
+            sx={{ borderRadius: 2 }}
+          >
+            Download PDF
+          </Button>
+          <Button
+            onClick={handleCloseViewInvoice}
+            variant="contained"
+            sx={{ borderRadius: 2 }}
+          >
+            Close
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Snackbar for notifications */}
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={4000}
+        onClose={() => setSnackbar(prev => ({ ...prev, open: false }))}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+      >
+        <Alert
+          onClose={() => setSnackbar(prev => ({ ...prev, open: false }))}
+          severity={snackbar.severity}
+          variant="filled"
+          sx={{ width: '100%', borderRadius: 2 }}
+        >
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
     </Box>
   );
 };

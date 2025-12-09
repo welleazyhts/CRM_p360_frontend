@@ -19,7 +19,7 @@ const RenewalWhatsAppManager = () => {
   const theme = useTheme();
   const { currentUser } = useAuth();
   const messagesEndRef = useRef(null);
-  
+
   // State Management
   const [loading, setLoading] = useState(false);
   const [activeChat, setActiveChat] = useState(null);
@@ -30,12 +30,36 @@ const RenewalWhatsAppManager = () => {
   const [priorityFilter, setPriorityFilter] = useState('all');
   // Chat States
   const [newMessage, setNewMessage] = useState('');
-  
+
   // Dialog States
   const [newChatDialog, setNewChatDialog] = useState(false);
   const [templateDialog, setTemplateDialog] = useState(false);
   const [chatInfoDialog, setChatInfoDialog] = useState(false);
-  
+  const [editDetailsDialog, setEditDetailsDialog] = useState(false);
+  const [attachmentDialog, setAttachmentDialog] = useState(false);
+  const [imageDialog, setImageDialog] = useState(false);
+
+  // Edit Details Data
+  const [editData, setEditData] = useState({
+    customerName: '',
+    phoneNumber: '',
+    policyNumber: '',
+    renewalDate: '',
+    premiumAmount: '',
+    stage: '',
+    priority: '',
+    agentAssigned: ''
+  });
+
+  // Attachment Data
+  const [selectedAttachment, setSelectedAttachment] = useState(null);
+  const [attachmentCaption, setAttachmentCaption] = useState('');
+
+  // Image Data  
+  const [selectedImage, setSelectedImage] = useState(null);
+  const [imageCaption, setImageCaption] = useState('');
+  const [imagePreview, setImagePreview] = useState(null);
+
   // New Chat Data
   const [newChatData, setNewChatData] = useState({
     phoneNumber: '',
@@ -186,7 +210,7 @@ const RenewalWhatsAppManager = () => {
         ]
       }
     ];
-    
+
     setTimeout(() => {
       setChats(mockChats);
       setFilteredChats(mockChats);
@@ -249,11 +273,11 @@ const RenewalWhatsAppManager = () => {
     setChats(prev => prev.map(chat =>
       chat.id === activeChat.id
         ? {
-            ...chat,
-            messages: [...chat.messages, message],
-            lastMessage: newMessage,
-            lastMessageTime: new Date()
-          }
+          ...chat,
+          messages: [...chat.messages, message],
+          lastMessage: newMessage,
+          lastMessageTime: new Date()
+        }
         : chat
     ));
 
@@ -276,7 +300,7 @@ const RenewalWhatsAppManager = () => {
 
   const handleChatSelect = (chat) => {
     setActiveChat(chat);
-    
+
     // Mark as read
     if (chat.unreadCount > 0) {
       setChats(prev => prev.map(c =>
@@ -289,6 +313,159 @@ const RenewalWhatsAppManager = () => {
     setChats(prev => prev.map(chat =>
       chat.id === chatId ? { ...chat, starred: !chat.starred } : chat
     ));
+    // Update activeChat if it's the current one
+    if (activeChat && activeChat.id === chatId) {
+      setActiveChat(prev => ({ ...prev, starred: !prev.starred }));
+    }
+  };
+
+  // Handle Edit Details Dialog Open
+  const handleOpenEditDetails = () => {
+    if (activeChat) {
+      setEditData({
+        customerName: activeChat.customerName,
+        phoneNumber: activeChat.phoneNumber,
+        policyNumber: activeChat.renewalContext.policyNumber,
+        renewalDate: activeChat.renewalContext.renewalDate,
+        premiumAmount: activeChat.renewalContext.premiumAmount,
+        stage: activeChat.renewalContext.stage,
+        priority: activeChat.priority,
+        agentAssigned: activeChat.agentAssigned
+      });
+      setEditDetailsDialog(true);
+      setChatInfoDialog(false);
+    }
+  };
+
+  // Handle Save Edit Details
+  const handleSaveEditDetails = () => {
+    if (activeChat) {
+      const updatedChat = {
+        ...activeChat,
+        customerName: editData.customerName,
+        phoneNumber: editData.phoneNumber,
+        priority: editData.priority,
+        agentAssigned: editData.agentAssigned,
+        renewalContext: {
+          ...activeChat.renewalContext,
+          policyNumber: editData.policyNumber,
+          renewalDate: editData.renewalDate,
+          premiumAmount: editData.premiumAmount,
+          stage: editData.stage,
+          daysToRenewal: Math.ceil((new Date(editData.renewalDate) - new Date()) / (1000 * 60 * 60 * 24))
+        }
+      };
+
+      setChats(prev => prev.map(chat =>
+        chat.id === activeChat.id ? updatedChat : chat
+      ));
+      setActiveChat(updatedChat);
+      setEditDetailsDialog(false);
+    }
+  };
+
+  // Handle Attachment Selection
+  const handleAttachmentChange = (event) => {
+    const file = event.target.files[0];
+    if (file) {
+      setSelectedAttachment(file);
+    }
+  };
+
+  // Handle Send Attachment
+  const handleSendAttachment = () => {
+    if (!selectedAttachment || !activeChat) return;
+
+    const message = {
+      id: Date.now(),
+      sender: 'agent',
+      message: attachmentCaption || `📎 ${selectedAttachment.name}`,
+      timestamp: new Date(),
+      type: 'attachment',
+      status: 'sent',
+      attachment: {
+        name: selectedAttachment.name,
+        size: selectedAttachment.size,
+        type: selectedAttachment.type
+      }
+    };
+
+    setChats(prev => prev.map(chat =>
+      chat.id === activeChat.id
+        ? {
+          ...chat,
+          messages: [...chat.messages, message],
+          lastMessage: `📎 ${selectedAttachment.name}`,
+          lastMessageTime: new Date()
+        }
+        : chat
+    ));
+
+    setActiveChat(prev => ({
+      ...prev,
+      messages: [...prev.messages, message],
+      lastMessage: `📎 ${selectedAttachment.name}`,
+      lastMessageTime: new Date()
+    }));
+
+    setAttachmentDialog(false);
+    setSelectedAttachment(null);
+    setAttachmentCaption('');
+  };
+
+  // Handle Image Selection
+  const handleImageChange = (event) => {
+    const file = event.target.files[0];
+    if (file && file.type.startsWith('image/')) {
+      setSelectedImage(file);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImagePreview(reader.result);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  // Handle Send Image
+  const handleSendImage = () => {
+    if (!selectedImage || !activeChat) return;
+
+    const message = {
+      id: Date.now(),
+      sender: 'agent',
+      message: imageCaption || `📷 Image`,
+      timestamp: new Date(),
+      type: 'image',
+      status: 'sent',
+      image: {
+        name: selectedImage.name,
+        size: selectedImage.size,
+        preview: imagePreview
+      }
+    };
+
+    setChats(prev => prev.map(chat =>
+      chat.id === activeChat.id
+        ? {
+          ...chat,
+          messages: [...chat.messages, message],
+          lastMessage: `📷 Image`,
+          lastMessageTime: new Date()
+        }
+        : chat
+    ));
+
+    setActiveChat(prev => ({
+      ...prev,
+      messages: [...prev.messages, message],
+      lastMessage: `📷 Image`,
+      lastMessageTime: new Date()
+    }));
+
+    setImageDialog(false);
+    setSelectedImage(null);
+    setImageCaption('');
+    setImagePreview(null);
   };
 
 
@@ -413,12 +590,18 @@ const RenewalWhatsAppManager = () => {
                 <AddIcon />
               </IconButton>
             </Box>
-            
+
             <Grid container spacing={1}>
               <Grid item xs={6}>
-                <FormControl fullWidth size="small">
-                  <InputLabel>Status</InputLabel>
-                  <Select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
+                <FormControl fullWidth size="small" variant="outlined">
+                  <InputLabel id="status-filter-label">Status</InputLabel>
+                  <Select
+                    labelId="status-filter-label"
+                    id="status-filter"
+                    value={statusFilter}
+                    label="Status"            
+                    onChange={(e) => setStatusFilter(e.target.value)}
+                  >
                     <MenuItem value="all">All Status</MenuItem>
                     <MenuItem value="active">Active</MenuItem>
                     <MenuItem value="completed">Completed</MenuItem>
@@ -427,10 +610,17 @@ const RenewalWhatsAppManager = () => {
                   </Select>
                 </FormControl>
               </Grid>
+
               <Grid item xs={6}>
-                <FormControl fullWidth size="small">
-                  <InputLabel>Priority</InputLabel>
-                  <Select value={priorityFilter} onChange={(e) => setPriorityFilter(e.target.value)}>
+                <FormControl fullWidth size="small" variant="outlined">
+                  <InputLabel id="priority-filter-label">Priority</InputLabel>
+                  <Select
+                    labelId="priority-filter-label"
+                    id="priority-filter"
+                    value={priorityFilter}
+                    label="Priority"     // 👈 Required for proper label notch
+                    onChange={(e) => setPriorityFilter(e.target.value)}
+                  >
                     <MenuItem value="all">All Priority</MenuItem>
                     <MenuItem value="high">High</MenuItem>
                     <MenuItem value="medium">Medium</MenuItem>
@@ -439,6 +629,7 @@ const RenewalWhatsAppManager = () => {
                   </Select>
                 </FormControl>
               </Grid>
+
             </Grid>
           </CardContent>
 
@@ -497,16 +688,16 @@ const RenewalWhatsAppManager = () => {
                             {chat.lastMessageTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                           </Typography>
                           {chat.unreadCount > 0 && (
-                            <Badge 
-                              badgeContent={chat.unreadCount} 
+                            <Badge
+                              badgeContent={chat.unreadCount}
                               color="primary"
                               sx={{ display: 'block', mt: 0.5 }}
                             />
                           )}
                         </Box>
                       </Box>
-                      
-                      <Typography variant="body2" color="text.secondary" sx={{ 
+
+                      <Typography variant="body2" color="text.secondary" sx={{
                         overflow: 'hidden',
                         textOverflow: 'ellipsis',
                         whiteSpace: 'nowrap',
@@ -573,10 +764,10 @@ const RenewalWhatsAppManager = () => {
                 </Box>
 
                 {/* Renewal Info Bar */}
-                <Paper 
-                  sx={{ 
-                    mt: 2, 
-                    p: 2, 
+                <Paper
+                  sx={{
+                    mt: 2,
+                    p: 2,
                     backgroundColor: alpha(theme.palette.primary.main, 0.05),
                     borderLeft: 4,
                     borderLeftColor: 'primary.main'
@@ -597,16 +788,17 @@ const RenewalWhatsAppManager = () => {
                     </Grid>
                     <Grid item xs={3}>
                       <Typography variant="caption" color="text.secondary">Days Left</Typography>
-                      <Typography variant="body2" sx={{ fontWeight: 500, color: 
-                        activeChat.renewalContext.daysToRenewal <= 7 ? 'error.main' : 'text.primary'
+                      <Typography variant="body2" sx={{
+                        fontWeight: 500, color:
+                          activeChat.renewalContext.daysToRenewal <= 7 ? 'error.main' : 'text.primary'
                       }}>
                         {activeChat.renewalContext.daysToRenewal} days
                       </Typography>
                     </Grid>
                     <Grid item xs={3}>
                       <Typography variant="caption" color="text.secondary">Stage</Typography>
-                      <Chip 
-                        size="small" 
+                      <Chip
+                        size="small"
                         label={activeChat.renewalContext.stage}
                         color={activeChat.renewalContext.stage === 'completed' ? 'success' : 'default'}
                       />
@@ -630,8 +822,8 @@ const RenewalWhatsAppManager = () => {
                       sx={{
                         p: 2,
                         maxWidth: '70%',
-                        backgroundColor: message.sender === 'agent' 
-                          ? 'primary.main' 
+                        backgroundColor: message.sender === 'agent'
+                          ? 'primary.main'
                           : theme.palette.mode === 'dark' ? 'grey.800' : 'grey.100',
                         color: message.sender === 'agent' ? 'white' : 'text.primary'
                       }}
@@ -639,14 +831,14 @@ const RenewalWhatsAppManager = () => {
                       <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap' }}>
                         {message.message}
                       </Typography>
-                      <Box sx={{ 
-                        display: 'flex', 
-                        alignItems: 'center', 
-                        gap: 1, 
+                      <Box sx={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 1,
                         mt: 1,
                         justifyContent: message.sender === 'agent' ? 'flex-end' : 'flex-start'
                       }}>
-                        <Typography variant="caption" sx={{ 
+                        <Typography variant="caption" sx={{
                           color: message.sender === 'agent' ? 'rgba(255,255,255,0.7)' : 'text.secondary'
                         }}>
                           {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
@@ -666,10 +858,10 @@ const RenewalWhatsAppManager = () => {
               {/* Message Input */}
               <CardContent sx={{ borderTop: 1, borderColor: 'divider', pt: 2 }}>
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                  <IconButton size="small">
+                  <IconButton size="small" onClick={() => setAttachmentDialog(true)}>
                     <AttachFileIcon />
                   </IconButton>
-                  <IconButton size="small">
+                  <IconButton size="small" onClick={() => setImageDialog(true)}>
                     <ImageIcon />
                   </IconButton>
                   <TextField
@@ -685,8 +877,8 @@ const RenewalWhatsAppManager = () => {
                   <IconButton size="small" onClick={() => setTemplateDialog(true)}>
                     <DescriptionIcon />
                   </IconButton>
-                  <IconButton 
-                    size="small" 
+                  <IconButton
+                    size="small"
                     onClick={handleSendMessage}
                     disabled={!newMessage.trim()}
                     sx={{ color: 'primary.main' }}
@@ -697,10 +889,10 @@ const RenewalWhatsAppManager = () => {
               </CardContent>
             </>
           ) : (
-            <Box sx={{ 
-              display: 'flex', 
-              alignItems: 'center', 
-              justifyContent: 'center', 
+            <Box sx={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
               height: '100%',
               flexDirection: 'column',
               gap: 2
@@ -712,16 +904,6 @@ const RenewalWhatsAppManager = () => {
             </Box>
           )}
         </Card>
-      </Box>
-
-      {/* Floating Action Buttons */}
-      <Box sx={{ position: 'fixed', bottom: 20, right: 20, display: 'flex', flexDirection: 'column', gap: 1 }}>
-        <Fab color="primary" onClick={() => setNewChatDialog(true)}>
-          <AddIcon />
-        </Fab>
-        {/* <Fab color="secondary" onClick={() => setBroadcastDialog(true)}>
-          <GroupIcon />
-        </Fab> */}
       </Box>
 
       {/* New Chat Dialog */}
@@ -814,9 +996,9 @@ const RenewalWhatsAppManager = () => {
         <DialogContent>
           <List>
             {mockTemplates.map((template, index) => (
-              <ListItem 
+              <ListItem
                 key={index}
-                button 
+                button
                 onClick={() => {
                   setNewMessage(template.message);
                   setTemplateDialog(false);
@@ -825,7 +1007,7 @@ const RenewalWhatsAppManager = () => {
                 <ListItemIcon>
                   <DescriptionIcon />
                 </ListItemIcon>
-                <ListItemText 
+                <ListItemText
                   primary={template.name}
                   secondary={template.message.substring(0, 100) + '...'}
                 />
@@ -893,12 +1075,250 @@ const RenewalWhatsAppManager = () => {
             </DialogContent>
             <DialogActions>
               <Button onClick={() => setChatInfoDialog(false)}>Close</Button>
-              <Button variant="contained" startIcon={<EditIcon />}>
+              <Button variant="contained" startIcon={<EditIcon />} onClick={handleOpenEditDetails}>
                 Edit Details
               </Button>
             </DialogActions>
           </>
         )}
+      </Dialog>
+
+      {/* Edit Details Dialog */}
+      <Dialog open={editDetailsDialog} onClose={() => setEditDetailsDialog(false)} maxWidth="sm" fullWidth>
+        <DialogTitle>
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <Typography variant="h6">Edit Chat Details</Typography>
+            <IconButton onClick={() => setEditDetailsDialog(false)}>
+              <CloseIcon />
+            </IconButton>
+          </Box>
+        </DialogTitle>
+        <DialogContent>
+          <Grid container spacing={2} sx={{ mt: 0.5 }}>
+            <Grid item xs={6}>
+              <TextField
+                fullWidth
+                label="Customer Name"
+                value={editData.customerName}
+                onChange={(e) => setEditData(prev => ({ ...prev, customerName: e.target.value }))}
+              />
+            </Grid>
+            <Grid item xs={6}>
+              <TextField
+                fullWidth
+                label="Phone Number"
+                value={editData.phoneNumber}
+                onChange={(e) => setEditData(prev => ({ ...prev, phoneNumber: e.target.value }))}
+              />
+            </Grid>
+            <Grid item xs={6}>
+              <TextField
+                fullWidth
+                label="Policy Number"
+                value={editData.policyNumber}
+                onChange={(e) => setEditData(prev => ({ ...prev, policyNumber: e.target.value }))}
+              />
+            </Grid>
+            <Grid item xs={6}>
+              <TextField
+                fullWidth
+                label="Premium Amount"
+                value={editData.premiumAmount}
+                onChange={(e) => setEditData(prev => ({ ...prev, premiumAmount: e.target.value }))}
+              />
+            </Grid>
+            <Grid item xs={6}>
+              <TextField
+                fullWidth
+                label="Renewal Date"
+                type="date"
+                value={editData.renewalDate}
+                onChange={(e) => setEditData(prev => ({ ...prev, renewalDate: e.target.value }))}
+                InputLabelProps={{ shrink: true }}
+              />
+            </Grid>
+            <Grid item xs={6}>
+              <FormControl fullWidth>
+                <InputLabel>Stage</InputLabel>
+                <Select
+                  value={editData.stage}
+                  label="Stage"
+                  onChange={(e) => setEditData(prev => ({ ...prev, stage: e.target.value }))}
+                >
+                  <MenuItem value="initiated">Initiated</MenuItem>
+                  <MenuItem value="documentation">Documentation</MenuItem>
+                  <MenuItem value="payment-pending">Payment Pending</MenuItem>
+                  <MenuItem value="payment-completed">Payment Completed</MenuItem>
+                  <MenuItem value="completed">Completed</MenuItem>
+                  <MenuItem value="declined">Declined</MenuItem>
+                </Select>
+              </FormControl>
+            </Grid>
+            <Grid item xs={6}>
+              <FormControl fullWidth>
+                <InputLabel>Priority</InputLabel>
+                <Select
+                  value={editData.priority}
+                  label="Priority"
+                  onChange={(e) => setEditData(prev => ({ ...prev, priority: e.target.value }))}
+                >
+                  <MenuItem value="high">High</MenuItem>
+                  <MenuItem value="medium">Medium</MenuItem>
+                  <MenuItem value="normal">Normal</MenuItem>
+                  <MenuItem value="low">Low</MenuItem>
+                </Select>
+              </FormControl>
+            </Grid>
+            <Grid item xs={6}>
+              <TextField
+                fullWidth
+                label="Assigned Agent"
+                value={editData.agentAssigned}
+                onChange={(e) => setEditData(prev => ({ ...prev, agentAssigned: e.target.value }))}
+              />
+            </Grid>
+          </Grid>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setEditDetailsDialog(false)}>Cancel</Button>
+          <Button variant="contained" onClick={handleSaveEditDetails}>
+            Save Changes
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Attachment Dialog */}
+      <Dialog open={attachmentDialog} onClose={() => setAttachmentDialog(false)} maxWidth="sm" fullWidth>
+        <DialogTitle>
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <Typography variant="h6">Send Attachment</Typography>
+            <IconButton onClick={() => setAttachmentDialog(false)}>
+              <CloseIcon />
+            </IconButton>
+          </Box>
+        </DialogTitle>
+        <DialogContent>
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, py: 2 }}>
+            <Button
+              variant="outlined"
+              component="label"
+              startIcon={<AttachFileIcon />}
+              sx={{ py: 2 }}
+            >
+              {selectedAttachment ? selectedAttachment.name : 'Choose File'}
+              <input
+                type="file"
+                hidden
+                onChange={handleAttachmentChange}
+                accept=".pdf,.doc,.docx,.xls,.xlsx,.txt,.zip"
+              />
+            </Button>
+            {selectedAttachment && (
+              <Box sx={{ p: 2, bgcolor: alpha(theme.palette.primary.main, 0.1), borderRadius: 1 }}>
+                <Typography variant="body2" fontWeight="500">{selectedAttachment.name}</Typography>
+                <Typography variant="caption" color="text.secondary">
+                  {(selectedAttachment.size / 1024).toFixed(2)} KB
+                </Typography>
+              </Box>
+            )}
+            <TextField
+              fullWidth
+              label="Caption (Optional)"
+              value={attachmentCaption}
+              onChange={(e) => setAttachmentCaption(e.target.value)}
+              placeholder="Add a caption for this attachment..."
+              multiline
+              rows={2}
+            />
+          </Box>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => {
+            setAttachmentDialog(false);
+            setSelectedAttachment(null);
+            setAttachmentCaption('');
+          }}>Cancel</Button>
+          <Button
+            variant="contained"
+            onClick={handleSendAttachment}
+            disabled={!selectedAttachment}
+            startIcon={<SendIcon />}
+          >
+            Send
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Image Dialog */}
+      <Dialog open={imageDialog} onClose={() => setImageDialog(false)} maxWidth="sm" fullWidth>
+        <DialogTitle>
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <Typography variant="h6">Send Image</Typography>
+            <IconButton onClick={() => setImageDialog(false)}>
+              <CloseIcon />
+            </IconButton>
+          </Box>
+        </DialogTitle>
+        <DialogContent>
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, py: 2 }}>
+            <Button
+              variant="outlined"
+              component="label"
+              startIcon={<ImageIcon />}
+              sx={{ py: 2 }}
+            >
+              {selectedImage ? selectedImage.name : 'Choose Image'}
+              <input
+                type="file"
+                hidden
+                onChange={handleImageChange}
+                accept="image/*"
+              />
+            </Button>
+            {imagePreview && (
+              <Box sx={{ textAlign: 'center' }}>
+                <img
+                  src={imagePreview}
+                  alt="Preview"
+                  style={{
+                    maxWidth: '100%',
+                    maxHeight: 300,
+                    borderRadius: 8,
+                    boxShadow: '0 2px 8px rgba(0,0,0,0.15)'
+                  }}
+                />
+                <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 1 }}>
+                  {selectedImage?.name} - {(selectedImage?.size / 1024).toFixed(2)} KB
+                </Typography>
+              </Box>
+            )}
+            <TextField
+              fullWidth
+              label="Caption (Optional)"
+              value={imageCaption}
+              onChange={(e) => setImageCaption(e.target.value)}
+              placeholder="Add a caption for this image..."
+              multiline
+              rows={2}
+            />
+          </Box>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => {
+            setImageDialog(false);
+            setSelectedImage(null);
+            setImageCaption('');
+            setImagePreview(null);
+          }}>Cancel</Button>
+          <Button
+            variant="contained"
+            onClick={handleSendImage}
+            disabled={!selectedImage}
+            startIcon={<SendIcon />}
+          >
+            Send
+          </Button>
+        </DialogActions>
       </Dialog>
     </Box>
   );

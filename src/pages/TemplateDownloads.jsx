@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { jsPDF } from 'jspdf';
 import templateService from '../services/templateService';
 import {
   Box,
@@ -18,7 +19,8 @@ import {
   useTheme,
   alpha,
   Snackbar,
-  Alert
+  Alert,
+  CircularProgress
 } from '@mui/material';
 import {
   Download as DownloadIcon,
@@ -40,6 +42,7 @@ const TemplateDownloads = () => {
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
   const [templates, setTemplates] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [downloading, setDownloading] = useState(null);
 
   // Load templates from API on component mount
   useEffect(() => {
@@ -89,17 +92,180 @@ const TemplateDownloads = () => {
     }
   };
 
+  // Generate PDF content based on template category
+  const generatePDFContent = (doc, template) => {
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const pageHeight = doc.internal.pageSize.getHeight();
+    const margin = 20;
+    let yPos = margin;
+
+    // Header
+    doc.setFillColor(41, 98, 255);
+    doc.rect(0, 0, pageWidth, 40, 'F');
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(20);
+    doc.setFont('helvetica', 'bold');
+    doc.text(template.name, margin, 28);
+
+    // Reset text color
+    doc.setTextColor(0, 0, 0);
+    yPos = 60;
+
+    // Category badge
+    doc.setFillColor(240, 240, 240);
+    doc.roundedRect(margin, yPos, 80, 20, 3, 3, 'F');
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'normal');
+    doc.text(`Category: ${template.category}`, margin + 5, yPos + 13);
+    yPos += 35;
+
+    // Description
+    doc.setFontSize(12);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Description:', margin, yPos);
+    yPos += 10;
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(11);
+    const splitDescription = doc.splitTextToSize(template.description, pageWidth - 2 * margin);
+    doc.text(splitDescription, margin, yPos);
+    yPos += splitDescription.length * 7 + 15;
+
+    // Form fields based on category
+    doc.setFontSize(14);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Form Fields:', margin, yPos);
+    yPos += 15;
+
+    const formFields = getFormFieldsByCategory(template.category);
+    doc.setFontSize(11);
+    doc.setFont('helvetica', 'normal');
+
+    formFields.forEach((field, index) => {
+      if (yPos > pageHeight - 40) {
+        doc.addPage();
+        yPos = margin;
+      }
+
+      // Field label
+      doc.text(`${index + 1}. ${field.label}:`, margin, yPos);
+
+      // Field input line
+      doc.setDrawColor(200, 200, 200);
+      doc.line(margin + 100, yPos, pageWidth - margin, yPos);
+
+      yPos += 20;
+    });
+
+    // Footer
+    const currentDate = new Date().toLocaleDateString();
+    doc.setFontSize(9);
+    doc.setTextColor(128, 128, 128);
+    doc.text(`Generated on: ${currentDate}`, margin, pageHeight - 15);
+    doc.text(`Template ID: ${template.id}`, pageWidth - margin - 50, pageHeight - 15);
+
+    // Add signature section
+    if (yPos < pageHeight - 80) {
+      yPos = Math.max(yPos + 30, pageHeight - 80);
+      doc.setTextColor(0, 0, 0);
+      doc.setFontSize(11);
+      doc.text('Signature: ___________________', margin, yPos);
+      doc.text('Date: ___________________', pageWidth / 2, yPos);
+    }
+  };
+
+  // Get form fields based on template category
+  const getFormFieldsByCategory = (category) => {
+    switch (category) {
+      case 'Proposal':
+        return [
+          { label: 'Full Name' },
+          { label: 'Date of Birth' },
+          { label: 'Address' },
+          { label: 'Phone Number' },
+          { label: 'Email Address' },
+          { label: 'Policy Type' },
+          { label: 'Coverage Amount' },
+          { label: 'Premium Preference' },
+          { label: 'Nominee Name' },
+          { label: 'Nominee Relationship' }
+        ];
+      case 'KYC':
+        return [
+          { label: 'Full Legal Name' },
+          { label: 'Date of Birth' },
+          { label: 'PAN Number' },
+          { label: 'Aadhaar Number' },
+          { label: 'Current Address' },
+          { label: 'Permanent Address' },
+          { label: 'Occupation' },
+          { label: 'Annual Income' },
+          { label: 'ID Proof Type' },
+          { label: 'ID Proof Number' }
+        ];
+      case 'Claims':
+        return [
+          { label: 'Policy Number' },
+          { label: 'Policyholder Name' },
+          { label: 'Claim Type' },
+          { label: 'Date of Incident' },
+          { label: 'Description of Incident' },
+          { label: 'Claim Amount' },
+          { label: 'Hospital/Garage Name' },
+          { label: 'Doctor/Mechanic Name' },
+          { label: 'Bank Account Number' },
+          { label: 'IFSC Code' }
+        ];
+      case 'Renewal':
+        return [
+          { label: 'Existing Policy Number' },
+          { label: 'Policyholder Name' },
+          { label: 'Current Premium' },
+          { label: 'New Coverage Needed' },
+          { label: 'Address Changes (if any)' },
+          { label: 'Contact Number' },
+          { label: 'Email Address' },
+          { label: 'Payment Mode' },
+          { label: 'Auto-Renewal Preference' }
+        ];
+      default:
+        return [
+          { label: 'Name' },
+          { label: 'Date' },
+          { label: 'Address' },
+          { label: 'Phone' },
+          { label: 'Email' }
+        ];
+    }
+  };
+
   const handleDownload = async (template) => {
     try {
+      setDownloading(template.id);
+
+      // Update download count in the service
       await templateService.downloadTemplate(template.id);
-      setSnackbar({
-        open: true,
-        message: `Downloading ${template.name}...`,
-        severity: 'success'
+
+      // Generate PDF
+      const doc = new jsPDF({
+        orientation: 'portrait',
+        unit: 'pt',
+        format: 'a4'
       });
 
-      // In real implementation, this would trigger actual file download
-      // window.open(template.url, '_blank');
+      // Generate PDF content based on template
+      generatePDFContent(doc, template);
+
+      // Generate filename
+      const filename = template.name.toLowerCase().replace(/\s+/g, '-') + '.pdf';
+
+      // Download the PDF
+      doc.save(filename);
+
+      setSnackbar({
+        open: true,
+        message: `Successfully downloaded ${template.name}`,
+        severity: 'success'
+      });
     } catch (error) {
       console.error('Error downloading template:', error);
       setSnackbar({
@@ -107,6 +273,8 @@ const TemplateDownloads = () => {
         message: 'Failed to download template',
         severity: 'error'
       });
+    } finally {
+      setDownloading(null);
     }
   };
 
@@ -338,10 +506,11 @@ const TemplateDownloads = () => {
                 <Button
                   fullWidth
                   variant="contained"
-                  startIcon={<DownloadIcon />}
+                  startIcon={downloading === template.id ? <CircularProgress size={20} color="inherit" /> : <DownloadIcon />}
                   onClick={() => handleDownload(template)}
+                  disabled={downloading === template.id}
                 >
-                  Download {template.format}
+                  {downloading === template.id ? 'Generating PDF...' : `Download PDF`}
                 </Button>
               </Box>
             </Card>

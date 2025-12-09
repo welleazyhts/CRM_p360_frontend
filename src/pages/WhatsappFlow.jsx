@@ -715,7 +715,7 @@ const WhatsappFlow = () => {
             </CardContent>
           </Card>
         </Grid>
-
+                  
         <Grid item xs={12} md={4}>
           <Card>
             <CardContent>

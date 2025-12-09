@@ -231,9 +231,9 @@ const DispositionConfigurator = () => {
         showSnackbar('Sub-disposition added successfully');
         handleCloseSubDispDialog();
       }
-    } else {
+    } else {  
       const result = updateSubDisposition(parentId, data.id, data);
-      if (result.success) {
+      if (result.success) {  
         showSnackbar('Sub-disposition updated successfully');
         handleCloseSubDispDialog();
       }

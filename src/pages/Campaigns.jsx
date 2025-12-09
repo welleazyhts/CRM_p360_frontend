@@ -448,24 +448,34 @@ const CampaignManager = () => {
   };
 
   const handleSaveCampaign = () => {
+    // Safely access advancedScheduling with fallback
+    const advancedScheduling = newCampaign.advancedScheduling || { enabled: false, intervals: [] };
+    const isAdvancedSchedulingEnabled = advancedScheduling.enabled || false;
+    const intervals = advancedScheduling.intervals || [];
+
     const campaign = {
       ...newCampaign,
-      id: campaigns.length + 1,
+      id: newCampaign.id || campaigns.length + 1,
       audienceSize: audiences.find(a => a.name === newCampaign.audience)?.size || 0,
-      progress: 0,
-      createdDate: new Date().toISOString().split('T')[0],
-      tags: newCampaign.advancedScheduling.enabled ? ['advanced-scheduling'] : [],
-      metrics: { sent: 0, delivered: 0, opened: 0, clicked: 0, bounced: 0 },
-      advancedScheduling: newCampaign.advancedScheduling.enabled ? {
+      progress: newCampaign.progress || 0,
+      createdDate: newCampaign.createdDate || new Date().toISOString().split('T')[0],
+      tags: isAdvancedSchedulingEnabled ? ['advanced-scheduling'] : (newCampaign.tags || []),
+      metrics: newCampaign.metrics || { sent: 0, delivered: 0, opened: 0, clicked: 0, bounced: 0 },
+      advancedScheduling: isAdvancedSchedulingEnabled ? {
         enabled: true,
-        intervals: newCampaign.advancedScheduling.intervals.filter(interval => interval.enabled)
+        intervals: intervals.filter(interval => interval && interval.enabled)
       } : {
         enabled: false,
         intervals: []
       }
     };
 
-    setCampaigns(prev => [...prev, campaign]);
+    // Check if this is an edit (campaign already exists) or new campaign
+    if (newCampaign.id) {
+      setCampaigns(prev => prev.map(c => c.id === newCampaign.id ? campaign : c));
+    } else {
+      setCampaigns(prev => [...prev, campaign]);
+    }
     setCreateCampaignDialog(false);
   };
 
@@ -658,7 +668,19 @@ const CampaignManager = () => {
   const handleEditCampaign = (campaignId) => {
     const campaign = campaigns.find(c => c.id === campaignId);
     if (campaign) {
-      setNewCampaign(campaign);
+      // Ensure the campaign has all required properties with defaults
+      const campaignWithDefaults = {
+        ...campaign,
+        advancedScheduling: campaign.advancedScheduling || {
+          enabled: false,
+          intervals: []
+        },
+        providers: campaign.providers || {},
+        channels: campaign.channels || [],
+        tags: campaign.tags || [],
+        metrics: campaign.metrics || { sent: 0, delivered: 0, opened: 0, clicked: 0, bounced: 0 }
+      };
+      setNewCampaign(campaignWithDefaults);
       setCampaignStep(0);
       setCreateCampaignDialog(true);
     }
