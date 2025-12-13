@@ -90,7 +90,9 @@ import {
   CloudDownload as CloudDownloadIcon,
   VerifiedUser as VerifiedUserIcon,
   Error as ErrorIcon,
-  PushPin as PushPinIcon
+  PushPin as PushPinIcon,
+  Star as StarIcon,
+  StarBorder as StarBorderIcon
 } from '@mui/icons-material';
 import { analyzeEmail } from '../services/emailAI';
 
@@ -653,6 +655,25 @@ const LeadManagement = () => {
     const saved = localStorage.getItem('pinnedLeads');
     return saved ? JSON.parse(saved) : [];
   });
+
+  // Starred leads states
+  const [starredLeads, setStarredLeads] = useState(() => {
+    const saved = localStorage.getItem('starredLeads');
+    return saved ? JSON.parse(saved) : [];
+  });
+
+  const handleToggleStar = (e, leadId) => {
+    e.stopPropagation();
+    const isStarred = starredLeads.includes(leadId);
+    let newStarred;
+    if (isStarred) {
+      newStarred = starredLeads.filter(id => id !== leadId);
+    } else {
+      newStarred = [...starredLeads, leadId];
+    }
+    setStarredLeads(newStarred);
+    localStorage.setItem('starredLeads', JSON.stringify(newStarred));
+  };
   const [bulkAssignmentDialog, setBulkAssignmentDialog] = useState(false);
   const [bulkAssignmentAgent, setBulkAssignmentAgent] = useState('');
   const [agentTableOpen, setAgentTableOpen] = useState(false);
@@ -1998,6 +2019,15 @@ const LeadManagement = () => {
                       </TableCell>
                       <TableCell>
                         <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                          <Tooltip title={starredLeads.includes(lead.id) ? "Mark as Unimportant" : "Mark as Important"}>
+                            <IconButton
+                              size="small"
+                              onClick={(e) => handleToggleStar(e, lead.id)}
+                              sx={{ mr: 1, color: starredLeads.includes(lead.id) ? 'warning.main' : 'action.disabled' }}
+                            >
+                              {starredLeads.includes(lead.id) ? <StarIcon fontSize="small" /> : <StarBorderIcon fontSize="small" />}
+                            </IconButton>
+                          </Tooltip>
                           <Avatar sx={{
                             mr: 2,
                             bgcolor: lead.leadType === 'Premium' ? '#FFD700' : theme.palette.primary.main,

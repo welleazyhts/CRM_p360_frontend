@@ -2449,7 +2449,7 @@ const Dashboard = () => {
                               boxShadow: '0 4px 20px rgba(0,0,0,0.15)'
                             }}
                           />
-                          <Legend />
+                          <Legend iconType="circle" />
                           <Bar yAxisId="left" dataKey="efficiency" fill={alpha(theme.palette.primary.main, 0.8)} name="Efficiency %" />
                           <Bar yAxisId="right" dataKey="cost" fill={alpha(theme.palette.error.main, 0.8)} name="Cost per Lead (₹)" />
                         </BarChart>
@@ -2482,7 +2482,7 @@ const Dashboard = () => {
                               boxShadow: '0 4px 20px rgba(0,0,0,0.15)'
                             }}
                           />
-                          <Legend />
+                          <Legend iconType="circle" />
                         </RadialBarChart>
                       </ResponsiveContainer>
                     </Paper>
@@ -2585,7 +2585,7 @@ const Dashboard = () => {
                         boxShadow: '0 4px 20px rgba(0,0,0,0.15)'
                       }}
                     />
-                    <Legend />
+                    <Legend iconType="circle" />
                     <Bar
                       dataKey="newCases"
                       fill={alpha(theme.palette.primary.main, 0.8)}
@@ -2632,7 +2632,7 @@ const Dashboard = () => {
                         boxShadow: '0 4px 20px rgba(0,0,0,0.15)'
                       }}
                     />
-                    <Legend />
+                    <Legend iconType="circle" />
                     <Area
                       type="monotone"
                       dataKey="successRate"
@@ -2702,7 +2702,7 @@ const Dashboard = () => {
                           boxShadow: '0 4px 20px rgba(0,0,0,0.15)'
                         }}
                       />
-                      <Legend />
+                      <Legend iconType="circle" />
                       <Bar
                         dataKey="status.renewed"
                         stackId="a"
@@ -2795,7 +2795,7 @@ const Dashboard = () => {
                           boxShadow: '0 4px 20px rgba(0,0,0,0.15)'
                         }}
                       />
-                      <Legend />
+                      <Legend iconType="circle" />
                       <Line
                         type="monotone"
                         dataKey="payment.received"
@@ -2856,7 +2856,7 @@ const Dashboard = () => {
                       ))}
                     </Pie>
                     <RechartsTooltip formatter={(value) => `${value}%`} />
-                    <Legend />
+                    <Legend iconType="circle" />
                   </PieChart>
                 </ResponsiveContainer>
               </Paper>
@@ -2897,7 +2897,7 @@ const Dashboard = () => {
                         boxShadow: '0 4px 20px rgba(0,0,0,0.15)'
                       }}
                     />
-                    <Legend />
+                    <Legend iconType="circle" />
                     <Bar dataKey="cases" fill={alpha(theme.palette.info.main, 0.8)} name="Total Cases" />
                     <Bar dataKey="renewed" fill={alpha(theme.palette.success.main, 0.8)} name="Renewed" />
                   </BarChart>
@@ -2934,7 +2934,7 @@ const Dashboard = () => {
                         boxShadow: '0 4px 20px rgba(0,0,0,0.15)'
                       }}
                     />
-                    <Legend />
+                    <Legend iconType="circle" />
                     <Bar yAxisId="left" dataKey="cases" fill={alpha(theme.palette.primary.main, 0.8)} name="Total Cases" />
                     <Bar yAxisId="left" dataKey="renewed" fill={alpha(theme.palette.success.main, 0.8)} name="Renewed" />
                     <Bar yAxisId="right" dataKey="efficiency" fill={alpha(theme.palette.warning.main, 0.8)} name="Efficiency %" />
@@ -2973,7 +2973,7 @@ const Dashboard = () => {
                         boxShadow: '0 4px 20px rgba(0,0,0,0.15)'
                       }}
                     />
-                    <Legend />
+                    <Legend iconType="circle" />
                     <Bar yAxisId="left" dataKey="count" fill={alpha(theme.palette.info.main, 0.8)} name="Contact Count" />
                     <Bar yAxisId="left" dataKey="success" fill={alpha(theme.palette.success.main, 0.8)} name="Success Rate %" />
                     <Bar yAxisId="right" dataKey="cost" fill={alpha(theme.palette.error.main, 0.8)} name="Cost per Contact (₹)" />
@@ -3016,7 +3016,7 @@ const Dashboard = () => {
                         'Share'
                       ]}
                     />
-                    <Legend />
+                    <Legend iconType="circle" />
                   </PieChart>
                 </ResponsiveContainer>
               </Paper>
@@ -3052,7 +3052,7 @@ const Dashboard = () => {
                         boxShadow: '0 4px 20px rgba(0,0,0,0.15)'
                       }}
                     />
-                    <Legend />
+                    <Legend iconType="circle" />
                     <Bar yAxisId="left" dataKey="volume" fill={alpha(theme.palette.info.main, 0.8)} name="Volume" />
                     <Bar yAxisId="left" dataKey="costPerRenewal" fill={alpha(theme.palette.warning.main, 0.8)} name="Cost per Renewal (₹)" />
                     <Bar yAxisId="right" dataKey="totalCost" fill={alpha(theme.palette.error.main, 0.8)} name="Total Cost (₹)" />
@@ -3098,7 +3098,7 @@ const Dashboard = () => {
                         boxShadow: '0 4px 20px rgba(0,0,0,0.15)'
                       }}
                     />
-                    <Legend />
+                    <Legend iconType="circle" />
                     <Bar yAxisId="left" dataKey="renewals" fill={alpha(theme.palette.primary.main, 0.8)} name="Renewals" />
                     <Bar yAxisId="left" dataKey="costPerRenewal" fill={alpha(theme.palette.warning.main, 0.8)} name="Cost per Renewal (₹)" />
                     <Bar yAxisId="right" dataKey="efficiency" fill={alpha(theme.palette.success.main, 0.8)} name="Efficiency (%)" />
@@ -3198,7 +3198,7 @@ const Dashboard = () => {
                         boxShadow: '0 4px 20px rgba(0,0,0,0.15)'
                       }}
                     />
-                    <Legend />
+                    <Legend iconType="circle" />
                   </PieChart>
                 </ResponsiveContainer>
               </Paper>
@@ -3228,7 +3228,7 @@ const Dashboard = () => {
                         boxShadow: '0 4px 20px rgba(0,0,0,0.15)'
                       }}
                     />
-                    <Legend />
+                    <Legend iconType="circle" />
                     <Line
                       type="monotone"
                       dataKey="retained"
@@ -3333,7 +3333,7 @@ const Dashboard = () => {
                       ))}
                     </Pie>
                     <RechartsTooltip formatter={(value, name) => [`${value}%`, name]} />
-                    <Legend />
+                    <Legend iconType="circle" />
                   </PieChart>
                 </ResponsiveContainer>
               </Paper>
@@ -3362,7 +3362,7 @@ const Dashboard = () => {
                         boxShadow: '0 4px 20px rgba(0,0,0,0.15)'
                       }}
                     />
-                    <Legend />
+                    <Legend iconType="circle" />
                     <Line
                       type="monotone"
                       dataKey="avgDays"
@@ -3400,7 +3400,7 @@ const Dashboard = () => {
                         boxShadow: '0 4px 20px rgba(0,0,0,0.15)'
                       }}
                     />
-                    <Legend />
+                    <Legend iconType="circle" />
                     <Bar
                       dataKey="count"
                       fill={({ payload }) => payload?.color || '#8884d8'}
@@ -3439,7 +3439,7 @@ const Dashboard = () => {
                         boxShadow: '0 4px 20px rgba(0,0,0,0.15)'
                       }}
                     />
-                    <Legend />
+                    <Legend iconType="circle" />
                     <Bar
                       dataKey="pending"
                       stackId="a"
@@ -3483,7 +3483,7 @@ const Dashboard = () => {
                         boxShadow: '0 4px 20px rgba(0,0,0,0.15)'
                       }}
                     />
-                    <Legend />
+                    <Legend iconType="circle" />
                     <Bar
                       dataKey="target"
                       fill={alpha(theme.palette.info.main, 0.3)}
@@ -3536,7 +3536,7 @@ const Dashboard = () => {
                         boxShadow: '0 4px 20px rgba(0,0,0,0.15)'
                       }}
                     />
-                    <Legend />
+                    <Legend iconType="circle" />
                   </PieChart>
                 </ResponsiveContainer>
               </Paper>

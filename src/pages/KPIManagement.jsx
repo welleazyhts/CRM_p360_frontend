@@ -183,6 +183,7 @@ const KPIManagement = () => {
   const [openDialog, setOpenDialog] = useState(false);
   const [selectedKPI, setSelectedKPI] = useState(null);
   const [editingKPI, setEditingKPI] = useState(null);
+  const [viewMode, setViewMode] = useState(false);
 
   // Form state
   const [formData, setFormData] = useState({
@@ -238,7 +239,7 @@ const KPIManagement = () => {
   // Filter data
   useEffect(() => {
     if (!Array.isArray(kpiData)) return;
-    
+
     let filtered = kpiData;
 
     if (searchTerm) {
@@ -280,7 +281,8 @@ const KPIManagement = () => {
   };
 
   // Handle dialog operations
-  const handleOpenDialog = (kpi = null) => {
+  const handleOpenDialog = (kpi = null, isViewMode = false) => {
+    setViewMode(isViewMode);
     if (kpi) {
       setSelectedKPI(kpi);
       setEditingKPI(kpi);
@@ -327,22 +329,23 @@ const KPIManagement = () => {
     setOpenDialog(false);
     setSelectedKPI(null);
     setEditingKPI(null);
+    setViewMode(false);
   };
 
   const handleSaveKPI = () => {
     setLoading(true);
-    
+
     setTimeout(() => {
       if (editingKPI) {
         const updatedData = kpiData.map(record =>
           record.id === editingKPI.id
             ? {
-                ...record,
-                ...formData,
-                progress: Math.round((formData.currentValue / formData.targetValue) * 100),
-                status: calculateStatus(formData.currentValue, formData.targetValue),
-                lastUpdated: new Date().toISOString().split('T')[0]
-              }
+              ...record,
+              ...formData,
+              progress: Math.round((formData.currentValue / formData.targetValue) * 100),
+              status: calculateStatus(formData.currentValue, formData.targetValue),
+              lastUpdated: new Date().toISOString().split('T')[0]
+            }
             : record
         );
         setKpiData(updatedData);
@@ -361,7 +364,7 @@ const KPIManagement = () => {
         setKpiData([...kpiData, newKPI]);
         setSnackbar({ open: true, message: 'KPI added successfully!', severity: 'success' });
       }
-      
+
       setLoading(false);
       handleCloseDialog();
     }, 1000);
@@ -415,7 +418,7 @@ const KPIManagement = () => {
         <Button
           variant="contained"
           startIcon={<AddIcon />}
-          onClick={() => handleOpenDialog()}
+          onClick={() => handleOpenDialog(null, false)}
         >
           Add KPI
         </Button>
@@ -685,12 +688,12 @@ const KPIManagement = () => {
                     <TableCell align="center">
                       <Box sx={{ display: 'flex', gap: 1, justifyContent: 'center' }}>
                         <Tooltip title="View Details">
-                          <IconButton size="small" onClick={() => handleOpenDialog(record)}>
+                          <IconButton size="small" onClick={() => handleOpenDialog(record, true)}>
                             <ViewIcon />
                           </IconButton>
                         </Tooltip>
                         <Tooltip title="Edit KPI">
-                          <IconButton size="small" onClick={() => handleOpenDialog(record)}>
+                          <IconButton size="small" onClick={() => handleOpenDialog(record, false)}>
                             <EditIcon />
                           </IconButton>
                         </Tooltip>
@@ -722,139 +725,267 @@ const KPIManagement = () => {
 
       <Dialog open={openDialog} onClose={handleCloseDialog} maxWidth="md" fullWidth>
         <DialogTitle>
-          {editingKPI ? 'Edit KPI' : 'Add New KPI'}
+          {viewMode ? 'View KPI Details' : (editingKPI ? 'Edit KPI' : 'Add New KPI')}
         </DialogTitle>
         <DialogContent>
-          <Grid container spacing={2} sx={{ mt: 1 }}>
-            <Grid item xs={12} sm={6}>
-              <FormControl fullWidth>
-                <InputLabel>Employee</InputLabel>
-                <Select
-                  value={formData.employeeId}
-                  label="Employee"
-                  onChange={(e) => handleEmployeeChange(e.target.value)}
+          {viewMode && selectedKPI ? (
+            <Box sx={{ mt: 2 }}>
+              {/* Header Section */}
+              <Box sx={{ display: 'flex', alignItems: 'center', mb: 4, p: 2, bgcolor: 'action.hover', borderRadius: 2 }}>
+                <Avatar
+                  sx={{
+                    width: 64,
+                    height: 64,
+                    mr: 3,
+                    bgcolor: theme.palette.primary.main,
+                    fontSize: '1.5rem'
+                  }}
                 >
-                  {employees.map(employee => (
-                    <MenuItem key={employee.id} value={employee.id}>
-                      {employee.name} ({employee.department})
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
+                  {selectedKPI.employeeName.split(' ').map(n => n[0]).join('')}
+                </Avatar>
+                <Box>
+                  <Typography variant="h5" fontWeight="600" gutterBottom>
+                    {selectedKPI.employeeName}
+                  </Typography>
+                  <Typography variant="body1" color="text.secondary">
+                    {selectedKPI.position} • {selectedKPI.department}
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    Manager: {selectedKPI.manager}
+                  </Typography>
+                </Box>
+                <Box sx={{ ml: 'auto' }}>
+                  <Chip
+                    label={selectedKPI.status}
+                    sx={{
+                      bgcolor: alpha(getStatusColor(selectedKPI.status), 0.1),
+                      color: getStatusColor(selectedKPI.status),
+                      borderColor: alpha(getStatusColor(selectedKPI.status), 0.3),
+                      borderWidth: 1,
+                      borderStyle: 'solid',
+                      fontWeight: 600,
+                      px: 1
+                    }}
+                  />
+                </Box>
+              </Box>
+
+              {/* KPI Stats Section */}
+              <Grid container spacing={3} sx={{ mb: 4 }}>
+                <Grid item xs={12}>
+                  <Card variant="outlined">
+                    <CardContent>
+                      <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                        {selectedKPI.kpiName} Progress
+                      </Typography>
+                      <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+                        <Typography variant="h3" fontWeight="600" color="primary">
+                          {selectedKPI.progress}%
+                        </Typography>
+                        <Box sx={{ ml: 2, flex: 1 }}>
+                          <LinearProgress
+                            variant="determinate"
+                            value={Math.min(selectedKPI.progress, 100)}
+                            color={getProgressColor(selectedKPI.progress)}
+                            sx={{ height: 10, borderRadius: 5 }}
+                          />
+                        </Box>
+                      </Box>
+                      <Grid container spacing={2} sx={{ mt: 2 }}>
+                        <Grid item xs={6}>
+                          <Typography variant="caption" color="text.secondary">Current Value</Typography>
+                          <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                            <Typography variant="h6">
+                              {selectedKPI.currentValue.toLocaleString()} {selectedKPI.unit}
+                            </Typography>
+                            {selectedKPI.trend === 'up' && <TrendingUpIcon color="success" sx={{ ml: 1 }} />}
+                            {selectedKPI.trend === 'down' && <TrendingDownIcon color="error" sx={{ ml: 1 }} />}
+                          </Box>
+                        </Grid>
+                        <Grid item xs={6}>
+                          <Typography variant="caption" color="text.secondary">Target Value</Typography>
+                          <Typography variant="h6">
+                            {selectedKPI.targetValue.toLocaleString()} {selectedKPI.unit}
+                          </Typography>
+                        </Grid>
+                      </Grid>
+                    </CardContent>
+                  </Card>
+                </Grid>
+              </Grid>
+
+              {/* Details Grid */}
+              <Grid container spacing={3}>
+                <Grid item xs={12} sm={6}>
+                  <Box sx={{ p: 2, border: 1, borderColor: 'divider', borderRadius: 1 }}>
+                    <Typography variant="caption" color="text.secondary">KPI Type</Typography>
+                    <Typography variant="subtitle1" fontWeight="500">{selectedKPI.kpiType}</Typography>
+                  </Box>
+                </Grid>
+                <Grid item xs={12} sm={6}>
+                  <Box sx={{ p: 2, border: 1, borderColor: 'divider', borderRadius: 1 }}>
+                    <Typography variant="caption" color="text.secondary">Evaluation Period</Typography>
+                    <Typography variant="subtitle1" fontWeight="500">{selectedKPI.period}</Typography>
+                  </Box>
+                </Grid>
+                <Grid item xs={12} sm={6}>
+                  <Box sx={{ p: 2, border: 1, borderColor: 'divider', borderRadius: 1 }}>
+                    <Typography variant="caption" color="text.secondary">Category</Typography>
+                    <Typography variant="subtitle1" fontWeight="500">{selectedKPI.category}</Typography>
+                  </Box>
+                </Grid>
+                <Grid item xs={12} sm={6}>
+                  <Box sx={{ p: 2, border: 1, borderColor: 'divider', borderRadius: 1 }}>
+                    <Typography variant="caption" color="text.secondary">Weightage</Typography>
+                    <Typography variant="subtitle1" fontWeight="500">{selectedKPI.weight}%</Typography>
+                  </Box>
+                </Grid>
+                <Grid item xs={12}>
+                  <Box sx={{ p: 2, border: 1, borderColor: 'divider', borderRadius: 1, bgcolor: 'background.default' }}>
+                    <Typography variant="caption" color="text.secondary">Description</Typography>
+                    <Typography variant="body1" sx={{ mt: 1 }}>{selectedKPI.description}</Typography>
+                  </Box>
+                </Grid>
+                <Grid item xs={12}>
+                  <Typography variant="caption" color="text.secondary" sx={{ fontStyle: 'italic' }}>
+                    Last Updated: {new Date(selectedKPI.lastUpdated).toLocaleDateString()}
+                  </Typography>
+                </Grid>
+              </Grid>
+            </Box>
+          ) : (
+            <Grid container spacing={2} sx={{ mt: 1 }}>
+              <Grid item xs={12} sm={6}>
+                <FormControl fullWidth>
+                  <InputLabel>Employee</InputLabel>
+                  <Select
+                    value={formData.employeeId}
+                    label="Employee"
+                    onChange={(e) => handleEmployeeChange(e.target.value)}
+                  >
+                    {employees.map(employee => (
+                      <MenuItem key={employee.id} value={employee.id}>
+                        {employee.name} ({employee.department})
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  fullWidth
+                  label="KPI Name"
+                  value={formData.kpiName}
+                  onChange={(e) => setFormData({ ...formData, kpiName: e.target.value })}
+                  required
+                />
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <FormControl fullWidth>
+                  <InputLabel>KPI Type</InputLabel>
+                  <Select
+                    value={formData.kpiType}
+                    label="KPI Type"
+                    onChange={(e) => setFormData({ ...formData, kpiType: e.target.value })}
+                  >
+                    {kpiTypes.map(type => (
+                      <MenuItem key={type} value={type}>{type}</MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <FormControl fullWidth>
+                  <InputLabel>Period</InputLabel>
+                  <Select
+                    value={formData.period}
+                    label="Period"
+                    onChange={(e) => setFormData({ ...formData, period: e.target.value })}
+                  >
+                    {periods.map(period => (
+                      <MenuItem key={period} value={period}>{period}</MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  fullWidth
+                  label="Target Value"
+                  type="number"
+                  value={formData.targetValue}
+                  onChange={(e) => setFormData({ ...formData, targetValue: parseFloat(e.target.value) || 0 })}
+                  required
+                />
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  fullWidth
+                  label="Current Value"
+                  type="number"
+                  value={formData.currentValue}
+                  onChange={(e) => setFormData({ ...formData, currentValue: parseFloat(e.target.value) || 0 })}
+                  required
+                />
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  fullWidth
+                  label="Unit"
+                  value={formData.unit}
+                  onChange={(e) => setFormData({ ...formData, unit: e.target.value })}
+                  placeholder="e.g., USD, %, Count, Hours"
+                />
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  fullWidth
+                  label="Weight (%)"
+                  type="number"
+                  value={formData.weight}
+                  onChange={(e) => setFormData({ ...formData, weight: parseInt(e.target.value) || 0 })}
+                  inputProps={{ min: 0, max: 100 }}
+                />
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <FormControl fullWidth>
+                  <InputLabel>Category</InputLabel>
+                  <Select
+                    value={formData.category}
+                    label="Category"
+                    onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                  >
+                    {categories.map(category => (
+                      <MenuItem key={category} value={category}>{category}</MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+              </Grid>
+              <Grid item xs={12}>
+                <TextField
+                  fullWidth
+                  label="Description"
+                  multiline
+                  rows={3}
+                  value={formData.description}
+                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                  placeholder="Describe what this KPI measures and how it's calculated..."
+                />
+              </Grid>
             </Grid>
-            <Grid item xs={12} sm={6}>
-              <TextField
-                fullWidth
-                label="KPI Name"
-                value={formData.kpiName}
-                onChange={(e) => setFormData({ ...formData, kpiName: e.target.value })}
-                required
-              />
-            </Grid>
-            <Grid item xs={12} sm={6}>
-              <FormControl fullWidth>
-                <InputLabel>KPI Type</InputLabel>
-                <Select
-                  value={formData.kpiType}
-                  label="KPI Type"
-                  onChange={(e) => setFormData({ ...formData, kpiType: e.target.value })}
-                >
-                  {kpiTypes.map(type => (
-                    <MenuItem key={type} value={type}>{type}</MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-            </Grid>
-            <Grid item xs={12} sm={6}>
-              <FormControl fullWidth>
-                <InputLabel>Period</InputLabel>
-                <Select
-                  value={formData.period}
-                  label="Period"
-                  onChange={(e) => setFormData({ ...formData, period: e.target.value })}
-                >
-                  {periods.map(period => (
-                    <MenuItem key={period} value={period}>{period}</MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-            </Grid>
-            <Grid item xs={12} sm={6}>
-              <TextField
-                fullWidth
-                label="Target Value"
-                type="number"
-                value={formData.targetValue}
-                onChange={(e) => setFormData({ ...formData, targetValue: parseFloat(e.target.value) || 0 })}
-                required
-              />
-            </Grid>
-            <Grid item xs={12} sm={6}>
-              <TextField
-                fullWidth
-                label="Current Value"
-                type="number"
-                value={formData.currentValue}
-                onChange={(e) => setFormData({ ...formData, currentValue: parseFloat(e.target.value) || 0 })}
-                required
-              />
-            </Grid>
-            <Grid item xs={12} sm={6}>
-              <TextField
-                fullWidth
-                label="Unit"
-                value={formData.unit}
-                onChange={(e) => setFormData({ ...formData, unit: e.target.value })}
-                placeholder="e.g., USD, %, Count, Hours"
-              />
-            </Grid>
-            <Grid item xs={12} sm={6}>
-              <TextField
-                fullWidth
-                label="Weight (%)"
-                type="number"
-                value={formData.weight}
-                onChange={(e) => setFormData({ ...formData, weight: parseInt(e.target.value) || 0 })}
-                inputProps={{ min: 0, max: 100 }}
-              />
-            </Grid>
-            <Grid item xs={12} sm={6}>
-              <FormControl fullWidth>
-                <InputLabel>Category</InputLabel>
-                <Select
-                  value={formData.category}
-                  label="Category"
-                  onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                >
-                  {categories.map(category => (
-                    <MenuItem key={category} value={category}>{category}</MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-            </Grid>
-            <Grid item xs={12}>
-              <TextField
-                fullWidth
-                label="Description"
-                multiline
-                rows={3}
-                value={formData.description}
-                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                placeholder="Describe what this KPI measures and how it's calculated..."
-              />
-            </Grid>
-          </Grid>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={handleCloseDialog}>Cancel</Button>
-          <Button
-            onClick={handleSaveKPI}
-            variant="contained"
-            disabled={loading}
-            startIcon={loading ? <CircularProgress size={20} /> : null}
-          >
-            {loading ? 'Saving...' : (editingKPI ? 'Update' : 'Save')}
-          </Button>
+          )}
+        </DialogContent>        <DialogActions>
+          <Button onClick={handleCloseDialog}>{viewMode ? 'Close' : 'Cancel'}</Button>
+          {!viewMode && (
+            <Button
+              onClick={handleSaveKPI}
+              variant="contained"
+              disabled={loading}
+              startIcon={loading ? <CircularProgress size={20} /> : null}
+            >
+              {loading ? 'Saving...' : (editingKPI ? 'Update' : 'Save')}
+            </Button>
+          )}
         </DialogActions>
       </Dialog>
 

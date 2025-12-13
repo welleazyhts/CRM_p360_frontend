@@ -974,6 +974,7 @@ const CampaignManager = () => {
                     <FormControl fullWidth>
                       <InputLabel>Campaign Type</InputLabel>
                       <Select
+                        label="Campaign Type"
                         value={newCampaign.type}
                         onChange={(e) => setNewCampaign(prev => ({ ...prev, type: e.target.value }))}
                         sx={{
@@ -1161,6 +1162,7 @@ const CampaignManager = () => {
                 <FormControl fullWidth sx={{ mt: 1 }}>
                   <InputLabel>Target Audience</InputLabel>
                   <Select
+                    label="Target Audience"
                     value={newCampaign.audience}
                     onChange={(e) => setNewCampaign(prev => ({ ...prev, audience: e.target.value }))}
                   >

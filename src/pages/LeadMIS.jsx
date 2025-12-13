@@ -2124,16 +2124,7 @@ const LeadMIS = () => {
                         Reset Filters
                       </Button>
                     </Grid>
-                    <Grid item xs={12} sm={6} md={2}>
-                      <Button
-                        variant="contained"
-                        startIcon={<DownloadIcon />}
-                        onClick={handleExportExcel}
-                        fullWidth
-                      >
-                        Export Report
-                      </Button>
-                    </Grid>
+
                   </Grid>
                 </CardContent>
               </Card>
@@ -3458,36 +3449,11 @@ const LeadMIS = () => {
                 </CardContent>
               </Card>
             </Grid>
-
-            {/* Export Options */}
-            <Grid item xs={12} md={6}>
-              <Card>
-                <CardContent>
-                  <Typography variant="h6" fontWeight="600" gutterBottom>
-                    Export Options
-                  </Typography>
-                  <Stack spacing={2}>
-                    <Button
-                      variant="outlined"
-                      startIcon={<DownloadIcon />}
-                      fullWidth
-                    >
-                      Export as Excel (.xlsx)
-                    </Button>
-                    <Button
-                      variant="outlined"
-                      startIcon={<PdfIcon />}
-                      fullWidth
-                    >
-                      Export as PDF
-                    </Button>
-                  </Stack>
-                </CardContent>
-              </Card>
-            </Grid>
           </Grid>
         )
       }
+
+
 
       {
         currentTab === 10 && (
@@ -3721,36 +3687,11 @@ const LeadMIS = () => {
                 </CardContent>
               </Card>
             </Grid>
-
-            {/* Download Options */}
-            <Grid item xs={12}>
-              <Card>
-                <CardContent>
-                  <Typography variant="h6" fontWeight="600" gutterBottom>
-                    Download Options
-                  </Typography>
-                  <Stack direction="row" spacing={2}>
-                    <Button
-                      variant="outlined"
-                      startIcon={<DownloadIcon />}
-                      onClick={handleExportExcel}
-                    >
-                      Export as Excel
-                    </Button>
-                    <Button
-                      variant="outlined"
-                      startIcon={<PdfIcon />}
-                      onClick={handleExportPDF}
-                    >
-                      Export as PDF
-                    </Button>
-                  </Stack>
-                </CardContent>
-              </Card>
-            </Grid>
           </Grid>
         )
       }
+
+
 
 
 
@@ -4071,36 +4012,11 @@ const LeadMIS = () => {
                 </CardContent>
               </Card>
             </Grid>
-
-            {/* Export Options */}
-            <Grid item xs={12}>
-              <Card>
-                <CardContent>
-                  <Typography variant="h6" fontWeight="600" gutterBottom>
-                    Export Options
-                  </Typography>
-                  <Stack direction="row" spacing={2}>
-                    <Button
-                      variant="outlined"
-                      startIcon={<DownloadIcon />}
-                      onClick={handleExportExcel}
-                    >
-                      Export as Excel
-                    </Button>
-                    <Button
-                      variant="outlined"
-                      startIcon={<PdfIcon />}
-                      onClick={handleExportPDF}
-                    >
-                      Export as PDF
-                    </Button>
-                  </Stack>
-                </CardContent>
-              </Card>
-            </Grid>
           </Grid>
         )
       }
+
+
 
       {
         currentTab === 13 && (
