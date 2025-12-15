@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useLeads } from '../context/LeadContext';
+import MultiContactNumberManager from '../components/leads/MultiContactNumberManager';
+import DocumentCollectionTracker from '../components/leads/DocumentCollectionTracker';
 import {
   Box,
   Card,
@@ -33,7 +35,11 @@ import {
   Paper,
   Tooltip,
   useTheme,
-  alpha
+  alpha,
+  FormGroup,
+  Checkbox,
+  FormControlLabel,
+  Alert
 } from '@mui/material';
 import {
   ArrowBack as ArrowBackIcon,
@@ -67,7 +73,9 @@ import {
   Image as ImageIcon,
   AttachFile as FileIcon,
   Search as SearchIcon,
-  FilterList as FilterIcon
+  FilterList as FilterIcon,
+  Payment as PaymentIcon,
+  Send as SendIcon
 } from '@mui/icons-material';
 
 const LeadDetails = () => {
@@ -90,6 +98,31 @@ const LeadDetails = () => {
   const [documentType, setDocumentType] = useState('vehicle'); // 'vehicle' or 'insurance'
   const [fileUploadDialog, setFileUploadDialog] = useState(false);
   const [followUpDialog, setFollowUpDialog] = useState(false);
+  const [paymentLinkDialog, setPaymentLinkDialog] = useState(false);
+  const [callNumberDialog, setCallNumberDialog] = useState(false);
+  const [postCallDialog, setPostCallDialog] = useState(false);
+
+  // Payment link form state
+  const [paymentLinkData, setPaymentLinkData] = useState({
+    amount: '',
+    purpose: '',
+    expiryDays: 7,
+    sendVia: {
+      email: true,
+      sms: false,
+      whatsapp: false
+    }
+  });
+
+  // Call log form state
+  const [selectedNumber, setSelectedNumber] = useState('');
+  const [callLogData, setCallLogData] = useState({
+    status: '',
+    subStatus: '',
+    followUpDate: '',
+    followUpTime: '',
+    notes: ''
+  });
 
   // Mock policy history data
   const policyHistoryData = [
@@ -775,6 +808,26 @@ const LeadDetails = () => {
                 <Stack direction="row" spacing={2}>
                   <Button
                     variant="contained"
+                    startIcon={<CallIcon />}
+                    onClick={() => setCallNumberDialog(true)}
+                    sx={{
+                      background: `linear-gradient(135deg, ${theme.palette.info.main} 0%, ${theme.palette.info.dark} 100%)`,
+                    }}
+                  >
+                    Call Customer
+                  </Button>
+                  <Button
+                    variant="contained"
+                    startIcon={<PaymentIcon />}
+                    onClick={() => setPaymentLinkDialog(true)}
+                    sx={{
+                      background: `linear-gradient(135deg, ${theme.palette.success.main} 0%, ${theme.palette.success.dark} 100%)`,
+                    }}
+                  >
+                    Send Payment Link
+                  </Button>
+                  <Button
+                    variant="contained"
                     startIcon={<MoneyIcon />}
                     onClick={() => {/* TODO: Implement share quote functionality */}}
                     sx={{
@@ -798,7 +851,7 @@ const LeadDetails = () => {
                   <Button
                     variant="outlined"
                     startIcon={<EditIcon />}
-                    onClick={() => navigate(`/lead-management`)}
+                    onClick={() => navigate(`/lead-management?editLead=${leadId}`)}
                   >
                     Edit Lead
                   </Button>
@@ -817,6 +870,8 @@ const LeadDetails = () => {
             <Tab label="Policy & Nominee" />
             <Tab label="Policy History" />
             <Tab label="Activities" />
+            <Tab label="Contact Numbers" />
+            <Tab label="Documents" />
             <Tab label="Vehicle Documents" />
             <Tab label="Insurance Documents" />
             <Tab label="KYC Documents" />
@@ -1630,10 +1685,36 @@ const LeadDetails = () => {
             </Box>
           )}
 
+          {/* Contact Numbers Tab - NEW */}
+          {currentTab === 4 && (
+            <Box>
+              <MultiContactNumberManager
+                leadId={leadId}
+                initialContacts={lead?.contacts || []}
+                onUpdate={(contacts) => {
+                  console.log('Contacts updated:', contacts);
+                  setLead({ ...lead, contacts });
+                }}
+              />
+            </Box>
+          )}
 
+          {/* Documents Tab - NEW */}
+          {currentTab === 5 && (
+            <Box>
+              <DocumentCollectionTracker
+                leadId={leadId}
+                initialDocuments={lead?.documents || []}
+                onUpdate={(documents) => {
+                  console.log('Documents updated:', documents);
+                  setLead({ ...lead, documents });
+                }}
+              />
+            </Box>
+          )}
 
           {/* Vehicle Documents Tab */}
-          {currentTab === 4 && (
+          {currentTab === 6 && (
             <Box>
               <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 2 }}>
                 <Button
@@ -1705,7 +1786,7 @@ const LeadDetails = () => {
           )}
 
           {/* Insurance Documents Tab */}
-          {currentTab === 5 && (
+          {currentTab === 7 && (
             <Box>
               <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 2 }}>
                 <Button
@@ -1776,7 +1857,7 @@ const LeadDetails = () => {
             </Box>
           )}
           {/* KYC Documents Tab */}
-          {currentTab === 6 && (
+          {currentTab === 8 && (
             <Box>
               <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
                 <Typography variant="h6" fontWeight="600">KYC Documents Management</Typography>
@@ -1949,7 +2030,7 @@ const LeadDetails = () => {
           )}
 
           {/* Customer Feedback Tab Content */}
-          {currentTab === 7 && (
+          {currentTab === 9 && (
             <Box>
               <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
                 <Typography variant="h6" fontWeight="600">Customer Feedback</Typography>
@@ -2976,6 +3057,321 @@ const LeadDetails = () => {
             startIcon={<AccessTimeIcon />}
           >
             Schedule Follow-up
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Payment Link Dialog */}
+      <Dialog open={paymentLinkDialog} onClose={() => setPaymentLinkDialog(false)} maxWidth="sm" fullWidth>
+        <DialogTitle>Send Payment Link</DialogTitle>
+        <DialogContent>
+          <Grid container spacing={2} sx={{ mt: 1 }}>
+            <Grid item xs={12}>
+              <TextField
+                fullWidth
+                label="Amount (₹)"
+                type="number"
+                value={paymentLinkData.amount}
+                onChange={(e) => setPaymentLinkData({ ...paymentLinkData, amount: e.target.value })}
+                required
+                InputProps={{
+                  startAdornment: <Typography sx={{ mr: 1 }}>₹</Typography>
+                }}
+              />
+            </Grid>
+            <Grid item xs={12}>
+              <TextField
+                fullWidth
+                label="Purpose"
+                value={paymentLinkData.purpose}
+                onChange={(e) => setPaymentLinkData({ ...paymentLinkData, purpose: e.target.value })}
+                placeholder="e.g., Policy Premium, Down Payment"
+                required
+              />
+            </Grid>
+            <Grid item xs={12}>
+              <FormControl fullWidth>
+                <InputLabel>Link Expires In</InputLabel>
+                <Select
+                  value={paymentLinkData.expiryDays}
+                  label="Link Expires In"
+                  onChange={(e) => setPaymentLinkData({ ...paymentLinkData, expiryDays: e.target.value })}
+                >
+                  <MenuItem value={1}>1 Day</MenuItem>
+                  <MenuItem value={3}>3 Days</MenuItem>
+                  <MenuItem value={7}>7 Days</MenuItem>
+                  <MenuItem value={15}>15 Days</MenuItem>
+                  <MenuItem value={30}>30 Days</MenuItem>
+                </Select>
+              </FormControl>
+            </Grid>
+            <Grid item xs={12}>
+              <Typography variant="subtitle2" gutterBottom>Send Via:</Typography>
+              <FormGroup row>
+                <FormControlLabel
+                  control={
+                    <Checkbox
+                      checked={paymentLinkData.sendVia.email}
+                      onChange={(e) => setPaymentLinkData({
+                        ...paymentLinkData,
+                        sendVia: { ...paymentLinkData.sendVia, email: e.target.checked }
+                      })}
+                    />
+                  }
+                  label={`Email (${lead?.email || 'N/A'})`}
+                />
+                <FormControlLabel
+                  control={
+                    <Checkbox
+                      checked={paymentLinkData.sendVia.sms}
+                      onChange={(e) => setPaymentLinkData({
+                        ...paymentLinkData,
+                        sendVia: { ...paymentLinkData.sendVia, sms: e.target.checked }
+                      })}
+                    />
+                  }
+                  label={`SMS (${lead?.phone || 'N/A'})`}
+                />
+                <FormControlLabel
+                  control={
+                    <Checkbox
+                      checked={paymentLinkData.sendVia.whatsapp}
+                      onChange={(e) => setPaymentLinkData({
+                        ...paymentLinkData,
+                        sendVia: { ...paymentLinkData.sendVia, whatsapp: e.target.checked }
+                      })}
+                    />
+                  }
+                  label={`WhatsApp (${lead?.phone || 'N/A'})`}
+                />
+              </FormGroup>
+            </Grid>
+            <Grid item xs={12}>
+              <Alert severity="info">
+                The payment link will be sent to the customer's {
+                  [
+                    paymentLinkData.sendVia.email && 'email',
+                    paymentLinkData.sendVia.sms && 'phone (SMS)',
+                    paymentLinkData.sendVia.whatsapp && 'WhatsApp'
+                  ].filter(Boolean).join(', ') || 'selected channels'
+                }.
+              </Alert>
+            </Grid>
+          </Grid>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setPaymentLinkDialog(false)}>Cancel</Button>
+          <Button
+            variant="contained"
+            onClick={() => {
+              // TODO: Implement payment link generation
+              alert(`Payment link of ₹${paymentLinkData.amount} for "${paymentLinkData.purpose}" will be sent to ${lead?.firstName} ${lead?.lastName}`);
+              setPaymentLinkDialog(false);
+              // Reset form
+              setPaymentLinkData({
+                amount: '',
+                purpose: '',
+                expiryDays: 7,
+                sendVia: { email: true, sms: false, whatsapp: false }
+              });
+            }}
+            disabled={!paymentLinkData.amount || !paymentLinkData.purpose}
+            startIcon={<SendIcon />}
+          >
+            Generate & Send Link
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Call Number Selection Dialog */}
+      <Dialog open={callNumberDialog} onClose={() => setCallNumberDialog(false)} maxWidth="xs" fullWidth>
+        <DialogTitle>Select Number to Call</DialogTitle>
+        <DialogContent>
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+            Choose which number you would like to dial:
+          </Typography>
+          <Stack spacing={2}>
+            <Button
+              variant="outlined"
+              fullWidth
+              startIcon={<CallIcon />}
+              onClick={() => {
+                setSelectedNumber(lead.phone);
+                window.open(`tel:${lead.phone}`, '_self');
+                setCallNumberDialog(false);
+                setPostCallDialog(true);
+              }}
+              sx={{
+                justifyContent: 'flex-start',
+                py: 1.5,
+                borderColor: theme.palette.primary.main,
+                '&:hover': {
+                  borderColor: theme.palette.primary.dark,
+                  backgroundColor: alpha(theme.palette.primary.main, 0.05)
+                }
+              }}
+            >
+              <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', ml: 1 }}>
+                <Typography variant="body2" fontWeight={600}>Main Number</Typography>
+                <Typography variant="body2" color="text.secondary">{lead.phone}</Typography>
+              </Box>
+            </Button>
+            {lead.alternatePhone && (
+              <Button
+                variant="outlined"
+                fullWidth
+                startIcon={<CallIcon />}
+                onClick={() => {
+                  setSelectedNumber(lead.alternatePhone);
+                  window.open(`tel:${lead.alternatePhone}`, '_self');
+                  setCallNumberDialog(false);
+                  setPostCallDialog(true);
+                }}
+                sx={{
+                  justifyContent: 'flex-start',
+                  py: 1.5,
+                  borderColor: theme.palette.info.main,
+                  '&:hover': {
+                    borderColor: theme.palette.info.dark,
+                    backgroundColor: alpha(theme.palette.info.main, 0.05)
+                  }
+                }}
+              >
+                <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', ml: 1 }}>
+                  <Typography variant="body2" fontWeight={600}>Alternate Number</Typography>
+                  <Typography variant="body2" color="text.secondary">{lead.alternatePhone}</Typography>
+                </Box>
+              </Button>
+            )}
+          </Stack>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setCallNumberDialog(false)}>Cancel</Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Post-Call Dialog */}
+      <Dialog open={postCallDialog} onClose={() => setPostCallDialog(false)} maxWidth="sm" fullWidth>
+        <DialogTitle>Update Call Details</DialogTitle>
+        <DialogContent>
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+            Called: {selectedNumber}
+          </Typography>
+          <Grid container spacing={2} sx={{ mt: 1 }}>
+            <Grid item xs={12} sm={6}>
+              <FormControl fullWidth>
+                <InputLabel>Status</InputLabel>
+                <Select
+                  value={callLogData.status}
+                  label="Status"
+                  onChange={(e) => setCallLogData({ ...callLogData, status: e.target.value })}
+                >
+                  <MenuItem value="New">New</MenuItem>
+                  <MenuItem value="Contacted">Contacted</MenuItem>
+                  <MenuItem value="Qualified">Qualified</MenuItem>
+                  <MenuItem value="Proposal">Proposal</MenuItem>
+                  <MenuItem value="Negotiation">Negotiation</MenuItem>
+                  <MenuItem value="Closed Won">Closed Won</MenuItem>
+                  <MenuItem value="Closed Lost">Closed Lost</MenuItem>
+                </Select>
+              </FormControl>
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <FormControl fullWidth>
+                <InputLabel>Sub-Status</InputLabel>
+                <Select
+                  value={callLogData.subStatus}
+                  label="Sub-Status"
+                  onChange={(e) => setCallLogData({ ...callLogData, subStatus: e.target.value })}
+                >
+                  <MenuItem value="Attempting Contact">Attempting Contact</MenuItem>
+                  <MenuItem value="Contact Made">Contact Made</MenuItem>
+                  <MenuItem value="Needs Analysis">Needs Analysis</MenuItem>
+                  <MenuItem value="Quote Sent">Quote Sent</MenuItem>
+                  <MenuItem value="Follow-up Required">Follow-up Required</MenuItem>
+                  <MenuItem value="Decision Pending">Decision Pending</MenuItem>
+                  <MenuItem value="Not Interested">Not Interested</MenuItem>
+                  <MenuItem value="No Response">No Response</MenuItem>
+                </Select>
+              </FormControl>
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <TextField
+                fullWidth
+                label="Follow-up Date"
+                type="date"
+                value={callLogData.followUpDate}
+                onChange={(e) => setCallLogData({ ...callLogData, followUpDate: e.target.value })}
+                InputLabelProps={{ shrink: true }}
+              />
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <TextField
+                fullWidth
+                label="Follow-up Time"
+                type="time"
+                value={callLogData.followUpTime}
+                onChange={(e) => setCallLogData({ ...callLogData, followUpTime: e.target.value })}
+                InputLabelProps={{ shrink: true }}
+              />
+            </Grid>
+            <Grid item xs={12}>
+              <TextField
+                fullWidth
+                label="Call Notes"
+                multiline
+                rows={3}
+                value={callLogData.notes}
+                onChange={(e) => setCallLogData({ ...callLogData, notes: e.target.value })}
+                placeholder="Add any notes from the call..."
+              />
+            </Grid>
+          </Grid>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => {
+            setPostCallDialog(false);
+            setCallLogData({
+              status: '',
+              subStatus: '',
+              followUpDate: '',
+              followUpTime: '',
+              notes: ''
+            });
+          }}>Cancel</Button>
+          <Button
+            variant="contained"
+            onClick={() => {
+              // TODO: Save call log and update lead status
+              const callLog = {
+                date: new Date().toISOString().split('T')[0],
+                time: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
+                number: selectedNumber,
+                status: callLogData.status,
+                subStatus: callLogData.subStatus,
+                followUpDate: callLogData.followUpDate,
+                followUpTime: callLogData.followUpTime,
+                notes: callLogData.notes
+              };
+              console.log('Call log saved:', callLog);
+              alert(`Call details saved successfully!${callLogData.followUpDate ? `\nFollow-up scheduled for ${callLogData.followUpDate} at ${callLogData.followUpTime}` : ''}`);
+
+              // Update lead status if changed
+              if (callLogData.status && callLogData.status !== lead.status) {
+                setLead({ ...lead, status: callLogData.status });
+              }
+
+              setPostCallDialog(false);
+              setCallLogData({
+                status: '',
+                subStatus: '',
+                followUpDate: '',
+                followUpTime: '',
+                notes: ''
+              });
+            }}
+          >
+            Save Call Details
           </Button>
         </DialogActions>
       </Dialog>

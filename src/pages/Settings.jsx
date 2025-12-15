@@ -85,7 +85,8 @@ import {
   Timer as TimerIcon,
   AssignmentInd as AssignmentIndIcon,
   Event as EventIcon,
-  LocalCafe as CoffeeIcon
+  LocalCafe as CoffeeIcon,
+  LocationOn as LocationOnIcon
 } from '@mui/icons-material';
 import { useThemeMode } from '../context/ThemeModeContext';
 import { useSettings } from '../context/SettingsContext';
@@ -98,6 +99,7 @@ import AdminSettings from '../components/settings/AdminSettings';
 import AutoAssignmentSettings from '../components/settings/AutoAssignmentSettings';
 import SLASettings from '../components/settings/SLASettings';
 import DialerConfiguration from '../components/settings/DialerConfiguration';
+import ReminderConfiguration from './ReminderConfiguration';
 
 import { supportedLanguages } from '../i18n';
 
@@ -713,7 +715,9 @@ const Settings = () => {
     { label: 'Auto-Assignment', icon: <AssignmentIndIcon /> },
     { label: 'SLA Management', icon: <TimerIcon /> },
     { label: 'Language Test', icon: <LanguageIcon /> },
-    { label: 'Scheduled Dialer', icon: <PhoneIcon />, component: <DialerConfiguration /> }
+    { label: 'Scheduled Dialer', icon: <PhoneIcon />, component: <DialerConfiguration /> },
+    { label: 'Reminder Config', icon: <NotificationsIcon /> },
+    { label: 'Debt Collection', icon: <ReceiptIcon /> }
   ], []);
 
   useEffect(() => {
@@ -8247,6 +8251,408 @@ const Settings = () => {
     );
   };
 
+  // Debt Collection Settings Tab
+  const DebtCollectionSettingsTab = () => {
+    const [debtSettings, setDebtSettings] = useState({
+      // Portfolio Segmentation Settings
+      autoSegmentation: true,
+      segmentationCriteria: 'balance',
+      readyToPayThreshold: 10000,
+      hardToContactDays: 30,
+      skipTraceThreshold: 60,
+      legalCaseThreshold: 90,
+      enableCustomSegments: false,
+
+      // Data Cleaning Options
+      autoFixPhoneNumbers: true,
+      removeDuplicates: true,
+      validateEmailAddresses: true,
+      standardizeAddresses: true,
+      fillMissingData: false,
+      dataQualityThreshold: 85,
+      requireCustomerId: true,
+      requirePhoneNumber: true,
+      requireEmailOrPhone: false,
+      phoneNumberFormat: 'international',
+      dateFormat: 'YYYY-MM-DD',
+      currencyFormat: 'INR'
+    });
+
+    const handleDebtSettingChange = (field, value) => {
+      setDebtSettings(prev => ({ ...prev, [field]: value }));
+    };
+
+    return (
+      <Box>
+        <Typography variant="h5" fontWeight="600" gutterBottom>
+          Debt Collection Settings
+        </Typography>
+        <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+          Configure portfolio onboarding, account segmentation, and data cleaning options for debt collection operations.
+        </Typography>
+
+        {/* Portfolio and Account Segmentation Settings */}
+        <Card sx={{ mb: 3, borderRadius: 3, boxShadow: '0 8px 24px rgba(0,0,0,0.05)' }}>
+          <CardContent sx={{ p: 3 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+              <AnalyticsIcon sx={{ mr: 1, color: theme.palette.primary.main }} />
+              <Typography variant="h6" fontWeight="600">Portfolio and Account Segmentation</Typography>
+            </Box>
+            <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+              Configure how accounts are automatically segmented based on various criteria
+            </Typography>
+            <Divider sx={{ mb: 3 }} />
+
+            {/* Enable Auto Segmentation */}
+            <FormControlLabel
+              control={
+                <Switch
+                  checked={debtSettings.autoSegmentation}
+                  onChange={(e) => handleDebtSettingChange('autoSegmentation', e.target.checked)}
+                  color="primary"
+                />
+              }
+              label="Enable Automatic Segmentation"
+              sx={{ mb: 3 }}
+            />
+
+            {debtSettings.autoSegmentation && (
+              <Box>
+                {/* Segmentation Criteria */}
+                <FormControl fullWidth sx={{ mb: 3 }}>
+                  <InputLabel>Primary Segmentation Criteria</InputLabel>
+                  <Select
+                    value={debtSettings.segmentationCriteria}
+                    onChange={(e) => handleDebtSettingChange('segmentationCriteria', e.target.value)}
+                    label="Primary Segmentation Criteria"
+                  >
+                    <MenuItem value="balance">Account Balance</MenuItem>
+                    <MenuItem value="age">Debt Age</MenuItem>
+                    <MenuItem value="contact_history">Contact History</MenuItem>
+                    <MenuItem value="payment_history">Payment History</MenuItem>
+                    <MenuItem value="combined">Combined Criteria</MenuItem>
+                  </Select>
+                  <FormHelperText>Choose the main factor for segmenting accounts</FormHelperText>
+                </FormControl>
+
+                <Grid container spacing={3} sx={{ mb: 3 }}>
+                  {/* Ready-to-Pay Threshold */}
+                  <Grid item xs={12} md={6}>
+                    <TextField
+                      fullWidth
+                      label="Ready-to-Pay Threshold (₹)"
+                      type="number"
+                      value={debtSettings.readyToPayThreshold}
+                      onChange={(e) => handleDebtSettingChange('readyToPayThreshold', parseFloat(e.target.value))}
+                      helperText="Minimum balance to classify as ready-to-pay"
+                    />
+                  </Grid>
+
+                  {/* Hard-to-Contact Days */}
+                  <Grid item xs={12} md={6}>
+                    <TextField
+                      fullWidth
+                      label="Hard-to-Contact Period (Days)"
+                      type="number"
+                      value={debtSettings.hardToContactDays}
+                      onChange={(e) => handleDebtSettingChange('hardToContactDays', parseInt(e.target.value))}
+                      helperText="Days without contact to flag as hard-to-contact"
+                    />
+                  </Grid>
+
+                  {/* Skip-trace Threshold */}
+                  <Grid item xs={12} md={6}>
+                    <TextField
+                      fullWidth
+                      label="Skip-trace Threshold (Days)"
+                      type="number"
+                      value={debtSettings.skipTraceThreshold}
+                      onChange={(e) => handleDebtSettingChange('skipTraceThreshold', parseInt(e.target.value))}
+                      helperText="Days before requiring skip-trace services"
+                    />
+                  </Grid>
+
+                  {/* Legal Case Threshold */}
+                  <Grid item xs={12} md={6}>
+                    <TextField
+                      fullWidth
+                      label="Legal Case Threshold (Days)"
+                      type="number"
+                      value={debtSettings.legalCaseThreshold}
+                      onChange={(e) => handleDebtSettingChange('legalCaseThreshold', parseInt(e.target.value))}
+                      helperText="Days before escalating to legal action"
+                    />
+                  </Grid>
+                </Grid>
+
+                {/* Enable Custom Segments */}
+                <FormControlLabel
+                  control={
+                    <Checkbox
+                      checked={debtSettings.enableCustomSegments}
+                      onChange={(e) => handleDebtSettingChange('enableCustomSegments', e.target.checked)}
+                      color="primary"
+                    />
+                  }
+                  label="Enable custom segment definitions"
+                />
+              </Box>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Data Cleaning Options */}
+        <Card sx={{ mb: 3, borderRadius: 3, boxShadow: '0 8px 24px rgba(0,0,0,0.05)' }}>
+          <CardContent sx={{ p: 3 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+              <VerifiedIcon sx={{ mr: 1, color: theme.palette.success.main }} />
+              <Typography variant="h6" fontWeight="600">Data Cleaning Options</Typography>
+            </Box>
+            <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+              Configure automatic data validation and cleaning rules for portfolio uploads
+            </Typography>
+            <Divider sx={{ mb: 3 }} />
+
+            {/* Auto-cleaning Options */}
+            <List disablePadding sx={{ mb: 3 }}>
+              <ListItem sx={{ borderRadius: 2, mb: 1 }}>
+                <ListItemIcon>
+                  <PhoneIcon color="info" />
+                </ListItemIcon>
+                <ListItemText
+                  primary={<Typography fontWeight="500">Auto-fix Phone Numbers</Typography>}
+                  secondary="Automatically format and validate phone numbers"
+                />
+                <ListItemSecondaryAction>
+                  <Switch
+                    edge="end"
+                    checked={debtSettings.autoFixPhoneNumbers}
+                    onChange={(e) => handleDebtSettingChange('autoFixPhoneNumbers', e.target.checked)}
+                    color="primary"
+                  />
+                </ListItemSecondaryAction>
+              </ListItem>
+
+              <ListItem sx={{ borderRadius: 2, mb: 1 }}>
+                <ListItemIcon>
+                  <MergeIcon color="warning" />
+                </ListItemIcon>
+                <ListItemText
+                  primary={<Typography fontWeight="500">Remove Duplicates</Typography>}
+                  secondary="Automatically detect and remove duplicate records"
+                />
+                <ListItemSecondaryAction>
+                  <Switch
+                    edge="end"
+                    checked={debtSettings.removeDuplicates}
+                    onChange={(e) => handleDebtSettingChange('removeDuplicates', e.target.checked)}
+                    color="primary"
+                  />
+                </ListItemSecondaryAction>
+              </ListItem>
+
+              <ListItem sx={{ borderRadius: 2, mb: 1 }}>
+                <ListItemIcon>
+                  <EmailIcon color="secondary" />
+                </ListItemIcon>
+                <ListItemText
+                  primary={<Typography fontWeight="500">Validate Email Addresses</Typography>}
+                  secondary="Check email format and domain validity"
+                />
+                <ListItemSecondaryAction>
+                  <Switch
+                    edge="end"
+                    checked={debtSettings.validateEmailAddresses}
+                    onChange={(e) => handleDebtSettingChange('validateEmailAddresses', e.target.checked)}
+                    color="primary"
+                  />
+                </ListItemSecondaryAction>
+              </ListItem>
+
+              <ListItem sx={{ borderRadius: 2, mb: 1 }}>
+                <ListItemIcon>
+                  <LocationOnIcon color="success" />
+                </ListItemIcon>
+                <ListItemText
+                  primary={<Typography fontWeight="500">Standardize Addresses</Typography>}
+                  secondary="Format addresses to standard format"
+                />
+                <ListItemSecondaryAction>
+                  <Switch
+                    edge="end"
+                    checked={debtSettings.standardizeAddresses}
+                    onChange={(e) => handleDebtSettingChange('standardizeAddresses', e.target.checked)}
+                    color="primary"
+                  />
+                </ListItemSecondaryAction>
+              </ListItem>
+
+              <ListItem sx={{ borderRadius: 2 }}>
+                <ListItemIcon>
+                  <RestoreIcon color="info" />
+                </ListItemIcon>
+                <ListItemText
+                  primary={<Typography fontWeight="500">Auto-fill Missing Data</Typography>}
+                  secondary="Attempt to fill missing fields from external sources"
+                />
+                <ListItemSecondaryAction>
+                  <Switch
+                    edge="end"
+                    checked={debtSettings.fillMissingData}
+                    onChange={(e) => handleDebtSettingChange('fillMissingData', e.target.checked)}
+                    color="primary"
+                  />
+                </ListItemSecondaryAction>
+              </ListItem>
+            </List>
+
+            {/* Data Quality Threshold */}
+            <Box sx={{ mb: 3 }}>
+              <Typography variant="body2" color="text.secondary" gutterBottom>
+                Minimum Data Quality Score (%)
+              </Typography>
+              <Slider
+                value={debtSettings.dataQualityThreshold}
+                onChange={(e, value) => handleDebtSettingChange('dataQualityThreshold', value)}
+                min={50}
+                max={100}
+                step={5}
+                marks={[
+                  { value: 50, label: '50%' },
+                  { value: 75, label: '75%' },
+                  { value: 85, label: '85%' },
+                  { value: 95, label: '95%' },
+                  { value: 100, label: '100%' }
+                ]}
+                valueLabelDisplay="auto"
+                sx={{ mt: 2 }}
+              />
+              <FormHelperText>Reject portfolios below this quality threshold</FormHelperText>
+            </Box>
+
+            <Divider sx={{ my: 3 }} />
+
+            {/* Required Fields */}
+            <Typography variant="subtitle1" fontWeight="600" gutterBottom sx={{ mt: 3 }}>
+              Required Fields
+            </Typography>
+            <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+              Specify which fields must be present in uploaded data
+            </Typography>
+
+            <Grid container spacing={2}>
+              <Grid item xs={12} md={6}>
+                <FormControlLabel
+                  control={
+                    <Checkbox
+                      checked={debtSettings.requireCustomerId}
+                      onChange={(e) => handleDebtSettingChange('requireCustomerId', e.target.checked)}
+                      color="primary"
+                    />
+                  }
+                  label="Customer ID (Required)"
+                />
+              </Grid>
+              <Grid item xs={12} md={6}>
+                <FormControlLabel
+                  control={
+                    <Checkbox
+                      checked={debtSettings.requirePhoneNumber}
+                      onChange={(e) => handleDebtSettingChange('requirePhoneNumber', e.target.checked)}
+                      color="primary"
+                    />
+                  }
+                  label="Phone Number (Required)"
+                />
+              </Grid>
+              <Grid item xs={12} md={6}>
+                <FormControlLabel
+                  control={
+                    <Checkbox
+                      checked={debtSettings.requireEmailOrPhone}
+                      onChange={(e) => handleDebtSettingChange('requireEmailOrPhone', e.target.checked)}
+                      color="primary"
+                    />
+                  }
+                  label="Email or Phone (At least one required)"
+                />
+              </Grid>
+            </Grid>
+
+            <Divider sx={{ my: 3 }} />
+
+            {/* Format Settings */}
+            <Typography variant="subtitle1" fontWeight="600" gutterBottom>
+              Format Settings
+            </Typography>
+            <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+              Standardize data formats for consistency
+            </Typography>
+
+            <Grid container spacing={3}>
+              <Grid item xs={12} md={4}>
+                <FormControl fullWidth>
+                  <InputLabel>Phone Number Format</InputLabel>
+                  <Select
+                    value={debtSettings.phoneNumberFormat}
+                    onChange={(e) => handleDebtSettingChange('phoneNumberFormat', e.target.value)}
+                    label="Phone Number Format"
+                  >
+                    <MenuItem value="international">International (+91...)</MenuItem>
+                    <MenuItem value="national">National (10 digits)</MenuItem>
+                    <MenuItem value="e164">E.164 Format</MenuItem>
+                  </Select>
+                </FormControl>
+              </Grid>
+
+              <Grid item xs={12} md={4}>
+                <FormControl fullWidth>
+                  <InputLabel>Date Format</InputLabel>
+                  <Select
+                    value={debtSettings.dateFormat}
+                    onChange={(e) => handleDebtSettingChange('dateFormat', e.target.value)}
+                    label="Date Format"
+                  >
+                    <MenuItem value="YYYY-MM-DD">YYYY-MM-DD</MenuItem>
+                    <MenuItem value="DD/MM/YYYY">DD/MM/YYYY</MenuItem>
+                    <MenuItem value="MM/DD/YYYY">MM/DD/YYYY</MenuItem>
+                    <MenuItem value="DD-MM-YYYY">DD-MM-YYYY</MenuItem>
+                  </Select>
+                </FormControl>
+              </Grid>
+
+              <Grid item xs={12} md={4}>
+                <FormControl fullWidth>
+                  <InputLabel>Currency Format</InputLabel>
+                  <Select
+                    value={debtSettings.currencyFormat}
+                    onChange={(e) => handleDebtSettingChange('currencyFormat', e.target.value)}
+                    label="Currency Format"
+                  >
+                    <MenuItem value="INR">INR (₹)</MenuItem>
+                    <MenuItem value="USD">USD ($)</MenuItem>
+                    <MenuItem value="EUR">EUR (€)</MenuItem>
+                    <MenuItem value="GBP">GBP (£)</MenuItem>
+                  </Select>
+                </FormControl>
+              </Grid>
+            </Grid>
+          </CardContent>
+        </Card>
+
+        {/* Info Alert */}
+        <Alert severity="info" sx={{ borderRadius: 2 }}>
+          <Typography variant="body2" fontWeight="500" gutterBottom>
+            Portfolio Onboarding Integration
+          </Typography>
+          <Typography variant="body2">
+            These settings will be automatically applied during the portfolio upload process. Changes to segmentation criteria will affect how accounts are categorized, while data cleaning rules will be enforced during validation.
+          </Typography>
+        </Alert>
+      </Box>
+    );
+  };
+
   return (
     <Fade in={true} timeout={800}>
       <Box sx={{ px: 1 }}>
@@ -8364,6 +8770,12 @@ const Settings = () => {
             </TabPanel>
             <TabPanel value={tabValue} index={18}>
               <ScheduledDialerSettingsTab />
+            </TabPanel>
+            <TabPanel value={tabValue} index={19}>
+              <ReminderConfiguration />
+            </TabPanel>
+            <TabPanel value={tabValue} index={20}>
+              <DebtCollectionSettingsTab />
             </TabPanel>
           </Box>
         </Card>

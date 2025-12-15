@@ -730,15 +730,15 @@ const WelcomeModal = ({ open, onClose }) => {
 
   const steps = [
     {
-      label: 'Welcome to the Insurance Policy Renewal Portal',
+      label: 'Welcome to Py360 CRM',
       icon: <CheckCircleIcon color="primary" />,
       description: (
         <>
           <Typography variant="body1" paragraph>
-            Welcome to our Insurance Policy Renewal Portal! This platform is designed to help you efficiently manage and track insurance policy renewals.
+            Welcome to Py360 CRM! This platform is designed to help you efficiently manage customer relationships, track policies, and streamline your insurance business operations.
           </Typography>
           <Typography variant="body1" paragraph>
-            This quick tour will guide you through the main features of the portal to help you get started.
+            This quick tour will guide you through the main features of the platform to help you get started.
           </Typography>
           <Box 
             sx={{ 
@@ -1006,7 +1006,7 @@ const WelcomeModal = ({ open, onClose }) => {
       description: (
         <>
           <Typography variant="body1" paragraph>
-            You're all set to start using the Insurance Policy Renewal Portal!
+            You're all set to start using Py360 CRM!
           </Typography>
           <Typography variant="body1" paragraph>
             Remember, you can always access help resources from the Settings menu if you need assistance.

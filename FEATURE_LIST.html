@@ -1,0 +1,2760 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>PY360 CRM - Complete Feature List</title>
+    <style>
+        @page { size: A4; margin: 2.5cm; }
+        body {
+            font-family: 'Times New Roman', Times, serif;
+            font-size: 12pt;
+            line-height: 2;
+            margin: 0;
+            padding: 50px;
+        }
+        h1 {
+            color: #1a237e;
+            font-size: 26pt;
+            border-bottom: 3px solid #3f51b5;
+            padding-bottom: 15px;
+            margin-top: 60px;
+            margin-bottom: 35px;
+            page-break-before: always;
+        }
+        h1:first-of-type { page-break-before: avoid; }
+        h2 {
+            color: #283593;
+            font-size: 18pt;
+            border-bottom: 2px solid #7986cb;
+            padding-bottom: 10px;
+            margin-top: 45px;
+            margin-bottom: 30px;
+        }
+        h3 {
+            color: #3949ab;
+            font-size: 14pt;
+            margin-top: 35px;
+            margin-bottom: 25px;
+        }
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 30px 0 40px 0;
+            font-size: 11pt;
+            page-break-inside: auto;
+        }
+        tr { page-break-inside: avoid; page-break-after: auto; }
+        th, td {
+            border: 1.5px solid #5c6bc0;
+            padding: 14px 16px;
+            text-align: left;
+            vertical-align: top;
+            line-height: 1.6;
+        }
+        th {
+            background-color: #3f51b5;
+            color: white;
+            font-weight: bold;
+            font-size: 12pt;
+        }
+        tr:nth-child(even) { background-color: #e8eaf6; }
+        tr:nth-child(odd) { background-color: #ffffff; }
+        hr {
+            border: none;
+            border-top: 2px solid #bdbdbd;
+            margin: 50px 0;
+        }
+        p {
+            margin: 20px 0;
+            text-align: justify;
+            font-size: 12pt;
+        }
+        strong { color: #1a237e; }
+        .cover-page {
+            text-align: center;
+            padding: 150px 0;
+            page-break-after: always;
+        }
+        .cover-page h1 {
+            font-size: 42pt;
+            border: none;
+            margin-bottom: 40px;
+            page-break-before: avoid;
+        }
+        .cover-page .subtitle {
+            font-size: 20pt;
+            color: #5c6bc0;
+            margin: 25px 0;
+        }
+        .cover-page .version {
+            font-size: 14pt;
+            color: #757575;
+            margin-top: 80px;
+            line-height: 2.5;
+        }
+        .section-intro {
+            background-color: #f5f5f5;
+            padding: 25px 30px;
+            border-left: 6px solid #3f51b5;
+            margin: 30px 0 40px 0;
+            font-style: italic;
+            line-height: 1.8;
+        }
+        .field-note {
+            font-size: 11pt;
+            color: #555;
+            margin: 15px 0 25px 0;
+            font-style: italic;
+        }
+        .toc {
+            page-break-after: always;
+        }
+        .toc h2 {
+            page-break-before: avoid;
+            text-align: center;
+            font-size: 24pt;
+        }
+        .toc ol {
+            font-size: 13pt;
+            line-height: 2.5;
+        }
+    </style>
+</head>
+<body>
+
+<div class="cover-page">
+    <h1>PY360 CRM</h1>
+    <div class="subtitle">Complete Feature List with Data Fields</div>
+    <div class="subtitle">Enterprise Customer Relationship Management System</div>
+    <div class="version">
+        <p>Version 1.0</p>
+        <p>December 2025</p>
+        <p>&nbsp;</p>
+        <p>&nbsp;</p>
+        <p>Supporting 13 Indian Languages</p>
+        <p>Built with React 18+ and Material-UI</p>
+        <p>&nbsp;</p>
+        <p>Designed for Insurance Renewals, Lead Management,</p>
+        <p>Customer Service, and Business Operations</p>
+    </div>
+</div>
+
+<div class="toc">
+<h2>TABLE OF CONTENTS</h2>
+<ol>
+<li>Authentication & Security</li>
+<li>Renewal Management Module</li>
+<li>Lead Management Module</li>
+<li>Customer Management Module</li>
+<li>Email Management Module</li>
+<li>Campaigns & Marketing Module</li>
+<li>Policy & Insurance Operations</li>
+<li>Communication & Messaging</li>
+<li>Sales Pipeline Management</li>
+<li>Task & Workflow Automation</li>
+<li>Human Resources & Attendance</li>
+<li>Performance & KPI Management</li>
+<li>Call Center Management</li>
+<li>Settings & Administration</li>
+<li>AI & Intelligent Features</li>
+<li>Integrations</li>
+<li>User Interface & Experience</li>
+<li>Internationalization</li>
+</ol>
+</div>
+
+<h1>PY360 CRM - Complete Feature List with Fields</h1>
+<h2>System Overview</h2>
+<p><strong>PY360</strong> is an enterprise-grade Customer Relationship Management (CRM) system designed for insurance renewals, lead management, customer service, and comprehensive business operations. Built with React 18+, Material-UI, and supporting 13 Indian languages.</p>
+<hr>
+<hr>
+<h1>1. AUTHENTICATION & SECURITY</h1>
+<div class="section-intro">This section covers all authentication and security features of the PY360 CRM system. It includes comprehensive user login functionality, multi-factor authentication (MFA) with OTP verification, user registration with validation, profile management capabilities, and a robust role-based access control system. The platform supports 7 distinct user roles (admin, client_admin, manager, renewals_specialist, all_modules_manager, agent, and viewer) with 8 permission groups covering renewals, email, business, marketing, survey, whatsapp, admin, and core functionalities. Security features ensure data protection and compliance with enterprise requirements.</div>
+<h2>1.1 Login Page</h2>
+<h3>Features</h3>
+<table>
+<tr><th>Feature</th><th>Description</th><th>Explanation</th></tr>
+<tr><td>Email/Password Login</td><td>Standard credential-based authentication</td><td>Users enter their registered email and password to access the system</td></tr>
+<tr><td>Session Persistence</td><td>Maintains user login state across browser sessions</td><td>Authentication tokens are stored in localStorage</td></tr>
+<tr><td>Account Expiry Checking</td><td>Monitors and enforces account validity periods</td><td>System checks if user accounts have an expiry date</td></tr>
+<tr><td>Expiry Warning Banner</td><td>Visual notification for accounts nearing expiration</td><td>Warning banner appears when accounts will expire within 7 days</td></tr>
+</table>
+<h3>Fields</h3>
+<p class="field-note">The following table lists all data fields for this feature with their data types, requirement status, and detailed descriptions.</p>
+<table>
+<tr><th>Field Name</th><th>Type</th><th>Required</th><th>Description</th></tr>
+<tr><td>email</td><td>Email</td><td>Yes</td><td>User's registered email address</td></tr>
+<tr><td>password</td><td>Password</td><td>Yes</td><td>User's password (masked input)</td></tr>
+<tr><td>rememberMe</td><td>Checkbox</td><td>No</td><td>Keep user logged in on this device</td></tr>
+</table>
+<hr>
+<h2>1.2 MFA/OTP Verification</h2>
+<h3>Features</h3>
+<table>
+<tr><th>Feature</th><th>Description</th><th>Explanation</th></tr>
+<tr><td>OTP Verification</td><td>Two-factor authentication via one-time password</td><td>6-digit OTP code required after password verification</td></tr>
+<tr><td>MFA Enable/Disable</td><td>User-configurable MFA settings</td><td>Users can toggle MFA from profile settings</td></tr>
+</table>
+<h3>Fields</h3>
+<p class="field-note">The following table lists all data fields for this feature with their data types, requirement status, and detailed descriptions.</p>
+<table>
+<tr><th>Field Name</th><th>Type</th><th>Required</th><th>Description</th></tr>
+<tr><td>otpCode</td><td>Number (6 digits)</td><td>Yes</td><td>One-time password sent via email/SMS</td></tr>
+</table>
+<hr>
+<h2>1.3 User Registration</h2>
+<h3>Features</h3>
+<table>
+<tr><th>Feature</th><th>Description</th><th>Explanation</th></tr>
+<tr><td>New User Registration</td><td>Self-service account creation</td><td>New users can create accounts by providing their details</td></tr>
+<tr><td>Form Validation</td><td>Input validation for registration data</td><td>All fields validated for proper format</td></tr>
+</table>
+<h3>Fields</h3>
+<p class="field-note">The following table lists all data fields for this feature with their data types, requirement status, and detailed descriptions.</p>
+<table>
+<tr><th>Field Name</th><th>Type</th><th>Required</th><th>Description</th></tr>
+<tr><td>firstName</td><td>Text</td><td>Yes</td><td>User's first name</td></tr>
+<tr><td>lastName</td><td>Text</td><td>Yes</td><td>User's last name</td></tr>
+<tr><td>email</td><td>Email</td><td>Yes</td><td>Valid email address</td></tr>
+<tr><td>password</td><td>Password</td><td>Yes</td><td>Minimum 8 characters with complexity</td></tr>
+<tr><td>confirmPassword</td><td>Password</td><td>Yes</td><td>Must match password field</td></tr>
+<tr><td>phone</td><td>Phone</td><td>No</td><td>Contact phone number</td></tr>
+<tr><td>acceptTerms</td><td>Checkbox</td><td>Yes</td><td>Agreement to terms and conditions</td></tr>
+</table>
+<hr>
+<h2>1.4 User Profile</h2>
+<h3>Features</h3>
+<table>
+<tr><th>Feature</th><th>Description</th><th>Explanation</th></tr>
+<tr><td>View Profile</td><td>Display user account information</td><td>View personal details, role, and status</td></tr>
+<tr><td>Edit Profile</td><td>Update personal information</td><td>Modify name, contact information, preferences</td></tr>
+<tr><td>Language Preference</td><td>Per-user language setting</td><td>Select interface language from 13 options</td></tr>
+<tr><td>Password Change</td><td>Update account password</td><td>Change password with verification</td></tr>
+</table>
+<h3>Fields</h3>
+<p class="field-note">The following table lists all data fields for this feature with their data types, requirement status, and detailed descriptions.</p>
+<table>
+<tr><th>Field Name</th><th>Type</th><th>Required</th><th>Description</th></tr>
+<tr><td>firstName</td><td>Text</td><td>Yes</td><td>User's first name</td></tr>
+<tr><td>lastName</td><td>Text</td><td>Yes</td><td>User's last name</td></tr>
+<tr><td>email</td><td>Email</td><td>Yes</td><td>Email address (read-only)</td></tr>
+<tr><td>phone</td><td>Phone</td><td>No</td><td>Contact phone number</td></tr>
+<tr><td>avatar</td><td>Image</td><td>No</td><td>Profile picture</td></tr>
+<tr><td>language</td><td>Dropdown</td><td>No</td><td>Preferred interface language</td></tr>
+<tr><td>timezone</td><td>Dropdown</td><td>No</td><td>User's timezone</td></tr>
+<tr><td>currentPassword</td><td>Password</td><td>Yes*</td><td>Required for password change</td></tr>
+<tr><td>newPassword</td><td>Password</td><td>Yes*</td><td>New password (min 8 chars)</td></tr>
+<tr><td>confirmNewPassword</td><td>Password</td><td>Yes*</td><td>Confirm new password</td></tr>
+</table>
+<hr>
+<h2>1.5 Role & Permission Configuration</h2>
+<h3>User Roles</h3>
+<table>
+<tr><th>Role</th><th>Description</th><th>Access Level</th></tr>
+<tr><td>admin</td><td>Full system administrator</td><td>All modules and settings</td></tr>
+<tr><td>client_admin</td><td>Client-level administrator</td><td>All client modules, limited settings</td></tr>
+<tr><td>manager</td><td>Team manager</td><td>Team modules, reports, assignments</td></tr>
+<tr><td>renewals_specialist</td><td>Renewal operations specialist</td><td>Renewals module, cases, policies</td></tr>
+<tr><td>all_modules_manager</td><td>Cross-module manager</td><td>All operational modules</td></tr>
+<tr><td>agent</td><td>Field/call center agent</td><td>Assigned cases, leads, communications</td></tr>
+<tr><td>viewer</td><td>Read-only access</td><td>View-only access to assigned modules</td></tr>
+</table>
+<h3>Permission Groups</h3>
+<table>
+<tr><th>Group</th><th>Permissions Included</th></tr>
+<tr><td>renewals</td><td>view_renewals, edit_renewals, delete_renewals, export_renewals</td></tr>
+<tr><td>email</td><td>view_emails, send_emails, manage_templates</td></tr>
+<tr><td>business</td><td>view_business, edit_business, reports</td></tr>
+<tr><td>marketing</td><td>campaigns, surveys, templates</td></tr>
+<tr><td>survey</td><td>create_surveys, view_responses, analyze_surveys</td></tr>
+<tr><td>whatsapp</td><td>send_whatsapp, manage_templates, view_chats</td></tr>
+<tr><td>admin</td><td>user_management, settings, billing, audit_logs</td></tr>
+<tr><td>core</td><td>dashboard, profile, notifications</td></tr>
+</table>
+<hr>
+<h1>2. RENEWAL MANAGEMENT MODULE</h1>
+<div class="section-intro">The Renewal Management Module is the core operational module for handling insurance policy renewals in the PY360 system. This comprehensive module includes a feature-rich dashboard with KPI overview cards, batch status tracking, team performance metrics, and chart visualizations. The case tracking system provides detailed case list views with advanced filtering, bulk operations, and export capabilities. Case details include policy information, customer data, communication history, activity timeline, and document attachments. The module also features bulk data upload with template-based importing, validation reporting, and error handling. Email and WhatsApp campaign managers enable targeted communication for renewal notices and payment collection.</div>
+<h2>2.1 Renewals Dashboard</h2>
+<h3>Features</h3>
+<table>
+<tr><th>Feature</th><th>Description</th><th>Explanation</th></tr>
+<tr><td>KPI Overview Cards</td><td>Key performance indicators display</td><td>Shows total renewals, pending, success rate, SLA compliance</td></tr>
+<tr><td>Batch Status Tracking</td><td>Monitor bulk processing operations</td><td>View batch upload progress and status</td></tr>
+<tr><td>Team Performance Metrics</td><td>Agent and team analytics</td><td>Performance rankings and statistics</td></tr>
+<tr><td>Date Range Filtering</td><td>Time-based data filtering</td><td>Filter by today, week, month, custom range</td></tr>
+<tr><td>Chart Visualizations</td><td>Graphical data display</td><td>Line, bar, pie charts for trends</td></tr>
+<tr><td>Customer Retention Analysis</td><td>Retention metrics</td><td>Overall retention rate, trends, segments</td></tr>
+<tr><td>Channel Performance</td><td>Distribution channel analytics</td><td>Performance by channel type</td></tr>
+<tr><td>MIS Export</td><td>Management reports</td><td>Export comprehensive reports</td></tr>
+</table>
+<h3>Dashboard Statistics Fields</h3>
+<p class="field-note">The following table lists all data fields for this feature with their data types, requirement status, and detailed descriptions.</p>
+<table>
+<tr><th>Field Name</th><th>Type</th><th>Description</th></tr>
+<tr><td>totalCases</td><td>Number</td><td>Total renewal cases count</td></tr>
+<tr><td>inProgress</td><td>Number</td><td>Cases currently being worked</td></tr>
+<tr><td>renewed</td><td>Number</td><td>Successfully renewed cases</td></tr>
+<tr><td>pendingAction</td><td>Number</td><td>Cases awaiting action</td></tr>
+<tr><td>errors</td><td>Number</td><td>Cases with errors</td></tr>
+<tr><td>paymentCollected</td><td>Currency</td><td>Total payment collected</td></tr>
+<tr><td>paymentPending</td><td>Currency</td><td>Payment still pending</td></tr>
+</table>
+<h3>Filter Fields</h3>
+<table>
+<tr><th>Field Name</th><th>Type</th><th>Options</th><th>Description</th></tr>
+<tr><td>dateRange</td><td>Dropdown</td><td>today, week, month, quarter, year, custom</td><td>Time period filter</td></tr>
+<tr><td>startDate</td><td>Date</td><td>-</td><td>Custom start date</td></tr>
+<tr><td>endDate</td><td>Date</td><td>-</td><td>Custom end date</td></tr>
+<tr><td>policyType</td><td>Dropdown</td><td>all, motor, health, life, property</td><td>Policy category filter</td></tr>
+<tr><td>caseStatus</td><td>Dropdown</td><td>all, new, inProgress, renewed, failed</td><td>Status filter</td></tr>
+<tr><td>selectedTeam</td><td>Dropdown</td><td>Dynamic list</td><td>Team filter</td></tr>
+<tr><td>selectedTeamMember</td><td>Dropdown</td><td>Dynamic list</td><td>Individual agent filter</td></tr>
+<tr><td>selectedBatch</td><td>Dropdown</td><td>Dynamic list</td><td>Batch filter</td></tr>
+</table>
+<h3>MIS Export Fields</h3>
+<p class="field-note">The following table lists all data fields for this feature with their data types, requirement status, and detailed descriptions.</p>
+<table>
+<tr><th>Field Name</th><th>Type</th><th>Description</th></tr>
+<tr><td>exportDateRange</td><td>Dropdown</td><td>month, quarter, year, custom</td></tr>
+<tr><td>exportDataType</td><td>Dropdown</td><td>all, cases, payments, performance</td></tr>
+<tr><td>exportFormat</td><td>Dropdown</td><td>excel, csv, pdf</td></tr>
+<tr><td>exportPolicyType</td><td>Dropdown</td><td>Policy type to export</td></tr>
+<tr><td>exportCaseStatus</td><td>Dropdown</td><td>Status to export</td></tr>
+</table>
+<h3>Channel Management Fields</h3>
+<p class="field-note">The following table lists all data fields for this feature with their data types, requirement status, and detailed descriptions.</p>
+<table>
+<tr><th>Field Name</th><th>Type</th><th>Required</th><th>Description</th></tr>
+<tr><td>channelName</td><td>Text</td><td>Yes</td><td>Channel name</td></tr>
+<tr><td>channelType</td><td>Dropdown</td><td>Yes</td><td>online, offline, partner</td></tr>
+<tr><td>status</td><td>Dropdown</td><td>Yes</td><td>active, inactive</td></tr>
+<tr><td>description</td><td>Textarea</td><td>No</td><td>Channel description</td></tr>
+<tr><td>targetAudience</td><td>Text</td><td>No</td><td>Target audience</td></tr>
+<tr><td>costPerLead</td><td>Number</td><td>No</td><td>Cost per lead</td></tr>
+<tr><td>conversionRate</td><td>Number</td><td>No</td><td>Conversion percentage</td></tr>
+<tr><td>manager</td><td>Dropdown</td><td>No</td><td>Channel manager</td></tr>
+<tr><td>budget</td><td>Currency</td><td>No</td><td>Allocated budget</td></tr>
+<tr><td>autoAssignment</td><td>Boolean</td><td>No</td><td>Enable auto-assignment</td></tr>
+<tr><td>priority</td><td>Dropdown</td><td>No</td><td>low, medium, high</td></tr>
+<tr><td>workingHours</td><td>Text</td><td>No</td><td>Operating hours</td></tr>
+<tr><td>maxCapacity</td><td>Number</td><td>No</td><td>Maximum capacity</td></tr>
+</table>
+<h3>Hierarchy Management Fields</h3>
+<p class="field-note">The following table lists all data fields for this feature with their data types, requirement status, and detailed descriptions.</p>
+<table>
+<tr><th>Field Name</th><th>Type</th><th>Required</th><th>Description</th></tr>
+<tr><td>nodeName</td><td>Text</td><td>Yes</td><td>Node name</td></tr>
+<tr><td>nodeType</td><td>Dropdown</td><td>Yes</td><td>region, state, branch, department, team</td></tr>
+<tr><td>parentId</td><td>Dropdown</td><td>No</td><td>Parent node</td></tr>
+<tr><td>managerId</td><td>Dropdown</td><td>No</td><td>Manager assignment</td></tr>
+<tr><td>description</td><td>Textarea</td><td>No</td><td>Node description</td></tr>
+<tr><td>budget</td><td>Currency</td><td>No</td><td>Allocated budget</td></tr>
+<tr><td>targetCases</td><td>Number</td><td>No</td><td>Target case count</td></tr>
+<tr><td>status</td><td>Dropdown</td><td>Yes</td><td>active, inactive</td></tr>
+</table>
+<h3>Distribution Channel Fields</h3>
+<p class="field-note">The following table lists all data fields for this feature with their data types, requirement status, and detailed descriptions.</p>
+<table>
+<tr><th>Field Name</th><th>Type</th><th>Required</th><th>Description</th></tr>
+<tr><td>channelName</td><td>Text</td><td>Yes</td><td>Distribution channel name</td></tr>
+<tr><td>channelType</td><td>Dropdown</td><td>Yes</td><td>agent, broker, bank, corporate, online, direct</td></tr>
+<tr><td>status</td><td>Dropdown</td><td>Yes</td><td>active, inactive</td></tr>
+<tr><td>description</td><td>Textarea</td><td>No</td><td>Channel description</td></tr>
+<tr><td>contactPerson</td><td>Text</td><td>No</td><td>Primary contact</td></tr>
+<tr><td>contactEmail</td><td>Email</td><td>No</td><td>Contact email</td></tr>
+<tr><td>contactPhone</td><td>Phone</td><td>No</td><td>Contact phone</td></tr>
+<tr><td>commissionRate</td><td>Percentage</td><td>No</td><td>Commission percentage</td></tr>
+<tr><td>targetRevenue</td><td>Currency</td><td>No</td><td>Revenue target</td></tr>
+<tr><td>region</td><td>Dropdown</td><td>No</td><td>Geographic region</td></tr>
+<tr><td>partnerSince</td><td>Date</td><td>No</td><td>Partnership start date</td></tr>
+<tr><td>agreementType</td><td>Dropdown</td><td>No</td><td>exclusive, non-exclusive</td></tr>
+<tr><td>validUntil</td><td>Date</td><td>No</td><td>Agreement validity</td></tr>
+<tr><td>renewalTerms</td><td>Textarea</td><td>No</td><td>Renewal conditions</td></tr>
+</table>
+<hr>
+<h2>2.2 Case Tracking</h2>
+<h3>Features</h3>
+<table>
+<tr><th>Feature</th><th>Description</th><th>Explanation</th></tr>
+<tr><td>Case List View</td><td>Tabular display of all renewal cases</td><td>Paginated table with sorting</td></tr>
+<tr><td>Status Filtering</td><td>Filter cases by status</td><td>Quick filters for each status</td></tr>
+<tr><td>Search Functionality</td><td>Find specific cases</td><td>Search by policy, name, phone, email</td></tr>
+<tr><td>Bulk Selection</td><td>Select multiple cases for actions</td><td>Checkbox selection for bulk operations</td></tr>
+<tr><td>Export to Excel</td><td>Download case data</td><td>Export filtered data to spreadsheet</td></tr>
+<tr><td>DNC Check</td><td>Do Not Call verification</td><td>Check if customer is on DNC list</td></tr>
+<tr><td>Bulk Status Update</td><td>Mass status change</td><td>Update multiple cases at once</td></tr>
+<tr><td>Bulk Assignment</td><td>Mass agent assignment</td><td>Assign multiple cases to agents</td></tr>
+</table>
+<h3>Case List Table Columns</h3>
+<table>
+<tr><th>Column</th><th>Field</th><th>Type</th><th>Description</th></tr>
+<tr><td>Case ID</td><td>id</td><td>Text</td><td>Unique case identifier</td></tr>
+<tr><td>Customer Name</td><td>customerName</td><td>Text</td><td>Policyholder name (clickable)</td></tr>
+<tr><td>Policy Number</td><td>policyNumber</td><td>Text</td><td>Policy number</td></tr>
+<tr><td>Status</td><td>status</td><td>Chip</td><td>Current case status</td></tr>
+<tr><td>Sub-Status</td><td>subStatus</td><td>Text</td><td>Detailed status</td></tr>
+<tr><td>Policy Status</td><td>policyStatus</td><td>Text</td><td>Pre Due, Due, Lapsed, etc.</td></tr>
+<tr><td>Agent</td><td>agent</td><td>Text</td><td>Assigned agent name</td></tr>
+<tr><td>Upload Date</td><td>uploadDate</td><td>Date</td><td>When case was uploaded</td></tr>
+<tr><td>Priority</td><td>isPriority</td><td>Boolean</td><td>Priority flag</td></tr>
+<tr><td>Batch ID</td><td>batchId</td><td>Text</td><td>Batch reference</td></tr>
+<tr><td>Next Follow-Up</td><td>nextFollowUpDate</td><td>Date</td><td>Scheduled follow-up</td></tr>
+<tr><td>Next Action</td><td>nextActionPlan</td><td>Text</td><td>Planned next action</td></tr>
+<tr><td>Current Step</td><td>currentWorkStep</td><td>Text</td><td>Workflow step</td></tr>
+<tr><td>Customer Profile</td><td>customerProfile</td><td>Text</td><td>Normal, HNI</td></tr>
+<tr><td>Mobile</td><td>customerMobile</td><td>Phone</td><td>Customer phone</td></tr>
+<tr><td>Language</td><td>preferredLanguage</td><td>Text</td><td>Preferred language</td></tr>
+<tr><td>Product</td><td>productName</td><td>Text</td><td>Insurance product</td></tr>
+<tr><td>Category</td><td>productCategory</td><td>Text</td><td>Motor, Health, Life, etc.</td></tr>
+<tr><td>Channel</td><td>channel</td><td>Text</td><td>Sales channel</td></tr>
+<tr><td>Sub-Channel</td><td>subChannel</td><td>Text</td><td>Channel detail</td></tr>
+<tr><td>Comm Channel</td><td>currentCommunicationChannel</td><td>Text</td><td>email, sms, whatsapp, call</td></tr>
+<tr><td>Last Action</td><td>lastActionDate</td><td>Date</td><td>Last activity date</td></tr>
+<tr><td>Total Calls</td><td>totalCalls</td><td>Number</td><td>Call attempt count</td></tr>
+</table>
+<h3>Case Object Fields (Complete)</h3>
+<p class="field-note">The following table lists all data fields for this feature with their data types, requirement status, and detailed descriptions.</p>
+<table>
+<tr><th>Field Name</th><th>Type</th><th>Required</th><th>Description</th></tr>
+<tr><td>id</td><td>Text</td><td>Auto</td><td>Case ID (e.g., CASE-001)</td></tr>
+<tr><td>customerName</td><td>Text</td><td>Yes</td><td>Customer full name</td></tr>
+<tr><td>policyNumber</td><td>Text</td><td>Yes</td><td>Policy number</td></tr>
+<tr><td>status</td><td>Dropdown</td><td>Yes</td><td>Uploaded, Assigned, In Progress, Renewed, Failed, Pending</td></tr>
+<tr><td>subStatus</td><td>Dropdown</td><td>Yes</td><td>Document Pending, Ready for Renewal, Payment Processing, etc.</td></tr>
+<tr><td>policyStatus</td><td>Dropdown</td><td>Yes</td><td>Pre Due Stage, Policy Due, Reinstatement</td></tr>
+<tr><td>agent</td><td>Dropdown</td><td>No</td><td>Assigned agent</td></tr>
+<tr><td>uploadDate</td><td>Date</td><td>Auto</td><td>Upload timestamp</td></tr>
+<tr><td>isPriority</td><td>Boolean</td><td>No</td><td>Priority flag</td></tr>
+<tr><td>batchId</td><td>Text</td><td>Auto</td><td>Batch reference</td></tr>
+<tr><td>nextFollowUpDate</td><td>Date</td><td>No</td><td>Next follow-up scheduled</td></tr>
+<tr><td>nextActionPlan</td><td>Text</td><td>No</td><td>Planned action description</td></tr>
+<tr><td>currentWorkStep</td><td>Text</td><td>No</td><td>Workflow step name</td></tr>
+<tr><td>customerProfile</td><td>Dropdown</td><td>No</td><td>Normal, HNI (High Net-worth)</td></tr>
+<tr><td>customerMobile</td><td>Phone</td><td>Yes</td><td>Primary phone</td></tr>
+<tr><td>preferredLanguage</td><td>Dropdown</td><td>No</td><td>Language preference</td></tr>
+<tr><td>assignedAgent</td><td>Text</td><td>No</td><td>Assigned agent name</td></tr>
+<tr><td>productName</td><td>Text</td><td>Yes</td><td>Product name</td></tr>
+<tr><td>productCategory</td><td>Dropdown</td><td>Yes</td><td>Motor, Health, Life, Property</td></tr>
+<tr><td>channel</td><td>Dropdown</td><td>No</td><td>Online, Branch, Telecalling, Partner</td></tr>
+<tr><td>subChannel</td><td>Dropdown</td><td>No</td><td>Website, Mobile App, RM, Inbound</td></tr>
+<tr><td>currentCommunicationChannel</td><td>Dropdown</td><td>No</td><td>email, sms, whatsapp, call</td></tr>
+<tr><td>lastActionDate</td><td>Date</td><td>Auto</td><td>Last activity timestamp</td></tr>
+<tr><td>totalCalls</td><td>Number</td><td>Auto</td><td>Call count</td></tr>
+</table>
+<h3>Contact Info Object</h3>
+<table>
+<tr><th>Field Name</th><th>Type</th><th>Description</th></tr>
+<tr><td>email</td><td>Email</td><td>Customer email</td></tr>
+<tr><td>phone</td><td>Phone</td><td>Primary phone</td></tr>
+<tr><td>alternatePhone</td><td>Phone</td><td>Secondary phone</td></tr>
+</table>
+<h3>Policy Details Object</h3>
+<table>
+<tr><th>Field Name</th><th>Type</th><th>Description</th></tr>
+<tr><td>type</td><td>Text</td><td>Policy type (Vehicle, Home, Life, Health)</td></tr>
+<tr><td>expiryDate</td><td>Date</td><td>Policy expiry date</td></tr>
+<tr><td>premium</td><td>Currency</td><td>Premium amount</td></tr>
+<tr><td>renewalDate</td><td>Date</td><td>Renewal due date</td></tr>
+<tr><td>sumInsured</td><td>Currency</td><td>Coverage amount</td></tr>
+</table>
+<h3>Comments/Notes Object</h3>
+<table>
+<tr><th>Field Name</th><th>Type</th><th>Description</th></tr>
+<tr><td>id</td><td>Text</td><td>Comment ID</td></tr>
+<tr><td>text</td><td>Textarea</td><td>Comment content</td></tr>
+<tr><td>user</td><td>Text</td><td>Comment author</td></tr>
+<tr><td>timestamp</td><td>DateTime</td><td>When posted</td></tr>
+<tr><td>status</td><td>Text</td><td>Status at time of comment</td></tr>
+<tr><td>subStatus</td><td>Text</td><td>Sub-status at time of comment</td></tr>
+</table>
+<h3>Filter Options</h3>
+<table>
+<tr><th>Filter</th><th>Options</th></tr>
+<tr><td>Status</td><td>All, Uploaded, Assigned, In Progress, Renewed, Failed, Pending</td></tr>
+<tr><td>Policy Status</td><td>All, Pre Due Stage, Policy Due, Reinstatement</td></tr>
+<tr><td>Priority</td><td>All, Priority Only, Non-Priority</td></tr>
+<tr><td>Agent</td><td>All, Unassigned, [Agent List]</td></tr>
+<tr><td>Batch</td><td>All, [Batch List]</td></tr>
+<tr><td>Date Range</td><td>Today, This Week, This Month, Custom</td></tr>
+</table>
+<hr>
+<h2>2.3 Case Details</h2>
+<h3>Features</h3>
+<table>
+<tr><th>Feature</th><th>Description</th><th>Explanation</th></tr>
+<tr><td>Policy Information Display</td><td>Complete policy data</td><td>All policy details in structured layout</td></tr>
+<tr><td>Customer Information</td><td>Policyholder details</td><td>Contact, address, preferences</td></tr>
+<tr><td>Communication History</td><td>Log of all interactions</td><td>Timeline of all communications</td></tr>
+<tr><td>Activity Timeline</td><td>Chronological case events</td><td>All activities in order</td></tr>
+<tr><td>Notes & Comments</td><td>Case annotations</td><td>Internal notes and history</td></tr>
+<tr><td>Document Attachments</td><td>Associated files</td><td>Policy copies, proofs, etc.</td></tr>
+<tr><td>Status Update</td><td>Change case status</td><td>With disposition and notes</td></tr>
+<tr><td>Send Renewal Notice</td><td>Multi-channel notification</td><td>Email, SMS, WhatsApp</td></tr>
+<tr><td>Send Payment Link</td><td>Payment collection</td><td>Secure payment link generation</td></tr>
+<tr><td>Verification Status</td><td>Email/Phone/PAN verification</td><td>Verify customer details</td></tr>
+</table>
+<h3>Case Detail Tabs</h3>
+<table>
+<tr><th>Tab</th><th>Description</th></tr>
+<tr><td>Overview</td><td>Case summary and quick info</td></tr>
+<tr><td>Policy</td><td>Full policy details</td></tr>
+<tr><td>Customer</td><td>Customer information</td></tr>
+<tr><td>Communication</td><td>Interaction history</td></tr>
+<tr><td>Documents</td><td>Attached files</td></tr>
+<tr><td>History</td><td>Activity timeline</td></tr>
+<tr><td>Notes</td><td>Internal comments</td></tr>
+</table>
+<h3>Renewal Notice Message Fields</h3>
+<p class="field-note">The following table lists all data fields for this feature with their data types, requirement status, and detailed descriptions.</p>
+<table>
+<tr><th>Field Name</th><th>Type</th><th>Required</th><th>Description</th></tr>
+<tr><td>selectedChannel</td><td>Dropdown</td><td>Yes</td><td>whatsapp, sms, email</td></tr>
+<tr><td>messageType</td><td>Dropdown</td><td>Yes</td><td>renewal_notice, payment_link</td></tr>
+<tr><td>customMessage</td><td>Textarea</td><td>No</td><td>Custom message content</td></tr>
+</table>
+<h3>Payment Link Fields</h3>
+<p class="field-note">The following table lists all data fields for this feature with their data types, requirement status, and detailed descriptions.</p>
+<table>
+<tr><th>Field Name</th><th>Type</th><th>Required</th><th>Description</th></tr>
+<tr><td>amount</td><td>Currency</td><td>Yes</td><td>Payment amount</td></tr>
+<tr><td>purpose</td><td>Text</td><td>No</td><td>Payment purpose</td></tr>
+<tr><td>expiryDays</td><td>Number</td><td>No</td><td>Link validity (days)</td></tr>
+<tr><td>sendVia.email</td><td>Boolean</td><td>No</td><td>Send via email</td></tr>
+<tr><td>sendVia.sms</td><td>Boolean</td><td>No</td><td>Send via SMS</td></tr>
+<tr><td>sendVia.whatsapp</td><td>Boolean</td><td>No</td><td>Send via WhatsApp</td></tr>
+</table>
+<h3>Verification Status Object</h3>
+<table>
+<tr><th>Field Name</th><th>Type</th><th>Description</th></tr>
+<tr><td>email.verified</td><td>Boolean</td><td>Email verification status</td></tr>
+<tr><td>email.verifiedAt</td><td>DateTime</td><td>Verification timestamp</td></tr>
+<tr><td>phone.verified</td><td>Boolean</td><td>Phone verification status</td></tr>
+<tr><td>phone.verifiedAt</td><td>DateTime</td><td>Verification timestamp</td></tr>
+<tr><td>pan.verified</td><td>Boolean</td><td>PAN verification status</td></tr>
+<tr><td>pan.verifiedAt</td><td>DateTime</td><td>Verification timestamp</td></tr>
+</table>
+<hr>
+<h2>2.4 Data Upload Bulk Upload</h2>
+<h3>Features</h3>
+<table>
+<tr><th>Feature</th><th>Description</th><th>Explanation</th></tr>
+<tr><td>File Upload</td><td>Upload Excel/CSV files</td><td>Drag-drop or file browser</td></tr>
+<tr><td>Template Download</td><td>Get upload format</td><td>Pre-formatted template</td></tr>
+<tr><td>Column Mapping</td><td>Field alignment</td><td>Map file columns to system</td></tr>
+<tr><td>Validation Report</td><td>Upload error details</td><td>Row-level error display</td></tr>
+<tr><td>Error Correction</td><td>Fix upload issues</td><td>Download failed records</td></tr>
+<tr><td>Upload History</td><td>Past upload records</td><td>History with statistics</td></tr>
+</table>
+<h3>Upload Template Columns (Required)</h3>
+<table>
+<tr><th>Column</th><th>Type</th><th>Required</th><th>Description</th></tr>
+<tr><td>Policy Number</td><td>Text</td><td>Yes</td><td>Unique policy identifier</td></tr>
+<tr><td>Customer Name</td><td>Text</td><td>Yes</td><td>Full name</td></tr>
+<tr><td>Phone</td><td>Phone</td><td>Yes</td><td>Contact number</td></tr>
+<tr><td>Email</td><td>Email</td><td>No</td><td>Email address</td></tr>
+<tr><td>Policy Type</td><td>Text</td><td>Yes</td><td>Policy category</td></tr>
+<tr><td>Expiry Date</td><td>Date</td><td>Yes</td><td>Policy expiry</td></tr>
+<tr><td>Premium Amount</td><td>Number</td><td>Yes</td><td>Premium value</td></tr>
+<tr><td>Sum Insured</td><td>Number</td><td>No</td><td>Coverage amount</td></tr>
+</table>
+<h3>Upload Template Columns (Optional)</h3>
+<table>
+<tr><th>Column</th><th>Type</th><th>Description</th></tr>
+<tr><td>Address</td><td>Text</td><td>Customer address</td></tr>
+<tr><td>City</td><td>Text</td><td>City name</td></tr>
+<tr><td>State</td><td>Text</td><td>State name</td></tr>
+<tr><td>Pincode</td><td>Text</td><td>Postal code</td></tr>
+<tr><td>Vehicle Number</td><td>Text</td><td>For motor policies</td></tr>
+<tr><td>Make</td><td>Text</td><td>Vehicle make</td></tr>
+<tr><td>Model</td><td>Text</td><td>Vehicle model</td></tr>
+<tr><td>Year</td><td>Number</td><td>Manufacturing year</td></tr>
+<tr><td>Agent Code</td><td>Text</td><td>Assigned agent</td></tr>
+<tr><td>Channel</td><td>Text</td><td>Source channel</td></tr>
+<tr><td>Batch Reference</td><td>Text</td><td>Custom batch ID</td></tr>
+</table>
+<hr>
+<h2>2.5 Renewal Email Manager</h2>
+<h3>Features</h3>
+<table>
+<tr><th>Feature</th><th>Description</th><th>Explanation</th></tr>
+<tr><td>Email Campaign Creation</td><td>Design campaigns</td><td>Create targeted email campaigns</td></tr>
+<tr><td>Template Selection</td><td>Choose templates</td><td>Pre-designed email templates</td></tr>
+<tr><td>Recipient Filtering</td><td>Target segments</td><td>Filter by criteria</td></tr>
+<tr><td>Schedule Campaigns</td><td>Time delivery</td><td>Set send date/time</td></tr>
+<tr><td>Performance Tracking</td><td>Monitor metrics</td><td>Open, click, response rates</td></tr>
+<tr><td>A/B Testing</td><td>Compare versions</td><td>Test different content</td></tr>
+</table>
+<h3>Campaign Fields</h3>
+<p class="field-note">The following table lists all data fields for this feature with their data types, requirement status, and detailed descriptions.</p>
+<table>
+<tr><th>Field Name</th><th>Type</th><th>Required</th><th>Description</th></tr>
+<tr><td>campaignName</td><td>Text</td><td>Yes</td><td>Campaign name</td></tr>
+<tr><td>templateId</td><td>Dropdown</td><td>Yes</td><td>Email template</td></tr>
+<tr><td>subject</td><td>Text</td><td>Yes</td><td>Email subject line</td></tr>
+<tr><td>fromName</td><td>Text</td><td>No</td><td>Sender name</td></tr>
+<tr><td>replyTo</td><td>Email</td><td>No</td><td>Reply address</td></tr>
+<tr><td>sendDate</td><td>DateTime</td><td>Yes</td><td>Scheduled send time</td></tr>
+<tr><td>status</td><td>Dropdown</td><td>Auto</td><td>Draft, Scheduled, Sent</td></tr>
+</table>
+<h3>Recipient Filter Fields</h3>
+<table>
+<tr><th>Field Name</th><th>Type</th><th>Description</th></tr>
+<tr><td>policyType</td><td>Multi-select</td><td>Policy types to include</td></tr>
+<tr><td>expiryDateFrom</td><td>Date</td><td>Expiry start range</td></tr>
+<tr><td>expiryDateTo</td><td>Date</td><td>Expiry end range</td></tr>
+<tr><td>status</td><td>Multi-select</td><td>Case statuses</td></tr>
+<tr><td>channel</td><td>Multi-select</td><td>Source channels</td></tr>
+<tr><td>excludeDNC</td><td>Boolean</td><td>Exclude DNC list</td></tr>
+</table>
+<hr>
+<h2>2.6 Renewal WhatsApp Manager</h2>
+<h3>Features</h3>
+<table>
+<tr><th>Feature</th><th>Description</th><th>Explanation</th></tr>
+<tr><td>WhatsApp Campaign Creation</td><td>Design campaigns</td><td>Create WhatsApp campaigns</td></tr>
+<tr><td>Template Management</td><td>Manage templates</td><td>WhatsApp API templates</td></tr>
+<tr><td>Bulk Messaging</td><td>Mass dispatch</td><td>Send to multiple recipients</td></tr>
+<tr><td>Response Handling</td><td>Manage replies</td><td>View and respond to messages</td></tr>
+<tr><td>Delivery Reports</td><td>Track status</td><td>Delivery and read status</td></tr>
+<tr><td>Rich Media Support</td><td>Attach files</td><td>Images, documents, links</td></tr>
+</table>
+<h3>WhatsApp Campaign Fields</h3>
+<p class="field-note">The following table lists all data fields for this feature with their data types, requirement status, and detailed descriptions.</p>
+<table>
+<tr><th>Field Name</th><th>Type</th><th>Required</th><th>Description</th></tr>
+<tr><td>campaignName</td><td>Text</td><td>Yes</td><td>Campaign name</td></tr>
+<tr><td>templateId</td><td>Dropdown</td><td>Yes</td><td>Approved template</td></tr>
+<tr><td>mediaUrl</td><td>URL</td><td>No</td><td>Media attachment</td></tr>
+<tr><td>scheduleDate</td><td>DateTime</td><td>Yes</td><td>Send date/time</td></tr>
+<tr><td>status</td><td>Dropdown</td><td>Auto</td><td>Draft, Scheduled, Sent</td></tr>
+</table>
+<h3>WhatsApp Template Fields</h3>
+<p class="field-note">The following table lists all data fields for this feature with their data types, requirement status, and detailed descriptions.</p>
+<table>
+<tr><th>Field Name</th><th>Type</th><th>Required</th><th>Description</th></tr>
+<tr><td>templateName</td><td>Text</td><td>Yes</td><td>Template name</td></tr>
+<tr><td>language</td><td>Dropdown</td><td>Yes</td><td>Template language</td></tr>
+<tr><td>category</td><td>Dropdown</td><td>Yes</td><td>Marketing, Transactional, OTP</td></tr>
+<tr><td>headerType</td><td>Dropdown</td><td>No</td><td>None, Text, Image, Video, Document</td></tr>
+<tr><td>headerContent</td><td>Text/URL</td><td>No</td><td>Header content</td></tr>
+<tr><td>bodyText</td><td>Textarea</td><td>Yes</td><td>Message body with variables</td></tr>
+<tr><td>footerText</td><td>Text</td><td>No</td><td>Footer text</td></tr>
+<tr><td>buttons</td><td>Array</td><td>No</td><td>Button configurations</td></tr>
+<tr><td>sampleValues</td><td>Array</td><td>No</td><td>Variable samples for approval</td></tr>
+</table>
+<hr>
+<h2>2.7 System Logs</h2>
+<h3>Features</h3>
+<table>
+<tr><th>Feature</th><th>Description</th><th>Explanation</th></tr>
+<tr><td>Activity Logs</td><td>System event history</td><td>All system activities</td></tr>
+<tr><td>User Action Tracking</td><td>Who did what when</td><td>User actions logged</td></tr>
+<tr><td>Audit Trail</td><td>Compliance logging</td><td>Immutable audit records</td></tr>
+<tr><td>Log Filtering</td><td>Search and filter</td><td>By user, action, date</td></tr>
+<tr><td>Export Logs</td><td>Download log data</td><td>Export to CSV</td></tr>
+</table>
+<h3>Log Entry Fields</h3>
+<p class="field-note">The following table lists all data fields for this feature with their data types, requirement status, and detailed descriptions.</p>
+<table>
+<tr><th>Field Name</th><th>Type</th><th>Description</th></tr>
+<tr><td>timestamp</td><td>DateTime</td><td>Event timestamp</td></tr>
+<tr><td>userId</td><td>Text</td><td>User who performed action</td></tr>
+<tr><td>userName</td><td>Text</td><td>User display name</td></tr>
+<tr><td>action</td><td>Text</td><td>Action type</td></tr>
+<tr><td>module</td><td>Text</td><td>Module name</td></tr>
+<tr><td>entityType</td><td>Text</td><td>Entity type affected</td></tr>
+<tr><td>entityId</td><td>Text</td><td>Entity identifier</td></tr>
+<tr><td>details</td><td>JSON</td><td>Action details</td></tr>
+<tr><td>ipAddress</td><td>Text</td><td>User IP address</td></tr>
+<tr><td>userAgent</td><td>Text</td><td>Browser/device info</td></tr>
+</table>
+<hr>
+<h1>3. LEAD MANAGEMENT MODULE</h1>
+<div class="section-intro">The Lead Management Module provides complete lead lifecycle management from initial capture through qualification to final conversion. Key features include a comprehensive lead list view with quick search and advanced multi-criteria filtering, bulk operations for mass lead actions, lead import/export functionality, and column customization. The lead details section offers contact information management, multi-contact number handling, lead scoring with AI-powered quality indicators, activity feed tracking, notes system, task association, document tracking for required paperwork, policy history viewing, nominee details management, call logging, claims tracking, follow-up scheduling, payment link generation, lead conversion workflows, and customer feedback recording. Analytics provide conversion funnel analysis, source performance tracking, and agent performance metrics.</div>
+<h2>3.1 Lead Management Dashboard</h2>
+<h3>Features</h3>
+<table>
+<tr><th>Feature</th><th>Description</th><th>Explanation</th></tr>
+<tr><td>Lead List View</td><td>Comprehensive lead display</td><td>Paginated table with all leads</td></tr>
+<tr><td>Quick Search</td><td>Fast lead lookup</td><td>Search by name, phone, email</td></tr>
+<tr><td>Advanced Filters</td><td>Multi-criteria filtering</td><td>Multiple filter combinations</td></tr>
+<tr><td>Bulk Operations</td><td>Mass lead actions</td><td>Assign, status change, export</td></tr>
+<tr><td>Lead Import</td><td>Upload lead files</td><td>Excel/CSV import</td></tr>
+<tr><td>Quick Add Lead</td><td>Fast lead creation</td><td>Minimal field quick add</td></tr>
+<tr><td>Column Customization</td><td>Personalize display</td><td>Choose visible columns</td></tr>
+<tr><td>Saved Views</td><td>Store filter configs</td><td>Save frequently used filters</td></tr>
+<tr><td>Lead Scoring Display</td><td>Quality indicator</td><td>Visual score display</td></tr>
+<tr><td>Duplicate Detection</td><td>Find duplicates</td><td>Identify potential duplicates</td></tr>
+<tr><td>Vahan Integration</td><td>Vehicle data fetch</td><td>Get vehicle details</td></tr>
+</table>
+<h3>Lead List Table Columns</h3>
+<table>
+<tr><th>Column</th><th>Field</th><th>Type</th><th>Description</th></tr>
+<tr><td>ID</td><td>id</td><td>Number</td><td>Lead ID</td></tr>
+<tr><td>Name</td><td>firstName + lastName</td><td>Text</td><td>Full name</td></tr>
+<tr><td>Email</td><td>email</td><td>Email</td><td>Email address</td></tr>
+<tr><td>Phone</td><td>phone</td><td>Phone</td><td>Contact number</td></tr>
+<tr><td>Company</td><td>company</td><td>Text</td><td>Company name</td></tr>
+<tr><td>Position</td><td>position</td><td>Text</td><td>Job title</td></tr>
+<tr><td>Source</td><td>source</td><td>Text</td><td>Lead source</td></tr>
+<tr><td>Status</td><td>status</td><td>Chip</td><td>Lead status</td></tr>
+<tr><td>Priority</td><td>priority</td><td>Chip</td><td>Hot, Warm, Cold</td></tr>
+<tr><td>Lead Type</td><td>leadType</td><td>Chip</td><td>Premium, Regular</td></tr>
+<tr><td>Assigned To</td><td>assignedTo</td><td>Text</td><td>Agent name</td></tr>
+<tr><td>Value</td><td>value</td><td>Currency</td><td>Expected value</td></tr>
+<tr><td>Score</td><td>score</td><td>Number</td><td>Lead score</td></tr>
+<tr><td>Close Date</td><td>expectedCloseDate</td><td>Date</td><td>Expected close</td></tr>
+<tr><td>Last Contact</td><td>lastContactDate</td><td>Date</td><td>Last interaction</td></tr>
+<tr><td>Language</td><td>preferredLanguage</td><td>Text</td><td>Preferred language</td></tr>
+<tr><td>Total Calls</td><td>totalCalls</td><td>Number</td><td>Call count</td></tr>
+<tr><td>Created</td><td>createdAt</td><td>Date</td><td>Creation date</td></tr>
+</table>
+<h3>Lead Object Fields (Complete)</h3>
+<p class="field-note">The following table lists all data fields for this feature with their data types, requirement status, and detailed descriptions.</p>
+<table>
+<tr><th>Field Name</th><th>Type</th><th>Required</th><th>Description</th></tr>
+<tr><td>id</td><td>Number</td><td>Auto</td><td>Lead ID</td></tr>
+<tr><td>firstName</td><td>Text</td><td>Yes</td><td>First name</td></tr>
+<tr><td>lastName</td><td>Text</td><td>Yes</td><td>Last name</td></tr>
+<tr><td>email</td><td>Email</td><td>Yes</td><td>Email address</td></tr>
+<tr><td>phone</td><td>Phone</td><td>Yes</td><td>Primary phone</td></tr>
+<tr><td>alternatePhone</td><td>Phone</td><td>No</td><td>Secondary phone</td></tr>
+<tr><td>company</td><td>Text</td><td>No</td><td>Company name</td></tr>
+<tr><td>position</td><td>Text</td><td>No</td><td>Job title/position</td></tr>
+<tr><td>source</td><td>Dropdown</td><td>Yes</td><td>Website, Referral, Cold Call, Email Campaign, LinkedIn, Trade Show, Partner</td></tr>
+<tr><td>status</td><td>Dropdown</td><td>Yes</td><td>New, Contacted, Qualified, Proposal, Negotiation, Won, Lost</td></tr>
+<tr><td>priority</td><td>Dropdown</td><td>No</td><td>Hot, Warm, Cold, High, Medium, Low</td></tr>
+<tr><td>leadType</td><td>Dropdown</td><td>No</td><td>Premium, Regular</td></tr>
+<tr><td>assignedTo</td><td>Dropdown</td><td>No</td><td>Assigned agent</td></tr>
+<tr><td>assignedToId</td><td>Text</td><td>No</td><td>Agent ID</td></tr>
+<tr><td>value</td><td>Currency</td><td>No</td><td>Expected deal value</td></tr>
+<tr><td>score</td><td>Number</td><td>Auto</td><td>Lead score (0-100)</td></tr>
+<tr><td>expectedCloseDate</td><td>Date</td><td>No</td><td>Expected close date</td></tr>
+<tr><td>lastContactDate</td><td>Date</td><td>Auto</td><td>Last contact date</td></tr>
+<tr><td>notes</td><td>Textarea</td><td>No</td><td>General notes</td></tr>
+<tr><td>tags</td><td>Multi-select</td><td>No</td><td>Lead tags</td></tr>
+<tr><td>createdAt</td><td>Date</td><td>Auto</td><td>Creation timestamp</td></tr>
+<tr><td>updatedAt</td><td>Date</td><td>Auto</td><td>Last update timestamp</td></tr>
+<tr><td>preferredLanguage</td><td>Dropdown</td><td>No</td><td>Communication language</td></tr>
+<tr><td>totalCalls</td><td>Number</td><td>Auto</td><td>Call attempt count</td></tr>
+<tr><td>product</td><td>Text</td><td>No</td><td>Product of interest</td></tr>
+<tr><td>subProduct</td><td>Text</td><td>No</td><td>Sub-product</td></tr>
+<tr><td>vehicleRegistrationNumber</td><td>Text</td><td>No</td><td>For motor leads</td></tr>
+<tr><td>vehicleType</td><td>Dropdown</td><td>No</td><td>Private Car, Commercial, Two Wheeler</td></tr>
+</table>
+<h3>Filter Fields</h3>
+<table>
+<tr><th>Field Name</th><th>Type</th><th>Options</th></tr>
+<tr><td>status</td><td>Multi-select</td><td>All statuses</td></tr>
+<tr><td>priority</td><td>Multi-select</td><td>Hot, Warm, Cold</td></tr>
+<tr><td>leadType</td><td>Dropdown</td><td>All, Premium, Regular</td></tr>
+<tr><td>source</td><td>Multi-select</td><td>All sources</td></tr>
+<tr><td>assignedTo</td><td>Dropdown</td><td>All agents</td></tr>
+<tr><td>dateRange</td><td>Dropdown</td><td>Today, Week, Month, Custom</td></tr>
+<tr><td>valueMin</td><td>Currency</td><td>Minimum value</td></tr>
+<tr><td>valueMax</td><td>Currency</td><td>Maximum value</td></tr>
+<tr><td>tags</td><td>Multi-select</td><td>Available tags</td></tr>
+</table>
+<h3>Quick Add Lead Fields</h3>
+<p class="field-note">The following table lists all data fields for this feature with their data types, requirement status, and detailed descriptions.</p>
+<table>
+<tr><th>Field Name</th><th>Type</th><th>Required</th></tr>
+<tr><td>firstName</td><td>Text</td><td>Yes</td></tr>
+<tr><td>lastName</td><td>Text</td><td>Yes</td></tr>
+<tr><td>phone</td><td>Phone</td><td>Yes</td></tr>
+<tr><td>email</td><td>Email</td><td>No</td></tr>
+<tr><td>source</td><td>Dropdown</td><td>Yes</td></tr>
+<tr><td>assignedTo</td><td>Dropdown</td><td>No</td></tr>
+</table>
+<hr>
+<h2>3.2 Lead Details</h2>
+<h3>Features</h3>
+<table>
+<tr><th>Feature</th><th>Description</th><th>Explanation</th></tr>
+<tr><td>Contact Information</td><td>Lead's personal details</td><td>View and edit contact info</td></tr>
+<tr><td>Multi-Contact Manager</td><td>Multiple phone numbers</td><td>Manage multiple numbers</td></tr>
+<tr><td>Lead Scoring</td><td>Quality indicator</td><td>Score breakdown and history</td></tr>
+<tr><td>Activity Feed</td><td>Lead interaction history</td><td>Chronological activities</td></tr>
+<tr><td>Notes System</td><td>Lead annotations</td><td>Add and view notes</td></tr>
+<tr><td>Task Association</td><td>Related tasks</td><td>Tasks linked to lead</td></tr>
+<tr><td>Document Tracker</td><td>Required documents</td><td>Track document collection</td></tr>
+<tr><td>Policy History</td><td>Previous policies</td><td>Historical policy data</td></tr>
+<tr><td>Nominee Details</td><td>Beneficiary info</td><td>Nominee information</td></tr>
+<tr><td>Call Logs</td><td>Call history</td><td>Call records and notes</td></tr>
+<tr><td>Claims Management</td><td>Claims tracking</td><td>Claims associated with lead</td></tr>
+<tr><td>Follow-up Scheduling</td><td>Schedule follow-ups</td><td>Set reminders</td></tr>
+<tr><td>Payment Link Generation</td><td>Collect payments</td><td>Generate payment links</td></tr>
+<tr><td>Lead Conversion</td><td>Convert to customer</td><td>Convert with policy details</td></tr>
+<tr><td>Customer Feedback</td><td>Feedback recording</td><td>NPS, satisfaction scores</td></tr>
+</table>
+<h3>Lead Detail Tabs</h3>
+<table>
+<tr><th>Tab</th><th>Description</th></tr>
+<tr><td>Overview</td><td>Lead summary and key info</td></tr>
+<tr><td>Contact</td><td>Contact information management</td></tr>
+<tr><td>Activities</td><td>Activity timeline and logs</td></tr>
+<tr><td>Tasks</td><td>Associated tasks</td></tr>
+<tr><td>Documents</td><td>Document collection tracker</td></tr>
+<tr><td>Policy History</td><td>Previous policies</td></tr>
+<tr><td>Notes</td><td>Internal notes</td></tr>
+<tr><td>Feedback</td><td>Customer feedback</td></tr>
+</table>
+<h3>Contact Information Fields</h3>
+<p class="field-note">The following table lists all data fields for this feature with their data types, requirement status, and detailed descriptions.</p>
+<table>
+<tr><th>Field Name</th><th>Type</th><th>Required</th><th>Description</th></tr>
+<tr><td>firstName</td><td>Text</td><td>Yes</td><td>First name</td></tr>
+<tr><td>lastName</td><td>Text</td><td>Yes</td><td>Last name</td></tr>
+<tr><td>email</td><td>Email</td><td>Yes</td><td>Primary email</td></tr>
+<tr><td>phone</td><td>Phone</td><td>Yes</td><td>Primary phone</td></tr>
+<tr><td>alternatePhone</td><td>Phone</td><td>No</td><td>Secondary phone</td></tr>
+<tr><td>company</td><td>Text</td><td>No</td><td>Company name</td></tr>
+<tr><td>position</td><td>Text</td><td>No</td><td>Job title</td></tr>
+<tr><td>address</td><td>Textarea</td><td>No</td><td>Full address</td></tr>
+<tr><td>city</td><td>Text</td><td>No</td><td>City</td></tr>
+<tr><td>state</td><td>Dropdown</td><td>No</td><td>State</td></tr>
+<tr><td>pincode</td><td>Text</td><td>No</td><td>Postal code</td></tr>
+</table>
+<h3>Multi-Contact Number Fields</h3>
+<p class="field-note">The following table lists all data fields for this feature with their data types, requirement status, and detailed descriptions.</p>
+<table>
+<tr><th>Field Name</th><th>Type</th><th>Required</th><th>Description</th></tr>
+<tr><td>number</td><td>Phone</td><td>Yes</td><td>Phone number</td></tr>
+<tr><td>type</td><td>Dropdown</td><td>Yes</td><td>Mobile, Home, Office, WhatsApp</td></tr>
+<tr><td>isPrimary</td><td>Boolean</td><td>No</td><td>Mark as primary</td></tr>
+<tr><td>isVerified</td><td>Boolean</td><td>Auto</td><td>Verification status</td></tr>
+<tr><td>notes</td><td>Text</td><td>No</td><td>Number notes</td></tr>
+</table>
+<h3>Policy Details Fields (View)</h3>
+<p class="field-note">The following table lists all data fields for this feature with their data types, requirement status, and detailed descriptions.</p>
+<table>
+<tr><th>Field Name</th><th>Type</th><th>Description</th></tr>
+<tr><td>policyNumber</td><td>Text</td><td>Policy number</td></tr>
+<tr><td>policyType</td><td>Text</td><td>Insurance type</td></tr>
+<tr><td>policyStatus</td><td>Text</td><td>Active, Pending, Expired</td></tr>
+<tr><td>idv</td><td>Currency</td><td>Insured Declared Value</td></tr>
+<tr><td>odPremium</td><td>Currency</td><td>Own Damage premium</td></tr>
+<tr><td>liabilityPremium</td><td>Currency</td><td>TP premium</td></tr>
+<tr><td>addOnPremium</td><td>Currency</td><td>Add-on premium</td></tr>
+<tr><td>netPremium</td><td>Currency</td><td>Net premium</td></tr>
+<tr><td>gst</td><td>Currency</td><td>GST amount</td></tr>
+<tr><td>finalPremium</td><td>Currency</td><td>Total premium</td></tr>
+<tr><td>referenceId</td><td>Text</td><td>Reference ID</td></tr>
+<tr><td>policyStartDate</td><td>Date</td><td>Start date</td></tr>
+<tr><td>policyEndDate</td><td>Date</td><td>End date</td></tr>
+<tr><td>paymentFrequency</td><td>Dropdown</td><td>Annual, Semi-Annual, Quarterly</td></tr>
+<tr><td>nextPaymentDue</td><td>Date</td><td>Next payment date</td></tr>
+</table>
+<h3>Nominee Details Fields</h3>
+<p class="field-note">The following table lists all data fields for this feature with their data types, requirement status, and detailed descriptions.</p>
+<table>
+<tr><th>Field Name</th><th>Type</th><th>Required</th><th>Description</th></tr>
+<tr><td>nomineeName</td><td>Text</td><td>Yes</td><td>Nominee full name</td></tr>
+<tr><td>relationship</td><td>Dropdown</td><td>Yes</td><td>Spouse, Child, Parent, Other</td></tr>
+<tr><td>dateOfBirth</td><td>Date</td><td>No</td><td>Nominee DOB</td></tr>
+<tr><td>contactNumber</td><td>Phone</td><td>No</td><td>Nominee phone</td></tr>
+<tr><td>email</td><td>Email</td><td>No</td><td>Nominee email</td></tr>
+<tr><td>address</td><td>Textarea</td><td>No</td><td>Nominee address</td></tr>
+<tr><td>nomineePercentage</td><td>Number</td><td>Yes</td><td>Percentage share</td></tr>
+</table>
+<h3>Task Form Fields</h3>
+<p class="field-note">The following table lists all data fields for this feature with their data types, requirement status, and detailed descriptions.</p>
+<table>
+<tr><th>Field Name</th><th>Type</th><th>Required</th><th>Description</th></tr>
+<tr><td>task</td><td>Text</td><td>Yes</td><td>Task description</td></tr>
+<tr><td>dueDate</td><td>Date</td><td>Yes</td><td>Due date</td></tr>
+<tr><td>assignedTo</td><td>Dropdown</td><td>No</td><td>Assigned agent</td></tr>
+<tr><td>priority</td><td>Dropdown</td><td>No</td><td>High, Medium, Low</td></tr>
+<tr><td>status</td><td>Dropdown</td><td>Auto</td><td>Pending, In Progress, Completed</td></tr>
+</table>
+<h3>Call Log Form Fields</h3>
+<p class="field-note">The following table lists all data fields for this feature with their data types, requirement status, and detailed descriptions.</p>
+<table>
+<tr><th>Field Name</th><th>Type</th><th>Required</th><th>Description</th></tr>
+<tr><td>type</td><td>Dropdown</td><td>Yes</td><td>Inbound, Outbound</td></tr>
+<tr><td>duration</td><td>Text</td><td>Yes</td><td>Call duration</td></tr>
+<tr><td>status</td><td>Dropdown</td><td>Yes</td><td>Completed, No Answer, Busy, Failed</td></tr>
+<tr><td>notes</td><td>Textarea</td><td>No</td><td>Call notes</td></tr>
+<tr><td>followUpRequired</td><td>Boolean</td><td>No</td><td>Needs follow-up</td></tr>
+<tr><td>callRating</td><td>Number</td><td>No</td><td>Call quality (1-5)</td></tr>
+</table>
+<h3>Claim Form Fields</h3>
+<p class="field-note">The following table lists all data fields for this feature with their data types, requirement status, and detailed descriptions.</p>
+<table>
+<tr><th>Field Name</th><th>Type</th><th>Required</th><th>Description</th></tr>
+<tr><td>customerName</td><td>Text</td><td>Yes</td><td>Claimant name</td></tr>
+<tr><td>mobileNumber</td><td>Phone</td><td>Yes</td><td>Contact number</td></tr>
+<tr><td>emailId</td><td>Email</td><td>No</td><td>Email address</td></tr>
+<tr><td>insuranceCompany</td><td>Text</td><td>Yes</td><td>Insurance company</td></tr>
+<tr><td>policyNumber</td><td>Text</td><td>Yes</td><td>Policy number</td></tr>
+<tr><td>expiryDate</td><td>Date</td><td>No</td><td>Policy expiry</td></tr>
+<tr><td>claimNumber</td><td>Text</td><td>Auto</td><td>Claim reference</td></tr>
+<tr><td>claimStatus</td><td>Dropdown</td><td>Yes</td><td>Pending, Processing, Approved, Rejected</td></tr>
+<tr><td>remarks</td><td>Textarea</td><td>No</td><td>Claim notes</td></tr>
+</table>
+<h3>Document Types</h3>
+<table>
+<tr><th>Document Type</th><th>Description</th></tr>
+<tr><td>Registration Certificate</td><td>Vehicle RC</td></tr>
+<tr><td>Previous Policy Copy</td><td>Last policy document</td></tr>
+<tr><td>Inspection Report</td><td>Vehicle inspection</td></tr>
+<tr><td>CKYC Document</td><td>KYC verification</td></tr>
+<tr><td>Customer Declaration</td><td>Signed declaration</td></tr>
+<tr><td>Aadhaar Card</td><td>Identity proof</td></tr>
+<tr><td>PAN Card</td><td>Tax ID</td></tr>
+<tr><td>Driving License</td><td>License copy</td></tr>
+<tr><td>Passport</td><td>Passport copy</td></tr>
+<tr><td>Voter ID</td><td>Voter card</td></tr>
+<tr><td>Bank Statement</td><td>Bank records</td></tr>
+<tr><td>Salary Certificate</td><td>Employment proof</td></tr>
+<tr><td>Income Tax Return</td><td>ITR document</td></tr>
+<tr><td>Address Proof</td><td>Residence proof</td></tr>
+</table>
+<h3>Document Tracker Fields</h3>
+<p class="field-note">The following table lists all data fields for this feature with their data types, requirement status, and detailed descriptions.</p>
+<table>
+<tr><th>Field Name</th><th>Type</th><th>Description</th></tr>
+<tr><td>documentType</td><td>Dropdown</td><td>Document category</td></tr>
+<tr><td>status</td><td>Dropdown</td><td>Pending, Uploaded, Verified, Rejected</td></tr>
+<tr><td>uploadedBy</td><td>Text</td><td>Who uploaded</td></tr>
+<tr><td>uploadedAt</td><td>DateTime</td><td>Upload timestamp</td></tr>
+<tr><td>verifiedBy</td><td>Text</td><td>Verifier name</td></tr>
+<tr><td>verifiedAt</td><td>DateTime</td><td>Verification timestamp</td></tr>
+<tr><td>notes</td><td>Text</td><td>Document notes</td></tr>
+<tr><td>fileUrl</td><td>URL</td><td>File location</td></tr>
+</table>
+<h3>Follow-Up Form Fields</h3>
+<p class="field-note">The following table lists all data fields for this feature with their data types, requirement status, and detailed descriptions.</p>
+<table>
+<tr><th>Field Name</th><th>Type</th><th>Required</th><th>Description</th></tr>
+<tr><td>date</td><td>Date</td><td>Yes</td><td>Follow-up date</td></tr>
+<tr><td>time</td><td>Time</td><td>Yes</td><td>Follow-up time</td></tr>
+<tr><td>type</td><td>Dropdown</td><td>Yes</td><td>Call, Email, Meeting, WhatsApp</td></tr>
+<tr><td>priority</td><td>Dropdown</td><td>No</td><td>High, Medium, Low</td></tr>
+<tr><td>notes</td><td>Textarea</td><td>No</td><td>Follow-up notes</td></tr>
+<tr><td>assignedTo</td><td>Dropdown</td><td>No</td><td>Assigned agent</td></tr>
+</table>
+<h3>Payment Link Form Fields</h3>
+<p class="field-note">The following table lists all data fields for this feature with their data types, requirement status, and detailed descriptions.</p>
+<table>
+<tr><th>Field Name</th><th>Type</th><th>Required</th><th>Description</th></tr>
+<tr><td>amount</td><td>Currency</td><td>Yes</td><td>Payment amount</td></tr>
+<tr><td>purpose</td><td>Text</td><td>No</td><td>Payment purpose</td></tr>
+<tr><td>expiryDays</td><td>Number</td><td>No</td><td>Link validity days</td></tr>
+<tr><td>sendVia.email</td><td>Boolean</td><td>No</td><td>Send via email</td></tr>
+<tr><td>sendVia.sms</td><td>Boolean</td><td>No</td><td>Send via SMS</td></tr>
+<tr><td>sendVia.whatsapp</td><td>Boolean</td><td>No</td><td>Send via WhatsApp</td></tr>
+</table>
+<h3>Lead Conversion Form Fields</h3>
+<p class="field-note">The following table lists all data fields for this feature with their data types, requirement status, and detailed descriptions.</p>
+<table>
+<tr><th>Field Name</th><th>Type</th><th>Required</th><th>Description</th></tr>
+<tr><td>productType</td><td>Dropdown</td><td>Yes</td><td>Product type</td></tr>
+<tr><td>policyNumber</td><td>Text</td><td>Yes</td><td>New policy number</td></tr>
+<tr><td>premiumAmount</td><td>Currency</td><td>Yes</td><td>Premium amount</td></tr>
+<tr><td>age</td><td>Number</td><td>No</td><td>Customer age</td></tr>
+<tr><td>gender</td><td>Dropdown</td><td>No</td><td>Male, Female, Other</td></tr>
+<tr><td>policyStartDate</td><td>Date</td><td>Yes</td><td>Policy start date</td></tr>
+<tr><td>policyEndDate</td><td>Date</td><td>Yes</td><td>Policy end date</td></tr>
+</table>
+<h3>Customer Feedback Fields</h3>
+<p class="field-note">The following table lists all data fields for this feature with their data types, requirement status, and detailed descriptions.</p>
+<table>
+<tr><th>Field Name</th><th>Type</th><th>Required</th><th>Description</th></tr>
+<tr><td>rating</td><td>Number</td><td>Yes</td><td>Overall rating (1-5)</td></tr>
+<tr><td>feedback</td><td>Textarea</td><td>No</td><td>Written feedback</td></tr>
+<tr><td>feedbackDate</td><td>Date</td><td>Auto</td><td>Feedback date</td></tr>
+<tr><td>feedbackBy</td><td>Text</td><td>Auto</td><td>Collected by</td></tr>
+<tr><td>recommendationScore</td><td>Number</td><td>No</td><td>NPS score (0-10)</td></tr>
+<tr><td>satisfactionAreas</td><td>Multi-select</td><td>No</td><td>Satisfied with</td></tr>
+<tr><td>improvementAreas</td><td>Multi-select</td><td>No</td><td>Needs improvement</td></tr>
+<tr><td>additionalComments</td><td>Textarea</td><td>No</td><td>Extra comments</td></tr>
+</table>
+<hr>
+<h2>3.3 Lead Analytics</h2>
+<h3>Features</h3>
+<table>
+<tr><th>Feature</th><th>Description</th><th>Explanation</th></tr>
+<tr><td>Conversion Funnel</td><td>Stage-by-stage analysis</td><td>Visual funnel with rates</td></tr>
+<tr><td>Source Performance</td><td>Lead origin analysis</td><td>Compare source quality</td></tr>
+<tr><td>Agent Performance</td><td>Individual metrics</td><td>Per-agent statistics</td></tr>
+<tr><td>Time-based Analysis</td><td>Trend tracking</td><td>Metrics over time</td></tr>
+<tr><td>Custom Reports</td><td>Flexible reporting</td><td>Build custom reports</td></tr>
+<tr><td>Dashboard Widgets</td><td>KPI visualization</td><td>Configurable widgets</td></tr>
+</table>
+<h3>Analytics Metrics</h3>
+<table>
+<tr><th>Metric</th><th>Description</th></tr>
+<tr><td>Total Leads</td><td>Count of all leads</td></tr>
+<tr><td>New Leads</td><td>Leads created in period</td></tr>
+<tr><td>Qualified Leads</td><td>Leads qualified</td></tr>
+<tr><td>Conversion Rate</td><td>Percentage converted</td></tr>
+<tr><td>Average Deal Value</td><td>Average lead value</td></tr>
+<tr><td>Average Time to Close</td><td>Days to conversion</td></tr>
+<tr><td>Lead Response Time</td><td>First contact time</td></tr>
+<tr><td>Win Rate</td><td>Percentage won</td></tr>
+<tr><td>Loss Rate</td><td>Percentage lost</td></tr>
+<tr><td>By Source</td><td>Breakdown by source</td></tr>
+<tr><td>By Agent</td><td>Breakdown by agent</td></tr>
+<tr><td>By Status</td><td>Breakdown by status</td></tr>
+</table>
+<hr>
+<h2>3.4 Duplicate Lead Management</h2>
+<h3>Features</h3>
+<table>
+<tr><th>Feature</th><th>Description</th><th>Explanation</th></tr>
+<tr><td>Duplicate Detection</td><td>Find potential duplicates</td><td>Identify matching leads</td></tr>
+<tr><td>Duplicate Review</td><td>Manual verification</td><td>Confirm or dismiss matches</td></tr>
+<tr><td>Merge Duplicates</td><td>Combine records</td><td>Merge into single lead</td></tr>
+<tr><td>Deduplication Rules</td><td>Matching criteria</td><td>Configure match rules</td></tr>
+<tr><td>Bulk Deduplication</td><td>Mass processing</td><td>Process multiple at once</td></tr>
+</table>
+<h3>Duplicate Match Fields</h3>
+<p class="field-note">The following table lists all data fields for this feature with their data types, requirement status, and detailed descriptions.</p>
+<table>
+<tr><th>Field Name</th><th>Type</th><th>Description</th></tr>
+<tr><td>matchType</td><td>Text</td><td>Exact, Fuzzy, Partial</td></tr>
+<tr><td>matchScore</td><td>Number</td><td>Similarity percentage</td></tr>
+<tr><td>matchedFields</td><td>Array</td><td>Fields that matched</td></tr>
+<tr><td>lead1</td><td>Object</td><td>First lead record</td></tr>
+<tr><td>lead2</td><td>Object</td><td>Second lead record</td></tr>
+<tr><td>suggestedAction</td><td>Text</td><td>Merge, Review, Dismiss</td></tr>
+<tr><td>status</td><td>Dropdown</td><td>Pending, Reviewed, Merged, Dismissed</td></tr>
+</table>
+<hr>
+<h1>4. CUSTOMER MANAGEMENT MODULE</h1>
+<div class="section-intro">The Customer Management Module offers a complete 360-degree view of customers throughout their relationship with the organization. It includes a contact database for managing all contacts with search, filtering, grouping, and import/export capabilities. The customer database provides access to active customers with segmentation, value analysis, and lifetime value calculations. Customer profiles display KYC information, policy portfolios, claims history, communication logs, family relationships, preferences, and relationship history. The module also handles inbound customer service with screen pop functionality for CTI integration, quick access to customer records, and call logging. Complaints management enables registration, tracking, escalation workflows, resolution documentation, and analytics. Customer feedback collection supports NPS tracking, CSAT measurement, sentiment analysis, and closed-loop feedback processes.</div>
+<h2>4.1 Contact Database</h2>
+<h3>Features</h3>
+<table>
+<tr><th>Feature</th><th>Description</th><th>Explanation</th></tr>
+<tr><td>Contact List</td><td>All contacts view</td><td>Comprehensive contact list</td></tr>
+<tr><td>Contact Search</td><td>Find contacts</td><td>Search by any field</td></tr>
+<tr><td>Contact Filtering</td><td>Segment contacts</td><td>Filter by type, status</td></tr>
+<tr><td>Contact Groups</td><td>Organize contacts</td><td>Create and manage groups</td></tr>
+<tr><td>Import/Export</td><td>Bulk operations</td><td>Upload/download contacts</td></tr>
+</table>
+<h3>Contact Fields</h3>
+<p class="field-note">The following table lists all data fields for this feature with their data types, requirement status, and detailed descriptions.</p>
+<table>
+<tr><th>Field Name</th><th>Type</th><th>Required</th><th>Description</th></tr>
+<tr><td>firstName</td><td>Text</td><td>Yes</td><td>First name</td></tr>
+<tr><td>lastName</td><td>Text</td><td>Yes</td><td>Last name</td></tr>
+<tr><td>email</td><td>Email</td><td>No</td><td>Email address</td></tr>
+<tr><td>phone</td><td>Phone</td><td>Yes</td><td>Primary phone</td></tr>
+<tr><td>alternatePhone</td><td>Phone</td><td>No</td><td>Secondary phone</td></tr>
+<tr><td>type</td><td>Dropdown</td><td>Yes</td><td>Lead, Prospect, Customer, Partner</td></tr>
+<tr><td>company</td><td>Text</td><td>No</td><td>Company name</td></tr>
+<tr><td>designation</td><td>Text</td><td>No</td><td>Job title</td></tr>
+<tr><td>address</td><td>Textarea</td><td>No</td><td>Full address</td></tr>
+<tr><td>city</td><td>Text</td><td>No</td><td>City</td></tr>
+<tr><td>state</td><td>Dropdown</td><td>No</td><td>State</td></tr>
+<tr><td>pincode</td><td>Text</td><td>No</td><td>Postal code</td></tr>
+<tr><td>status</td><td>Dropdown</td><td>Yes</td><td>Active, Inactive</td></tr>
+<tr><td>source</td><td>Dropdown</td><td>No</td><td>Contact source</td></tr>
+<tr><td>groups</td><td>Multi-select</td><td>No</td><td>Contact groups</td></tr>
+<tr><td>tags</td><td>Multi-select</td><td>No</td><td>Contact tags</td></tr>
+<tr><td>notes</td><td>Textarea</td><td>No</td><td>General notes</td></tr>
+<tr><td>createdAt</td><td>DateTime</td><td>Auto</td><td>Creation date</td></tr>
+<tr><td>updatedAt</td><td>DateTime</td><td>Auto</td><td>Last updated</td></tr>
+</table>
+<hr>
+<h2>4.2 Customer Database</h2>
+<h3>Features</h3>
+<table>
+<tr><th>Feature</th><th>Description</th><th>Explanation</th></tr>
+<tr><td>Customer List</td><td>Active customers view</td><td>All active customers</td></tr>
+<tr><td>Customer Search</td><td>Find customers</td><td>Search by name, policy, phone</td></tr>
+<tr><td>Customer Segments</td><td>Group customers</td><td>Segment by value, product</td></tr>
+<tr><td>360-Degree View</td><td>Complete picture</td><td>All customer data in one place</td></tr>
+<tr><td>Customer Value Analysis</td><td>Value calculation</td><td>Lifetime value, premium</td></tr>
+</table>
+<h3>Customer Fields</h3>
+<p class="field-note">The following table lists all data fields for this feature with their data types, requirement status, and detailed descriptions.</p>
+<table>
+<tr><th>Field Name</th><th>Type</th><th>Required</th><th>Description</th></tr>
+<tr><td>customerId</td><td>Text</td><td>Auto</td><td>Customer ID</td></tr>
+<tr><td>firstName</td><td>Text</td><td>Yes</td><td>First name</td></tr>
+<tr><td>lastName</td><td>Text</td><td>Yes</td><td>Last name</td></tr>
+<tr><td>email</td><td>Email</td><td>Yes</td><td>Primary email</td></tr>
+<tr><td>phone</td><td>Phone</td><td>Yes</td><td>Primary phone</td></tr>
+<tr><td>dateOfBirth</td><td>Date</td><td>No</td><td>Date of birth</td></tr>
+<tr><td>gender</td><td>Dropdown</td><td>No</td><td>Male, Female, Other</td></tr>
+<tr><td>maritalStatus</td><td>Dropdown</td><td>No</td><td>Single, Married, Other</td></tr>
+<tr><td>occupation</td><td>Text</td><td>No</td><td>Occupation</td></tr>
+<tr><td>annualIncome</td><td>Currency</td><td>No</td><td>Annual income</td></tr>
+<tr><td>address</td><td>Textarea</td><td>Yes</td><td>Full address</td></tr>
+<tr><td>city</td><td>Text</td><td>Yes</td><td>City</td></tr>
+<tr><td>state</td><td>Dropdown</td><td>Yes</td><td>State</td></tr>
+<tr><td>pincode</td><td>Text</td><td>Yes</td><td>Postal code</td></tr>
+<tr><td>kycStatus</td><td>Dropdown</td><td>No</td><td>Pending, Verified, Rejected</td></tr>
+<tr><td>kycType</td><td>Dropdown</td><td>No</td><td>Aadhaar, PAN, Passport</td></tr>
+<tr><td>kycNumber</td><td>Text</td><td>No</td><td>KYC document number</td></tr>
+<tr><td>segment</td><td>Dropdown</td><td>No</td><td>Premium, Standard, Basic</td></tr>
+<tr><td>customerSince</td><td>Date</td><td>Auto</td><td>Registration date</td></tr>
+<tr><td>totalPolicies</td><td>Number</td><td>Auto</td><td>Policy count</td></tr>
+<tr><td>totalPremium</td><td>Currency</td><td>Auto</td><td>Total premium paid</td></tr>
+<tr><td>lifetimeValue</td><td>Currency</td><td>Auto</td><td>CLV calculation</td></tr>
+<tr><td>status</td><td>Dropdown</td><td>Yes</td><td>Active, Inactive, Churned</td></tr>
+<tr><td>preferredLanguage</td><td>Dropdown</td><td>No</td><td>Communication language</td></tr>
+<tr><td>communicationPreference</td><td>Multi-select</td><td>No</td><td>Email, SMS, WhatsApp, Call</td></tr>
+<tr><td>doNotContact</td><td>Boolean</td><td>No</td><td>DNC flag</td></tr>
+</table>
+<hr>
+<h2>4.3 Customer Profile</h2>
+<h3>Features</h3>
+<table>
+<tr><th>Feature</th><th>Description</th><th>Explanation</th></tr>
+<tr><td>Profile Overview</td><td>Customer summary</td><td>Key metrics and status</td></tr>
+<tr><td>KYC Information</td><td>Know Your Customer</td><td>Verification details</td></tr>
+<tr><td>Policy Portfolio</td><td>All policies</td><td>Customer's policies</td></tr>
+<tr><td>Claims History</td><td>Past claims</td><td>All claims filed</td></tr>
+<tr><td>Communication Log</td><td>Interaction history</td><td>All communications</td></tr>
+<tr><td>Family Tree</td><td>Relationships</td><td>Family members</td></tr>
+<tr><td>Preferences</td><td>Customer preferences</td><td>Communication prefs</td></tr>
+<tr><td>Relationship History</td><td>Customer journey</td><td>Timeline of relationship</td></tr>
+</table>
+<h3>KYC Fields</h3>
+<p class="field-note">The following table lists all data fields for this feature with their data types, requirement status, and detailed descriptions.</p>
+<table>
+<tr><th>Field Name</th><th>Type</th><th>Required</th><th>Description</th></tr>
+<tr><td>kycType</td><td>Dropdown</td><td>Yes</td><td>Aadhaar, PAN, Passport, Voter ID</td></tr>
+<tr><td>kycNumber</td><td>Text</td><td>Yes</td><td>Document number</td></tr>
+<tr><td>kycStatus</td><td>Dropdown</td><td>Yes</td><td>Pending, Verified, Rejected</td></tr>
+<tr><td>verificationDate</td><td>Date</td><td>Auto</td><td>When verified</td></tr>
+<tr><td>verifiedBy</td><td>Text</td><td>Auto</td><td>Verifier name</td></tr>
+<tr><td>expiryDate</td><td>Date</td><td>No</td><td>Document expiry</td></tr>
+<tr><td>documentUrl</td><td>URL</td><td>No</td><td>Document file</td></tr>
+</table>
+<h3>Family Member Fields</h3>
+<p class="field-note">The following table lists all data fields for this feature with their data types, requirement status, and detailed descriptions.</p>
+<table>
+<tr><th>Field Name</th><th>Type</th><th>Required</th><th>Description</th></tr>
+<tr><td>name</td><td>Text</td><td>Yes</td><td>Full name</td></tr>
+<tr><td>relationship</td><td>Dropdown</td><td>Yes</td><td>Spouse, Child, Parent, Sibling</td></tr>
+<tr><td>dateOfBirth</td><td>Date</td><td>No</td><td>Date of birth</td></tr>
+<tr><td>phone</td><td>Phone</td><td>No</td><td>Contact number</td></tr>
+<tr><td>email</td><td>Email</td><td>No</td><td>Email address</td></tr>
+<tr><td>isDependent</td><td>Boolean</td><td>No</td><td>Dependent status</td></tr>
+<tr><td>hasPolicy</td><td>Boolean</td><td>Auto</td><td>Has own policy</td></tr>
+</table>
+<hr>
+<h2>4.4 Inbound Customer Service</h2>
+<h3>Features</h3>
+<table>
+<tr><th>Feature</th><th>Description</th><th>Explanation</th></tr>
+<tr><td>Inbound Call Screen</td><td>Caller info display</td><td>Auto-display customer profile</td></tr>
+<tr><td>Screen Pop</td><td>Automatic data display</td><td>CTI integration</td></tr>
+<tr><td>Quick Access</td><td>Fast navigation</td><td>One-click to records</td></tr>
+<tr><td>Call Logging</td><td>Record call details</td><td>Log during/after call</td></tr>
+<tr><td>Ticket Creation</td><td>Create service tickets</td><td>Auto-populate from call</td></tr>
+</table>
+<h3>Inbound Call Fields</h3>
+<p class="field-note">The following table lists all data fields for this feature with their data types, requirement status, and detailed descriptions.</p>
+<table>
+<tr><th>Field Name</th><th>Type</th><th>Required</th><th>Description</th></tr>
+<tr><td>callerId</td><td>Phone</td><td>Auto</td><td>Calling number</td></tr>
+<tr><td>customerName</td><td>Text</td><td>Auto</td><td>Matched customer</td></tr>
+<tr><td>callType</td><td>Dropdown</td><td>Yes</td><td>Query, Complaint, Request, Information</td></tr>
+<tr><td>callPurpose</td><td>Dropdown</td><td>Yes</td><td>Specific purpose</td></tr>
+<tr><td>callNotes</td><td>Textarea</td><td>No</td><td>Call notes</td></tr>
+<tr><td>callDuration</td><td>Time</td><td>Auto</td><td>Call duration</td></tr>
+<tr><td>callDisposition</td><td>Dropdown</td><td>Yes</td><td>Disposition code</td></tr>
+<tr><td>followUpRequired</td><td>Boolean</td><td>No</td><td>Needs follow-up</td></tr>
+<tr><td>createTicket</td><td>Boolean</td><td>No</td><td>Create ticket</td></tr>
+<tr><td>ticketPriority</td><td>Dropdown</td><td>No</td><td>High, Medium, Low</td></tr>
+</table>
+<hr>
+<h2>4.5 Complaints Management</h2>
+<h3>Features</h3>
+<table>
+<tr><th>Feature</th><th>Description</th><th>Explanation</th></tr>
+<tr><td>Complaint Registration</td><td>Log complaints</td><td>Register new complaints</td></tr>
+<tr><td>Complaint Tracking</td><td>Monitor resolution</td><td>Track through stages</td></tr>
+<tr><td>Escalation Workflow</td><td>Escalate issues</td><td>Auto/manual escalation</td></tr>
+<tr><td>Resolution Documentation</td><td>Record outcomes</td><td>Document resolution</td></tr>
+<tr><td>Complaint Analytics</td><td>Issue analysis</td><td>Pattern analysis</td></tr>
+</table>
+<h3>Complaint Fields</h3>
+<p class="field-note">The following table lists all data fields for this feature with their data types, requirement status, and detailed descriptions.</p>
+<table>
+<tr><th>Field Name</th><th>Type</th><th>Required</th><th>Description</th></tr>
+<tr><td>complaintId</td><td>Text</td><td>Auto</td><td>Complaint ID</td></tr>
+<tr><td>customerId</td><td>Text</td><td>Yes</td><td>Customer ID</td></tr>
+<tr><td>customerName</td><td>Text</td><td>Auto</td><td>Customer name</td></tr>
+<tr><td>category</td><td>Dropdown</td><td>Yes</td><td>Policy, Claim, Service, Billing, Other</td></tr>
+<tr><td>subCategory</td><td>Dropdown</td><td>Yes</td><td>Specific issue type</td></tr>
+<tr><td>priority</td><td>Dropdown</td><td>Yes</td><td>Critical, High, Medium, Low</td></tr>
+<tr><td>severity</td><td>Dropdown</td><td>Yes</td><td>Major, Minor</td></tr>
+<tr><td>description</td><td>Textarea</td><td>Yes</td><td>Complaint details</td></tr>
+<tr><td>attachments</td><td>File[]</td><td>No</td><td>Supporting documents</td></tr>
+<tr><td>status</td><td>Dropdown</td><td>Yes</td><td>New, Investigating, Resolved, Closed</td></tr>
+<tr><td>assignedTo</td><td>Dropdown</td><td>No</td><td>Assigned agent</td></tr>
+<tr><td>dueDate</td><td>Date</td><td>Auto</td><td>Resolution deadline</td></tr>
+<tr><td>escalationLevel</td><td>Number</td><td>Auto</td><td>Escalation tier</td></tr>
+<tr><td>escalatedTo</td><td>Text</td><td>Auto</td><td>Escalated to whom</td></tr>
+<tr><td>resolutionNotes</td><td>Textarea</td><td>No</td><td>Resolution details</td></tr>
+<tr><td>resolutionDate</td><td>Date</td><td>Auto</td><td>When resolved</td></tr>
+<tr><td>customerSatisfaction</td><td>Number</td><td>No</td><td>CSAT score (1-5)</td></tr>
+<tr><td>rootCause</td><td>Dropdown</td><td>No</td><td>Cause category</td></tr>
+<tr><td>preventiveMeasures</td><td>Textarea</td><td>No</td><td>Prevention steps</td></tr>
+<tr><td>createdAt</td><td>DateTime</td><td>Auto</td><td>Registration date</td></tr>
+<tr><td>updatedAt</td><td>DateTime</td><td>Auto</td><td>Last updated</td></tr>
+</table>
+<hr>
+<h2>4.6 Customer Feedback</h2>
+<h3>Features</h3>
+<table>
+<tr><th>Feature</th><th>Description</th><th>Explanation</th></tr>
+<tr><td>Feedback Collection</td><td>Gather customer input</td><td>Multiple collection channels</td></tr>
+<tr><td>NPS Tracking</td><td>Net Promoter Score</td><td>Track and analyze NPS</td></tr>
+<tr><td>CSAT Measurement</td><td>Customer satisfaction</td><td>Satisfaction scores</td></tr>
+<tr><td>Feedback Analysis</td><td>Insights from feedback</td><td>Theme and sentiment analysis</td></tr>
+<tr><td>Closed-Loop Feedback</td><td>Follow-up on feedback</td><td>Act on negative feedback</td></tr>
+</table>
+<h3>Feedback Fields</h3>
+<p class="field-note">The following table lists all data fields for this feature with their data types, requirement status, and detailed descriptions.</p>
+<table>
+<tr><th>Field Name</th><th>Type</th><th>Required</th><th>Description</th></tr>
+<tr><td>feedbackId</td><td>Text</td><td>Auto</td><td>Feedback ID</td></tr>
+<tr><td>customerId</td><td>Text</td><td>Yes</td><td>Customer ID</td></tr>
+<tr><td>customerName</td><td>Text</td><td>Auto</td><td>Customer name</td></tr>
+<tr><td>feedbackType</td><td>Dropdown</td><td>Yes</td><td>Survey, Call, Email, In-App</td></tr>
+<tr><td>npsScore</td><td>Number</td><td>No</td><td>NPS (0-10)</td></tr>
+<tr><td>csatScore</td><td>Number</td><td>No</td><td>CSAT (1-5)</td></tr>
+<tr><td>overallRating</td><td>Number</td><td>No</td><td>Overall rating (1-5)</td></tr>
+<tr><td>comments</td><td>Textarea</td><td>No</td><td>Open feedback</td></tr>
+<tr><td>touchpoint</td><td>Dropdown</td><td>No</td><td>Where collected</td></tr>
+<tr><td>productFeedback</td><td>Textarea</td><td>No</td><td>Product comments</td></tr>
+<tr><td>serviceFeedback</td><td>Textarea</td><td>No</td><td>Service comments</td></tr>
+<tr><td>processFeedback</td><td>Textarea</td><td>No</td><td>Process comments</td></tr>
+<tr><td>wouldRecommend</td><td>Boolean</td><td>No</td><td>Would recommend</td></tr>
+<tr><td>followUpRequired</td><td>Boolean</td><td>Auto</td><td>Needs follow-up</td></tr>
+<tr><td>followUpStatus</td><td>Dropdown</td><td>No</td><td>Pending, Completed</td></tr>
+<tr><td>sentiment</td><td>Dropdown</td><td>Auto</td><td>Positive, Neutral, Negative</td></tr>
+<tr><td>collectedAt</td><td>DateTime</td><td>Auto</td><td>Collection date</td></tr>
+<tr><td>collectedBy</td><td>Text</td><td>Auto</td><td>Collector name</td></tr>
+</table>
+<hr>
+<h1>5. EMAIL MANAGEMENT MODULE</h1>
+<div class="section-intro">The Email Management Module provides unified inbox functionality with comprehensive email handling capabilities. Features include email threading for conversation grouping, folder management for organization, email tagging for categorization, full-text search, and bulk actions. Email settings support IMAP/SMTP configuration with SSL, polling intervals, auto-tagging, AI classification, sentiment analysis, and signature management. Analytics track campaign metrics including open rates, click rates, reply rates, bounce rates, and conversion rates. Bulk email functionality enables mass campaign creation with recipient selection from CRM, template usage, personalization with merge fields, scheduling, and throttling controls for controlled sending rates.</div>
+<h2>5.1 Email Inbox</h2>
+<h3>Features</h3>
+<table>
+<tr><th>Feature</th><th>Description</th><th>Explanation</th></tr>
+<tr><td>Unified Inbox</td><td>All emails in one place</td><td>View from connected accounts</td></tr>
+<tr><td>Email Threading</td><td>Conversation grouping</td><td>Group related emails</td></tr>
+<tr><td>Folder Management</td><td>Organize emails</td><td>Standard + custom folders</td></tr>
+<tr><td>Email Tagging</td><td>Categorize emails</td><td>Apply tags/labels</td></tr>
+<tr><td>Search Functionality</td><td>Find emails</td><td>Full-text search</td></tr>
+<tr><td>Bulk Actions</td><td>Mass operations</td><td>Mark, archive, delete</td></tr>
+</table>
+<h3>Email Fields</h3>
+<p class="field-note">The following table lists all data fields for this feature with their data types, requirement status, and detailed descriptions.</p>
+<table>
+<tr><th>Field Name</th><th>Type</th><th>Description</th></tr>
+<tr><td>messageId</td><td>Text</td><td>Email message ID</td></tr>
+<tr><td>subject</td><td>Text</td><td>Email subject</td></tr>
+<tr><td>from</td><td>Email</td><td>Sender address</td></tr>
+<tr><td>to</td><td>Email[]</td><td>Recipients</td></tr>
+<tr><td>cc</td><td>Email[]</td><td>CC recipients</td></tr>
+<tr><td>bcc</td><td>Email[]</td><td>BCC recipients</td></tr>
+<tr><td>date</td><td>DateTime</td><td>Send/receive date</td></tr>
+<tr><td>body</td><td>HTML</td><td>Email content</td></tr>
+<tr><td>attachments</td><td>File[]</td><td>Attached files</td></tr>
+<tr><td>isRead</td><td>Boolean</td><td>Read status</td></tr>
+<tr><td>isStarred</td><td>Boolean</td><td>Starred flag</td></tr>
+<tr><td>folder</td><td>Dropdown</td><td>Folder location</td></tr>
+<tr><td>tags</td><td>Multi-select</td><td>Email tags</td></tr>
+<tr><td>linkedEntity</td><td>Object</td><td>Linked CRM record</td></tr>
+</table>
+<h3>Email Settings Fields</h3>
+<p class="field-note">The following table lists all data fields for this feature with their data types, requirement status, and detailed descriptions.</p>
+<table>
+<tr><th>Field Name</th><th>Type</th><th>Required</th><th>Description</th></tr>
+<tr><td>accountName</td><td>Text</td><td>Yes</td><td>Account display name</td></tr>
+<tr><td>emailAddress</td><td>Email</td><td>Yes</td><td>Email address</td></tr>
+<tr><td>imapHost</td><td>Text</td><td>Yes</td><td>IMAP server</td></tr>
+<tr><td>imapPort</td><td>Number</td><td>Yes</td><td>IMAP port</td></tr>
+<tr><td>smtpHost</td><td>Text</td><td>Yes</td><td>SMTP server</td></tr>
+<tr><td>smtpPort</td><td>Number</td><td>Yes</td><td>SMTP port</td></tr>
+<tr><td>username</td><td>Text</td><td>Yes</td><td>Login username</td></tr>
+<tr><td>password</td><td>Password</td><td>Yes</td><td>Login password</td></tr>
+<tr><td>useSsl</td><td>Boolean</td><td>Yes</td><td>Use SSL</td></tr>
+<tr><td>pollingInterval</td><td>Number</td><td>No</td><td>Sync frequency (minutes)</td></tr>
+<tr><td>autoTagging</td><td>Boolean</td><td>No</td><td>Enable auto-tagging</td></tr>
+<tr><td>aiClassification</td><td>Boolean</td><td>No</td><td>Enable AI classification</td></tr>
+<tr><td>sentimentAnalysis</td><td>Boolean</td><td>No</td><td>Enable sentiment</td></tr>
+<tr><td>signature</td><td>HTML</td><td>No</td><td>Email signature</td></tr>
+</table>
+<hr>
+<h2>5.2 Email Analytics</h2>
+<h3>Features</h3>
+<table>
+<tr><th>Feature</th><th>Description</th><th>Explanation</th></tr>
+<tr><td>Campaign Analytics</td><td>Email campaign metrics</td><td>Opens, clicks, conversions</td></tr>
+<tr><td>Engagement Analysis</td><td>Recipient behavior</td><td>How recipients engage</td></tr>
+<tr><td>Time Analysis</td><td>Optimal timing</td><td>Best send times</td></tr>
+<tr><td>A/B Test Results</td><td>Comparison analysis</td><td>Version comparison</td></tr>
+<tr><td>Deliverability Reports</td><td>Delivery status</td><td>Bounces, spam</td></tr>
+</table>
+<h3>Email Analytics Metrics</h3>
+<table>
+<tr><th>Metric</th><th>Description</th></tr>
+<tr><td>Total Sent</td><td>Emails sent</td></tr>
+<tr><td>Delivered</td><td>Successfully delivered</td></tr>
+<tr><td>Bounced</td><td>Failed delivery</td></tr>
+<tr><td>Opened</td><td>Emails opened</td></tr>
+<tr><td>Open Rate</td><td>% opened</td></tr>
+<tr><td>Clicked</td><td>Links clicked</td></tr>
+<tr><td>Click Rate</td><td>% clicked</td></tr>
+<tr><td>Replied</td><td>Replies received</td></tr>
+<tr><td>Reply Rate</td><td>% replied</td></tr>
+<tr><td>Unsubscribed</td><td>Opt-outs</td></tr>
+<tr><td>Spam Reports</td><td>Marked as spam</td></tr>
+<tr><td>Conversion Rate</td><td>% converted</td></tr>
+</table>
+<hr>
+<h2>5.3 Bulk Email</h2>
+<h3>Features</h3>
+<table>
+<tr><th>Feature</th><th>Description</th><th>Explanation</th></tr>
+<tr><td>Mass Email Creation</td><td>Build bulk campaigns</td><td>Create multi-recipient emails</td></tr>
+<tr><td>Recipient Selection</td><td>Target audience</td><td>Select from CRM</td></tr>
+<tr><td>Template Usage</td><td>Pre-designed emails</td><td>Use templates</td></tr>
+<tr><td>Personalization</td><td>Dynamic content</td><td>Merge fields</td></tr>
+<tr><td>Scheduling</td><td>Timed delivery</td><td>Set send time</td></tr>
+<tr><td>Throttling</td><td>Sending rate control</td><td>Control pace</td></tr>
+</table>
+<h3>Bulk Email Campaign Fields</h3>
+<p class="field-note">The following table lists all data fields for this feature with their data types, requirement status, and detailed descriptions.</p>
+<table>
+<tr><th>Field Name</th><th>Type</th><th>Required</th><th>Description</th></tr>
+<tr><td>campaignName</td><td>Text</td><td>Yes</td><td>Campaign name</td></tr>
+<tr><td>subject</td><td>Text</td><td>Yes</td><td>Email subject</td></tr>
+<tr><td>template</td><td>Dropdown</td><td>No</td><td>Email template</td></tr>
+<tr><td>fromName</td><td>Text</td><td>Yes</td><td>Sender name</td></tr>
+<tr><td>fromEmail</td><td>Email</td><td>Yes</td><td>Sender email</td></tr>
+<tr><td>replyTo</td><td>Email</td><td>No</td><td>Reply address</td></tr>
+<tr><td>recipients</td><td>Object</td><td>Yes</td><td>Recipient selection</td></tr>
+<tr><td>content</td><td>HTML</td><td>Yes</td><td>Email body</td></tr>
+<tr><td>personalizations</td><td>Object</td><td>No</td><td>Merge fields</td></tr>
+<tr><td>scheduleDate</td><td>DateTime</td><td>No</td><td>Scheduled send</td></tr>
+<tr><td>sendImmediately</td><td>Boolean</td><td>No</td><td>Send now</td></tr>
+<tr><td>throttleRate</td><td>Number</td><td>No</td><td>Emails per hour</td></tr>
+<tr><td>trackOpens</td><td>Boolean</td><td>No</td><td>Track opens</td></tr>
+<tr><td>trackClicks</td><td>Boolean</td><td>No</td><td>Track clicks</td></tr>
+<tr><td>status</td><td>Dropdown</td><td>Auto</td><td>Draft, Scheduled, Sending, Sent</td></tr>
+</table>
+<hr>
+<h1>6. CAMPAIGNS & MARKETING MODULE</h1>
+<div class="section-intro">The Campaigns and Marketing Module enables sophisticated multi-channel marketing campaign creation and management. Campaign features include various campaign types (Email, SMS, WhatsApp, Multi-channel, Calling), audience selection with filters and segments, campaign scheduling, status lifecycle management, and campaign cloning. The Template Manager provides a template library, rich editor for template creation, version tracking, category organization, variable placeholders for dynamic content, preview functionality, and approval workflows for WhatsApp templates. The Survey Designer offers a drag-and-drop builder for creating surveys with multiple question types (multiple choice, single choice, rating scale, NPS, text, matrix, ranking, date, file upload), conditional logic with skip logic and branching, branding customization, multi-channel distribution, real-time response collection, and multi-language support.</div>
+<h2>6.1 Campaign Management</h2>
+<h3>Features</h3>
+<table>
+<tr><th>Feature</th><th>Description</th><th>Explanation</th></tr>
+<tr><td>Campaign Creation</td><td>Build marketing campaigns</td><td>Multi-channel campaigns</td></tr>
+<tr><td>Campaign Types</td><td>Various formats</td><td>Email, SMS, WhatsApp, Call</td></tr>
+<tr><td>Audience Selection</td><td>Target definition</td><td>Filters, segments, lists</td></tr>
+<tr><td>Campaign Scheduling</td><td>Timing control</td><td>Set schedule</td></tr>
+<tr><td>Campaign Status</td><td>Lifecycle management</td><td>Track status</td></tr>
+<tr><td>Campaign Cloning</td><td>Duplicate campaigns</td><td>Quick duplication</td></tr>
+</table>
+<h3>Campaign Fields</h3>
+<p class="field-note">The following table lists all data fields for this feature with their data types, requirement status, and detailed descriptions.</p>
+<table>
+<tr><th>Field Name</th><th>Type</th><th>Required</th><th>Description</th></tr>
+<tr><td>campaignId</td><td>Text</td><td>Auto</td><td>Campaign ID</td></tr>
+<tr><td>name</td><td>Text</td><td>Yes</td><td>Campaign name</td></tr>
+<tr><td>type</td><td>Dropdown</td><td>Yes</td><td>Email, SMS, WhatsApp, Multi-channel, Calling</td></tr>
+<tr><td>objective</td><td>Dropdown</td><td>No</td><td>Awareness, Conversion, Retention</td></tr>
+<tr><td>status</td><td>Dropdown</td><td>Yes</td><td>Draft, Scheduled, Active, Paused, Completed</td></tr>
+<tr><td>startDate</td><td>Date</td><td>Yes</td><td>Start date</td></tr>
+<tr><td>endDate</td><td>Date</td><td>No</td><td>End date</td></tr>
+<tr><td>budget</td><td>Currency</td><td>No</td><td>Campaign budget</td></tr>
+<tr><td>targetAudience</td><td>Object</td><td>Yes</td><td>Audience criteria</td></tr>
+<tr><td>audienceSize</td><td>Number</td><td>Auto</td><td>Estimated reach</td></tr>
+<tr><td>channels</td><td>Multi-select</td><td>Yes</td><td>Channels to use</td></tr>
+<tr><td>content</td><td>Object</td><td>Yes</td><td>Channel content</td></tr>
+<tr><td>schedule</td><td>Object</td><td>No</td><td>Send schedule</td></tr>
+<tr><td>goals</td><td>Object</td><td>No</td><td>Campaign goals</td></tr>
+<tr><td>createdBy</td><td>Text</td><td>Auto</td><td>Creator</td></tr>
+<tr><td>createdAt</td><td>DateTime</td><td>Auto</td><td>Creation date</td></tr>
+</table>
+<h3>Audience Selection Fields</h3>
+<p class="field-note">The following table lists all data fields for this feature with their data types, requirement status, and detailed descriptions.</p>
+<table>
+<tr><th>Field Name</th><th>Type</th><th>Description</th></tr>
+<tr><td>type</td><td>Dropdown</td><td>All, Segment, Custom, Upload</td></tr>
+<tr><td>segment</td><td>Dropdown</td><td>Pre-defined segment</td></tr>
+<tr><td>filters</td><td>Object</td><td>Custom filter criteria</td></tr>
+<tr><td>uploadFile</td><td>File</td><td>Uploaded list</td></tr>
+<tr><td>excludeDNC</td><td>Boolean</td><td>Exclude DNC</td></tr>
+<tr><td>excludeOptOut</td><td>Boolean</td><td>Exclude opt-outs</td></tr>
+</table>
+<hr>
+<h2>6.2 Template Manager</h2>
+<h3>Features</h3>
+<table>
+<tr><th>Feature</th><th>Description</th><th>Explanation</th></tr>
+<tr><td>Template Library</td><td>All templates view</td><td>Browse all templates</td></tr>
+<tr><td>Template Creation</td><td>Build new templates</td><td>Rich editor</td></tr>
+<tr><td>Template Editing</td><td>Modify templates</td><td>Version tracking</td></tr>
+<tr><td>Template Categories</td><td>Organize templates</td><td>Category grouping</td></tr>
+<tr><td>Template Variables</td><td>Dynamic content</td><td>Placeholder variables</td></tr>
+<tr><td>Template Preview</td><td>Test appearance</td><td>Preview with data</td></tr>
+<tr><td>Template Approval</td><td>Approval workflow</td><td>WhatsApp approval</td></tr>
+</table>
+<h3>Template Fields</h3>
+<p class="field-note">The following table lists all data fields for this feature with their data types, requirement status, and detailed descriptions.</p>
+<table>
+<tr><th>Field Name</th><th>Type</th><th>Required</th><th>Description</th></tr>
+<tr><td>templateId</td><td>Text</td><td>Auto</td><td>Template ID</td></tr>
+<tr><td>name</td><td>Text</td><td>Yes</td><td>Template name</td></tr>
+<tr><td>type</td><td>Dropdown</td><td>Yes</td><td>Email, SMS, WhatsApp</td></tr>
+<tr><td>category</td><td>Dropdown</td><td>Yes</td><td>Renewal, Welcome, Follow-up, Promotional</td></tr>
+<tr><td>subject</td><td>Text</td><td>Email only</td><td>Email subject</td></tr>
+<tr><td>content</td><td>HTML/Text</td><td>Yes</td><td>Template content</td></tr>
+<tr><td>variables</td><td>Array</td><td>No</td><td>Variable placeholders</td></tr>
+<tr><td>language</td><td>Dropdown</td><td>No</td><td>Template language</td></tr>
+<tr><td>status</td><td>Dropdown</td><td>Yes</td><td>Draft, Active, Archived</td></tr>
+<tr><td>approvalStatus</td><td>Dropdown</td><td>WhatsApp</td><td>Pending, Approved, Rejected</td></tr>
+<tr><td>previewUrl</td><td>URL</td><td>Auto</td><td>Preview link</td></tr>
+<tr><td>createdBy</td><td>Text</td><td>Auto</td><td>Creator</td></tr>
+<tr><td>createdAt</td><td>DateTime</td><td>Auto</td><td>Creation date</td></tr>
+<tr><td>updatedAt</td><td>DateTime</td><td>Auto</td><td>Last update</td></tr>
+</table>
+<h3>Template Variable Fields</h3>
+<p class="field-note">The following table lists all data fields for this feature with their data types, requirement status, and detailed descriptions.</p>
+<table>
+<tr><th>Field Name</th><th>Type</th><th>Description</th></tr>
+<tr><td>name</td><td>Text</td><td>Variable name</td></tr>
+<tr><td>type</td><td>Dropdown</td><td>Text, Number, Date, Currency</td></tr>
+<tr><td>defaultValue</td><td>Text</td><td>Default value</td></tr>
+<tr><td>required</td><td>Boolean</td><td>Is required</td></tr>
+<tr><td>sampleValue</td><td>Text</td><td>Sample for preview</td></tr>
+</table>
+<hr>
+<h2>6.3 Survey Designer</h2>
+<h3>Features</h3>
+<table>
+<tr><th>Feature</th><th>Description</th><th>Explanation</th></tr>
+<tr><td>Survey Builder</td><td>Create surveys</td><td>Drag-and-drop builder</td></tr>
+<tr><td>Question Types</td><td>Diverse questions</td><td>Multiple choice, rating, text</td></tr>
+<tr><td>Conditional Logic</td><td>Smart surveys</td><td>Skip logic, branching</td></tr>
+<tr><td>Survey Branding</td><td>Customize appearance</td><td>Logo, colors, styling</td></tr>
+<tr><td>Survey Distribution</td><td>Send surveys</td><td>Email, SMS, WhatsApp</td></tr>
+<tr><td>Response Collection</td><td>Gather answers</td><td>Real-time results</td></tr>
+<tr><td>Survey Preview</td><td>Test surveys</td><td>Preview flow</td></tr>
+<tr><td>Multi-language</td><td>Localized surveys</td><td>Multiple languages</td></tr>
+</table>
+<h3>Survey Fields</h3>
+<p class="field-note">The following table lists all data fields for this feature with their data types, requirement status, and detailed descriptions.</p>
+<table>
+<tr><th>Field Name</th><th>Type</th><th>Required</th><th>Description</th></tr>
+<tr><td>surveyId</td><td>Text</td><td>Auto</td><td>Survey ID</td></tr>
+<tr><td>title</td><td>Text</td><td>Yes</td><td>Survey title</td></tr>
+<tr><td>description</td><td>Textarea</td><td>No</td><td>Survey description</td></tr>
+<tr><td>type</td><td>Dropdown</td><td>Yes</td><td>NPS, CSAT, Custom</td></tr>
+<tr><td>status</td><td>Dropdown</td><td>Yes</td><td>Draft, Active, Closed</td></tr>
+<tr><td>startDate</td><td>Date</td><td>No</td><td>Active from</td></tr>
+<tr><td>endDate</td><td>Date</td><td>No</td><td>Active until</td></tr>
+<tr><td>targetResponses</td><td>Number</td><td>No</td><td>Goal responses</td></tr>
+<tr><td>currentResponses</td><td>Number</td><td>Auto</td><td>Received count</td></tr>
+<tr><td>questions</td><td>Array</td><td>Yes</td><td>Survey questions</td></tr>
+<tr><td>branding</td><td>Object</td><td>No</td><td>Visual settings</td></tr>
+<tr><td>thankYouMessage</td><td>Text</td><td>No</td><td>Completion message</td></tr>
+<tr><td>redirectUrl</td><td>URL</td><td>No</td><td>Post-survey redirect</td></tr>
+<tr><td>allowAnonymous</td><td>Boolean</td><td>No</td><td>Anonymous responses</td></tr>
+<tr><td>languages</td><td>Multi-select</td><td>No</td><td>Available languages</td></tr>
+<tr><td>createdBy</td><td>Text</td><td>Auto</td><td>Creator</td></tr>
+<tr><td>createdAt</td><td>DateTime</td><td>Auto</td><td>Creation date</td></tr>
+</table>
+<h3>Question Types & Fields</h3>
+<p class="field-note">The following table lists all data fields for this feature with their data types, requirement status, and detailed descriptions.</p>
+<table>
+<tr><th>Question Type</th><th>Fields</th></tr>
+<tr><td>Multiple Choice</td><td>question, options, allowMultiple, required</td></tr>
+<tr><td>Single Choice</td><td>question, options, required</td></tr>
+<tr><td>Rating Scale</td><td>question, minValue, maxValue, labels, required</td></tr>
+<tr><td>NPS</td><td>question, required (0-10 scale)</td></tr>
+<tr><td>Text (Short)</td><td>question, maxLength, required</td></tr>
+<tr><td>Text (Long)</td><td>question, maxLength, required</td></tr>
+<tr><td>Matrix</td><td>question, rows, columns, required</td></tr>
+<tr><td>Ranking</td><td>question, items, required</td></tr>
+<tr><td>Date</td><td>question, required</td></tr>
+<tr><td>File Upload</td><td>question, allowedTypes, maxSize, required</td></tr>
+</table>
+<hr>
+<h1>7. POLICY & INSURANCE OPERATIONS</h1>
+<div class="section-intro">Policy and Insurance Operations handles the complete lifecycle of insurance policies including claims, servicing, and new business. Claims Management provides claims list views with filtering, claim registration, workflow-based status progression, document upload for evidence, surveyor assignment for inspections, settlement processing, and timeline tracking. Claim fields capture comprehensive information including incident details, estimated and approved amounts, surveyor reports, photos, and payment information. Policy Servicing handles endorsements for policy changes (additions, deletions, modifications), cancellations with refund calculations, reinstatement of lapsed policies, document issuance, and premium calculators. New Business processing includes proposal entry, underwriting workflows for risk assessment, quote generation, policy issuance, and automated document generation.</div>
+<h2>7.1 Claims Management</h2>
+<h3>Features</h3>
+<table>
+<tr><th>Feature</th><th>Description</th><th>Explanation</th></tr>
+<tr><td>Claims List</td><td>All claims view</td><td>View all claims with filters</td></tr>
+<tr><td>Claim Registration</td><td>Log new claims</td><td>Register new claims</td></tr>
+<tr><td>Claim Workflow</td><td>Status progression</td><td>Track through stages</td></tr>
+<tr><td>Document Upload</td><td>Claim evidence</td><td>Upload supporting docs</td></tr>
+<tr><td>Surveyor Assignment</td><td>Allocate assessors</td><td>Assign for inspection</td></tr>
+<tr><td>Settlement Processing</td><td>Claim payout</td><td>Process approved claims</td></tr>
+<tr><td>Claim Timeline</td><td>Activity history</td><td>Chronological events</td></tr>
+</table>
+<h3>Claim Fields</h3>
+<p class="field-note">The following table lists all data fields for this feature with their data types, requirement status, and detailed descriptions.</p>
+<table>
+<tr><th>Field Name</th><th>Type</th><th>Required</th><th>Description</th></tr>
+<tr><td>claimId</td><td>Text</td><td>Auto</td><td>Claim ID</td></tr>
+<tr><td>claimNumber</td><td>Text</td><td>Auto</td><td>Claim reference</td></tr>
+<tr><td>policyNumber</td><td>Text</td><td>Yes</td><td>Policy number</td></tr>
+<tr><td>policyType</td><td>Dropdown</td><td>Auto</td><td>Policy type</td></tr>
+<tr><td>customerId</td><td>Text</td><td>Yes</td><td>Customer ID</td></tr>
+<tr><td>customerName</td><td>Text</td><td>Auto</td><td>Customer name</td></tr>
+<tr><td>claimType</td><td>Dropdown</td><td>Yes</td><td>Accident, Theft, Fire, Health, Death</td></tr>
+<tr><td>claimSubType</td><td>Dropdown</td><td>No</td><td>Specific type</td></tr>
+<tr><td>incidentDate</td><td>Date</td><td>Yes</td><td>When incident occurred</td></tr>
+<tr><td>reportedDate</td><td>Date</td><td>Auto</td><td>When reported</td></tr>
+<tr><td>description</td><td>Textarea</td><td>Yes</td><td>Incident description</td></tr>
+<tr><td>location</td><td>Text</td><td>No</td><td>Incident location</td></tr>
+<tr><td>estimatedAmount</td><td>Currency</td><td>No</td><td>Estimated claim</td></tr>
+<tr><td>approvedAmount</td><td>Currency</td><td>No</td><td>Approved amount</td></tr>
+<tr><td>settledAmount</td><td>Currency</td><td>No</td><td>Settled amount</td></tr>
+<tr><td>status</td><td>Dropdown</td><td>Yes</td><td>Registered, Under Investigation, Approved, Rejected, Settled</td></tr>
+<tr><td>surveyorId</td><td>Dropdown</td><td>No</td><td>Assigned surveyor</td></tr>
+<tr><td>surveyorReport</td><td>File</td><td>No</td><td>Survey report</td></tr>
+<tr><td>surveyDate</td><td>Date</td><td>No</td><td>Survey date</td></tr>
+<tr><td>documents</td><td>File[]</td><td>No</td><td>Claim documents</td></tr>
+<tr><td>photos</td><td>File[]</td><td>No</td><td>Incident photos</td></tr>
+<tr><td>rejectionReason</td><td>Textarea</td><td>No</td><td>If rejected</td></tr>
+<tr><td>settlementDate</td><td>Date</td><td>No</td><td>When settled</td></tr>
+<tr><td>paymentMode</td><td>Dropdown</td><td>No</td><td>NEFT, Cheque, UPI</td></tr>
+<tr><td>paymentReference</td><td>Text</td><td>No</td><td>Payment reference</td></tr>
+<tr><td>priority</td><td>Dropdown</td><td>No</td><td>High, Medium, Low</td></tr>
+<tr><td>assignedTo</td><td>Dropdown</td><td>No</td><td>Claim handler</td></tr>
+<tr><td>remarks</td><td>Textarea</td><td>No</td><td>Internal remarks</td></tr>
+<tr><td>createdAt</td><td>DateTime</td><td>Auto</td><td>Registration date</td></tr>
+<tr><td>updatedAt</td><td>DateTime</td><td>Auto</td><td>Last updated</td></tr>
+</table>
+<hr>
+<h2>7.2 Policy Servicing</h2>
+<h3>Features</h3>
+<table>
+<tr><th>Feature</th><th>Description</th><th>Explanation</th></tr>
+<tr><td>Endorsements</td><td>Policy changes</td><td>Add/remove coverage</td></tr>
+<tr><td>Cancellations</td><td>Cancel policies</td><td>Process cancellations</td></tr>
+<tr><td>Reinstatement</td><td>Restore lapsed</td><td>Handle reinstatements</td></tr>
+<tr><td>Document Issuance</td><td>Generate documents</td><td>Issue certificates</td></tr>
+<tr><td>Premium Calculator</td><td>Calculate premiums</td><td>Tool for calculations</td></tr>
+</table>
+<h3>Endorsement Fields</h3>
+<p class="field-note">The following table lists all data fields for this feature with their data types, requirement status, and detailed descriptions.</p>
+<table>
+<tr><th>Field Name</th><th>Type</th><th>Required</th><th>Description</th></tr>
+<tr><td>endorsementId</td><td>Text</td><td>Auto</td><td>Endorsement ID</td></tr>
+<tr><td>policyNumber</td><td>Text</td><td>Yes</td><td>Policy number</td></tr>
+<tr><td>endorsementType</td><td>Dropdown</td><td>Yes</td><td>Addition, Deletion, Modification</td></tr>
+<tr><td>endorsementCategory</td><td>Dropdown</td><td>Yes</td><td>Coverage, Nominee, Address, Vehicle</td></tr>
+<tr><td>currentValue</td><td>Text</td><td>Auto</td><td>Current value</td></tr>
+<tr><td>newValue</td><td>Text</td><td>Yes</td><td>New value</td></tr>
+<tr><td>reason</td><td>Textarea</td><td>Yes</td><td>Reason for change</td></tr>
+<tr><td>effectiveDate</td><td>Date</td><td>Yes</td><td>When effective</td></tr>
+<tr><td>premiumImpact</td><td>Currency</td><td>Auto</td><td>Premium change</td></tr>
+<tr><td>status</td><td>Dropdown</td><td>Yes</td><td>Pending, Approved, Rejected, Processed</td></tr>
+<tr><td>approvedBy</td><td>Text</td><td>Auto</td><td>Approver</td></tr>
+<tr><td>approvalDate</td><td>Date</td><td>Auto</td><td>When approved</td></tr>
+<tr><td>documents</td><td>File[]</td><td>No</td><td>Supporting documents</td></tr>
+<tr><td>createdBy</td><td>Text</td><td>Auto</td><td>Requester</td></tr>
+<tr><td>createdAt</td><td>DateTime</td><td>Auto</td><td>Request date</td></tr>
+</table>
+<h3>Cancellation Fields</h3>
+<p class="field-note">The following table lists all data fields for this feature with their data types, requirement status, and detailed descriptions.</p>
+<table>
+<tr><th>Field Name</th><th>Type</th><th>Required</th><th>Description</th></tr>
+<tr><td>cancellationId</td><td>Text</td><td>Auto</td><td>Cancellation ID</td></tr>
+<tr><td>policyNumber</td><td>Text</td><td>Yes</td><td>Policy number</td></tr>
+<tr><td>cancellationType</td><td>Dropdown</td><td>Yes</td><td>Customer Request, Non-Payment, Fraud</td></tr>
+<tr><td>reason</td><td>Dropdown</td><td>Yes</td><td>Reason category</td></tr>
+<tr><td>reasonDetails</td><td>Textarea</td><td>No</td><td>Detailed reason</td></tr>
+<tr><td>effectiveDate</td><td>Date</td><td>Yes</td><td>Cancellation date</td></tr>
+<tr><td>refundAmount</td><td>Currency</td><td>Auto</td><td>Refund calculation</td></tr>
+<tr><td>refundMode</td><td>Dropdown</td><td>No</td><td>NEFT, Cheque, UPI</td></tr>
+<tr><td>status</td><td>Dropdown</td><td>Yes</td><td>Pending, Approved, Processed</td></tr>
+<tr><td>approvedBy</td><td>Text</td><td>Auto</td><td>Approver</td></tr>
+<tr><td>createdBy</td><td>Text</td><td>Auto</td><td>Requester</td></tr>
+<tr><td>createdAt</td><td>DateTime</td><td>Auto</td><td>Request date</td></tr>
+</table>
+<hr>
+<h2>7.3 New Business</h2>
+<h3>Features</h3>
+<table>
+<tr><th>Feature</th><th>Description</th><th>Explanation</th></tr>
+<tr><td>Proposal Entry</td><td>New policy applications</td><td>Enter new proposals</td></tr>
+<tr><td>Underwriting Workflow</td><td>Risk assessment</td><td>Route through underwriting</td></tr>
+<tr><td>Quote Generation</td><td>Premium quotation</td><td>Generate quotes</td></tr>
+<tr><td>Policy Issuance</td><td>Create new policies</td><td>Issue after approval</td></tr>
+<tr><td>Document Generation</td><td>Create policy docs</td><td>Auto-generate documents</td></tr>
+</table>
+<h3>Proposal Fields</h3>
+<p class="field-note">The following table lists all data fields for this feature with their data types, requirement status, and detailed descriptions.</p>
+<table>
+<tr><th>Field Name</th><th>Type</th><th>Required</th><th>Description</th></tr>
+<tr><td>proposalId</td><td>Text</td><td>Auto</td><td>Proposal ID</td></tr>
+<tr><td>proposalNumber</td><td>Text</td><td>Auto</td><td>Proposal reference</td></tr>
+<tr><td>productType</td><td>Dropdown</td><td>Yes</td><td>Insurance product</td></tr>
+<tr><td>productSubType</td><td>Dropdown</td><td>Yes</td><td>Specific product</td></tr>
+<tr><td>proposerName</td><td>Text</td><td>Yes</td><td>Proposer name</td></tr>
+<tr><td>proposerDob</td><td>Date</td><td>Yes</td><td>Date of birth</td></tr>
+<tr><td>proposerGender</td><td>Dropdown</td><td>Yes</td><td>Gender</td></tr>
+<tr><td>proposerPhone</td><td>Phone</td><td>Yes</td><td>Contact number</td></tr>
+<tr><td>proposerEmail</td><td>Email</td><td>Yes</td><td>Email address</td></tr>
+<tr><td>proposerAddress</td><td>Textarea</td><td>Yes</td><td>Full address</td></tr>
+<tr><td>sumInsured</td><td>Currency</td><td>Yes</td><td>Coverage amount</td></tr>
+<tr><td>premiumType</td><td>Dropdown</td><td>Yes</td><td>Annual, Half-yearly, Quarterly, Monthly</td></tr>
+<tr><td>proposedPremium</td><td>Currency</td><td>Auto</td><td>Calculated premium</td></tr>
+<tr><td>riskDetails</td><td>Object</td><td>Yes</td><td>Risk-specific fields</td></tr>
+<tr><td>nomineeDetails</td><td>Object</td><td>No</td><td>Nominee information</td></tr>
+<tr><td>paymentMode</td><td>Dropdown</td><td>Yes</td><td>Payment method</td></tr>
+<tr><td>status</td><td>Dropdown</td><td>Yes</td><td>Draft, Submitted, Under Review, Approved, Rejected</td></tr>
+<tr><td>underwriterRemarks</td><td>Textarea</td><td>No</td><td>UW comments</td></tr>
+<tr><td>underwriterDecision</td><td>Dropdown</td><td>No</td><td>Accept, Decline, Refer</td></tr>
+<tr><td>documents</td><td>File[]</td><td>Yes</td><td>Required documents</td></tr>
+<tr><td>createdBy</td><td>Text</td><td>Auto</td><td>Agent/creator</td></tr>
+<tr><td>createdAt</td><td>DateTime</td><td>Auto</td><td>Creation date</td></tr>
+</table>
+<hr>
+<h1>8. COMMUNICATION & MESSAGING</h1>
+<div class="section-intro">The Communication and Messaging module provides advanced WhatsApp automation and multi-channel messaging capabilities. The WhatsApp Flow Builder features a visual drag-and-drop designer for creating automated conversation flows with message nodes, condition nodes for branching logic, action nodes for system triggers, wait nodes for timing control, and human handoff capabilities. Flow testing enables simulation before deployment, and analytics track completion rates. WhatsApp Bot Management includes bot configuration with welcome and fallback messages, intent recognition with training phrases, response management, operating hours configuration, and performance analytics. The system supports rich media including images, documents, and interactive buttons.</div>
+<h2>8.1 WhatsApp Flow Builder</h2>
+<h3>Features</h3>
+<table>
+<tr><th>Feature</th><th>Description</th><th>Explanation</th></tr>
+<tr><td>Flow Designer</td><td>Visual flow creation</td><td>Drag-and-drop interface</td></tr>
+<tr><td>Message Nodes</td><td>Define messages</td><td>Text, buttons, lists</td></tr>
+<tr><td>Condition Nodes</td><td>Branch logic</td><td>Conditional branching</td></tr>
+<tr><td>Action Nodes</td><td>Trigger actions</td><td>Update records, send emails</td></tr>
+<tr><td>Flow Testing</td><td>Test conversations</td><td>Simulation mode</td></tr>
+<tr><td>Flow Analytics</td><td>Measure performance</td><td>Completion rates</td></tr>
+</table>
+<h3>Flow Node Types</h3>
+<table>
+<tr><th>Node Type</th><th>Fields</th><th>Description</th></tr>
+<tr><td>Message</td><td>text, buttons, listItems</td><td>Send a message</td></tr>
+<tr><td>Condition</td><td>field, operator, value</td><td>Branch based on condition</td></tr>
+<tr><td>Wait</td><td>duration, unit</td><td>Pause execution</td></tr>
+<tr><td>Action</td><td>actionType, parameters</td><td>Execute system action</td></tr>
+<tr><td>Human Handoff</td><td>agentGroup, priority</td><td>Transfer to agent</td></tr>
+<tr><td>End</td><td>status</td><td>End flow</td></tr>
+</table>
+<h3>Flow Fields</h3>
+<p class="field-note">The following table lists all data fields for this feature with their data types, requirement status, and detailed descriptions.</p>
+<table>
+<tr><th>Field Name</th><th>Type</th><th>Required</th><th>Description</th></tr>
+<tr><td>flowId</td><td>Text</td><td>Auto</td><td>Flow ID</td></tr>
+<tr><td>name</td><td>Text</td><td>Yes</td><td>Flow name</td></tr>
+<tr><td>description</td><td>Textarea</td><td>No</td><td>Flow description</td></tr>
+<tr><td>triggerType</td><td>Dropdown</td><td>Yes</td><td>Keyword, Message, Webhook</td></tr>
+<tr><td>triggerKeywords</td><td>Text[]</td><td>No</td><td>Trigger keywords</td></tr>
+<tr><td>nodes</td><td>Array</td><td>Yes</td><td>Flow nodes</td></tr>
+<tr><td>connections</td><td>Array</td><td>Yes</td><td>Node connections</td></tr>
+<tr><td>status</td><td>Dropdown</td><td>Yes</td><td>Draft, Active, Paused</td></tr>
+<tr><td>testMode</td><td>Boolean</td><td>No</td><td>Enable test mode</td></tr>
+<tr><td>analytics</td><td>Object</td><td>Auto</td><td>Performance data</td></tr>
+<tr><td>createdBy</td><td>Text</td><td>Auto</td><td>Creator</td></tr>
+<tr><td>createdAt</td><td>DateTime</td><td>Auto</td><td>Creation date</td></tr>
+</table>
+<hr>
+<h2>8.2 WhatsApp Bot Management</h2>
+<h3>Features</h3>
+<table>
+<tr><th>Feature</th><th>Description</th><th>Explanation</th></tr>
+<tr><td>Bot Configuration</td><td>Set up chatbot</td><td>Configure behavior</td></tr>
+<tr><td>Intent Recognition</td><td>Understand messages</td><td>Configure intents</td></tr>
+<tr><td>Response Management</td><td>Bot replies</td><td>Define responses</td></tr>
+<tr><td>Human Handoff</td><td>Agent transfer</td><td>Configure handoff rules</td></tr>
+<tr><td>Bot Analytics</td><td>Performance metrics</td><td>Track performance</td></tr>
+</table>
+<h3>Bot Configuration Fields</h3>
+<p class="field-note">The following table lists all data fields for this feature with their data types, requirement status, and detailed descriptions.</p>
+<table>
+<tr><th>Field Name</th><th>Type</th><th>Required</th><th>Description</th></tr>
+<tr><td>botName</td><td>Text</td><td>Yes</td><td>Bot display name</td></tr>
+<tr><td>welcomeMessage</td><td>Textarea</td><td>Yes</td><td>Initial greeting</td></tr>
+<tr><td>fallbackMessage</td><td>Textarea</td><td>Yes</td><td>Unknown intent response</td></tr>
+<tr><td>handoffKeywords</td><td>Text[]</td><td>No</td><td>Agent transfer triggers</td></tr>
+<tr><td>handoffMessage</td><td>Textarea</td><td>No</td><td>Handoff announcement</td></tr>
+<tr><td>operatingHours</td><td>Object</td><td>No</td><td>Active hours</td></tr>
+<tr><td>language</td><td>Dropdown</td><td>No</td><td>Primary language</td></tr>
+<tr><td>responseDelay</td><td>Number</td><td>No</td><td>Delay in seconds</td></tr>
+<tr><td>status</td><td>Dropdown</td><td>Yes</td><td>Active, Inactive</td></tr>
+</table>
+<h3>Intent Fields</h3>
+<p class="field-note">The following table lists all data fields for this feature with their data types, requirement status, and detailed descriptions.</p>
+<table>
+<tr><th>Field Name</th><th>Type</th><th>Required</th><th>Description</th></tr>
+<tr><td>intentName</td><td>Text</td><td>Yes</td><td>Intent name</td></tr>
+<tr><td>trainingPhrases</td><td>Text[]</td><td>Yes</td><td>Example phrases</td></tr>
+<tr><td>response</td><td>Textarea</td><td>Yes</td><td>Bot response</td></tr>
+<tr><td>actions</td><td>Object[]</td><td>No</td><td>Actions to execute</td></tr>
+<tr><td>confidence</td><td>Number</td><td>Auto</td><td>Match confidence</td></tr>
+</table>
+<hr>
+<h1>9. SALES PIPELINE MANAGEMENT</h1>
+<div class="section-intro">Sales Pipeline Management provides visual pipeline tracking and quote management capabilities. The Sales Pipeline features a Kanban-style board view with drag-and-drop functionality, configurable pipeline stages with probability percentages, detailed opportunity cards showing key information, pipeline filtering, and stage-level metrics and analytics. Quote Management enables quote creation with product configuration, template-based formatting, comparison of multiple options, digital delivery via email and WhatsApp, status tracking (draft, sent, viewed, accepted, expired, rejected), and expiry management. Payment Link Management provides secure link generation, customization options for amount and expiry, multi-channel distribution, payment tracking with status updates, and reconciliation features.</div>
+<h2>9.1 Sales Pipeline</h2>
+<h3>Features</h3>
+<table>
+<tr><th>Feature</th><th>Description</th><th>Explanation</th></tr>
+<tr><td>Kanban View</td><td>Visual pipeline</td><td>Drag-and-drop board</td></tr>
+<tr><td>Stage Configuration</td><td>Pipeline stages</td><td>Configure stages</td></tr>
+<tr><td>Card Details</td><td>Opportunity info</td><td>Key info on cards</td></tr>
+<tr><td>Drag to Update</td><td>Move between stages</td><td>Drag to change status</td></tr>
+<tr><td>Pipeline Filtering</td><td>Focus views</td><td>Filter by criteria</td></tr>
+<tr><td>Pipeline Metrics</td><td>Stage analytics</td><td>Metrics per stage</td></tr>
+</table>
+<h3>Pipeline Stage Fields</h3>
+<p class="field-note">The following table lists all data fields for this feature with their data types, requirement status, and detailed descriptions.</p>
+<table>
+<tr><th>Field Name</th><th>Type</th><th>Required</th><th>Description</th></tr>
+<tr><td>stageId</td><td>Text</td><td>Auto</td><td>Stage ID</td></tr>
+<tr><td>name</td><td>Text</td><td>Yes</td><td>Stage name</td></tr>
+<tr><td>order</td><td>Number</td><td>Yes</td><td>Stage order</td></tr>
+<tr><td>probability</td><td>Number</td><td>No</td><td>Win probability %</td></tr>
+<tr><td>color</td><td>Color</td><td>No</td><td>Stage color</td></tr>
+<tr><td>description</td><td>Text</td><td>No</td><td>Stage description</td></tr>
+</table>
+<h3>Opportunity Fields</h3>
+<p class="field-note">The following table lists all data fields for this feature with their data types, requirement status, and detailed descriptions.</p>
+<table>
+<tr><th>Field Name</th><th>Type</th><th>Required</th><th>Description</th></tr>
+<tr><td>opportunityId</td><td>Text</td><td>Auto</td><td>Opportunity ID</td></tr>
+<tr><td>title</td><td>Text</td><td>Yes</td><td>Opportunity name</td></tr>
+<tr><td>value</td><td>Currency</td><td>Yes</td><td>Deal value</td></tr>
+<tr><td>stage</td><td>Dropdown</td><td>Yes</td><td>Pipeline stage</td></tr>
+<tr><td>probability</td><td>Number</td><td>Auto</td><td>Win probability</td></tr>
+<tr><td>expectedCloseDate</td><td>Date</td><td>No</td><td>Expected close</td></tr>
+<tr><td>leadId</td><td>Text</td><td>No</td><td>Associated lead</td></tr>
+<tr><td>customerId</td><td>Text</td><td>No</td><td>Associated customer</td></tr>
+<tr><td>productType</td><td>Dropdown</td><td>No</td><td>Product interest</td></tr>
+<tr><td>assignedTo</td><td>Dropdown</td><td>Yes</td><td>Owner</td></tr>
+<tr><td>notes</td><td>Textarea</td><td>No</td><td>Notes</td></tr>
+<tr><td>activities</td><td>Array</td><td>Auto</td><td>Activity log</td></tr>
+<tr><td>createdAt</td><td>DateTime</td><td>Auto</td><td>Creation date</td></tr>
+<tr><td>updatedAt</td><td>DateTime</td><td>Auto</td><td>Last updated</td></tr>
+</table>
+<hr>
+<h2>9.2 Quote Management</h2>
+<h3>Features</h3>
+<table>
+<tr><th>Feature</th><th>Description</th><th>Explanation</th></tr>
+<tr><td>Quote Creation</td><td>Generate quotes</td><td>Create premium quotes</td></tr>
+<tr><td>Quote Templates</td><td>Standard formats</td><td>Product templates</td></tr>
+<tr><td>Quote Comparison</td><td>Compare options</td><td>Multiple options</td></tr>
+<tr><td>Quote Sending</td><td>Digital delivery</td><td>Email/WhatsApp</td></tr>
+<tr><td>Quote Tracking</td><td>Monitor status</td><td>Track responses</td></tr>
+<tr><td>Quote Expiry</td><td>Validity management</td><td>Expiry tracking</td></tr>
+</table>
+<h3>Quote Fields</h3>
+<p class="field-note">The following table lists all data fields for this feature with their data types, requirement status, and detailed descriptions.</p>
+<table>
+<tr><th>Field Name</th><th>Type</th><th>Required</th><th>Description</th></tr>
+<tr><td>quoteId</td><td>Text</td><td>Auto</td><td>Quote ID</td></tr>
+<tr><td>quoteNumber</td><td>Text</td><td>Auto</td><td>Quote reference</td></tr>
+<tr><td>customerId</td><td>Text</td><td>Yes</td><td>Customer ID</td></tr>
+<tr><td>customerName</td><td>Text</td><td>Auto</td><td>Customer name</td></tr>
+<tr><td>productType</td><td>Dropdown</td><td>Yes</td><td>Insurance product</td></tr>
+<tr><td>productDetails</td><td>Object</td><td>Yes</td><td>Product configuration</td></tr>
+<tr><td>sumInsured</td><td>Currency</td><td>Yes</td><td>Coverage amount</td></tr>
+<tr><td>premium</td><td>Currency</td><td>Auto</td><td>Calculated premium</td></tr>
+<tr><td>premiumBreakdown</td><td>Object</td><td>Auto</td><td>Premium components</td></tr>
+<tr><td>addOns</td><td>Array</td><td>No</td><td>Selected add-ons</td></tr>
+<tr><td>discounts</td><td>Array</td><td>No</td><td>Applied discounts</td></tr>
+<tr><td>validFrom</td><td>Date</td><td>Auto</td><td>Quote date</td></tr>
+<tr><td>validUntil</td><td>Date</td><td>Yes</td><td>Expiry date</td></tr>
+<tr><td>status</td><td>Dropdown</td><td>Yes</td><td>Draft, Sent, Viewed, Accepted, Expired, Rejected</td></tr>
+<tr><td>sentVia</td><td>Multi-select</td><td>No</td><td>Email, SMS, WhatsApp</td></tr>
+<tr><td>sentAt</td><td>DateTime</td><td>Auto</td><td>When sent</td></tr>
+<tr><td>viewedAt</td><td>DateTime</td><td>Auto</td><td>When viewed</td></tr>
+<tr><td>acceptedAt</td><td>DateTime</td><td>Auto</td><td>When accepted</td></tr>
+<tr><td>rejectionReason</td><td>Text</td><td>No</td><td>If rejected</td></tr>
+<tr><td>createdBy</td><td>Text</td><td>Auto</td><td>Creator</td></tr>
+<tr><td>createdAt</td><td>DateTime</td><td>Auto</td><td>Creation date</td></tr>
+</table>
+<hr>
+<h2>9.3 Payment Link Management</h2>
+<h3>Features</h3>
+<table>
+<tr><th>Feature</th><th>Description</th><th>Explanation</th></tr>
+<tr><td>Link Generation</td><td>Create payment links</td><td>Generate secure links</td></tr>
+<tr><td>Link Customization</td><td>Configure links</td><td>Amount, expiry, options</td></tr>
+<tr><td>Link Distribution</td><td>Send links</td><td>SMS, Email, WhatsApp</td></tr>
+<tr><td>Payment Tracking</td><td>Monitor payments</td><td>Track link status</td></tr>
+<tr><td>Payment Reconciliation</td><td>Match payments</td><td>Match to records</td></tr>
+</table>
+<h3>Payment Link Fields</h3>
+<p class="field-note">The following table lists all data fields for this feature with their data types, requirement status, and detailed descriptions.</p>
+<table>
+<tr><th>Field Name</th><th>Type</th><th>Required</th><th>Description</th></tr>
+<tr><td>linkId</td><td>Text</td><td>Auto</td><td>Link ID</td></tr>
+<tr><td>linkUrl</td><td>URL</td><td>Auto</td><td>Payment link URL</td></tr>
+<tr><td>amount</td><td>Currency</td><td>Yes</td><td>Payment amount</td></tr>
+<tr><td>currency</td><td>Dropdown</td><td>No</td><td>INR default</td></tr>
+<tr><td>description</td><td>Text</td><td>No</td><td>Payment description</td></tr>
+<tr><td>referenceId</td><td>Text</td><td>No</td><td>Custom reference</td></tr>
+<tr><td>customerName</td><td>Text</td><td>Yes</td><td>Customer name</td></tr>
+<tr><td>customerEmail</td><td>Email</td><td>No</td><td>Customer email</td></tr>
+<tr><td>customerPhone</td><td>Phone</td><td>No</td><td>Customer phone</td></tr>
+<tr><td>expiryDate</td><td>DateTime</td><td>Yes</td><td>Link expiry</td></tr>
+<tr><td>status</td><td>Dropdown</td><td>Auto</td><td>Created, Sent, Clicked, Paid, Expired, Cancelled</td></tr>
+<tr><td>sendVia</td><td>Object</td><td>No</td><td>Channels to send</td></tr>
+<tr><td>sentAt</td><td>DateTime</td><td>Auto</td><td>When sent</td></tr>
+<tr><td>clickedAt</td><td>DateTime</td><td>Auto</td><td>When clicked</td></tr>
+<tr><td>paidAt</td><td>DateTime</td><td>Auto</td><td>When paid</td></tr>
+<tr><td>paymentId</td><td>Text</td><td>Auto</td><td>Payment reference</td></tr>
+<tr><td>paymentMode</td><td>Text</td><td>Auto</td><td>Payment method used</td></tr>
+<tr><td>createdBy</td><td>Text</td><td>Auto</td><td>Creator</td></tr>
+<tr><td>createdAt</td><td>DateTime</td><td>Auto</td><td>Creation date</td></tr>
+</table>
+<hr>
+<h1>10. TASK & WORKFLOW AUTOMATION</h1>
+<div class="section-intro">Task and Workflow Automation provides comprehensive task management and process automation capabilities. Task Management includes a central dashboard with multiple views (list, kanban, calendar), task creation with templates, subtasks for breaking down work, task dependencies for sequencing, recurring task scheduling, reminder notifications, and completion tracking with notes. Task fields include title, description, type, priority, status, due date/time, assignments, related entities, estimated and actual time, and attachments. The Workflow Builder offers a visual designer for creating automated workflows with trigger configuration (manual, scheduled, event-based), action nodes for executing tasks, condition nodes for decision logic, delay nodes for timing, and various communication nodes (email, SMS, WhatsApp). Workflow execution monitoring tracks progress and status.</div>
+<h2>10.1 Task Management</h2>
+<h3>Features</h3>
+<table>
+<tr><th>Feature</th><th>Description</th><th>Explanation</th></tr>
+<tr><td>Task Dashboard</td><td>Task overview</td><td>Central task hub</td></tr>
+<tr><td>Multiple Views</td><td>List, Kanban, Calendar</td><td>Different displays</td></tr>
+<tr><td>Task Creation</td><td>Add new tasks</td><td>Create with details</td></tr>
+<tr><td>Task Templates</td><td>Predefined tasks</td><td>Task templates</td></tr>
+<tr><td>Subtasks</td><td>Break down tasks</td><td>Hierarchical tasks</td></tr>
+<tr><td>Task Dependencies</td><td>Linked tasks</td><td>Define dependencies</td></tr>
+<tr><td>Recurring Tasks</td><td>Repeating tasks</td><td>Auto-recurring</td></tr>
+<tr><td>Task Reminders</td><td>Notification alerts</td><td>Set reminders</td></tr>
+<tr><td>Task Completion</td><td>Mark done</td><td>Complete with notes</td></tr>
+</table>
+<h3>Task Fields</h3>
+<p class="field-note">The following table lists all data fields for this feature with their data types, requirement status, and detailed descriptions.</p>
+<table>
+<tr><th>Field Name</th><th>Type</th><th>Required</th><th>Description</th></tr>
+<tr><td>taskId</td><td>Text</td><td>Auto</td><td>Task ID</td></tr>
+<tr><td>title</td><td>Text</td><td>Yes</td><td>Task title</td></tr>
+<tr><td>description</td><td>Textarea</td><td>No</td><td>Task description</td></tr>
+<tr><td>type</td><td>Dropdown</td><td>Yes</td><td>Call, Email, Meeting, Follow-up, Document, Other</td></tr>
+<tr><td>priority</td><td>Dropdown</td><td>Yes</td><td>Urgent, High, Medium, Low</td></tr>
+<tr><td>status</td><td>Dropdown</td><td>Yes</td><td>Todo, In Progress, On Hold, Completed, Cancelled</td></tr>
+<tr><td>dueDate</td><td>Date</td><td>Yes</td><td>Due date</td></tr>
+<tr><td>dueTime</td><td>Time</td><td>No</td><td>Due time</td></tr>
+<tr><td>assignedTo</td><td>Dropdown</td><td>No</td><td>Assigned to</td></tr>
+<tr><td>relatedEntity</td><td>Object</td><td>No</td><td>Linked record</td></tr>
+<tr><td>parentTaskId</td><td>Text</td><td>No</td><td>Parent task</td></tr>
+<tr><td>subtasks</td><td>Array</td><td>No</td><td>Subtask list</td></tr>
+<tr><td>dependencies</td><td>Array</td><td>No</td><td>Dependent tasks</td></tr>
+<tr><td>estimatedTime</td><td>Number</td><td>No</td><td>Estimated hours</td></tr>
+<tr><td>actualTime</td><td>Number</td><td>No</td><td>Actual hours</td></tr>
+<tr><td>isRecurring</td><td>Boolean</td><td>No</td><td>Recurring task</td></tr>
+<tr><td>recurringPattern</td><td>Object</td><td>No</td><td>Recurrence settings</td></tr>
+<tr><td>reminders</td><td>Array</td><td>No</td><td>Reminder settings</td></tr>
+<tr><td>attachments</td><td>File[]</td><td>No</td><td>Attached files</td></tr>
+<tr><td>notes</td><td>Textarea</td><td>No</td><td>Task notes</td></tr>
+<tr><td>completedAt</td><td>DateTime</td><td>Auto</td><td>Completion time</td></tr>
+<tr><td>completionNotes</td><td>Textarea</td><td>No</td><td>Completion notes</td></tr>
+<tr><td>createdBy</td><td>Text</td><td>Auto</td><td>Creator</td></tr>
+<tr><td>createdAt</td><td>DateTime</td><td>Auto</td><td>Creation date</td></tr>
+<tr><td>updatedAt</td><td>DateTime</td><td>Auto</td><td>Last updated</td></tr>
+</table>
+<h3>Task Status Options</h3>
+<table>
+<tr><th>Status</th><th>Description</th></tr>
+<tr><td>todo</td><td>Not started</td></tr>
+<tr><td>in_progress</td><td>Currently working</td></tr>
+<tr><td>on_hold</td><td>Temporarily paused</td></tr>
+<tr><td>completed</td><td>Finished successfully</td></tr>
+<tr><td>cancelled</td><td>Cancelled/abandoned</td></tr>
+</table>
+<h3>Task Priority Options</h3>
+<table>
+<tr><th>Priority</th><th>Description</th></tr>
+<tr><td>urgent</td><td>Immediate attention</td></tr>
+<tr><td>high</td><td>High priority</td></tr>
+<tr><td>medium</td><td>Normal priority</td></tr>
+<tr><td>low</td><td>Low priority</td></tr>
+</table>
+<h3>Task Type Options</h3>
+<table>
+<tr><th>Type</th><th>Description</th></tr>
+<tr><td>call</td><td>Phone call task</td></tr>
+<tr><td>email</td><td>Email task</td></tr>
+<tr><td>meeting</td><td>Meeting/appointment</td></tr>
+<tr><td>follow_up</td><td>Follow-up action</td></tr>
+<tr><td>document</td><td>Document related</td></tr>
+<tr><td>review</td><td>Review task</td></tr>
+<tr><td>other</td><td>Other task type</td></tr>
+</table>
+<hr>
+<h2>10.2 Workflow Builder</h2>
+<h3>Features</h3>
+<table>
+<tr><th>Feature</th><th>Description</th><th>Explanation</th></tr>
+<tr><td>Visual Designer</td><td>Build workflows</td><td>Drag-and-drop interface</td></tr>
+<tr><td>Trigger Configuration</td><td>Start conditions</td><td>Define triggers</td></tr>
+<tr><td>Action Nodes</td><td>Workflow steps</td><td>Add actions</td></tr>
+<tr><td>Condition Nodes</td><td>Decision logic</td><td>Branching conditions</td></tr>
+<tr><td>Delay Nodes</td><td>Wait steps</td><td>Time delays</td></tr>
+<tr><td>Workflow Templates</td><td>Pre-built workflows</td><td>Template library</td></tr>
+<tr><td>Workflow Execution</td><td>Run workflows</td><td>Execute automatically</td></tr>
+<tr><td>Execution Monitoring</td><td>Track progress</td><td>Monitor status</td></tr>
+</table>
+<h3>Workflow Fields</h3>
+<p class="field-note">The following table lists all data fields for this feature with their data types, requirement status, and detailed descriptions.</p>
+<table>
+<tr><th>Field Name</th><th>Type</th><th>Required</th><th>Description</th></tr>
+<tr><td>workflowId</td><td>Text</td><td>Auto</td><td>Workflow ID</td></tr>
+<tr><td>name</td><td>Text</td><td>Yes</td><td>Workflow name</td></tr>
+<tr><td>description</td><td>Textarea</td><td>No</td><td>Description</td></tr>
+<tr><td>triggerType</td><td>Dropdown</td><td>Yes</td><td>Manual, Scheduled, Event</td></tr>
+<tr><td>triggerConfig</td><td>Object</td><td>Yes</td><td>Trigger settings</td></tr>
+<tr><td>nodes</td><td>Array</td><td>Yes</td><td>Workflow nodes</td></tr>
+<tr><td>connections</td><td>Array</td><td>Yes</td><td>Node connections</td></tr>
+<tr><td>status</td><td>Dropdown</td><td>Yes</td><td>Draft, Active, Paused</td></tr>
+<tr><td>executionCount</td><td>Number</td><td>Auto</td><td>Times executed</td></tr>
+<tr><td>lastExecuted</td><td>DateTime</td><td>Auto</td><td>Last run time</td></tr>
+<tr><td>createdBy</td><td>Text</td><td>Auto</td><td>Creator</td></tr>
+<tr><td>createdAt</td><td>DateTime</td><td>Auto</td><td>Creation date</td></tr>
+</table>
+<h3>Workflow Node Types</h3>
+<table>
+<tr><th>Node Type</th><th>Description</th><th>Fields</th></tr>
+<tr><td>Trigger</td><td>Start workflow</td><td>type, config</td></tr>
+<tr><td>Action</td><td>Execute action</td><td>actionType, parameters</td></tr>
+<tr><td>Condition</td><td>Branch logic</td><td>field, operator, value</td></tr>
+<tr><td>Delay</td><td>Wait period</td><td>duration, unit</td></tr>
+<tr><td>Email</td><td>Send email</td><td>template, recipient</td></tr>
+<tr><td>SMS</td><td>Send SMS</td><td>template, phone</td></tr>
+<tr><td>WhatsApp</td><td>Send WhatsApp</td><td>template, phone</td></tr>
+<tr><td>Task</td><td>Create task</td><td>taskConfig</td></tr>
+<tr><td>Update</td><td>Update record</td><td>entity, field, value</td></tr>
+<tr><td>Assign</td><td>Assign to agent</td><td>agentId, round-robin</td></tr>
+<tr><td>End</td><td>End workflow</td><td>status</td></tr>
+</table>
+<hr>
+<h1>11. HUMAN RESOURCES & ATTENDANCE</h1>
+<div class="section-intro">Human Resources and Attendance module handles employee time tracking, leave management, and training. Attendance Management features clock in/out functionality, real-time attendance status display, attendance history and reports, optional GPS location tracking, and shift management with configurable work schedules including grace periods and overtime rules. Leave Management provides leave request submission, multiple leave types (Casual, Sick, Earned, Maternity, Paternity, Bereavement, Unpaid, Compensatory Off), multi-level approval workflows, leave balance tracking, team leave calendar views, and usage analytics. Training Management includes training program definition with categories and modules, assignment to employees, progress tracking, material uploads, assessment configuration, certification issuance, and calendar scheduling.</div>
+<h2>11.1 Attendance Management</h2>
+<h3>Features</h3>
+<table>
+<tr><th>Feature</th><th>Description</th><th>Explanation</th></tr>
+<tr><td>Clock In/Out</td><td>Time tracking</td><td>Punch in/out</td></tr>
+<tr><td>Real-time Status</td><td>Current attendance</td><td>Who is present</td></tr>
+<tr><td>Attendance History</td><td>Past records</td><td>Historical data</td></tr>
+<tr><td>Attendance Reports</td><td>Summary reports</td><td>Attendance analytics</td></tr>
+<tr><td>Location Tracking</td><td>Work location</td><td>Optional GPS</td></tr>
+<tr><td>Shift Management</td><td>Work schedules</td><td>Define shifts</td></tr>
+</table>
+<h3>Attendance Fields</h3>
+<p class="field-note">The following table lists all data fields for this feature with their data types, requirement status, and detailed descriptions.</p>
+<table>
+<tr><th>Field Name</th><th>Type</th><th>Required</th><th>Description</th></tr>
+<tr><td>attendanceId</td><td>Text</td><td>Auto</td><td>Attendance ID</td></tr>
+<tr><td>userId</td><td>Text</td><td>Yes</td><td>User ID</td></tr>
+<tr><td>userName</td><td>Text</td><td>Auto</td><td>User name</td></tr>
+<tr><td>date</td><td>Date</td><td>Auto</td><td>Attendance date</td></tr>
+<tr><td>checkIn</td><td>DateTime</td><td>Auto</td><td>Clock in time</td></tr>
+<tr><td>checkOut</td><td>DateTime</td><td>No</td><td>Clock out time</td></tr>
+<tr><td>checkInLocation</td><td>GeoPoint</td><td>No</td><td>Check-in location</td></tr>
+<tr><td>checkOutLocation</td><td>GeoPoint</td><td>No</td><td>Check-out location</td></tr>
+<tr><td>workHours</td><td>Number</td><td>Auto</td><td>Total hours worked</td></tr>
+<tr><td>breakDuration</td><td>Number</td><td>No</td><td>Break time</td></tr>
+<tr><td>netHours</td><td>Number</td><td>Auto</td><td>Work hours minus break</td></tr>
+<tr><td>status</td><td>Dropdown</td><td>Auto</td><td>Present, Absent, Half-day, Leave</td></tr>
+<tr><td>shiftId</td><td>Text</td><td>No</td><td>Assigned shift</td></tr>
+<tr><td>overtime</td><td>Number</td><td>Auto</td><td>Overtime hours</td></tr>
+<tr><td>notes</td><td>Text</td><td>No</td><td>Attendance notes</td></tr>
+</table>
+<h3>Shift Fields</h3>
+<p class="field-note">The following table lists all data fields for this feature with their data types, requirement status, and detailed descriptions.</p>
+<table>
+<tr><th>Field Name</th><th>Type</th><th>Required</th><th>Description</th></tr>
+<tr><td>shiftId</td><td>Text</td><td>Auto</td><td>Shift ID</td></tr>
+<tr><td>name</td><td>Text</td><td>Yes</td><td>Shift name</td></tr>
+<tr><td>startTime</td><td>Time</td><td>Yes</td><td>Shift start</td></tr>
+<tr><td>endTime</td><td>Time</td><td>Yes</td><td>Shift end</td></tr>
+<tr><td>breakDuration</td><td>Number</td><td>No</td><td>Break minutes</td></tr>
+<tr><td>workingDays</td><td>Multi-select</td><td>Yes</td><td>Active days</td></tr>
+<tr><td>graceMinutes</td><td>Number</td><td>No</td><td>Late grace period</td></tr>
+<tr><td>overtimeAfter</td><td>Number</td><td>No</td><td>Hours before OT</td></tr>
+</table>
+<hr>
+<h2>11.2 Leave Management</h2>
+<h3>Features</h3>
+<table>
+<tr><th>Feature</th><th>Description</th><th>Explanation</th></tr>
+<tr><td>Leave Request</td><td>Apply for leave</td><td>Submit leave applications</td></tr>
+<tr><td>Leave Types</td><td>Various categories</td><td>Multiple leave types</td></tr>
+<tr><td>Approval Workflow</td><td>Manager approval</td><td>Multi-level approval</td></tr>
+<tr><td>Leave Balance</td><td>Available leaves</td><td>Track balances</td></tr>
+<tr><td>Leave Calendar</td><td>Team calendar</td><td>Team leave view</td></tr>
+<tr><td>Leave Reports</td><td>Leave analytics</td><td>Usage reports</td></tr>
+</table>
+<h3>Leave Request Fields</h3>
+<p class="field-note">The following table lists all data fields for this feature with their data types, requirement status, and detailed descriptions.</p>
+<table>
+<tr><th>Field Name</th><th>Type</th><th>Required</th><th>Description</th></tr>
+<tr><td>leaveId</td><td>Text</td><td>Auto</td><td>Leave request ID</td></tr>
+<tr><td>userId</td><td>Text</td><td>Yes</td><td>Employee ID</td></tr>
+<tr><td>userName</td><td>Text</td><td>Auto</td><td>Employee name</td></tr>
+<tr><td>leaveType</td><td>Dropdown</td><td>Yes</td><td>Leave category</td></tr>
+<tr><td>startDate</td><td>Date</td><td>Yes</td><td>Leave start</td></tr>
+<tr><td>endDate</td><td>Date</td><td>Yes</td><td>Leave end</td></tr>
+<tr><td>isHalfDay</td><td>Boolean</td><td>No</td><td>Half-day leave</td></tr>
+<tr><td>halfDayType</td><td>Dropdown</td><td>No</td><td>First half, Second half</td></tr>
+<tr><td>duration</td><td>Number</td><td>Auto</td><td>Leave days</td></tr>
+<tr><td>reason</td><td>Textarea</td><td>Yes</td><td>Leave reason</td></tr>
+<tr><td>status</td><td>Dropdown</td><td>Auto</td><td>Pending, Approved, Rejected, Cancelled</td></tr>
+<tr><td>approver</td><td>Text</td><td>Auto</td><td>Approving manager</td></tr>
+<tr><td>approverComments</td><td>Textarea</td><td>No</td><td>Approval notes</td></tr>
+<tr><td>approvedAt</td><td>DateTime</td><td>Auto</td><td>Approval time</td></tr>
+<tr><td>attachments</td><td>File[]</td><td>No</td><td>Supporting documents</td></tr>
+<tr><td>createdAt</td><td>DateTime</td><td>Auto</td><td>Request date</td></tr>
+</table>
+<h3>Leave Type Fields</h3>
+<p class="field-note">The following table lists all data fields for this feature with their data types, requirement status, and detailed descriptions.</p>
+<table>
+<tr><th>Field Name</th><th>Type</th><th>Required</th><th>Description</th></tr>
+<tr><td>typeId</td><td>Text</td><td>Auto</td><td>Type ID</td></tr>
+<tr><td>name</td><td>Text</td><td>Yes</td><td>Leave type name</td></tr>
+<tr><td>code</td><td>Text</td><td>Yes</td><td>Short code</td></tr>
+<tr><td>description</td><td>Text</td><td>No</td><td>Description</td></tr>
+<tr><td>annualAllowance</td><td>Number</td><td>Yes</td><td>Days per year</td></tr>
+<tr><td>carryForward</td><td>Boolean</td><td>No</td><td>Allow carry forward</td></tr>
+<tr><td>maxCarryForward</td><td>Number</td><td>No</td><td>Max carry days</td></tr>
+<tr><td>requiresApproval</td><td>Boolean</td><td>Yes</td><td>Needs approval</td></tr>
+<tr><td>requiresDocument</td><td>Boolean</td><td>No</td><td>Needs documents</td></tr>
+<tr><td>minDays</td><td>Number</td><td>No</td><td>Minimum days</td></tr>
+<tr><td>maxDays</td><td>Number</td><td>No</td><td>Maximum consecutive</td></tr>
+<tr><td>isPaid</td><td>Boolean</td><td>Yes</td><td>Paid leave</td></tr>
+<tr><td>isActive</td><td>Boolean</td><td>Yes</td><td>Active type</td></tr>
+</table>
+<h3>Leave Types Available</h3>
+<table>
+<tr><th>Type</th><th>Code</th><th>Description</th></tr>
+<tr><td>Casual Leave</td><td>CL</td><td>Personal time off</td></tr>
+<tr><td>Sick Leave</td><td>SL</td><td>Medical leave</td></tr>
+<tr><td>Earned Leave</td><td>EL</td><td>Accumulated leave</td></tr>
+<tr><td>Maternity Leave</td><td>ML</td><td>Maternity period</td></tr>
+<tr><td>Paternity Leave</td><td>PL</td><td>Paternity period</td></tr>
+<tr><td>Bereavement Leave</td><td>BL</td><td>Family bereavement</td></tr>
+<tr><td>Unpaid Leave</td><td>UL</td><td>Leave without pay</td></tr>
+<tr><td>Compensatory Off</td><td>CO</td><td>Comp time off</td></tr>
+</table>
+<hr>
+<h2>11.3 Training Management</h2>
+<h3>Features</h3>
+<table>
+<tr><th>Feature</th><th>Description</th><th>Explanation</th></tr>
+<tr><td>Training Programs</td><td>Learning initiatives</td><td>Define programs</td></tr>
+<tr><td>Training Assignment</td><td>Assign training</td><td>Assign to employees</td></tr>
+<tr><td>Progress Tracking</td><td>Monitor completion</td><td>Track progress</td></tr>
+<tr><td>Training Materials</td><td>Learning content</td><td>Upload materials</td></tr>
+<tr><td>Certification</td><td>Training completion</td><td>Issue certificates</td></tr>
+<tr><td>Training Calendar</td><td>Schedule training</td><td>Calendar view</td></tr>
+</table>
+<h3>Training Program Fields</h3>
+<p class="field-note">The following table lists all data fields for this feature with their data types, requirement status, and detailed descriptions.</p>
+<table>
+<tr><th>Field Name</th><th>Type</th><th>Required</th><th>Description</th></tr>
+<tr><td>programId</td><td>Text</td><td>Auto</td><td>Program ID</td></tr>
+<tr><td>name</td><td>Text</td><td>Yes</td><td>Program name</td></tr>
+<tr><td>description</td><td>Textarea</td><td>No</td><td>Description</td></tr>
+<tr><td>category</td><td>Dropdown</td><td>Yes</td><td>Technical, Soft Skills, Compliance, Product</td></tr>
+<tr><td>duration</td><td>Number</td><td>Yes</td><td>Duration in hours</td></tr>
+<tr><td>mode</td><td>Dropdown</td><td>Yes</td><td>Online, Classroom, Hybrid</td></tr>
+<tr><td>modules</td><td>Array</td><td>Yes</td><td>Training modules</td></tr>
+<tr><td>targetAudience</td><td>Multi-select</td><td>No</td><td>Target roles</td></tr>
+<tr><td>prerequisites</td><td>Text</td><td>No</td><td>Prerequisites</td></tr>
+<tr><td>instructor</td><td>Text</td><td>No</td><td>Trainer name</td></tr>
+<tr><td>materials</td><td>File[]</td><td>No</td><td>Training materials</td></tr>
+<tr><td>assessmentType</td><td>Dropdown</td><td>No</td><td>Quiz, Assignment, None</td></tr>
+<tr><td>passingScore</td><td>Number</td><td>No</td><td>Minimum pass score</td></tr>
+<tr><td>certificate</td><td>Boolean</td><td>No</td><td>Issue certificate</td></tr>
+<tr><td>status</td><td>Dropdown</td><td>Yes</td><td>Draft, Active, Archived</td></tr>
+<tr><td>createdBy</td><td>Text</td><td>Auto</td><td>Creator</td></tr>
+<tr><td>createdAt</td><td>DateTime</td><td>Auto</td><td>Creation date</td></tr>
+</table>
+<h3>Training Assignment Fields</h3>
+<p class="field-note">The following table lists all data fields for this feature with their data types, requirement status, and detailed descriptions.</p>
+<table>
+<tr><th>Field Name</th><th>Type</th><th>Required</th><th>Description</th></tr>
+<tr><td>assignmentId</td><td>Text</td><td>Auto</td><td>Assignment ID</td></tr>
+<tr><td>programId</td><td>Text</td><td>Yes</td><td>Training program</td></tr>
+<tr><td>userId</td><td>Text</td><td>Yes</td><td>Assigned employee</td></tr>
+<tr><td>assignedBy</td><td>Text</td><td>Auto</td><td>Assigned by</td></tr>
+<tr><td>assignedAt</td><td>DateTime</td><td>Auto</td><td>Assignment date</td></tr>
+<tr><td>dueDate</td><td>Date</td><td>Yes</td><td>Completion deadline</td></tr>
+<tr><td>startedAt</td><td>DateTime</td><td>Auto</td><td>When started</td></tr>
+<tr><td>completedAt</td><td>DateTime</td><td>Auto</td><td>When completed</td></tr>
+<tr><td>progress</td><td>Number</td><td>Auto</td><td>Completion %</td></tr>
+<tr><td>score</td><td>Number</td><td>Auto</td><td>Assessment score</td></tr>
+<tr><td>status</td><td>Dropdown</td><td>Auto</td><td>Assigned, In Progress, Completed, Overdue</td></tr>
+<tr><td>certificateUrl</td><td>URL</td><td>Auto</td><td>Certificate link</td></tr>
+</table>
+<hr>
+<h1>12. PERFORMANCE & KPI MANAGEMENT</h1>
+<div class="section-intro">Performance and KPI Management enables goal setting, tracking, and commission calculations. KPI Management features KPI definition with metrics and formulas, individual target assignment, real-time performance tracking, visual dashboards, trend analysis over time, and target configuration. KPI fields include name, description, category, metric type, formula, target value, weight, measurement frequency, and data source. Commission Tracking provides commission rule definition with product and role-based configurations, automatic calculation based on rules, commission dashboard for earnings overview, detailed transaction statements, payout processing, and historical records. Commission rules support percentage, fixed, and slab-based calculations with effective date ranges.</div>
+<h2>12.1 KPI Management</h2>
+<h3>Features</h3>
+<table>
+<tr><th>Feature</th><th>Description</th><th>Explanation</th></tr>
+<tr><td>KPI Definition</td><td>Create KPIs</td><td>Define performance indicators</td></tr>
+<tr><td>KPI Assignment</td><td>Assign to employees</td><td>Set individual targets</td></tr>
+<tr><td>KPI Tracking</td><td>Monitor performance</td><td>Real-time tracking</td></tr>
+<tr><td>KPI Dashboard</td><td>Performance overview</td><td>Visual dashboard</td></tr>
+<tr><td>Trend Analysis</td><td>Performance over time</td><td>Historical trends</td></tr>
+<tr><td>Target Setting</td><td>Goal configuration</td><td>Set targets</td></tr>
+</table>
+<h3>KPI Fields</h3>
+<p class="field-note">The following table lists all data fields for this feature with their data types, requirement status, and detailed descriptions.</p>
+<table>
+<tr><th>Field Name</th><th>Type</th><th>Required</th><th>Description</th></tr>
+<tr><td>kpiId</td><td>Text</td><td>Auto</td><td>KPI ID</td></tr>
+<tr><td>name</td><td>Text</td><td>Yes</td><td>KPI name</td></tr>
+<tr><td>description</td><td>Textarea</td><td>No</td><td>Description</td></tr>
+<tr><td>category</td><td>Dropdown</td><td>Yes</td><td>Sales, Service, Quality, Productivity</td></tr>
+<tr><td>metric</td><td>Dropdown</td><td>Yes</td><td>Count, Currency, Percentage, Score</td></tr>
+<tr><td>formula</td><td>Text</td><td>No</td><td>Calculation formula</td></tr>
+<tr><td>target</td><td>Number</td><td>Yes</td><td>Target value</td></tr>
+<tr><td>weight</td><td>Number</td><td>No</td><td>Weight percentage</td></tr>
+<tr><td>frequency</td><td>Dropdown</td><td>Yes</td><td>Daily, Weekly, Monthly, Quarterly</td></tr>
+<tr><td>dataSource</td><td>Text</td><td>No</td><td>Data source</td></tr>
+<tr><td>owner</td><td>Dropdown</td><td>No</td><td>KPI owner</td></tr>
+<tr><td>status</td><td>Dropdown</td><td>Yes</td><td>Active, Inactive</td></tr>
+</table>
+<h3>KPI Assignment Fields</h3>
+<p class="field-note">The following table lists all data fields for this feature with their data types, requirement status, and detailed descriptions.</p>
+<table>
+<tr><th>Field Name</th><th>Type</th><th>Required</th><th>Description</th></tr>
+<tr><td>assignmentId</td><td>Text</td><td>Auto</td><td>Assignment ID</td></tr>
+<tr><td>kpiId</td><td>Text</td><td>Yes</td><td>KPI reference</td></tr>
+<tr><td>userId</td><td>Text</td><td>Yes</td><td>Assigned user</td></tr>
+<tr><td>period</td><td>Text</td><td>Yes</td><td>Measurement period</td></tr>
+<tr><td>target</td><td>Number</td><td>Yes</td><td>Individual target</td></tr>
+<tr><td>actual</td><td>Number</td><td>Auto</td><td>Actual value</td></tr>
+<tr><td>achievement</td><td>Number</td><td>Auto</td><td>Achievement %</td></tr>
+<tr><td>status</td><td>Dropdown</td><td>Auto</td><td>On Track, At Risk, Behind</td></tr>
+</table>
+<hr>
+<h2>12.2 Commission Tracking</h2>
+<h3>Features</h3>
+<table>
+<tr><th>Feature</th><th>Description</th><th>Explanation</th></tr>
+<tr><td>Commission Rules</td><td>Define calculations</td><td>Set commission rules</td></tr>
+<tr><td>Commission Calculation</td><td>Compute earnings</td><td>Auto-calculate</td></tr>
+<tr><td>Commission Dashboard</td><td>Earnings overview</td><td>View commissions</td></tr>
+<tr><td>Commission Statements</td><td>Detailed statements</td><td>Transaction details</td></tr>
+<tr><td>Payout Processing</td><td>Commission payment</td><td>Process payouts</td></tr>
+<tr><td>Commission History</td><td>Past commissions</td><td>Historical data</td></tr>
+</table>
+<h3>Commission Rule Fields</h3>
+<p class="field-note">The following table lists all data fields for this feature with their data types, requirement status, and detailed descriptions.</p>
+<table>
+<tr><th>Field Name</th><th>Type</th><th>Required</th><th>Description</th></tr>
+<tr><td>ruleId</td><td>Text</td><td>Auto</td><td>Rule ID</td></tr>
+<tr><td>name</td><td>Text</td><td>Yes</td><td>Rule name</td></tr>
+<tr><td>productType</td><td>Dropdown</td><td>Yes</td><td>Product type</td></tr>
+<tr><td>agentRole</td><td>Dropdown</td><td>No</td><td>Agent role</td></tr>
+<tr><td>commissionType</td><td>Dropdown</td><td>Yes</td><td>Percentage, Fixed, Slab</td></tr>
+<tr><td>commissionValue</td><td>Number</td><td>Yes</td><td>Commission % or amount</td></tr>
+<tr><td>slabs</td><td>Array</td><td>No</td><td>Slab-based rules</td></tr>
+<tr><td>minPremium</td><td>Currency</td><td>No</td><td>Minimum premium</td></tr>
+<tr><td>maxPremium</td><td>Currency</td><td>No</td><td>Maximum premium</td></tr>
+<tr><td>effectiveFrom</td><td>Date</td><td>Yes</td><td>Start date</td></tr>
+<tr><td>effectiveTo</td><td>Date</td><td>No</td><td>End date</td></tr>
+<tr><td>status</td><td>Dropdown</td><td>Yes</td><td>Active, Inactive</td></tr>
+</table>
+<h3>Commission Transaction Fields</h3>
+<p class="field-note">The following table lists all data fields for this feature with their data types, requirement status, and detailed descriptions.</p>
+<table>
+<tr><th>Field Name</th><th>Type</th><th>Required</th><th>Description</th></tr>
+<tr><td>transactionId</td><td>Text</td><td>Auto</td><td>Transaction ID</td></tr>
+<tr><td>agentId</td><td>Text</td><td>Yes</td><td>Agent ID</td></tr>
+<tr><td>agentName</td><td>Text</td><td>Auto</td><td>Agent name</td></tr>
+<tr><td>policyNumber</td><td>Text</td><td>Yes</td><td>Policy reference</td></tr>
+<tr><td>productType</td><td>Text</td><td>Auto</td><td>Product type</td></tr>
+<tr><td>premium</td><td>Currency</td><td>Yes</td><td>Premium amount</td></tr>
+<tr><td>commissionRate</td><td>Number</td><td>Auto</td><td>Applied rate</td></tr>
+<tr><td>commissionAmount</td><td>Currency</td><td>Auto</td><td>Commission earned</td></tr>
+<tr><td>status</td><td>Dropdown</td><td>Auto</td><td>Pending, Approved, Paid</td></tr>
+<tr><td>transactionDate</td><td>Date</td><td>Auto</td><td>Transaction date</td></tr>
+<tr><td>payoutDate</td><td>Date</td><td>No</td><td>When paid</td></tr>
+<tr><td>payoutReference</td><td>Text</td><td>No</td><td>Payment reference</td></tr>
+</table>
+<hr>
+<h1>13. CALL CENTER MANAGEMENT</h1>
+<div class="section-intro">Call Center Management provides recording, quality monitoring, and dialer configuration. Call Recording features secure storage, playback with controls, search by multiple criteria, download capability, tagging for categorization, and optional transcription and sentiment analysis. Recording fields capture call details, duration, disposition, quality scores, and evaluation data. Call Quality Monitoring includes customizable scorecards with categories and weighted criteria, call evaluation workflows, agent performance tracking, and calibration for scorer alignment. Evaluation captures scores, strengths, improvement areas, and feedback with dispute handling. Dialer Configuration supports progressive, predictive, and preview dialing modes with pace ratio settings, attempt limits and intervals, call timeouts, wrap-up time, calling hours and days, timezone handling, DNC compliance checking, and voicemail detection.</div>
+<h2>13.1 Call Recording</h2>
+<h3>Features</h3>
+<table>
+<tr><th>Feature</th><th>Description</th><th>Explanation</th></tr>
+<tr><td>Recording Storage</td><td>Store call recordings</td><td>Secure storage</td></tr>
+<tr><td>Recording Playback</td><td>Listen to calls</td><td>Playback with controls</td></tr>
+<tr><td>Recording Search</td><td>Find recordings</td><td>Search by criteria</td></tr>
+<tr><td>Recording Download</td><td>Export recordings</td><td>Download files</td></tr>
+<tr><td>Recording Tagging</td><td>Categorize calls</td><td>Apply tags</td></tr>
+</table>
+<h3>Call Recording Fields</h3>
+<p class="field-note">The following table lists all data fields for this feature with their data types, requirement status, and detailed descriptions.</p>
+<table>
+<tr><th>Field Name</th><th>Type</th><th>Required</th><th>Description</th></tr>
+<tr><td>recordingId</td><td>Text</td><td>Auto</td><td>Recording ID</td></tr>
+<tr><td>callId</td><td>Text</td><td>Yes</td><td>Call reference</td></tr>
+<tr><td>agentId</td><td>Text</td><td>Yes</td><td>Agent ID</td></tr>
+<tr><td>agentName</td><td>Text</td><td>Auto</td><td>Agent name</td></tr>
+<tr><td>customerPhone</td><td>Phone</td><td>Yes</td><td>Customer number</td></tr>
+<tr><td>customerId</td><td>Text</td><td>No</td><td>Customer ID</td></tr>
+<tr><td>callType</td><td>Dropdown</td><td>Yes</td><td>Inbound, Outbound</td></tr>
+<tr><td>callDirection</td><td>Text</td><td>Auto</td><td>Direction</td></tr>
+<tr><td>duration</td><td>Number</td><td>Auto</td><td>Duration seconds</td></tr>
+<tr><td>recordingUrl</td><td>URL</td><td>Auto</td><td>Recording file</td></tr>
+<tr><td>recordingDuration</td><td>Number</td><td>Auto</td><td>Recording length</td></tr>
+<tr><td>disposition</td><td>Dropdown</td><td>No</td><td>Call outcome</td></tr>
+<tr><td>tags</td><td>Multi-select</td><td>No</td><td>Recording tags</td></tr>
+<tr><td>transcript</td><td>Text</td><td>No</td><td>Call transcript</td></tr>
+<tr><td>sentiment</td><td>Dropdown</td><td>No</td><td>Positive, Neutral, Negative</td></tr>
+<tr><td>quality Score</td><td>Number</td><td>No</td><td>Quality rating</td></tr>
+<tr><td>callDate</td><td>DateTime</td><td>Auto</td><td>Call timestamp</td></tr>
+<tr><td>evaluatedBy</td><td>Text</td><td>No</td><td>QA evaluator</td></tr>
+<tr><td>evaluatedAt</td><td>DateTime</td><td>No</td><td>Evaluation date</td></tr>
+</table>
+<hr>
+<h2>13.2 Call Quality Monitoring</h2>
+<h3>Features</h3>
+<table>
+<tr><th>Feature</th><th>Description</th><th>Explanation</th></tr>
+<tr><td>Quality Scorecard</td><td>Evaluation criteria</td><td>Define QA criteria</td></tr>
+<tr><td>Call Evaluation</td><td>Score calls</td><td>Evaluate recordings</td></tr>
+<tr><td>Agent Performance</td><td>Quality metrics</td><td>Track agent quality</td></tr>
+<tr><td>Calibration</td><td>Scorer alignment</td><td>Calibrate evaluators</td></tr>
+</table>
+<h3>Quality Scorecard Fields</h3>
+<p class="field-note">The following table lists all data fields for this feature with their data types, requirement status, and detailed descriptions.</p>
+<table>
+<tr><th>Field Name</th><th>Type</th><th>Required</th><th>Description</th></tr>
+<tr><td>scorecardId</td><td>Text</td><td>Auto</td><td>Scorecard ID</td></tr>
+<tr><td>name</td><td>Text</td><td>Yes</td><td>Scorecard name</td></tr>
+<tr><td>description</td><td>Text</td><td>No</td><td>Description</td></tr>
+<tr><td>categories</td><td>Array</td><td>Yes</td><td>Evaluation categories</td></tr>
+<tr><td>totalPoints</td><td>Number</td><td>Auto</td><td>Total possible points</td></tr>
+<tr><td>passingScore</td><td>Number</td><td>Yes</td><td>Minimum passing</td></tr>
+<tr><td>status</td><td>Dropdown</td><td>Yes</td><td>Active, Inactive</td></tr>
+</table>
+<h3>Scorecard Category Fields</h3>
+<p class="field-note">The following table lists all data fields for this feature with their data types, requirement status, and detailed descriptions.</p>
+<table>
+<tr><th>Field Name</th><th>Type</th><th>Required</th><th>Description</th></tr>
+<tr><td>categoryName</td><td>Text</td><td>Yes</td><td>Category name</td></tr>
+<tr><td>weight</td><td>Number</td><td>Yes</td><td>Category weight %</td></tr>
+<tr><td>criteria</td><td>Array</td><td>Yes</td><td>Evaluation criteria</td></tr>
+</table>
+<h3>Evaluation Criteria Fields</h3>
+<p class="field-note">The following table lists all data fields for this feature with their data types, requirement status, and detailed descriptions.</p>
+<table>
+<tr><th>Field Name</th><th>Type</th><th>Required</th><th>Description</th></tr>
+<tr><td>criterionName</td><td>Text</td><td>Yes</td><td>Criterion name</td></tr>
+<tr><td>description</td><td>Text</td><td>No</td><td>Description</td></tr>
+<tr><td>maxPoints</td><td>Number</td><td>Yes</td><td>Maximum points</td></tr>
+<tr><td>isRequired</td><td>Boolean</td><td>No</td><td>Required criterion</td></tr>
+<tr><td>scoringGuide</td><td>Text</td><td>No</td><td>Scoring guidelines</td></tr>
+</table>
+<h3>Call Evaluation Fields</h3>
+<p class="field-note">The following table lists all data fields for this feature with their data types, requirement status, and detailed descriptions.</p>
+<table>
+<tr><th>Field Name</th><th>Type</th><th>Required</th><th>Description</th></tr>
+<tr><td>evaluationId</td><td>Text</td><td>Auto</td><td>Evaluation ID</td></tr>
+<tr><td>recordingId</td><td>Text</td><td>Yes</td><td>Recording reference</td></tr>
+<tr><td>scorecardId</td><td>Text</td><td>Yes</td><td>Scorecard used</td></tr>
+<tr><td>evaluatorId</td><td>Text</td><td>Auto</td><td>Evaluator ID</td></tr>
+<tr><td>agentId</td><td>Text</td><td>Auto</td><td>Agent evaluated</td></tr>
+<tr><td>scores</td><td>Object</td><td>Yes</td><td>Category scores</td></tr>
+<tr><td>totalScore</td><td>Number</td><td>Auto</td><td>Calculated score</td></tr>
+<tr><td>percentage</td><td>Number</td><td>Auto</td><td>Score percentage</td></tr>
+<tr><td>passed</td><td>Boolean</td><td>Auto</td><td>Pass/fail</td></tr>
+<tr><td>strengths</td><td>Textarea</td><td>No</td><td>Agent strengths</td></tr>
+<tr><td>improvements</td><td>Textarea</td><td>No</td><td>Areas to improve</td></tr>
+<tr><td>feedback</td><td>Textarea</td><td>No</td><td>Overall feedback</td></tr>
+<tr><td>disputeStatus</td><td>Dropdown</td><td>No</td><td>None, Disputed, Resolved</td></tr>
+<tr><td>disputeNotes</td><td>Textarea</td><td>No</td><td>Dispute details</td></tr>
+<tr><td>evaluatedAt</td><td>DateTime</td><td>Auto</td><td>Evaluation date</td></tr>
+</table>
+<hr>
+<h2>13.3 Dialer Configuration</h2>
+<h3>Features</h3>
+<table>
+<tr><th>Feature</th><th>Description</th><th>Explanation</th></tr>
+<tr><td>Dialer Setup</td><td>Configure auto-dialer</td><td>Dialer settings</td></tr>
+<tr><td>Calling Rules</td><td>Dial parameters</td><td>Set calling rules</td></tr>
+<tr><td>DNC Compliance</td><td>Avoid blocked numbers</td><td>DNC integration</td></tr>
+<tr><td>Pacing Controls</td><td>Call rate management</td><td>Control pace</td></tr>
+<tr><td>Scheduled Dialer</td><td>Timed campaigns</td><td>Schedule campaigns</td></tr>
+</table>
+<h3>Dialer Configuration Fields</h3>
+<p class="field-note">The following table lists all data fields for this feature with their data types, requirement status, and detailed descriptions.</p>
+<table>
+<tr><th>Field Name</th><th>Type</th><th>Required</th><th>Description</th></tr>
+<tr><td>configId</td><td>Text</td><td>Auto</td><td>Configuration ID</td></tr>
+<tr><td>name</td><td>Text</td><td>Yes</td><td>Configuration name</td></tr>
+<tr><td>dialerType</td><td>Dropdown</td><td>Yes</td><td>Progressive, Predictive, Preview</td></tr>
+<tr><td>paceRatio</td><td>Number</td><td>No</td><td>Calls per agent</td></tr>
+<tr><td>maxAttempts</td><td>Number</td><td>Yes</td><td>Max attempts per number</td></tr>
+<tr><td>attemptInterval</td><td>Number</td><td>Yes</td><td>Minutes between attempts</td></tr>
+<tr><td>callTimeout</td><td>Number</td><td>Yes</td><td>Ring timeout seconds</td></tr>
+<tr><td>wrapUpTime</td><td>Number</td><td>Yes</td><td>Agent wrap-up seconds</td></tr>
+<tr><td>callingHoursStart</td><td>Time</td><td>Yes</td><td>Calling start time</td></tr>
+<tr><td>callingHoursEnd</td><td>Time</td><td>Yes</td><td>Calling end time</td></tr>
+<tr><td>callingDays</td><td>Multi-select</td><td>Yes</td><td>Active days</td></tr>
+<tr><td>timezone</td><td>Dropdown</td><td>Yes</td><td>Timezone</td></tr>
+<tr><td>dncCheck</td><td>Boolean</td><td>Yes</td><td>Check DNC before dial</td></tr>
+<tr><td>voicemailDetection</td><td>Boolean</td><td>No</td><td>Detect voicemail</td></tr>
+<tr><td>status</td><td>Dropdown</td><td>Yes</td><td>Active, Inactive</td></tr>
+</table>
+<hr>
+<h1>14. SETTINGS & ADMINISTRATION</h1>
+<div class="section-intro">Settings and Administration covers system configuration and compliance management. General Settings include theme selection (light/dark), language selection from 13 options, timezone configuration, date and time format preferences, currency settings, pagination preferences, and notification channel configuration (email, in-app, SMS, browser). User Management provides user listing, creation, editing, deactivation, password reset, role assignment, and team assignment with fields for personal details, employment information, permissions, and account settings. SLA Settings enable template creation with response and resolution times, priority and case type mapping, escalation rule configuration, and business hours definition. Auto-Assignment Settings support round-robin, load-balance, skill-based, and geography-based routing with capacity limits and condition matching. DNC Management handles blocked number lists, import functionality, government DNC sync for TRAI compliance, override handling, audit logging, and compliance reporting.</div>
+<h2>14.1 General Settings</h2>
+<h3>Features</h3>
+<table>
+<tr><th>Feature</th><th>Description</th><th>Explanation</th></tr>
+<tr><td>Theme Settings</td><td>Appearance configuration</td><td>Light/dark mode</td></tr>
+<tr><td>Language Selection</td><td>Localization</td><td>13 languages</td></tr>
+<tr><td>Timezone Configuration</td><td>Time settings</td><td>Set timezone</td></tr>
+<tr><td>Notification Preferences</td><td>Alert settings</td><td>Configure notifications</td></tr>
+<tr><td>Data Display Settings</td><td>View preferences</td><td>Items per page, formats</td></tr>
+</table>
+<h3>Settings Fields</h3>
+<p class="field-note">The following table lists all data fields for this feature with their data types, requirement status, and detailed descriptions.</p>
+<table>
+<tr><th>Field Name</th><th>Type</th><th>Options</th><th>Description</th></tr>
+<tr><td>theme</td><td>Toggle</td><td>light, dark</td><td>Interface theme</td></tr>
+<tr><td>language</td><td>Dropdown</td><td>13 languages</td><td>Interface language</td></tr>
+<tr><td>timezone</td><td>Dropdown</td><td>All timezones</td><td>User timezone</td></tr>
+<tr><td>dateFormat</td><td>Dropdown</td><td>DD/MM/YYYY, MM/DD/YYYY, YYYY-MM-DD</td><td>Date format</td></tr>
+<tr><td>timeFormat</td><td>Dropdown</td><td>12h, 24h</td><td>Time format</td></tr>
+<tr><td>currency</td><td>Dropdown</td><td>INR, USD, etc.</td><td>Default currency</td></tr>
+<tr><td>itemsPerPage</td><td>Dropdown</td><td>10, 25, 50, 100</td><td>List pagination</td></tr>
+<tr><td>notifications.email</td><td>Boolean</td><td>-</td><td>Email notifications</td></tr>
+<tr><td>notifications.inApp</td><td>Boolean</td><td>-</td><td>In-app notifications</td></tr>
+<tr><td>notifications.sms</td><td>Boolean</td><td>-</td><td>SMS notifications</td></tr>
+<tr><td>notifications.browser</td><td>Boolean</td><td>-</td><td>Browser notifications</td></tr>
+</table>
+<hr>
+<h2>14.2 User Management</h2>
+<h3>Features</h3>
+<table>
+<tr><th>Feature</th><th>Description</th><th>Explanation</th></tr>
+<tr><td>User List</td><td>All users view</td><td>View all system users</td></tr>
+<tr><td>Add User</td><td>Create new users</td><td>Create user accounts</td></tr>
+<tr><td>Edit User</td><td>Modify users</td><td>Edit user details</td></tr>
+<tr><td>Deactivate User</td><td>Disable accounts</td><td>Deactivate accounts</td></tr>
+<tr><td>Password Reset</td><td>Reset credentials</td><td>Admin password reset</td></tr>
+<tr><td>Role Assignment</td><td>Set user roles</td><td>Assign roles</td></tr>
+<tr><td>Team Assignment</td><td>Organize users</td><td>Assign to teams</td></tr>
+</table>
+<h3>User Fields</h3>
+<p class="field-note">The following table lists all data fields for this feature with their data types, requirement status, and detailed descriptions.</p>
+<table>
+<tr><th>Field Name</th><th>Type</th><th>Required</th><th>Description</th></tr>
+<tr><td>userId</td><td>Text</td><td>Auto</td><td>User ID</td></tr>
+<tr><td>firstName</td><td>Text</td><td>Yes</td><td>First name</td></tr>
+<tr><td>lastName</td><td>Text</td><td>Yes</td><td>Last name</td></tr>
+<tr><td>email</td><td>Email</td><td>Yes</td><td>Email address</td></tr>
+<tr><td>phone</td><td>Phone</td><td>No</td><td>Contact phone</td></tr>
+<tr><td>role</td><td>Dropdown</td><td>Yes</td><td>User role</td></tr>
+<tr><td>team</td><td>Dropdown</td><td>No</td><td>Assigned team</td></tr>
+<tr><td>manager</td><td>Dropdown</td><td>No</td><td>Reporting manager</td></tr>
+<tr><td>status</td><td>Dropdown</td><td>Yes</td><td>Active, Inactive, Suspended</td></tr>
+<tr><td>employeeId</td><td>Text</td><td>No</td><td>Employee ID</td></tr>
+<tr><td>department</td><td>Dropdown</td><td>No</td><td>Department</td></tr>
+<tr><td>location</td><td>Dropdown</td><td>No</td><td>Work location</td></tr>
+<tr><td>joinDate</td><td>Date</td><td>No</td><td>Start date</td></tr>
+<tr><td>permissions</td><td>Multi-select</td><td>No</td><td>Additional permissions</td></tr>
+<tr><td>accountExpiry</td><td>Date</td><td>No</td><td>Account expiry date</td></tr>
+<tr><td>mfaEnabled</td><td>Boolean</td><td>No</td><td>MFA status</td></tr>
+<tr><td>lastLogin</td><td>DateTime</td><td>Auto</td><td>Last login time</td></tr>
+<tr><td>createdAt</td><td>DateTime</td><td>Auto</td><td>Account creation</td></tr>
+<tr><td>updatedAt</td><td>DateTime</td><td>Auto</td><td>Last updated</td></tr>
+</table>
+<hr>
+<h2>14.3 SLA Settings</h2>
+<h3>Features</h3>
+<table>
+<tr><th>Feature</th><th>Description</th><th>Explanation</th></tr>
+<tr><td>SLA Template Creation</td><td>Define SLAs</td><td>Create SLA templates</td></tr>
+<tr><td>SLA Assignment</td><td>Apply SLAs</td><td>Assign to case types</td></tr>
+<tr><td>Escalation Rules</td><td>Breach actions</td><td>Configure escalations</td></tr>
+<tr><td>Business Hours</td><td>Work time definition</td><td>Define business hours</td></tr>
+<tr><td>Holiday Calendar</td><td>Non-working days</td><td>Set up holidays</td></tr>
+</table>
+<h3>SLA Template Fields</h3>
+<p class="field-note">The following table lists all data fields for this feature with their data types, requirement status, and detailed descriptions.</p>
+<table>
+<tr><th>Field Name</th><th>Type</th><th>Required</th><th>Description</th></tr>
+<tr><td>slaId</td><td>Text</td><td>Auto</td><td>SLA ID</td></tr>
+<tr><td>name</td><td>Text</td><td>Yes</td><td>SLA name</td></tr>
+<tr><td>description</td><td>Textarea</td><td>No</td><td>Description</td></tr>
+<tr><td>responseTime</td><td>Number</td><td>Yes</td><td>Response time (hours)</td></tr>
+<tr><td>resolutionTime</td><td>Number</td><td>Yes</td><td>Resolution time (hours)</td></tr>
+<tr><td>priority</td><td>Dropdown</td><td>No</td><td>Applicable priority</td></tr>
+<tr><td>caseType</td><td>Dropdown</td><td>No</td><td>Case type</td></tr>
+<tr><td>productType</td><td>Dropdown</td><td>No</td><td>Product type</td></tr>
+<tr><td>escalationRules</td><td>Array</td><td>No</td><td>Escalation configuration</td></tr>
+<tr><td>businessHoursOnly</td><td>Boolean</td><td>No</td><td>Count business hours only</td></tr>
+<tr><td>status</td><td>Dropdown</td><td>Yes</td><td>Active, Inactive</td></tr>
+</table>
+<h3>Escalation Rule Fields</h3>
+<p class="field-note">The following table lists all data fields for this feature with their data types, requirement status, and detailed descriptions.</p>
+<table>
+<tr><th>Field Name</th><th>Type</th><th>Description</th></tr>
+<tr><td>level</td><td>Number</td><td>Escalation level</td></tr>
+<tr><td>triggerPercent</td><td>Number</td><td>% of SLA before trigger</td></tr>
+<tr><td>actions</td><td>Multi-select</td><td>Notification, Reassign, Alert</td></tr>
+<tr><td>notifyRoles</td><td>Multi-select</td><td>Roles to notify</td></tr>
+<tr><td>reassignTo</td><td>Dropdown</td><td>Reassign target</td></tr>
+</table>
+<hr>
+<h2>14.4 Auto-Assignment Settings</h2>
+<h3>Features</h3>
+<table>
+<tr><th>Feature</th><th>Description</th><th>Explanation</th></tr>
+<tr><td>Assignment Rules</td><td>Distribution logic</td><td>Configure rules</td></tr>
+<tr><td>Round-Robin</td><td>Equal distribution</td><td>Fair distribution</td></tr>
+<tr><td>Skill-Based Routing</td><td>Match expertise</td><td>Route by skills</td></tr>
+<tr><td>Capacity Limits</td><td>Workload limits</td><td>Set max capacity</td></tr>
+<tr><td>Priority Rules</td><td>High-value handling</td><td>Special routing</td></tr>
+</table>
+<h3>Auto-Assignment Rule Fields</h3>
+<p class="field-note">The following table lists all data fields for this feature with their data types, requirement status, and detailed descriptions.</p>
+<table>
+<tr><th>Field Name</th><th>Type</th><th>Required</th><th>Description</th></tr>
+<tr><td>ruleId</td><td>Text</td><td>Auto</td><td>Rule ID</td></tr>
+<tr><td>name</td><td>Text</td><td>Yes</td><td>Rule name</td></tr>
+<tr><td>ruleType</td><td>Dropdown</td><td>Yes</td><td>Round-Robin, Load-Balance, Skill-Based, Geography</td></tr>
+<tr><td>priority</td><td>Number</td><td>Yes</td><td>Rule priority</td></tr>
+<tr><td>conditions</td><td>Array</td><td>No</td><td>Match conditions</td></tr>
+<tr><td>targetAgents</td><td>Multi-select</td><td>No</td><td>Eligible agents</td></tr>
+<tr><td>targetTeams</td><td>Multi-select</td><td>No</td><td>Eligible teams</td></tr>
+<tr><td>maxCapacity</td><td>Number</td><td>No</td><td>Max per agent</td></tr>
+<tr><td>isActive</td><td>Boolean</td><td>Yes</td><td>Rule active</td></tr>
+</table>
+<h3>Condition Fields</h3>
+<p class="field-note">The following table lists all data fields for this feature with their data types, requirement status, and detailed descriptions.</p>
+<table>
+<tr><th>Field Name</th><th>Type</th><th>Description</th></tr>
+<tr><td>field</td><td>Dropdown</td><td>Field to check</td></tr>
+<tr><td>operator</td><td>Dropdown</td><td>equals, contains, greater, less</td></tr>
+<tr><td>value</td><td>Text</td><td>Value to match</td></tr>
+</table>
+<hr>
+<h2>14.5 DNC Management</h2>
+<h3>Features</h3>
+<table>
+<tr><th>Feature</th><th>Description</th><th>Explanation</th></tr>
+<tr><td>DNC List Management</td><td>Blocked numbers</td><td>View and manage DNC</td></tr>
+<tr><td>DNC Import</td><td>Upload blocked numbers</td><td>Import DNC list</td></tr>
+<tr><td>Government DNC Sync</td><td>Regulatory compliance</td><td>Sync with TRAI</td></tr>
+<tr><td>DNC Override</td><td>Exception handling</td><td>Override with approval</td></tr>
+<tr><td>DNC Logging</td><td>Audit trail</td><td>Log all checks</td></tr>
+<tr><td>Compliance Reporting</td><td>Regulatory reports</td><td>Generate reports</td></tr>
+</table>
+<h3>DNC Entry Fields</h3>
+<p class="field-note">The following table lists all data fields for this feature with their data types, requirement status, and detailed descriptions.</p>
+<table>
+<tr><th>Field Name</th><th>Type</th><th>Required</th><th>Description</th></tr>
+<tr><td>dncId</td><td>Text</td><td>Auto</td><td>DNC entry ID</td></tr>
+<tr><td>phoneNumber</td><td>Phone</td><td>Yes</td><td>Blocked number</td></tr>
+<tr><td>source</td><td>Dropdown</td><td>Yes</td><td>Customer Request, TRAI, Complaint, Legal</td></tr>
+<tr><td>addedDate</td><td>Date</td><td>Auto</td><td>When added</td></tr>
+<tr><td>expiryDate</td><td>Date</td><td>No</td><td>Expiry if temporary</td></tr>
+<tr><td>reason</td><td>Text</td><td>No</td><td>Block reason</td></tr>
+<tr><td>isActive</td><td>Boolean</td><td>Yes</td><td>Currently active</td></tr>
+<tr><td>createdBy</td><td>Text</td><td>Auto</td><td>Added by</td></tr>
+<tr><td>overrideAllowed</td><td>Boolean</td><td>No</td><td>Can be overridden</td></tr>
+</table>
+<hr>
+<h1>15. AI & INTELLIGENT FEATURES</h1>
+<div class="section-intro">AI and Intelligent Features provide machine learning capabilities throughout the platform. The AI Agent offers an intelligent chatbot assistant with natural language understanding, task automation, and context awareness for conversational interactions. Email AI Features include automatic intent classification (Query, Complaint, Request, Feedback), sentiment analysis with scoring, AI-generated response suggestions, and email thread summarization with key point extraction. Lead Scoring AI provides predictive quality scoring, conversion probability calculation, and detailed score factor breakdown showing positive and negative indicators with historical tracking. Propensity AI predicts payment likelihood, recommends optimal contact times, suggests preferred contact channels, calculates settlement probability, and identifies risk factors with positive and negative indicators.</div>
+<h2>15.1 AI Agent</h2>
+<h3>Features</h3>
+<table>
+<tr><th>Feature</th><th>Description</th><th>Explanation</th></tr>
+<tr><td>AI Assistant</td><td>Intelligent chatbot</td><td>AI-powered assistant</td></tr>
+<tr><td>Natural Language</td><td>Conversational interface</td><td>Understand natural language</td></tr>
+<tr><td>Task Automation</td><td>AI-driven actions</td><td>Execute tasks</td></tr>
+<tr><td>Context Awareness</td><td>Understand context</td><td>Maintain context</td></tr>
+</table>
+<hr>
+<h2>15.2 Email AI Features</h2>
+<h3>Features</h3>
+<table>
+<tr><th>Feature</th><th>Description</th><th>Explanation</th></tr>
+<tr><td>Intent Classification</td><td>Detect email purpose</td><td>Auto-classify emails</td></tr>
+<tr><td>Sentiment Analysis</td><td>Tone detection</td><td>Analyze sentiment</td></tr>
+<tr><td>Auto-Suggestions</td><td>Response recommendations</td><td>Suggest responses</td></tr>
+<tr><td>Summary Generation</td><td>Email summaries</td><td>Summarize threads</td></tr>
+</table>
+<h3>AI Classification Results</h3>
+<table>
+<tr><th>Field</th><th>Type</th><th>Description</th></tr>
+<tr><td>intent</td><td>Dropdown</td><td>Query, Complaint, Request, Feedback, Other</td></tr>
+<tr><td>confidence</td><td>Number</td><td>Classification confidence %</td></tr>
+<tr><td>sentiment</td><td>Dropdown</td><td>Positive, Neutral, Negative</td></tr>
+<tr><td>sentimentScore</td><td>Number</td><td>Sentiment score (-1 to 1)</td></tr>
+<tr><td>suggestedResponse</td><td>Text</td><td>AI-suggested response</td></tr>
+<tr><td>summary</td><td>Text</td><td>Email summary</td></tr>
+<tr><td>keyPoints</td><td>Text[]</td><td>Key points extracted</td></tr>
+</table>
+<hr>
+<h2>15.3 Lead Scoring AI</h2>
+<h3>Features</h3>
+<table>
+<tr><th>Feature</th><th>Description</th><th>Explanation</th></tr>
+<tr><td>Predictive Scoring</td><td>Quality prediction</td><td>AI-based scoring</td></tr>
+<tr><td>Conversion Probability</td><td>Likelihood to convert</td><td>Predict conversion</td></tr>
+<tr><td>Score Factors</td><td>Contributing elements</td><td>Show score factors</td></tr>
+</table>
+<h3>Lead Score Fields</h3>
+<p class="field-note">The following table lists all data fields for this feature with their data types, requirement status, and detailed descriptions.</p>
+<table>
+<tr><th>Field</th><th>Type</th><th>Description</th></tr>
+<tr><td>overallScore</td><td>Number</td><td>Total score (0-100)</td></tr>
+<tr><td>qualityTier</td><td>Dropdown</td><td>Hot, Warm, Cold</td></tr>
+<tr><td>conversionProbability</td><td>Number</td><td>% likely to convert</td></tr>
+<tr><td>scoreFactors</td><td>Object</td><td>Factor breakdown</td></tr>
+<tr><td>scoreHistory</td><td>Array</td><td>Score changes over time</td></tr>
+<tr><td>lastUpdated</td><td>DateTime</td><td>Score calculation date</td></tr>
+</table>
+<hr>
+<h2>15.4 Propensity AI</h2>
+<h3>Features</h3>
+<table>
+<tr><th>Feature</th><th>Description</th><th>Explanation</th></tr>
+<tr><td>Payment Propensity</td><td>Payment likelihood</td><td>Predict payment</td></tr>
+<tr><td>Best Contact Time</td><td>Optimal timing</td><td>AI-recommended time</td></tr>
+<tr><td>Contact Method</td><td>Best channel</td><td>Recommended channel</td></tr>
+<tr><td>Settlement Probability</td><td>Settlement likelihood</td><td>Settlement prediction</td></tr>
+</table>
+<h3>Propensity Score Fields</h3>
+<p class="field-note">The following table lists all data fields for this feature with their data types, requirement status, and detailed descriptions.</p>
+<table>
+<tr><th>Field</th><th>Type</th><th>Description</th></tr>
+<tr><td>propensityScore</td><td>Number</td><td>Overall score (0-100)</td></tr>
+<tr><td>propensityLevel</td><td>Dropdown</td><td>High, Medium, Low</td></tr>
+<tr><td>paymentProbability</td><td>Number</td><td>% likely to pay</td></tr>
+<tr><td>settlementProbability</td><td>Number</td><td>% likely to settle</td></tr>
+<tr><td>bestContactTime</td><td>Text</td><td>Optimal time window</td></tr>
+<tr><td>preferredContactMethod</td><td>Dropdown</td><td>Phone, Email, SMS</td></tr>
+<tr><td>riskScore</td><td>Number</td><td>Default risk</td></tr>
+<tr><td>factorsPositive</td><td>Text[]</td><td>Positive indicators</td></tr>
+<tr><td>factorsNegative</td><td>Text[]</td><td>Negative indicators</td></tr>
+</table>
+<hr>
+<h1>16. INTEGRATIONS</h1>
+<div class="section-intro">The Integrations section covers external system connections for data enrichment and verification. Vahan Integration enables vehicle data fetching from the government Vahan database using registration number, chassis number, or engine number. Response data includes owner name, vehicle class, manufacturer, model, fuel type, color, registration date, fitness validity, insurance status, PUC details, and tax information. This integration supports auto-fill functionality to populate vehicle details automatically in lead and policy records, ownership verification to confirm vehicle ownership, and insurance status checking to verify current coverage.</div>
+<h2>16.1 Vahan Integration</h2>
+<h3>Features</h3>
+<table>
+<tr><th>Feature</th><th>Description</th><th>Explanation</th></tr>
+<tr><td>Vehicle Data Fetch</td><td>Get vehicle info</td><td>Fetch from Vahan</td></tr>
+<tr><td>Ownership Verification</td><td>Confirm owner</td><td>Verify ownership</td></tr>
+<tr><td>Insurance Status</td><td>Check coverage</td><td>Check current insurance</td></tr>
+<tr><td>Auto-Fill</td><td>Populate fields</td><td>Auto-fill vehicle details</td></tr>
+</table>
+<h3>Vahan Request Fields</h3>
+<p class="field-note">The following table lists all data fields for this feature with their data types, requirement status, and detailed descriptions.</p>
+<table>
+<tr><th>Field Name</th><th>Type</th><th>Required</th><th>Description</th></tr>
+<tr><td>registrationNumber</td><td>Text</td><td>Yes</td><td>Vehicle registration</td></tr>
+<tr><td>chassisNumber</td><td>Text</td><td>No</td><td>Chassis number</td></tr>
+<tr><td>engineNumber</td><td>Text</td><td>No</td><td>Engine number</td></tr>
+</table>
+<h3>Vahan Response Fields</h3>
+<p class="field-note">The following table lists all data fields for this feature with their data types, requirement status, and detailed descriptions.</p>
+<table>
+<tr><th>Field</th><th>Type</th><th>Description</th></tr>
+<tr><td>registrationNumber</td><td>Text</td><td>Registration number</td></tr>
+<tr><td>ownerName</td><td>Text</td><td>Owner name</td></tr>
+<tr><td>vehicleClass</td><td>Text</td><td>Vehicle class</td></tr>
+<tr><td>maker</td><td>Text</td><td>Manufacturer</td></tr>
+<tr><td>model</td><td>Text</td><td>Model name</td></tr>
+<tr><td>fuelType</td><td>Text</td><td>Fuel type</td></tr>
+<tr><td>color</td><td>Text</td><td>Vehicle color</td></tr>
+<tr><td>registrationDate</td><td>Date</td><td>Registration date</td></tr>
+<tr><td>fitness</td><td>Date</td><td>Fitness validity</td></tr>
+<tr><td>insurance</td><td>Object</td><td>Insurance details</td></tr>
+<tr><td>puc</td><td>Object</td><td>PUC details</td></tr>
+<tr><td>tax</td><td>Object</td><td>Tax details</td></tr>
+</table>
+<hr>
+<h1>17. USER INTERFACE & EXPERIENCE</h1>
+<div class="section-intro">User Interface and Experience covers the visual design and navigation of the platform. The Theme System provides light mode with a clean, bright interface and dark mode for reduced eye strain, with easy toggle switching and persistent preference storage. Layout and Navigation features include a collapsible sidebar for space optimization, nested hierarchical menus with expandable sections, breadcrumb navigation for location awareness, quick action buttons for common operations, and responsive design that adapts to all screen sizes. Navigation sections organize modules into logical groups: Dashboard, Renewals, Leads, Customers, Policies, Communications, Operations, HR, Reports, and Settings. The Notification System includes a notification bell with unread count badge, dropdown panel for quick viewing, full dialog for detailed view, mark as read functionality, and support for multiple notification types (Task, Lead, Case, System, Alert, Approval).</div>
+<h2>17.1 Theme System</h2>
+<h3>Features</h3>
+<table>
+<tr><th>Feature</th><th>Description</th><th>Explanation</th></tr>
+<tr><td>Light Mode</td><td>Bright theme</td><td>Clean, bright interface</td></tr>
+<tr><td>Dark Mode</td><td>Dark theme</td><td>Reduced eye strain</td></tr>
+<tr><td>Theme Toggle</td><td>Switch themes</td><td>Easy toggle switch</td></tr>
+<tr><td>Persistent Preference</td><td>Remember choice</td><td>Saved preference</td></tr>
+</table>
+<hr>
+<h2>17.2 Layout & Navigation</h2>
+<h3>Features</h3>
+<table>
+<tr><th>Feature</th><th>Description</th><th>Explanation</th></tr>
+<tr><td>Collapsible Sidebar</td><td>Expandable menu</td><td>Collapsible navigation</td></tr>
+<tr><td>Nested Navigation</td><td>Hierarchical menu</td><td>Expandable sections</td></tr>
+<tr><td>Breadcrumbs</td><td>Location indicator</td><td>Path display</td></tr>
+<tr><td>Quick Actions</td><td>Shortcut buttons</td><td>Common actions</td></tr>
+<tr><td>Responsive Design</td><td>Mobile-friendly</td><td>Adapts to screen size</td></tr>
+</table>
+<h3>Navigation Sections</h3>
+<table>
+<tr><th>Section</th><th>Modules</th></tr>
+<tr><td>Dashboard</td><td>Renewals</td></tr>
+<tr><td>Renewals</td><td>Cases, Closed, Failed, Timeline</td></tr>
+<tr><td>Leads</td><td>Management, Assigned, Closed, Lost</td></tr>
+<tr><td>Customers</td><td>Contacts, Database, Service</td></tr>
+<tr><td>Policies</td><td>Claims, Servicing, New Business</td></tr>
+<tr><td>Communications</td><td>Email, WhatsApp, Campaigns</td></tr>
+<tr><td>Operations</td><td>Tasks, Workflows, SLA</td></tr>
+<tr><td>HR</td><td>Attendance, Leave, Training</td></tr>
+<tr><td>Reports</td><td>Analytics, KPIs, MIS</td></tr>
+<tr><td>Settings</td><td>Users, Configuration</td></tr>
+</table>
+<hr>
+<h2>17.3 Notification System</h2>
+<h3>Features</h3>
+<table>
+<tr><th>Feature</th><th>Description</th><th>Explanation</th></tr>
+<tr><td>Notification Bell</td><td>Alert indicator</td><td>Unread count badge</td></tr>
+<tr><td>Notification Panel</td><td>View notifications</td><td>Dropdown panel</td></tr>
+<tr><td>Notification Dialog</td><td>Full notifications</td><td>Full view dialog</td></tr>
+<tr><td>Mark as Read</td><td>Clear notifications</td><td>Mark read</td></tr>
+<tr><td>Notification Types</td><td>Various alerts</td><td>Different types</td></tr>
+</table>
+<h3>Notification Types</h3>
+<table>
+<tr><th>Type</th><th>Description</th></tr>
+<tr><td>Task</td><td>Task assignments and reminders</td></tr>
+<tr><td>Lead</td><td>Lead assignments and updates</td></tr>
+<tr><td>Case</td><td>Case status changes</td></tr>
+<tr><td>System</td><td>System announcements</td></tr>
+<tr><td>Alert</td><td>Important alerts</td></tr>
+<tr><td>Approval</td><td>Approval requests</td></tr>
+</table>
+<hr>
+<h1>18. INTERNATIONALIZATION</h1>
+<div class="section-intro">Internationalization provides comprehensive multi-language support for the Indian market. The system supports 13 languages: English, Hindi, Bengali, Telugu, Marathi, Tamil, Gujarati, Malayalam, Kannada, Punjabi, Assamese, Odia, and Urdu. Urdu is supported with right-to-left (RTL) text direction. Language selection is available at the user level allowing each user to choose their preferred interface language. All UI elements, labels, messages, and notifications are translated. The internationalization framework uses i18next for React with organized locale files for each language.</div>
+<h2>18.1 Supported Languages</h2>
+<table>
+<tr><th>Code</th><th>Language</th><th>RTL Support</th></tr>
+<tr><td>en</td><td>English</td><td>No</td></tr>
+<tr><td>hi</td><td>Hindi</td><td>No</td></tr>
+<tr><td>bn</td><td>Bengali</td><td>No</td></tr>
+<tr><td>te</td><td>Telugu</td><td>No</td></tr>
+<tr><td>mr</td><td>Marathi</td><td>No</td></tr>
+<tr><td>ta</td><td>Tamil</td><td>No</td></tr>
+<tr><td>gu</td><td>Gujarati</td><td>No</td></tr>
+<tr><td>ml</td><td>Malayalam</td><td>No</td></tr>
+<tr><td>kn</td><td>Kannada</td><td>No</td></tr>
+<tr><td>pa</td><td>Punjabi</td><td>No</td></tr>
+<tr><td>as</td><td>Assamese</td><td>No</td></tr>
+<tr><td>or</td><td>Odia</td><td>No</td></tr>
+<tr><td>ur</td><td>Urdu</td><td>Yes</td></tr>
+</table>
+<hr>
+<h1>INDUSTRY CONFIGURATION</h1>
+<h2>Supported Industries</h2>
+<p>The system supports multiple industry configurations with customizable terminology and fields:</p>
+<table>
+<tr><th>Industry</th><th>Code</th><th>Description</th></tr>
+<tr><td>Insurance</td><td>insurance</td><td>Insurance CRM with policy-specific terminology</td></tr>
+<tr><td>Automotive</td><td>automotive</td><td>Vehicle sales and service management</td></tr>
+<tr><td>Real Estate</td><td>realestate</td><td>Property sales and management</td></tr>
+<tr><td>Healthcare</td><td>healthcare</td><td>Patient management and appointments</td></tr>
+<tr><td>Retail</td><td>retail</td><td>Product sales and inventory</td></tr>
+<tr><td>Banking</td><td>banking</td><td>Account and loan management</td></tr>
+<tr><td>Education</td><td>education</td><td>Student and course management</td></tr>
+<tr><td>Hospitality</td><td>hospitality</td><td>Guest and reservation management</td></tr>
+<tr><td>Other</td><td>other</td><td>Generic CRM configuration</td></tr>
+</table>
+<h3>Industry-Specific Terminology (Insurance Example)</h3>
+<table>
+<tr><th>Generic Term</th><th>Insurance Term</th></tr>
+<tr><td>Customer</td><td>Policyholder</td></tr>
+<tr><td>Case</td><td>Policy</td></tr>
+<tr><td>Lead</td><td>Prospect</td></tr>
+<tr><td>Deal</td><td>Policy Sale</td></tr>
+<tr><td>Value</td><td>Premium Amount</td></tr>
+</table>
+<hr>
+<h1>SUMMARY</h1>
+<p>This comprehensive feature list documents:</p>
+<p>&bull; <strong>200+ Individual Features</strong> across all modules</p>
+<p>&bull; <strong>500+ Data Fields</strong> with types and requirements</p>
+<p>&bull; <strong>19 Major Sections</strong> covering entire system</p>
+<p>&bull; <strong>13 Languages</strong> supported with RTL</p>
+<p>&bull; <strong>10 Industries</strong> supported with configurations</p>
+<p>&bull; <strong>Complete Field Definitions</strong> for all pages</p>
+<p>All fields include:</p>
+<p>&bull; Field name</p>
+<p>&bull; Data type</p>
+<p>&bull; Required/Optional status</p>
+<p>&bull; Description</p>
+<p>&bull; Options (for dropdowns)</p>
+<p>&bull; Validation rules (where applicable)</p>
+<p>This documentation serves as the complete reference for the PY360 CRM system capabilities and data structure.</p>
+
+<hr>
+<h1 style="page-break-before: always;">Document Summary</h1>
+
+<p>This comprehensive feature list documents the complete functionality of the PY360 CRM system, an enterprise-grade Customer Relationship Management platform designed specifically for the Indian market.</p>
+
+<h2>System Statistics</h2>
+<table>
+<tr><th>Category</th><th>Count</th><th>Description</th></tr>
+<tr><td>Total Modules</td><td>18</td><td>Major functional areas of the system</td></tr>
+<tr><td>Total Features</td><td>200+</td><td>Individual features across all modules</td></tr>
+<tr><td>Total Data Fields</td><td>500+</td><td>Database fields with types and validations</td></tr>
+<tr><td>Supported Languages</td><td>13</td><td>Indian languages including RTL support</td></tr>
+<tr><td>User Roles</td><td>7</td><td>Role-based access control levels</td></tr>
+<tr><td>Permission Groups</td><td>8</td><td>Granular permission categories</td></tr>
+</table>
+
+<h2>Technical Stack</h2>
+<table>
+<tr><th>Technology</th><th>Purpose</th></tr>
+<tr><td>React 18+</td><td>Frontend framework</td></tr>
+<tr><td>Material-UI (MUI)</td><td>Component library</td></tr>
+<tr><td>React Router v6</td><td>Navigation and routing</td></tr>
+<tr><td>React Context API</td><td>State management</td></tr>
+<tr><td>i18next</td><td>Internationalization</td></tr>
+<tr><td>Recharts</td><td>Data visualization</td></tr>
+<tr><td>JWT</td><td>Authentication tokens</td></tr>
+</table>
+
+<h2>Supported Industries</h2>
+<table>
+<tr><th>Industry</th><th>Configuration Code</th><th>Description</th></tr>
+<tr><td>Insurance</td><td>insurance</td><td>Insurance CRM with policy-specific terminology</td></tr>
+<tr><td>Automotive</td><td>automotive</td><td>Vehicle sales and service management</td></tr>
+<tr><td>Real Estate</td><td>realestate</td><td>Property sales and management</td></tr>
+<tr><td>Healthcare</td><td>healthcare</td><td>Patient management and appointments</td></tr>
+<tr><td>Retail</td><td>retail</td><td>Product sales and inventory</td></tr>
+<tr><td>Banking</td><td>banking</td><td>Account and loan management</td></tr>
+<tr><td>Education</td><td>education</td><td>Student and course management</td></tr>
+<tr><td>Hospitality</td><td>hospitality</td><td>Guest and reservation management</td></tr>
+</table>
+
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p style="text-align: center; font-size: 14pt; color: #666;">— End of Document —</p>
+<p>&nbsp;</p>
+<p style="text-align: center; font-size: 11pt; color: #999;">PY360 CRM Feature List • Version 1.0 • December 2025</p>
+</body></html>

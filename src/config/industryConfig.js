@@ -400,6 +400,72 @@ export const industryConfig = {
     ]
   },
 
+  debt_collections: {
+    name: 'Debt Collections & AMC',
+    icon: 'account_balance_wallet',
+    terminology: {
+      // Core business terms
+      customer: 'Debtor',
+      customers: 'Debtors',
+      case: 'Account',
+      cases: 'Accounts',
+      lead: 'Prospect',
+      leads: 'Prospects',
+      deal: 'Settlement',
+      deals: 'Settlements',
+
+      // Operations
+      tracking: 'Account Tracking',
+      management: 'Portfolio Management',
+      pipeline: 'Collection Pipeline',
+      analytics: 'Collection Analytics',
+
+      // Fields
+      caseId: 'Account Number',
+      caseStatus: 'Collection Status',
+      caseType: 'Debt Type',
+      caseValue: 'Outstanding Balance',
+      renewalDate: 'Follow-up Date',
+      expiryDate: 'Settlement Deadline',
+
+      // Additional fields
+      product: 'Debt Product',
+      coverage: 'Settlement Amount',
+      beneficiary: 'Creditor',
+      claim: 'PTP (Promise to Pay)',
+      underwriting: 'Legal Review',
+
+      // Debt-specific terminology
+      portfolio: 'Portfolio',
+      portfolios: 'Portfolios',
+      debtor: 'Debtor',
+      debtors: 'Debtors',
+      collection: 'Collection',
+      collections: 'Collections',
+      settlement: 'Settlement',
+      ptp: 'Promise to Pay',
+      dpd: 'Days Past Due',
+      recovery: 'Recovery',
+      aging: 'Aging',
+      chargeoff: 'Charge-off'
+    },
+    modules: [
+      'Portfolio Onboarding',
+      'Debtor Management',
+      'Collection Workflow',
+      'Payment & Settlement',
+      'PTP Tracking',
+      'Legal Escalation',
+      'Self-Service Portal',
+      'Analytics & Reporting'
+    ],
+    additionalFields: [
+      { name: 'amcType', label: 'AMC Type', type: 'select', options: ['Debt Buyer', 'Collection Agency', 'Both'], required: true },
+      { name: 'portfolioFocus', label: 'Portfolio Focus', type: 'select', options: ['Unsecured Loans', 'Credit Cards', 'Personal Loans', 'Auto Loans', 'Mixed'], required: true },
+      { name: 'licenseNumber', label: 'Collection License Number', type: 'text', required: false }
+    ]
+  },
+
   other: {
     name: 'Other',
     icon: 'business',
@@ -595,6 +661,24 @@ export const industrySubdivisions = {
     serviceType: {
       label: 'Service Type',
       options: ['Full Service', 'Limited Service', 'Fast Food', 'Fine Dining', 'Catering']
+    }
+  },
+  debt_collections: {
+    businessModel: {
+      label: 'Business Model',
+      options: ['Debt Buyer (Asset Acquisition)', 'Collection Agency (Contingency)', 'Hybrid Model']
+    },
+    portfolioType: {
+      label: 'Portfolio Type',
+      options: ['Unsecured Consumer Debt', 'Credit Card Debt', 'Personal Loans', 'Auto Loans', 'Medical Debt', 'Mixed Portfolios']
+    },
+    complianceFramework: {
+      label: 'Compliance Framework',
+      options: ['FDCPA (US)', 'BOT Guidelines (Thailand)', 'FCA (UK)', 'Custom', 'Multi-Region']
+    },
+    operatingScale: {
+      label: 'Operating Scale',
+      options: ['Small (<1000 accounts)', 'Medium (1000-50K accounts)', 'Large (50K-500K accounts)', 'Enterprise (500K+ accounts)']
     }
   },
   other: {
@@ -848,6 +932,24 @@ export const industryProductStructure = {
       { name: 'amenities', label: 'Amenities/Features', type: 'textarea', required: false },
       { name: 'availability', label: 'Availability', type: 'select', options: ['Available', 'Limited', 'On Request', 'Not Available'], required: true },
       { name: 'isActive', label: 'Active', type: 'checkbox', required: false }
+    ]
+  },
+  debt_collections: {
+    fields: [
+      { name: 'portfolioName', label: 'Portfolio Name', type: 'text', required: true },
+      { name: 'debtType', label: 'Debt Type', type: 'select', options: ['Credit Card', 'Personal Loan', 'Auto Loan', 'Medical', 'Utility', 'Telecom', 'Other'], required: true },
+      { name: 'originalCreditor', label: 'Original Creditor', type: 'text', required: true },
+      { name: 'purchaseDate', label: 'Purchase Date', type: 'date', required: true },
+      { name: 'totalAccounts', label: 'Total Accounts', type: 'number', required: true },
+      { name: 'totalFaceValue', label: 'Total Face Value', type: 'number', required: true },
+      { name: 'purchasePrice', label: 'Purchase Price', type: 'number', required: true },
+      { name: 'averageBalance', label: 'Average Balance per Account', type: 'number', required: false },
+      { name: 'averageDPD', label: 'Average Days Past Due', type: 'number', required: false },
+      { name: 'chargeOffDateRange', label: 'Charge-off Date Range', type: 'text', required: false },
+      { name: 'contactableRate', label: 'Contactable Rate (%)', type: 'number', required: false },
+      { name: 'settlementStrategy', label: 'Settlement Strategy', type: 'select', options: ['Aggressive (60-70% discount)', 'Moderate (40-50% discount)', 'Conservative (20-30% discount)', 'Custom'], required: false },
+      { name: 'complianceNotes', label: 'Compliance Notes', type: 'textarea', required: false },
+      { name: 'isActive', label: 'Active Portfolio', type: 'checkbox', required: false }
     ]
   },
   other: {

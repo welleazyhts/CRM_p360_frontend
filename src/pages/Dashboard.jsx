@@ -1305,7 +1305,7 @@ const Dashboard = () => {
     <Fade in={true} timeout={800}>
       <Box sx={{ px: 1 }}>
         <Typography variant="h4" gutterBottom sx={{ mb: 3 }}>
-          Renewal Dashboard
+          Dashboard
         </Typography>
         
         {/* Filters */}

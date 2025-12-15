@@ -66,6 +66,7 @@ import {
   AssignmentInd as AutoAssignIcon,
   Task as TaskIcon,
   AttachMoney as CommissionIcon,
+  Payment as PaymentIcon,
   AccountTree as WorkflowIcon,
   Archive as ArchiveIcon,
   ThumbDown as LostLeadsIcon,
@@ -75,7 +76,17 @@ import {
   Business as InsurerIcon,
   Category as DispositionIcon,
   Share as DistributionIcon,
-  DirectionsCar as VahanIcon
+  DirectionsCar as VahanIcon,
+  FileCopy as DuplicateIcon,
+  Cancel as CancelIcon,
+  Error as ErrorIcon,
+  Search as SearchIcon,
+  PhoneInTalk as DialerIcon,
+  Handshake as SettlementIcon,
+  Security as ComplianceIcon,
+  Report as DisputeIcon,
+  VolunteerActivism as HardshipIcon,
+  History as HistoryIcon
 } from '@mui/icons-material';
 import { useAuth } from '../../context/AuthContext.js';
 import { useThemeMode } from '../../context/ThemeModeContext.js';
@@ -131,6 +142,22 @@ const Layout = ({ children }) => {
   const [customerMenuOpen, setCustomerMenuOpen] = useState(false);
   const [automationMenuOpen, setAutomationMenuOpen] = useState(false);
   const [workforceMenuOpen, setWorkforceMenuOpen] = useState(false);
+  const [collectionsMenuOpen, setCollectionsMenuOpen] = useState(false);
+  const [debtorManagementMenuOpen, setDebtorManagementMenuOpen] = useState(false);
+
+  // State to track current industry for conditional menu visibility
+  const [currentIndustry, setCurrentIndustry] = useState(() => {
+    try {
+      const companyData = localStorage.getItem('companyData');
+      if (companyData) {
+        const parsed = JSON.parse(companyData);
+        return parsed.industry || 'insurance';
+      }
+    } catch (error) {
+      console.error('Failed to parse company data:', error);
+    }
+    return 'insurance'; // default to insurance
+  });
 
   const [currentTime, setCurrentTime] = useState(new Date());
   const [qrcDialog, setQrcDialog] = useState(false);
@@ -181,6 +208,32 @@ const Layout = ({ children }) => {
       }
     }
   }, [currentUser, getDaysUntilExpiry]);
+
+  // Listen for industry changes in localStorage
+  useEffect(() => {
+    const handleStorageChange = () => {
+      try {
+        const companyData = localStorage.getItem('companyData');
+        if (companyData) {
+          const parsed = JSON.parse(companyData);
+          setCurrentIndustry(parsed.industry || 'insurance');
+        }
+      } catch (error) {
+        console.error('Failed to parse company data:', error);
+      }
+    };
+
+    // Listen for storage events (changes from other tabs/windows)
+    window.addEventListener('storage', handleStorageChange);
+
+    // Also check periodically for changes in the same tab
+    const interval = setInterval(handleStorageChange, 1000);
+
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      clearInterval(interval);
+    };
+  }, []);
 
   const handleDrawerToggle = () => {
     setMobileOpen(!mobileOpen);
@@ -254,6 +307,10 @@ const Layout = ({ children }) => {
     setWorkforceMenuOpen(!workforceMenuOpen);
   };
 
+  const handleCollectionsMenuClick = () => {
+    setCollectionsMenuOpen(!collectionsMenuOpen);
+  };
+
   const handleQRCOpen = () => {
     setQrcDialog(true);
   };
@@ -318,12 +375,6 @@ const Layout = ({ children }) => {
         { text: t('navigation.whatsapp'), icon: <WhatsAppIcon />, path: '/whatsapp-flow', permission: 'whatsapp-flow' },
       ],
       permissions: ['whatsapp-flow']
-    },
-    training: {
-      items: [
-        { text: 'Training & Analysis', icon: <TrainingIcon />, path: '/training-management', permission: 'training' },
-      ],
-      permissions: ['training']
     }
   };
 
@@ -337,12 +388,12 @@ const Layout = ({ children }) => {
     { text: 'Campaign Management', icon: <UploadIcon />, path: '/upload', permission: 'upload' },
     { text: 'Case Tracking', icon: <AssignmentIcon />, path: '/cases', permission: 'cases' },
     { text: 'Closed Cases', icon: <AssignmentTurnedInIcon />, path: '/closed-cases', permission: 'closed-cases' },
-    { text: 'Policy Timeline', icon: <TimelineIcon />, path: '/policy-timeline', permission: 'policy-timeline' },
+    { text: 'Not Interested Cases', icon: <CancelIcon />, path: '/not-interested-cases', permission: 'cases' },
+    { text: 'Renewal Failed Cases', icon: <ErrorIcon />, path: '/renewal-failed-cases', permission: 'cases' },
+    // { text: 'Policy Timeline', icon: <TimelineIcon />, path: '/policy-timeline', permission: 'policy-timeline' },
     { text: 'Policy Proposal Generation', icon: <DocumentIcon />, path: '/policy-proposal', permission: 'cases' },
-    { text: 'Template Downloads', icon: <DownloadIcon />, path: '/template-downloads', permission: 'cases' },
+    // { text: 'Template Downloads', icon: <DownloadIcon />, path: '/template-downloads', permission: 'cases' },
     { text: 'Case Logs', icon: <ListIcon />, path: '/logs', permission: 'logs' },
-    { text: 'Email Manager', icon: <EmailIcon />, path: '/renewals/email-manager', permission: 'renewal-email-manager' },
-    { text: 'WhatsApp Manager', icon: <WhatsAppIcon />, path: '/renewals/whatsapp-manager', permission: 'renewal-whatsapp-manager' },
   ].filter(item => hasPermission(item.permission));
 
   const emailMenuItems = [
@@ -358,9 +409,12 @@ const Layout = ({ children }) => {
     { text: 'Closed Leads', icon: <CheckCircleIcon />, path: '/closed-leads', permission: 'leads' },
     { text: 'Lost Leads', icon: <LostLeadsIcon />, path: '/lost-leads', permission: 'leads' },
     { text: 'Archived Leads', icon: <ArchiveIcon />, path: '/archived-leads', permission: 'leads' },
+    { text: 'Duplicate Leads', icon: <DuplicateIcon />, path: '/lead-management/duplicate-leads', permission: 'leads' },
     { text: 'Lead Analytics', icon: <AssessmentIcon />, path: '/leads/analytics', permission: 'lead-analytics' },
     { text: 'MIS', icon: <MISIcon />, path: '/leads/mis', permission: 'leads' },
     { text: 'Quote Management', icon: <ReceiptIcon />, path: '/quote-management', permission: 'leads' },
+    { text: 'Payment Links', icon: <PaymentIcon />, path: '/payment-links', permission: 'payments' },
+    { text: 'Reminders', icon: <ReminderIcon />, path: '/reminders', permission: 'leads' },
     { text: 'Sales Pipeline', icon: <PipelineIcon />, path: '/pipeline', permission: 'leads' },
     { text: 'QRC Management', icon: <QRCIcon />, path: '/qrc-management', permission: 'leads' },
   ].filter(item => hasPermission(item.permission));
@@ -369,10 +423,10 @@ const Layout = ({ children }) => {
     { text: 'Contact Database', icon: <ContactPhoneIcon />, path: '/customer-management/contact-database', permission: 'contact-database' },
     { text: 'Customer Database', icon: <PeopleIcon />, path: '/customer-management/customer-database', permission: 'customer-database' },
     { text: 'Inbound Service', icon: <SupportAgentIcon />, path: '/customer-management/inbound-service', permission: 'inbound-service' },
-    { text: 'Service Email', icon: <CustomerEmailIcon />, path: '/customer-management/service-email', permission: 'service-email' },
     { text: 'Complaints', icon: <ComplaintsIcon />, path: '/customer-management/complaints', permission: 'complaints' },
     { text: 'Feedback', icon: <FeedbackManagementIcon />, path: '/customer-management/feedback', permission: 'feedback' },
-    { text: 'Training & Analysis', icon: <TrainingIcon />, path: '/customer-management/training-analysis', permission: 'training-analysis' },
+    { text: 'Email Manager', icon: <EmailIcon />, path: '/renewals/email-manager', permission: 'renewal-email-manager' },
+    { text: 'WhatsApp Manager', icon: <WhatsAppIcon />, path: '/renewals/whatsapp-manager', permission: 'renewal-whatsapp-manager' },
   ].filter(item => hasPermission(item.permission));
 
   const automationMenuItems = [
@@ -393,7 +447,37 @@ const Layout = ({ children }) => {
     { text: 'Attendance', icon: <AttendanceIcon />, path: '/attendance', permission: 'attendance' },
     { text: 'Leave Management', icon: <CalendarIcon />, path: '/leave-management', permission: 'attendance' },
     { text: 'KPI Management', icon: <KPIIcon />, path: '/kpi', permission: 'kpi' },
+    { text: 'Training & Analysis', icon: <TrainingIcon />, path: '/training-management', permission: 'training' },
   ].filter(item => hasPermission(item.permission));
+
+  // Debt Collections menu - only show when industry is 'debt_collections'
+  const collectionsMenuItems = currentIndustry === 'debt_collections' ? [
+    { text: 'Collections Dashboard', icon: <DashboardIcon />, path: '/dashboard/collections', permission: 'dashboard' },
+    { text: 'Portfolio Onboarding', icon: <UploadIcon />, path: '/collections/portfolio-onboarding', permission: 'cases' },
+    {
+      text: 'Debtor Management',
+      icon: <PeopleIcon />,
+      path: '/collections/debtor-management',
+      permission: 'cases',
+      hasSubmenu: true,
+      submenuItems: [
+        { text: 'All Debtors', icon: <PeopleIcon />, path: '/collections/debtor-management', permission: 'cases' },
+        { text: 'Recovered Closed', icon: <CheckCircleIcon />, path: '/collections/debtor-management/recovered-closed', permission: 'cases' },
+        { text: 'Lost Closed', icon: <CancelIcon />, path: '/collections/debtor-management/lost-closed', permission: 'cases' },
+      ]
+    },
+    { text: 'Skip Tracing & Locator', icon: <SearchIcon />, path: '/collections/skip-tracing', permission: 'cases' },
+    { text: 'Workflow Manager', icon: <DialerIcon />, path: '/collections/smart-dialer', permission: 'cases' },
+    { text: 'Settlement & Payment Plans', icon: <SettlementIcon />, path: '/collections/settlement-automation', permission: 'cases' },
+    { text: 'Settlement Plan Log', icon: <HistoryIcon />, path: '/collections/settlement-plan-log', permission: 'cases' },
+    { text: 'Compliance & Disputes', icon: <ComplianceIcon />, path: '/collections/compliance-disputes', permission: 'cases' },
+    { text: 'Hardship Programs', icon: <HardshipIcon />, path: '/collections/hardship-programs', permission: 'cases' },
+    { text: 'Payment Reconciliation', icon: <ReceiptIcon />, path: '/collections/payment-reconciliation', permission: 'cases' },
+    { text: 'Legal Escalation', icon: <GavelIcon />, path: '/collections/legal-escalation', permission: 'cases' },
+    { text: 'Customer Database', icon: <GroupIcon />, path: '/collections/customer-database', permission: 'cases' },
+    { text: 'Collection Analytics', icon: <AssessmentIcon />, path: '/collections/analytics', permission: 'dashboard' },
+    { text: 'Debtor Portal', icon: <PersonIcon />, path: '/collections/debtor-portal', permission: 'cases' },
+  ].filter(item => hasPermission(item.permission)) : [];
 
   const secondaryMenuItems = [
     { text: t('navigation.profile'), icon: <PersonIcon />, path: '/profile', permission: 'profile' },
@@ -469,7 +553,7 @@ const Layout = ({ children }) => {
           </>
         )}
 
-        {/* Case Management Menu - Only show if user has renewals module access */}
+        {/* Existing Renewal Management Menu - Only show if user has renewals module access */}
         {hasModuleAccess('renewals') && (
           <>
             <ListItem disablePadding>
@@ -478,7 +562,7 @@ const Layout = ({ children }) => {
                   <AutorenewIcon />
                 </ListItemIcon>
                 <ListItemText
-                  primary={t('navigation.renewals', 'Case Management')}
+                  primary={t('navigation.renewals', 'Existing Renewal Management')}
                   primaryTypographyProps={{
                     fontWeight: 500,
                     color: theme.palette.text.primary
@@ -488,7 +572,7 @@ const Layout = ({ children }) => {
               </StyledListItemButton>
             </ListItem>
 
-            {/* Case Management Submenu */}
+            {/* Existing Renewal Management Submenu */}
             <Collapse in={renewalMenuOpen} timeout="auto" unmountOnExit>
               <List component="div" disablePadding>
                 {renewalMenuItems.map((item) => (
@@ -743,6 +827,123 @@ const Layout = ({ children }) => {
           </>
         )}
 
+        {/* Debt Collections Menu */}
+        {collectionsMenuItems.length > 0 && (
+          <>
+            <ListItem disablePadding>
+              <StyledListItemButton onClick={handleCollectionsMenuClick}>
+                <ListItemIcon sx={{ minWidth: 40, color: theme.palette.text.secondary }}>
+                  <CommissionIcon />
+                </ListItemIcon>
+                <ListItemText
+                  primary="Debt Collections"
+                  primaryTypographyProps={{
+                    fontWeight: 500,
+                    color: theme.palette.text.primary
+                  }}
+                />
+                {collectionsMenuOpen ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+              </StyledListItemButton>
+            </ListItem>
+
+            {/* Debt Collections Submenu */}
+            <Collapse in={collectionsMenuOpen} timeout="auto" unmountOnExit>
+              <List component="div" disablePadding>
+                {collectionsMenuItems.map((item) => (
+                  <React.Fragment key={item.text}>
+                    {item.hasSubmenu ? (
+                      <>
+                        {/* Menu item with submenu */}
+                        <ListItem disablePadding>
+                          <StyledListItemButton
+                            onClick={() => setDebtorManagementMenuOpen(!debtorManagementMenuOpen)}
+                            sx={{ pl: 4 }}
+                          >
+                            <ListItemIcon sx={{
+                              minWidth: 40,
+                              color: theme.palette.text.secondary
+                            }}>
+                              {item.icon}
+                            </ListItemIcon>
+                            <ListItemText
+                              primary={item.text}
+                              primaryTypographyProps={{
+                                fontWeight: 400,
+                                color: theme.palette.text.primary
+                              }}
+                            />
+                            {debtorManagementMenuOpen ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+                          </StyledListItemButton>
+                        </ListItem>
+
+                        {/* Nested submenu items */}
+                        <Collapse in={debtorManagementMenuOpen} timeout="auto" unmountOnExit>
+                          <List component="div" disablePadding>
+                            {item.submenuItems?.map((subItem) => (
+                              <ListItem key={subItem.text} disablePadding>
+                                <StyledListItemButton
+                                  onClick={() => handleNavigate(subItem.path)}
+                                  selected={location.pathname === subItem.path}
+                                  sx={{ pl: 8 }}
+                                >
+                                  <ListItemIcon sx={{
+                                    minWidth: 40,
+                                    color: location.pathname === subItem.path
+                                      ? theme.palette.primary.main
+                                      : theme.palette.text.secondary
+                                  }}>
+                                    {subItem.icon}
+                                  </ListItemIcon>
+                                  <ListItemText
+                                    primary={subItem.text}
+                                    primaryTypographyProps={{
+                                      fontWeight: location.pathname === subItem.path ? 600 : 400,
+                                      fontSize: '0.9rem',
+                                      color: location.pathname === subItem.path
+                                        ? theme.palette.primary.main
+                                        : theme.palette.text.primary
+                                    }}
+                                  />
+                                </StyledListItemButton>
+                              </ListItem>
+                            ))}
+                          </List>
+                        </Collapse>
+                      </>
+                    ) : (
+                      <ListItem disablePadding>
+                        <StyledListItemButton
+                          onClick={() => handleNavigate(item.path)}
+                          selected={location.pathname === item.path}
+                          sx={{ pl: 4 }}
+                        >
+                          <ListItemIcon sx={{
+                            minWidth: 40,
+                            color: location.pathname === item.path
+                              ? theme.palette.primary.main
+                              : theme.palette.text.secondary
+                          }}>
+                            {item.icon}
+                          </ListItemIcon>
+                          <ListItemText
+                            primary={item.text}
+                            primaryTypographyProps={{
+                              fontWeight: location.pathname === item.path ? 600 : 400,
+                              color: location.pathname === item.path
+                                ? theme.palette.primary.main
+                                : theme.palette.text.primary
+                            }}
+                          />
+                        </StyledListItemButton>
+                      </ListItem>
+                    )}
+                  </React.Fragment>
+                ))}
+              </List>
+            </Collapse>
+          </>
+        )}
+
         {/* Main Menu Items */}
         {menuItems.map((item) => (
           <ListItem key={item.text} disablePadding>
@@ -873,11 +1074,11 @@ const Layout = ({ children }) => {
           </>
         )}
 
-        {/* Case Management Section - Only show if user has renewals module access */}
+        {/* Existing Renewal Management Section - Only show if user has renewals module access */}
         {hasModuleAccess('renewals') && (
           <>
             <ListItem disablePadding sx={{ display: 'block', mt: 1 }}>
-              <Tooltip title="Case Management" placement="right">
+              <Tooltip title="Existing Renewal Management" placement="right">
                 <StyledListItemButton
                   onClick={handleRenewalMenuClick}
                   sx={{

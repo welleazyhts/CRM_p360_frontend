@@ -1465,7 +1465,7 @@ const CaseDetails = () => {
                     </Typography>
                     <Grid container spacing={3}>
                       <Grid item xs={12} md={3}>
-                        <Card variant="outlined" sx={{ p: 2, height: '100%', bgcolor: 'primary.light', color: 'primary.contrastText' }}>
+                        <Card variant="outlined" sx={{ p: 2, height: '100%', bgcolor: 'primary.main', color: '#fff' }}>
                           <Box sx={{ textAlign: 'center' }}>
                             <Typography variant="h4" sx={{ fontWeight: 'bold', mb: 1 }}>
                               ₹{(caseData.policyDetails.premium * 20).toLocaleString()}
@@ -1745,7 +1745,7 @@ const CaseDetails = () => {
                       {caseData.policyDetails.type === 'Auto' && (
                         <>
                           <Grid item xs={12} md={4}>
-                            <Card variant="outlined" sx={{ p: 2, textAlign: 'center', bgcolor: 'success.light', color: 'success.contrastText' }}>
+                            <Card variant="outlined" sx={{ p: 2, textAlign: 'center', bgcolor: 'success.main', color: '#fff' }}>
                               <Typography variant="h6" sx={{ fontWeight: 'bold', mb: 1 }}>
                                 🛡️ Enhanced Protection
                               </Typography>
@@ -1759,7 +1759,7 @@ const CaseDetails = () => {
                           </Grid>
                           
                           <Grid item xs={12} md={4}>
-                            <Card variant="outlined" sx={{ p: 2, textAlign: 'center', bgcolor: 'info.light', color: 'info.contrastText' }}>
+                            <Card variant="outlined" sx={{ p: 2, textAlign: 'center', bgcolor: 'info.main', color: '#fff' }}>
                               <Typography variant="h6" sx={{ fontWeight: 'bold', mb: 1 }}>
                                 🔧 Add-on Covers
                               </Typography>
@@ -1773,7 +1773,7 @@ const CaseDetails = () => {
                           </Grid>
                           
                           <Grid item xs={12} md={4}>
-                            <Card variant="outlined" sx={{ p: 2, textAlign: 'center', bgcolor: 'warning.light', color: 'warning.contrastText' }}>
+                            <Card variant="outlined" sx={{ p: 2, textAlign: 'center', bgcolor: 'warning.main', color: '#000' }}>
                               <Typography variant="h6" sx={{ fontWeight: 'bold', mb: 1 }}>
                                 💰 Financial Benefits
                               </Typography>
@@ -1792,7 +1792,7 @@ const CaseDetails = () => {
                       {caseData.policyDetails.type === 'Health' && (
                         <>
                           <Grid item xs={12} md={4}>
-                            <Card variant="outlined" sx={{ p: 2, textAlign: 'center', bgcolor: 'success.light', color: 'success.contrastText' }}>
+                            <Card variant="outlined" sx={{ p: 2, textAlign: 'center', bgcolor: 'success.main', color: '#fff' }}>
                               <Typography variant="h6" sx={{ fontWeight: 'bold', mb: 1 }}>
                                 🏥 Health Add-ons
                               </Typography>
@@ -1806,7 +1806,7 @@ const CaseDetails = () => {
                           </Grid>
                           
                           <Grid item xs={12} md={4}>
-                            <Card variant="outlined" sx={{ p: 2, textAlign: 'center', bgcolor: 'info.light', color: 'info.contrastText' }}>
+                            <Card variant="outlined" sx={{ p: 2, textAlign: 'center', bgcolor: 'info.main', color: '#fff' }}>
                               <Typography variant="h6" sx={{ fontWeight: 'bold', mb: 1 }}>
                                 👨‍⚕️ Wellness Benefits
                               </Typography>
@@ -1820,7 +1820,7 @@ const CaseDetails = () => {
                           </Grid>
                           
                           <Grid item xs={12} md={4}>
-                            <Card variant="outlined" sx={{ p: 2, textAlign: 'center', bgcolor: 'warning.light', color: 'warning.contrastText' }}>
+                            <Card variant="outlined" sx={{ p: 2, textAlign: 'center', bgcolor: 'warning.main', color: '#000' }}>
                               <Typography variant="h6" sx={{ fontWeight: 'bold', mb: 1 }}>
                                 💰 Financial Benefits
                               </Typography>
@@ -1839,7 +1839,7 @@ const CaseDetails = () => {
                       {caseData.policyDetails.type === 'Life' && (
                         <>
                           <Grid item xs={12} md={4}>
-                            <Card variant="outlined" sx={{ p: 2, textAlign: 'center', bgcolor: 'success.light', color: 'success.contrastText' }}>
+                            <Card variant="outlined" sx={{ p: 2, textAlign: 'center', bgcolor: 'success.main', color: '#fff' }}>
                               <Typography variant="h6" sx={{ fontWeight: 'bold', mb: 1 }}>
                                 💎 Premium Features
                               </Typography>
@@ -1853,7 +1853,7 @@ const CaseDetails = () => {
                           </Grid>
                           
                           <Grid item xs={12} md={4}>
-                            <Card variant="outlined" sx={{ p: 2, textAlign: 'center', bgcolor: 'info.light', color: 'info.contrastText' }}>
+                            <Card variant="outlined" sx={{ p: 2, textAlign: 'center', bgcolor: 'info.main', color: '#fff' }}>
                               <Typography variant="h6" sx={{ fontWeight: 'bold', mb: 1 }}>
                                 🛡️ Protection Riders
                               </Typography>
@@ -1867,7 +1867,7 @@ const CaseDetails = () => {
                           </Grid>
                           
                           <Grid item xs={12} md={4}>
-                            <Card variant="outlined" sx={{ p: 2, textAlign: 'center', bgcolor: 'warning.light', color: 'warning.contrastText' }}>
+                            <Card variant="outlined" sx={{ p: 2, textAlign: 'center', bgcolor: 'warning.main', color: '#000' }}>
                               <Typography variant="h6" sx={{ fontWeight: 'bold', mb: 1 }}>
                                 💰 Tax & Investment
                               </Typography>
@@ -1886,7 +1886,7 @@ const CaseDetails = () => {
                       {caseData.policyDetails.type === 'Home' && (
                         <>
                           <Grid item xs={12} md={4}>
-                            <Card variant="outlined" sx={{ p: 2, textAlign: 'center', bgcolor: 'success.light', color: 'success.contrastText' }}>
+                            <Card variant="outlined" sx={{ p: 2, textAlign: 'center', bgcolor: 'success.main', color: '#fff' }}>
                               <Typography variant="h6" sx={{ fontWeight: 'bold', mb: 1 }}>
                                 🏠 Property Protection
                               </Typography>
@@ -1900,7 +1900,7 @@ const CaseDetails = () => {
                           </Grid>
                           
                           <Grid item xs={12} md={4}>
-                            <Card variant="outlined" sx={{ p: 2, textAlign: 'center', bgcolor: 'info.light', color: 'info.contrastText' }}>
+                            <Card variant="outlined" sx={{ p: 2, textAlign: 'center', bgcolor: 'info.main', color: '#fff' }}>
                               <Typography variant="h6" sx={{ fontWeight: 'bold', mb: 1 }}>
                                 🔧 Additional Covers
                               </Typography>
@@ -1914,7 +1914,7 @@ const CaseDetails = () => {
                           </Grid>
                           
                           <Grid item xs={12} md={4}>
-                            <Card variant="outlined" sx={{ p: 2, textAlign: 'center', bgcolor: 'warning.light', color: 'warning.contrastText' }}>
+                            <Card variant="outlined" sx={{ p: 2, textAlign: 'center', bgcolor: 'warning.main', color: '#000' }}>
                               <Typography variant="h6" sx={{ fontWeight: 'bold', mb: 1 }}>
                                 💰 Financial Benefits
                               </Typography>
@@ -3412,7 +3412,7 @@ const CaseDetails = () => {
                                 • Tax benefits available*
                               </Typography>
                             </Box>
-                            <Box sx={{ textAlign: 'center', p: 1, bgcolor: 'warning.light', borderRadius: 1, color: 'warning.contrastText' }}>
+                            <Box sx={{ textAlign: 'center', p: 1, bgcolor: 'warning.main', borderRadius: 1, color: '#000' }}>
                               <Typography variant="body2" sx={{ fontWeight: 'bold' }}>
                                 Interest from 3.5% p.a.
                               </Typography>
@@ -4524,7 +4524,7 @@ const CaseDetails = () => {
                           </Typography>
                           <Grid container spacing={3}>
                             <Grid item xs={12} md={3}>
-                              <Card variant="outlined" sx={{ p: 2, height: '100%', bgcolor: 'primary.light', color: 'primary.contrastText' }}>
+                              <Card variant="outlined" sx={{ p: 2, height: '100%', bgcolor: 'primary.main', color: '#fff' }}>
                                 <Box sx={{ textAlign: 'center' }}>
                                   <Typography variant="h4" sx={{ fontWeight: 'bold', mb: 1 }}>
                                     ₹{(caseData.policyDetails.premium * 20).toLocaleString()}
@@ -4804,7 +4804,7 @@ const CaseDetails = () => {
                             {caseData.policyDetails.type === 'Auto' && (
                               <>
                                 <Grid item xs={12} md={4}>
-                                  <Card variant="outlined" sx={{ p: 2, textAlign: 'center', bgcolor: 'success.light', color: 'success.contrastText' }}>
+                                  <Card variant="outlined" sx={{ p: 2, textAlign: 'center', bgcolor: 'success.main', color: '#fff' }}>
                                     <Typography variant="h6" sx={{ fontWeight: 'bold', mb: 1 }}>
                                       🛡️ Enhanced Protection
                                     </Typography>
@@ -4818,7 +4818,7 @@ const CaseDetails = () => {
                                 </Grid>
                                 
                                 <Grid item xs={12} md={4}>
-                                  <Card variant="outlined" sx={{ p: 2, textAlign: 'center', bgcolor: 'info.light', color: 'info.contrastText' }}>
+                                  <Card variant="outlined" sx={{ p: 2, textAlign: 'center', bgcolor: 'info.main', color: '#fff' }}>
                                     <Typography variant="h6" sx={{ fontWeight: 'bold', mb: 1 }}>
                                       🔧 Add-on Covers
                                     </Typography>
@@ -4832,7 +4832,7 @@ const CaseDetails = () => {
                                 </Grid>
                                 
                                 <Grid item xs={12} md={4}>
-                                  <Card variant="outlined" sx={{ p: 2, textAlign: 'center', bgcolor: 'warning.light', color: 'warning.contrastText' }}>
+                                  <Card variant="outlined" sx={{ p: 2, textAlign: 'center', bgcolor: 'warning.main', color: '#000' }}>
                                     <Typography variant="h6" sx={{ fontWeight: 'bold', mb: 1 }}>
                                       💰 Financial Benefits
                                     </Typography>
@@ -4851,7 +4851,7 @@ const CaseDetails = () => {
                             {caseData.policyDetails.type === 'Health' && (
                               <>
                                 <Grid item xs={12} md={4}>
-                                  <Card variant="outlined" sx={{ p: 2, textAlign: 'center', bgcolor: 'success.light', color: 'success.contrastText' }}>
+                                  <Card variant="outlined" sx={{ p: 2, textAlign: 'center', bgcolor: 'success.main', color: '#fff' }}>
                                     <Typography variant="h6" sx={{ fontWeight: 'bold', mb: 1 }}>
                                       🏥 Health Add-ons
                                     </Typography>
@@ -4865,7 +4865,7 @@ const CaseDetails = () => {
                                 </Grid>
                                 
                                 <Grid item xs={12} md={4}>
-                                  <Card variant="outlined" sx={{ p: 2, textAlign: 'center', bgcolor: 'info.light', color: 'info.contrastText' }}>
+                                  <Card variant="outlined" sx={{ p: 2, textAlign: 'center', bgcolor: 'info.main', color: '#fff' }}>
                                     <Typography variant="h6" sx={{ fontWeight: 'bold', mb: 1 }}>
                                       👨‍⚕️ Wellness Benefits
                                     </Typography>
@@ -4879,7 +4879,7 @@ const CaseDetails = () => {
                                 </Grid>
                                 
                                 <Grid item xs={12} md={4}>
-                                  <Card variant="outlined" sx={{ p: 2, textAlign: 'center', bgcolor: 'warning.light', color: 'warning.contrastText' }}>
+                                  <Card variant="outlined" sx={{ p: 2, textAlign: 'center', bgcolor: 'warning.main', color: '#000' }}>
                                     <Typography variant="h6" sx={{ fontWeight: 'bold', mb: 1 }}>
                                       💰 Financial Benefits
                                     </Typography>
@@ -4898,7 +4898,7 @@ const CaseDetails = () => {
                             {caseData.policyDetails.type === 'Life' && (
                               <>
                                 <Grid item xs={12} md={4}>
-                                  <Card variant="outlined" sx={{ p: 2, textAlign: 'center', bgcolor: 'success.light', color: 'success.contrastText' }}>
+                                  <Card variant="outlined" sx={{ p: 2, textAlign: 'center', bgcolor: 'success.main', color: '#fff' }}>
                                     <Typography variant="h6" sx={{ fontWeight: 'bold', mb: 1 }}>
                                       💎 Premium Features
                                     </Typography>
@@ -4912,7 +4912,7 @@ const CaseDetails = () => {
                                 </Grid>
                                 
                                 <Grid item xs={12} md={4}>
-                                  <Card variant="outlined" sx={{ p: 2, textAlign: 'center', bgcolor: 'info.light', color: 'info.contrastText' }}>
+                                  <Card variant="outlined" sx={{ p: 2, textAlign: 'center', bgcolor: 'info.main', color: '#fff' }}>
                                     <Typography variant="h6" sx={{ fontWeight: 'bold', mb: 1 }}>
                                       🛡️ Protection Riders
                                     </Typography>
@@ -4926,7 +4926,7 @@ const CaseDetails = () => {
                                 </Grid>
                                 
                                 <Grid item xs={12} md={4}>
-                                  <Card variant="outlined" sx={{ p: 2, textAlign: 'center', bgcolor: 'warning.light', color: 'warning.contrastText' }}>
+                                  <Card variant="outlined" sx={{ p: 2, textAlign: 'center', bgcolor: 'warning.main', color: '#000' }}>
                                     <Typography variant="h6" sx={{ fontWeight: 'bold', mb: 1 }}>
                                       💰 Tax & Investment
                                     </Typography>
@@ -4945,7 +4945,7 @@ const CaseDetails = () => {
                             {caseData.policyDetails.type === 'Home' && (
                               <>
                                 <Grid item xs={12} md={4}>
-                                  <Card variant="outlined" sx={{ p: 2, textAlign: 'center', bgcolor: 'success.light', color: 'success.contrastText' }}>
+                                  <Card variant="outlined" sx={{ p: 2, textAlign: 'center', bgcolor: 'success.main', color: '#fff' }}>
                                     <Typography variant="h6" sx={{ fontWeight: 'bold', mb: 1 }}>
                                       🏠 Property Protection
                                     </Typography>
@@ -4959,7 +4959,7 @@ const CaseDetails = () => {
                                 </Grid>
                                 
                                 <Grid item xs={12} md={4}>
-                                  <Card variant="outlined" sx={{ p: 2, textAlign: 'center', bgcolor: 'info.light', color: 'info.contrastText' }}>
+                                  <Card variant="outlined" sx={{ p: 2, textAlign: 'center', bgcolor: 'info.main', color: '#fff' }}>
                                     <Typography variant="h6" sx={{ fontWeight: 'bold', mb: 1 }}>
                                       🔧 Additional Covers
                                     </Typography>
@@ -4973,7 +4973,7 @@ const CaseDetails = () => {
                                 </Grid>
                                 
                                 <Grid item xs={12} md={4}>
-                                  <Card variant="outlined" sx={{ p: 2, textAlign: 'center', bgcolor: 'warning.light', color: 'warning.contrastText' }}>
+                                  <Card variant="outlined" sx={{ p: 2, textAlign: 'center', bgcolor: 'warning.main', color: '#000' }}>
                                     <Typography variant="h6" sx={{ fontWeight: 'bold', mb: 1 }}>
                                       💰 Financial Benefits
                                     </Typography>
@@ -6787,7 +6787,7 @@ const CaseDetails = () => {
                                       • Tax benefits available*
                                     </Typography>
                                   </Box>
-                                  <Box sx={{ textAlign: 'center', p: 1, bgcolor: 'warning.light', borderRadius: 1, color: 'warning.contrastText' }}>
+                                  <Box sx={{ textAlign: 'center', p: 1, bgcolor: 'warning.main', borderRadius: 1, color: '#000' }}>
                                     <Typography variant="body2" sx={{ fontWeight: 'bold' }}>
                                       Interest from 3.5% p.a.
                                     </Typography>

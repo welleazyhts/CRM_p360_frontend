@@ -1,45 +1,157 @@
 // This file would contain all API calls to the backend
 // For now, it's just a placeholder with mock implementations
 
-// Base URL for API calls
-// const API_BASE_URL = 'https://api.example.com/v1';
+// Base URL for API calls - configured from environment variable
+const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:8000';
 
-// Create a default API client
+/**
+ * Helper function to construct full API URL
+ * @param {string} endpoint - API endpoint (e.g., '/api/v1/policies')
+ * @returns {string} Full API URL
+ */
+export const getApiUrl = (endpoint) => {
+  const cleanEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
+  return `${API_BASE_URL}${cleanEndpoint}`;
+};
+
+/**
+ * Get auth token from localStorage
+ */
+const getAuthToken = () => {
+  return localStorage.getItem('authToken') || localStorage.getItem('access_token');
+};
+
+/**
+ * Create a default API client with real HTTP requests
+ */
 const api = {
-  get: async (url, config = {}) => {
-    // Mock implementation - in real app, this would make actual HTTP requests
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        resolve({ data: {} });
-      }, 500);
+  get: async (endpoint, config = {}) => {
+    const url = getApiUrl(`/api${endpoint}`);
+    const { params, ...restConfig } = config;
+
+    // Build query string from params
+    let queryString = '';
+    if (params) {
+      const searchParams = new URLSearchParams();
+      Object.entries(params).forEach(([key, value]) => {
+        if (value !== undefined && value !== null) {
+          searchParams.append(key, value);
+        }
+      });
+      const qs = searchParams.toString();
+      if (qs) queryString = `?${qs}`;
+    }
+
+    const response = await fetch(`${url}${queryString}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${getAuthToken()}`,
+        ...restConfig.headers
+      },
+      ...restConfig
     });
+
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({}));
+      throw new Error(error.message || error.detail || `HTTP ${response.status}: ${response.statusText}`);
+    }
+
+    const data = await response.json();
+    return { data };
   },
-  
-  post: async (url, data, config = {}) => {
-    // Mock implementation
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        resolve({ data: {} });
-      }, 500);
+
+  post: async (endpoint, data, config = {}) => {
+    const url = getApiUrl(`/api${endpoint}`);
+
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${getAuthToken()}`,
+        ...config.headers
+      },
+      body: JSON.stringify(data),
+      ...config
     });
+
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({}));
+      throw new Error(error.message || error.detail || `HTTP ${response.status}: ${response.statusText}`);
+    }
+
+    const responseData = await response.json();
+    return { data: responseData };
   },
-  
-  put: async (url, data, config = {}) => {
-    // Mock implementation
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        resolve({ data: {} });
-      }, 500);
+
+  put: async (endpoint, data, config = {}) => {
+    const url = getApiUrl(`/api${endpoint}`);
+
+    const response = await fetch(url, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${getAuthToken()}`,
+        ...config.headers
+      },
+      body: JSON.stringify(data),
+      ...config
     });
+
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({}));
+      throw new Error(error.message || error.detail || `HTTP ${response.status}: ${response.statusText}`);
+    }
+
+    const responseData = await response.json();
+    return { data: responseData };
   },
-  
-  delete: async (url, config = {}) => {
-    // Mock implementation
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        resolve({ data: {} });
-      }, 500);
+
+  patch: async (endpoint, data, config = {}) => {
+    const url = getApiUrl(`/api${endpoint}`);
+
+    const response = await fetch(url, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${getAuthToken()}`,
+        ...config.headers
+      },
+      body: JSON.stringify(data),
+      ...config
     });
+
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({}));
+      throw new Error(error.message || error.detail || `HTTP ${response.status}: ${response.statusText}`);
+    }
+
+    const responseData = await response.json();
+    return { data: responseData };
+  },
+
+  delete: async (endpoint, config = {}) => {
+    const url = getApiUrl(`/api${endpoint}`);
+
+    const response = await fetch(url, {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${getAuthToken()}`,
+        ...config.headers
+      },
+      ...config
+    });
+
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({}));
+      throw new Error(error.message || error.detail || `HTTP ${response.status}: ${response.statusText}`);
+    }
+
+    // DELETE might return empty response
+    const text = await response.text();
+    const responseData = text ? JSON.parse(text) : {};
+    return { data: responseData };
   }
 };
 

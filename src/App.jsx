@@ -8,6 +8,8 @@ import Dashboard from './pages/Dashboard';
 import Upload from './pages/Upload';
 import CaseTracking from './pages/CaseTracking';
 import ClosedCases from './pages/ClosedCases';
+import NotInterestedCases from './pages/NotInterestedCases';
+import RenewalFailedCases from './pages/RenewalFailedCases';
 import PolicyTimeline from './pages/PolicyTimeline';
 import CaseDetails from './pages/CaseDetails';
 import CommunicationDetails from './pages/CommunicationDetails';
@@ -45,8 +47,11 @@ import AssignedLeads from './pages/AssignedLeads';
 import ClosedLeads from './pages/ClosedLeads';
 import LostLeads from './pages/LostLeads';
 import ArchivedLeads from './pages/ArchivedLeads';
+import DuplicateLeads from './pages/DuplicateLeads';
 import LeadMIS from './pages/LeadMIS';
 import QuoteManagement from './pages/QuoteManagement';
+import PaymentLinkManagement from './pages/PaymentLinkManagement';
+import ReminderManagement from './pages/ReminderManagement';
 import LeaveManagement from './pages/LeaveManagement';
 import SalesPipeline from './pages/SalesPipeline';
 import AttendanceManagement from './pages/AttendanceManagement';
@@ -73,6 +78,30 @@ import InsurerProductConfigurator from './pages/InsurerProductConfigurator';
 import DispositionConfigurator from './pages/DispositionConfigurator';
 import VahanIntegration from './pages/VahanIntegration';
 import FeaturesShowcase from './pages/FeaturesShowcase';
+
+// Debt Collections Pages
+import SkipTracing from './pages/collections/SkipTracing';
+import WorkflowManager from './pages/collections/WorkflowManager';
+import SettlementAutomation from './pages/collections/SettlementAutomation';
+import ComplianceDisputes from './pages/collections/ComplianceDisputes';
+import HardshipPrograms from './pages/collections/HardshipPrograms';
+
+// Debt Collections Pages
+import CollectionsDashboard from './pages/collections/CollectionsDashboard';
+import PortfolioOnboarding from './pages/collections/PortfolioOnboarding';
+import DebtorManagement from './pages/collections/DebtorManagement';
+import DebtorManagementRecoveredClosed from './pages/collections/DebtorManagementRecoveredClosed';
+import DebtorManagementLostClosed from './pages/collections/DebtorManagementLostClosed';
+import DebtorDetails from './pages/collections/DebtorDetails';
+import CollectionsCustomerDatabase from './pages/collections/CustomerDatabase';
+import CollectionsCustomerProfile from './pages/collections/CustomerProfile';
+import PTPTracking from './pages/collections/PTPTracking';
+import SettlementManagement from './pages/collections/SettlementManagement';
+import SettlementPlanLog from './pages/collections/SettlementPlanLog';
+import PaymentReconciliation from './pages/collections/PaymentReconciliation';
+import DebtorPortal from './pages/collections/DebtorPortal';
+import CollectionAnalytics from './pages/collections/CollectionAnalytics';
+import LegalEscalation from './pages/collections/LegalEscalation';
 
 import SLAMonitoring from './pages/SLAMonitoring';
 import SLASettings from './components/settings/SLASettings';
@@ -109,6 +138,7 @@ import { WorkflowProvider } from './context/WorkflowContext.jsx';
 import { InsurerProductProvider } from './context/InsurerProductContext.jsx';
 import { DispositionProvider } from './context/DispositionContext.jsx';
 import { VahanProvider } from './context/VahanContext.jsx';
+import { ActivityLogProvider } from './context/ActivityLogContext.jsx';
 import './i18n'; // Initialize i18n
 
 function AppWithTheme() {
@@ -341,7 +371,8 @@ function AppWithTheme() {
                               <InsurerProductProvider>
                                 <DispositionProvider>
                                   <VahanProvider>
-                                    <CustomerManagementProvider>
+                                    <ActivityLogProvider>
+                                      <CustomerManagementProvider>
                                       <LeadProvider>
                                         <AttendanceProvider>
                                         <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
@@ -386,7 +417,23 @@ function AppWithTheme() {
                 </Layout>
               </ProtectedRoute>
             } />
-            
+
+            <Route path="/not-interested-cases" element={
+              <ProtectedRoute>
+                <Layout>
+                  <NotInterestedCases />
+                </Layout>
+              </ProtectedRoute>
+            } />
+
+            <Route path="/renewal-failed-cases" element={
+              <ProtectedRoute>
+                <Layout>
+                  <RenewalFailedCases />
+                </Layout>
+              </ProtectedRoute>
+            } />
+
             <Route path="/policy-timeline" element={
               <ProtectedRoute>
                 <Layout>
@@ -658,6 +705,14 @@ function AppWithTheme() {
               </ProtectedRoute>
             } />
 
+            <Route path="/lead-management/duplicate-leads" element={
+              <ProtectedRoute requiredPermission="leads">
+                <Layout>
+                  <DuplicateLeads />
+                </Layout>
+              </ProtectedRoute>
+            } />
+
                 <Route path="/leads/analytics" element={
                   <ProtectedRoute requiredPermission="lead-analytics">
                     <Layout>
@@ -670,6 +725,22 @@ function AppWithTheme() {
                   <ProtectedRoute requiredPermission="leads">
                     <Layout>
                       <LeadMIS />
+                    </Layout>
+                  </ProtectedRoute>
+                } />
+
+                <Route path="/payment-links" element={
+                  <ProtectedRoute requiredPermission="payments">
+                    <Layout>
+                      <PaymentLinkManagement />
+                    </Layout>
+                  </ProtectedRoute>
+                } />
+
+                <Route path="/reminders" element={
+                  <ProtectedRoute requiredPermission="leads">
+                    <Layout>
+                      <ReminderManagement />
                     </Layout>
                   </ProtectedRoute>
                 } />
@@ -798,14 +869,6 @@ function AppWithTheme() {
                   <ProtectedRoute requiredPermission="feedback">
                     <Layout>
                       <CustomerFeedback />
-                    </Layout>
-                  </ProtectedRoute>
-                } />
-
-                <Route path="/customer-management/training-analysis" element={
-                  <ProtectedRoute requiredPermission="training-analysis">
-                    <Layout>
-                      <TrainingAnalysis />
                     </Layout>
                   </ProtectedRoute>
                 } />
@@ -1024,13 +1087,177 @@ function AppWithTheme() {
                   </ProtectedRoute>
                 } />
 
+                {/* Debt Collections Module Routes */}
+                <Route path="/collections/portfolio-onboarding" element={
+                  <ProtectedRoute>
+                    <Layout>
+                      <PortfolioOnboarding />
+                    </Layout>
+                  </ProtectedRoute>
+                } />
+
+                <Route path="/collections/debtor-management" element={
+                  <ProtectedRoute>
+                    <Layout>
+                      <DebtorManagement />
+                    </Layout>
+                  </ProtectedRoute>
+                } />
+
+                <Route path="/collections/debtor-management/recovered-closed" element={
+                  <ProtectedRoute>
+                    <Layout>
+                      <DebtorManagementRecoveredClosed />
+                    </Layout>
+                  </ProtectedRoute>
+                } />
+
+                <Route path="/collections/debtor-management/lost-closed" element={
+                  <ProtectedRoute>
+                    <Layout>
+                      <DebtorManagementLostClosed />
+                    </Layout>
+                  </ProtectedRoute>
+                } />
+
+                <Route path="/collections/debtor-management/:debtorId" element={
+                  <ProtectedRoute>
+                    <Layout>
+                      <DebtorDetails />
+                    </Layout>
+                  </ProtectedRoute>
+                } />
+
+                <Route path="/collections/customer-database" element={
+                  <ProtectedRoute>
+                    <Layout>
+                      <CollectionsCustomerDatabase />
+                    </Layout>
+                  </ProtectedRoute>
+                } />
+
+                <Route path="/collections/customer-database/:customerId" element={
+                  <ProtectedRoute>
+                    <Layout>
+                      <CollectionsCustomerProfile />
+                    </Layout>
+                  </ProtectedRoute>
+                } />
+
+                <Route path="/collections/ptp-tracking" element={
+                  <ProtectedRoute>
+                    <Layout>
+                      <PTPTracking />
+                    </Layout>
+                  </ProtectedRoute>
+                } />
+
+                <Route path="/collections/settlement-management" element={
+                  <ProtectedRoute>
+                    <Layout>
+                      <SettlementManagement />
+                    </Layout>
+                  </ProtectedRoute>
+                } />
+
+                <Route path="/collections/settlement-plan-log" element={
+                  <ProtectedRoute>
+                    <Layout>
+                      <SettlementPlanLog />
+                    </Layout>
+                  </ProtectedRoute>
+                } />
+
+                <Route path="/collections/payment-reconciliation" element={
+                  <ProtectedRoute>
+                    <Layout>
+                      <PaymentReconciliation />
+                    </Layout>
+                  </ProtectedRoute>
+                } />
+
+                <Route path="/collections/debtor-portal" element={
+                  <ProtectedRoute>
+                    <Layout>
+                      <DebtorPortal />
+                    </Layout>
+                  </ProtectedRoute>
+                } />
+
+                <Route path="/collections/analytics" element={
+                  <ProtectedRoute>
+                    <Layout>
+                      <CollectionAnalytics />
+                    </Layout>
+                  </ProtectedRoute>
+                } />
+
+                <Route path="/collections/legal-escalation" element={
+                  <ProtectedRoute>
+                    <Layout>
+                      <LegalEscalation />
+                    </Layout>
+                  </ProtectedRoute>
+                } />
+
+                {/* New Debt Collections Routes */}
+                <Route path="/collections/skip-tracing" element={
+                  <ProtectedRoute>
+                    <Layout>
+                      <SkipTracing />
+                    </Layout>
+                  </ProtectedRoute>
+                } />
+
+                <Route path="/collections/smart-dialer" element={
+                  <ProtectedRoute>
+                    <Layout>
+                      <WorkflowManager />
+                    </Layout>
+                  </ProtectedRoute>
+                } />
+
+                <Route path="/collections/settlement-automation" element={
+                  <ProtectedRoute>
+                    <Layout>
+                      <SettlementAutomation />
+                    </Layout>
+                  </ProtectedRoute>
+                } />
+
+                <Route path="/collections/compliance-disputes" element={
+                  <ProtectedRoute>
+                    <Layout>
+                      <ComplianceDisputes />
+                    </Layout>
+                  </ProtectedRoute>
+                } />
+
+                <Route path="/collections/hardship-programs" element={
+                  <ProtectedRoute>
+                    <Layout>
+                      <HardshipPrograms />
+                    </Layout>
+                  </ProtectedRoute>
+                } />
+
+                {/* Debt Collections Dashboard */}
+                <Route path="/dashboard/collections" element={
+                  <ProtectedRoute>
+                    <Layout>
+                      <CollectionsDashboard />
+                    </Layout>
+                  </ProtectedRoute>
+                } />
+
             <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
             <WelcomeModal open={welcomeModalOpen} onClose={handleCloseWelcomeModal} />
                                         </Router>
                                         </AttendanceProvider>
                                       </LeadProvider>
-                                    </CustomerManagementProvider>
+                                      </CustomerManagementProvider>
+                                    </ActivityLogProvider>
                                   </VahanProvider>
                                 </DispositionProvider>
                               </InsurerProductProvider>

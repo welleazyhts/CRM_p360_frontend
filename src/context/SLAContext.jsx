@@ -1,15 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import {
-  SLA_TEMPLATES,
-  createSLATracking,
-  completeSLA,
-  getSLAStatus,
-  getSLAViolations,
-  getApproachingSLA,
-  getSLAMetrics,
-  calculateTimeRemaining,
-  getEscalationLevel
-} from '../services/slaService';
+import slaAPI from '../services/slaAPI';
 
 const SLAContext = createContext();
 
@@ -22,274 +12,520 @@ export const useSLA = () => {
 };
 
 export const SLAProvider = ({ children }) => {
-  // SLA Configuration State
-  const [slaConfig, setSLAConfig] = useState(() => {
-    const saved = localStorage.getItem('slaConfig');
-    return saved ? JSON.parse(saved) : {
-      enabled: true,
-      templates: SLA_TEMPLATES,
-      notifications: {
-        enabled: true,
-        warning: 25, // Notify when 25% time remaining
-        critical: 10, // Critical alert when 10% time remaining
-        breach: true // Notify on breach
-      },
-      escalation: {
-        enabled: true,
-        levels: [
-          { threshold: 10, action: 'notify_team_lead', description: 'Notify team lead' },
-          { threshold: 0, action: 'notify_manager', description: 'Notify manager' },
-          { threshold: -24, action: 'notify_senior_management', description: 'Escalate to senior management' }
-        ]
-      },
-      autoAssignment: {
-        enabled: false,
-        considerSLA: true // Consider SLA workload when auto-assigning
-      }
-    };
-  });
-
-  // SLA Trackings State (in real app, this would be from backend)
-  const [slaTrackings, setSLATrackings] = useState(() => {
-    const saved = localStorage.getItem('slaTrackings');
-    return saved ? JSON.parse(saved) : [];
-  });
-
-  // Violations and alerts state
+  // State
+  const [templates, setTemplates] = useState([]);
+  const [policies, setPolicies] = useState([]);
   const [violations, setViolations] = useState([]);
-  const [approaching, setApproaching] = useState([]);
-  const [metrics, setMetrics] = useState(null);
-
-  // Save configuration to localStorage
-  useEffect(() => {
-    localStorage.setItem('slaConfig', JSON.stringify(slaConfig));
-  }, [slaConfig]);
-
-  // Save trackings to localStorage
-  useEffect(() => {
-    localStorage.setItem('slaTrackings', JSON.stringify(slaTrackings));
-  }, [slaTrackings]);
-
-  // Calculate metrics, violations, and approaching deadlines
-  useEffect(() => {
-    if (slaTrackings.length > 0) {
-      setViolations(getSLAViolations(slaTrackings));
-      setApproaching(getApproachingSLA(slaTrackings, slaConfig.notifications.warning));
-      setMetrics(getSLAMetrics(slaTrackings));
-    } else {
-      setViolations([]);
-      setApproaching([]);
-      setMetrics({
-        total: 0,
-        completed: 0,
-        met: 0,
-        breached: 0,
-        active: 0,
-        atRisk: 0,
-        complianceRate: 100,
-        breachRate: 0
-      });
-    }
-  }, [slaTrackings, slaConfig.notifications.warning]);
+  const [escalations, setEscalations] = useState([]);
+  const [dashboardData, setDashboardData] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
 
   /**
-   * Create new SLA tracking
+   * Fetch all templates
    */
-  const trackSLA = useCallback((entityType, entityId, slaType, priority = 'medium', startTime = null) => {
+  const fetchTemplates = useCallback(async (filters = {}) => {
+    setLoading(true);
+    setError(null);
     try {
-      const tracking = createSLATracking(
-        entityType,
-        entityId,
-        slaType,
-        startTime || new Date().toISOString(),
-        priority,
-        slaConfig.templates[entityType]?.[slaType]
-      );
+      const response = await slaAPI.templates.getAll(filters);
+      setTemplates(response.results || response.data || response);
+      return response;
+    } catch (err) {
+      setError(err.message);
+      console.error('Error fetching templates:', err);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
-      setSLATrackings(prev => [...prev, tracking]);
-      return tracking;
-    } catch (error) {
-      console.error('Error creating SLA tracking:', error);
+  /**
+   * Fetch all policies
+   */
+  const fetchPolicies = useCallback(async (filters = {}) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await slaAPI.policies.getAll(filters);
+      setPolicies(response.results || response.data || response);
+      return response;
+    } catch (err) {
+      setError(err.message);
+      console.error('Error fetching policies:', err);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  /**
+   * Fetch all violations
+   */
+  const fetchViolations = useCallback(async (filters = {}) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await slaAPI.violations.getAll(filters);
+      setViolations(response.results || response.data || response);
+      return response;
+    } catch (err) {
+      setError(err.message);
+      console.error('Error fetching violations:', err);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  /**
+   * Fetch all escalations
+   */
+  const fetchEscalations = useCallback(async (filters = {}) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await slaAPI.escalations.getAll(filters);
+      setEscalations(response.results || response.data || response);
+      return response;
+    } catch (err) {
+      setError(err.message);
+      console.error('Error fetching escalations:', err);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  /**
+   * Fetch dashboard data
+   */
+  const fetchDashboard = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await slaAPI.analytics.getDashboard();
+      setDashboardData(response.data);
+      return response;
+    } catch (err) {
+      setError(err.message);
+      console.error('Error fetching dashboard:', err);
+      // Don't throw error - just log it and continue
+      // This allows the app to work even when backend is not available
       return null;
+    } finally {
+      setLoading(false);
     }
-  }, [slaConfig.templates]);
-
-  /**
-   * Complete SLA tracking
-   */
-  const completeSLATracking = useCallback((trackingId) => {
-    setSLATrackings(prev => prev.map(tracking => {
-      if (tracking.id === trackingId && tracking.status === 'active') {
-        return completeSLA(tracking);
-      }
-      return tracking;
-    }));
   }, []);
 
   /**
-   * Update SLA tracking
+   * Create template
    */
-  const updateSLATracking = useCallback((trackingId, updates) => {
-    setSLATrackings(prev => prev.map(tracking => {
-      if (tracking.id === trackingId) {
-        return { ...tracking, ...updates };
-      }
-      return tracking;
-    }));
-  }, []);
-
-  /**
-   * Delete SLA tracking
-   */
-  const deleteSLATracking = useCallback((trackingId) => {
-    setSLATrackings(prev => prev.filter(tracking => tracking.id !== trackingId));
-  }, []);
-
-  /**
-   * Get SLA trackings for specific entity
-   */
-  const getSLATrackingsForEntity = useCallback((entityType, entityId) => {
-    return slaTrackings.filter(t => t.entityType === entityType && t.entityId === entityId);
-  }, [slaTrackings]);
-
-  /**
-   * Get active SLA trackings
-   */
-  const getActiveSLATrackings = useCallback(() => {
-    return slaTrackings.filter(t => t.status === 'active');
-  }, [slaTrackings]);
-
-  /**
-   * Update SLA configuration
-   */
-  const updateSLAConfig = useCallback((updates) => {
-    setSLAConfig(prev => ({
-      ...prev,
-      ...updates
-    }));
-  }, []);
-
-  /**
-   * Update SLA templates
-   */
-  const updateSLATemplates = useCallback((entityType, slaType, config) => {
-    setSLAConfig(prev => ({
-      ...prev,
-      templates: {
-        ...prev.templates,
-        [entityType]: {
-          ...prev.templates[entityType],
-          [slaType]: config
-        }
-      }
-    }));
-  }, []);
-
-  /**
-   * Get SLA status for tracking
-   */
-  const getSLATrackingStatus = useCallback((trackingId) => {
-    const tracking = slaTrackings.find(t => t.id === trackingId);
-    if (!tracking || !tracking.deadline) return null;
-    return getSLAStatus(tracking.deadline);
-  }, [slaTrackings]);
-
-  /**
-   * Get time remaining for tracking
-   */
-  const getTimeRemainingForTracking = useCallback((trackingId) => {
-    const tracking = slaTrackings.find(t => t.id === trackingId);
-    if (!tracking || !tracking.deadline) return null;
-    return calculateTimeRemaining(tracking.deadline);
-  }, [slaTrackings]);
-
-  /**
-   * Get escalation info for tracking
-   */
-  const getTrackingEscalation = useCallback((trackingId) => {
-    const tracking = slaTrackings.find(t => t.id === trackingId);
-    if (!tracking) return null;
-    return getEscalationLevel(tracking);
-  }, [slaTrackings]);
-
-  /**
-   * Clear all SLA trackings (for testing/reset)
-   */
-  const clearAllSLATrackings = useCallback(() => {
-    setSLATrackings([]);
-    localStorage.removeItem('slaTrackings');
-  }, []);
-
-  /**
-   * Get SLA compliance by entity type
-   */
-  const getComplianceByEntityType = useCallback((entityType) => {
-    const entityTrackings = slaTrackings.filter(t => t.entityType === entityType);
-    return getSLAMetrics(entityTrackings);
-  }, [slaTrackings]);
-
-  /**
-   * Get SLA compliance by SLA type
-   */
-  const getComplianceBySLAType = useCallback((slaType) => {
-    const typeTrackings = slaTrackings.filter(t => t.slaType === slaType);
-    return getSLAMetrics(typeTrackings);
-  }, [slaTrackings]);
-
-  /**
-   * Export SLA data
-   */
-  const exportSLAData = useCallback((startDate, endDate) => {
-    let filteredTrackings = slaTrackings;
-
-    if (startDate) {
-      filteredTrackings = filteredTrackings.filter(t =>
-        new Date(t.createdAt) >= new Date(startDate)
-      );
+  const createTemplate = useCallback(async (data) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await slaAPI.templates.create(data);
+      await fetchTemplates(); // Refresh list
+      return response;
+    } catch (err) {
+      setError(err.message);
+      console.error('Error creating template:', err);
+      throw err;
+    } finally {
+      setLoading(false);
     }
+  }, [fetchTemplates]);
 
-    if (endDate) {
-      filteredTrackings = filteredTrackings.filter(t =>
-        new Date(t.createdAt) <= new Date(endDate)
-      );
+  /**
+   * Update template
+   */
+  const updateTemplate = useCallback(async (id, data) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await slaAPI.templates.update(id, data);
+      await fetchTemplates(); // Refresh list
+      return response;
+    } catch (err) {
+      setError(err.message);
+      console.error('Error updating template:', err);
+      throw err;
+    } finally {
+      setLoading(false);
     }
+  }, [fetchTemplates]);
 
-    return {
-      trackings: filteredTrackings,
-      metrics: getSLAMetrics(filteredTrackings),
-      violations: getSLAViolations(filteredTrackings),
-      exportDate: new Date().toISOString()
-    };
-  }, [slaTrackings]);
+  /**
+   * Delete template
+   */
+  const deleteTemplate = useCallback(async (id) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await slaAPI.templates.delete(id);
+      await fetchTemplates(); // Refresh list
+      return response;
+    } catch (err) {
+      setError(err.message);
+      console.error('Error deleting template:', err);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }, [fetchTemplates]);
+
+  /**
+   * Create policy
+   */
+  const createPolicy = useCallback(async (data) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await slaAPI.policies.create(data);
+      await fetchPolicies(); // Refresh list
+      return response;
+    } catch (err) {
+      setError(err.message);
+      console.error('Error creating policy:', err);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }, [fetchPolicies]);
+
+  /**
+   * Update policy
+   */
+  const updatePolicy = useCallback(async (id, data) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await slaAPI.policies.update(id, data);
+      await fetchPolicies(); // Refresh list
+      return response;
+    } catch (err) {
+      setError(err.message);
+      console.error('Error updating policy:', err);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }, [fetchPolicies]);
+
+  /**
+   * Pause policy
+   */
+  const pausePolicy = useCallback(async (id, reason = '') => {
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await slaAPI.policies.pause(id, reason);
+      await fetchPolicies(); // Refresh list
+      return response;
+    } catch (err) {
+      setError(err.message);
+      console.error('Error pausing policy:', err);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }, [fetchPolicies]);
+
+  /**
+   * Resume policy
+   */
+  const resumePolicy = useCallback(async (id) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await slaAPI.policies.resume(id);
+      await fetchPolicies(); // Refresh list
+      return response;
+    } catch (err) {
+      setError(err.message);
+      console.error('Error resuming policy:', err);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }, [fetchPolicies]);
+
+  /**
+   * Complete policy
+   */
+  const completePolicy = useCallback(async (id) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await slaAPI.policies.complete(id);
+      await fetchPolicies(); // Refresh list
+      return response;
+    } catch (err) {
+      setError(err.message);
+      console.error('Error completing policy:', err);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }, [fetchPolicies]);
+
+  /**
+   * Reassign policy
+   */
+  const reassignPolicy = useCallback(async (id, assigneeId) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await slaAPI.policies.reassign(id, assigneeId);
+      await fetchPolicies(); // Refresh list
+      return response;
+    } catch (err) {
+      setError(err.message);
+      console.error('Error reassigning policy:', err);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }, [fetchPolicies]);
+
+  /**
+   * Get at-risk policies
+   */
+  const getAtRiskPolicies = useCallback(async (threshold = 80) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await slaAPI.policies.getAtRisk(threshold);
+      return response;
+    } catch (err) {
+      setError(err.message);
+      console.error('Error fetching at-risk policies:', err);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  /**
+   * Get policies by entity
+   */
+  const getPoliciesByEntity = useCallback(async (entityType, entityId) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await slaAPI.policies.getByEntity(entityType, entityId);
+      return response;
+    } catch (err) {
+      setError(err.message);
+      console.error('Error fetching policies by entity:', err);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  /**
+   * Get templates by entity type
+   */
+  const getTemplatesByEntityType = useCallback(async (entityType) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await slaAPI.templates.getByEntityType(entityType);
+      return response;
+    } catch (err) {
+      setError(err.message);
+      console.error('Error fetching templates by entity type:', err);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  /**
+   * Resolve violation
+   */
+  const resolveViolation = useCallback(async (id, notes = '') => {
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await slaAPI.violations.resolve(id, notes);
+      await fetchViolations(); // Refresh list
+      return response;
+    } catch (err) {
+      setError(err.message);
+      console.error('Error resolving violation:', err);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }, [fetchViolations]);
+
+  /**
+   * Get unresolved violations
+   */
+  const getUnresolvedViolations = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await slaAPI.violations.getUnresolved();
+      return response;
+    } catch (err) {
+      setError(err.message);
+      console.error('Error fetching unresolved violations:', err);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  /**
+   * Get statistics
+   */
+  const getStatistics = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const [templateStats, policyStats, violationStats, escalationStats] = await Promise.all([
+        slaAPI.templates.getStatistics(),
+        slaAPI.policies.getStatistics(),
+        slaAPI.violations.getStatistics(),
+        slaAPI.escalations.getStatistics()
+      ]);
+
+      return {
+        templates: templateStats.data,
+        policies: policyStats.data,
+        violations: violationStats.data,
+        escalations: escalationStats.data
+      };
+    } catch (err) {
+      setError(err.message);
+      console.error('Error fetching statistics:', err);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  /**
+   * Bulk operations
+   */
+  const bulkToggleTemplates = useCallback(async (templateIds, isActive) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await slaAPI.templates.bulkToggle(templateIds, isActive);
+      await fetchTemplates(); // Refresh list
+      return response;
+    } catch (err) {
+      setError(err.message);
+      console.error('Error bulk toggling templates:', err);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }, [fetchTemplates]);
+
+  const bulkPausePolicies = useCallback(async (policyIds, reason = '') => {
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await slaAPI.policies.bulkPause(policyIds, reason);
+      await fetchPolicies(); // Refresh list
+      return response;
+    } catch (err) {
+      setError(err.message);
+      console.error('Error bulk pausing policies:', err);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }, [fetchPolicies]);
+
+  const bulkResumePolicies = useCallback(async (policyIds) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await slaAPI.policies.bulkResume(policyIds);
+      await fetchPolicies(); // Refresh list
+      return response;
+    } catch (err) {
+      setError(err.message);
+      console.error('Error bulk resuming policies:', err);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }, [fetchPolicies]);
+
+  const bulkCompletePolicies = useCallback(async (policyIds) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await slaAPI.policies.bulkComplete(policyIds);
+      await fetchPolicies(); // Refresh list
+      return response;
+    } catch (err) {
+      setError(err.message);
+      console.error('Error bulk completing policies:', err);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }, [fetchPolicies]);
+
+  // Initial data load
+  useEffect(() => {
+    fetchDashboard();
+  }, [fetchDashboard]);
 
   const value = {
-    // Configuration
-    slaConfig,
-    updateSLAConfig,
-    updateSLATemplates,
-
-    // Trackings
-    slaTrackings,
-    trackSLA,
-    completeSLATracking,
-    updateSLATracking,
-    deleteSLATracking,
-    getSLATrackingsForEntity,
-    getActiveSLATrackings,
-    clearAllSLATrackings,
-
-    // Status and Info
-    getSLATrackingStatus,
-    getTimeRemainingForTracking,
-    getTrackingEscalation,
-
-    // Metrics and Reporting
-    metrics,
+    // State
+    templates,
+    policies,
     violations,
-    approaching,
-    getComplianceByEntityType,
-    getComplianceBySLAType,
-    exportSLAData
+    escalations,
+    dashboardData,
+    loading,
+    error,
+
+    // Fetch methods
+    fetchTemplates,
+    fetchPolicies,
+    fetchViolations,
+    fetchEscalations,
+    fetchDashboard,
+
+    // Template operations
+    createTemplate,
+    updateTemplate,
+    deleteTemplate,
+    getTemplatesByEntityType,
+
+    // Policy operations
+    createPolicy,
+    updatePolicy,
+    pausePolicy,
+    resumePolicy,
+    completePolicy,
+    reassignPolicy,
+    getAtRiskPolicies,
+    getPoliciesByEntity,
+
+    // Violation operations
+    resolveViolation,
+    getUnresolvedViolations,
+
+    // Statistics
+    getStatistics,
+
+    // Bulk operations
+    bulkToggleTemplates,
+    bulkPausePolicies,
+    bulkResumePolicies,
+    bulkCompletePolicies
   };
 
   return <SLAContext.Provider value={value}>{children}</SLAContext.Provider>;

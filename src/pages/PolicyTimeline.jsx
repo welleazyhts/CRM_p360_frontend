@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { 
-  Box, 
+import {
+  Box,
   Typography,
-  Card, 
-  CardContent, 
+  Card,
+  CardContent,
   TextField,
   Grid,
   Paper,
@@ -19,9 +19,10 @@ import {
   alpha,
   Fade,
   Grow,
+  IconButton,
 } from '@mui/material';
 
-import { 
+import {
   Search as SearchIcon,
   Event as EventIcon,
   Payment as PaymentIcon,
@@ -63,12 +64,14 @@ import {
   Psychology as PsychologyIcon,
   Recommend as RecommendIcon,
   Assessment as AssessmentIcon,
-  HealthAndSafety as HealthAndSafetyIcon
+  HealthAndSafety as HealthAndSafetyIcon,
+  ArrowBack as ArrowBackIcon
 } from '@mui/icons-material';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 
 const PolicyTimeline = () => {
   const location = useLocation();
+  const navigate = useNavigate();
   const theme = useTheme();
   const [searchTerm, setSearchTerm] = useState('');
   const [policyData, setPolicyData] = useState(null);
@@ -79,11 +82,12 @@ const PolicyTimeline = () => {
   const [loaded, setLoaded] = useState(false);
 
   const [aiSummary, setAiSummary] = useState(null);
-  
+
   // Extract customer data from URL parameters
   const queryParams = new URLSearchParams(location.search);
   const customerNameFromUrl = queryParams.get('customerName');
   const customerIdFromUrl = queryParams.get('customerId');
+  const sourceQueue = queryParams.get('source'); // Get the source queue if provided
 
   // Sample policy timeline data - wrapped in useMemo to prevent re-creation on every render
   const mockPolicyData = useMemo(() => ({
@@ -728,16 +732,38 @@ const PolicyTimeline = () => {
     <Fade in={true} timeout={800}>
       <Box sx={{ px: 1 }}>
         {/* Header Section */}
-        <Box sx={{ 
-          display: 'flex', 
-          justifyContent: 'space-between', 
-          alignItems: 'center', 
+        <Box sx={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
           mb: 4
         }}>
-          <Typography variant="h4" fontWeight="600">
-            Policy Timeline
-          </Typography>
-          
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+            <IconButton
+              onClick={() => {
+                // Navigate back to the source queue or default to main cases page
+                if (sourceQueue === 'not-interested') {
+                  navigate('/not-interested-cases');
+                } else if (sourceQueue === 'renewal-failed') {
+                  navigate('/renewal-failed-cases');
+                } else {
+                  navigate('/cases');
+                }
+              }}
+              sx={{
+                color: theme.palette.primary.main,
+                backgroundColor: alpha(theme.palette.primary.main, 0.1),
+                '&:hover': {
+                  backgroundColor: alpha(theme.palette.primary.main, 0.2)
+                }
+              }}
+            >
+              <ArrowBackIcon />
+            </IconButton>
+            <Typography variant="h4" fontWeight="600">
+              Policy Timeline
+            </Typography>
+          </Box>
 
         </Box>
         

@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect, useCallback } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { LocalizationProvider } from '@mui/x-date-pickers';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import BulkUpload from '../components/common/BulkUpload';
@@ -9,6 +9,9 @@ import { useVahan } from '../context/VahanContext';
 import { History as HistoryIcon } from '@mui/icons-material';
 import LeadScoringIndicator from '../components/leads/LeadScoringIndicator';
 import PriorityIndicator from '../components/leads/PriorityIndicator';
+import leadSanitizationService from '../services/leadSanitizationService';
+import callAttemptService from '../services/callAttemptService';
+import leadService from '../services/leadService';
 import {
   Box,
   Card,
@@ -622,10 +625,14 @@ const calculateLeadScore = (lead) => {
 const LeadManagement = () => {
   const theme = useTheme();
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { checkDuplicate } = useDedupe();
   const { verifyVehicle, bulkVerifyVehicles, getVerificationByLeadId, isVehicleVerified, loading: vahanLoading } = useVahan();
-  const [leads, setLeads] = useState(mockLeads);
-  const [filteredLeads, setFilteredLeads] = useState(mockLeads);
+  const [leads, setLeads] = useState([]);
+  const [filteredLeads, setFilteredLeads] = useState([]);
+  const [apiLoading, setApiLoading] = useState(true);
+  const [apiError, setApiError] = useState(null);
+  const [totalCount, setTotalCount] = useState(0);
   const [openDialog, setOpenDialog] = useState(false);
   const [editingLead, setEditingLead] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
@@ -708,17 +715,136 @@ const LeadManagement = () => {
     vehicleType: ''
   });
 
-  // Mock agents with ratings and language capabilities for assignment
-  const agents = [
-    { id: 'priya.patel', name: 'Priya Patel', rating: 4.8, totalLeads: 45, closedDeals: 32, specialization: 'Corporate Insurance', languages: ['English', 'Hindi', 'Gujarati'] },
-    { id: 'amit.kumar', name: 'Amit Kumar', rating: 4.6, totalLeads: 38, closedDeals: 28, specialization: 'Health Insurance', languages: ['English', 'Hindi', 'Bengali'] },
-    { id: 'sneha.gupta', name: 'Sneha Gupta', rating: 4.9, totalLeads: 52, closedDeals: 41, specialization: 'Vehicle Insurance', languages: ['English', 'Tamil', 'Telugu'] },
-    { id: 'rajesh.kumar', name: 'Rajesh Kumar', rating: 4.7, totalLeads: 41, closedDeals: 30, specialization: 'Life Insurance', languages: ['English', 'Marathi', 'Kannada'] },
-    { id: 'deepak.sharma', name: 'Deepak Sharma', rating: 4.5, totalLeads: 35, closedDeals: 24, specialization: 'Property Insurance', languages: ['English', 'Punjabi', 'Urdu'] }
-  ];
+  // Agents state - will be fetched from API
+  const [agents, setAgents] = useState([]);
 
   // Keep users for backward compatibility
   const users = agents.map(agent => ({ id: agent.id, name: agent.name }));
+
+  // Helper function to transform backend lead data to frontend format
+  const transformLeadFromAPI = (apiLead) => {
+    const leadDisplay = apiLead.lead_display || {};
+    return {
+      id: apiLead.id || apiLead.lead_id,
+      lead_id: apiLead.lead_id,
+      firstName: leadDisplay.name?.split(' ')[0] || apiLead.first_name || '',
+      lastName: leadDisplay.name?.split(' ').slice(1).join(' ') || apiLead.last_name || '',
+      email: leadDisplay.email || apiLead.email || '',
+      phone: leadDisplay.phone || apiLead.phone || '',
+      company: apiLead.company_display?.split(' - ')[0] || apiLead.company || '',
+      position: apiLead.company_display?.split(' - ')[1] || apiLead.position || '',
+      source: apiLead.source || '',
+      status: apiLead.status_display || apiLead.status || 'New',
+      priority: apiLead.priority_display || apiLead.priority || 'Medium',
+      leadType: leadDisplay.lead_type || apiLead.lead_type || 'Regular',
+      assignedTo: apiLead.assigned_to_name || '',
+      assignedToId: apiLead.assigned_to || '',
+      value: parseFloat(apiLead.value) || 0,
+      expectedCloseDate: apiLead.expected_close_date || '',
+      lastContactDate: apiLead.last_contact || apiLead.updated_at || '',
+      notes: apiLead.notes || '',
+      tags: apiLead.tags || [],
+      createdAt: apiLead.created_at || '',
+      updatedAt: apiLead.updated_at || '',
+      preferredLanguage: apiLead.preferred_language_display || apiLead.preferred_language || 'English',
+      totalCalls: apiLead.total_calls || 0,
+      score: apiLead.score || calculateLeadScore(apiLead),
+      // Insurance specific
+      product: apiLead.product || 'Insurance',
+      subProduct: apiLead.sub_product || '',
+      vehicleRegistrationNumber: apiLead.vehicle_reg_number || '',
+      vehicleType: apiLead.vehicle_type || '',
+      policyExpiryDate: apiLead.policy_expiry_date || '',
+    };
+  };
+
+  // Helper function to transform frontend lead data to backend format
+  const transformLeadToAPI = (frontendLead) => {
+    return {
+      first_name: frontendLead.firstName,
+      last_name: frontendLead.lastName,
+      email: frontendLead.email,
+      phone: frontendLead.phone,
+      company: frontendLead.company,
+      position: frontendLead.position,
+      source: frontendLead.source?.toLowerCase().replace(/ /g, '_'),
+      status: frontendLead.status?.toLowerCase().replace(/ /g, '_'),
+      priority: frontendLead.priority?.toLowerCase(),
+      lead_type: frontendLead.leadType?.toLowerCase(),
+      assigned_to: frontendLead.assignedToId || null,
+      value: frontendLead.value || null,
+      expected_close_date: frontendLead.expectedCloseDate || null,
+      notes: frontendLead.notes,
+      preferred_language: frontendLead.preferredLanguage?.toLowerCase().substring(0, 2) || 'en',
+      product: frontendLead.product,
+      sub_product: frontendLead.subProduct,
+      vehicle_reg_number: frontendLead.vehicleRegistrationNumber,
+      vehicle_type: frontendLead.vehicleType,
+    };
+  };
+
+  // Fetch leads from API
+  const fetchLeads = useCallback(async (filters = {}) => {
+    setApiLoading(true);
+    setApiError(null);
+    try {
+      const response = await leadService.getLeads({
+        status: statusFilter !== 'All' ? statusFilter.toLowerCase().replace(/ /g, '_') : undefined,
+        priority: priorityFilter !== 'All' ? priorityFilter.toLowerCase() : undefined,
+        leadType: leadTypeFilter !== 'All' ? leadTypeFilter.toLowerCase() : undefined,
+        isArchived: false,
+        ...filters
+      });
+
+      // Handle paginated response
+      const leadsData = response.results || response;
+      const transformedLeads = Array.isArray(leadsData)
+        ? leadsData.map(transformLeadFromAPI)
+        : [];
+
+      setLeads(transformedLeads);
+      setFilteredLeads(transformedLeads);
+      setTotalCount(response.count || transformedLeads.length);
+    } catch (error) {
+      console.error('Error fetching leads:', error);
+      setApiError('Failed to load leads. Please try again.');
+      // Fallback to mock data for development
+      setLeads(mockLeads);
+      setFilteredLeads(mockLeads);
+    } finally {
+      setApiLoading(false);
+    }
+  }, [statusFilter, priorityFilter, leadTypeFilter]);
+
+  // Fetch agents from API
+  const fetchAgents = useCallback(async () => {
+    try {
+      const agentsData = await leadService.getAvailableUsers();
+      setAgents(agentsData.map(agent => ({
+        id: agent.id,
+        name: agent.name,
+        rating: agent.rating || 4.0,
+        totalLeads: 0,
+        closedDeals: 0,
+        specialization: agent.specialization || 'General',
+        languages: agent.languages || ['English']
+      })));
+    } catch (error) {
+      console.error('Error fetching agents:', error);
+      // Keep default agents as fallback
+      setAgents([
+        { id: 1, name: 'Priya Patel', rating: 4.8, totalLeads: 45, closedDeals: 32, specialization: 'Corporate Insurance', languages: ['English', 'Hindi', 'Gujarati'] },
+        { id: 2, name: 'Amit Kumar', rating: 4.6, totalLeads: 38, closedDeals: 28, specialization: 'Health Insurance', languages: ['English', 'Hindi', 'Bengali'] },
+        { id: 3, name: 'Sneha Gupta', rating: 4.9, totalLeads: 52, closedDeals: 41, specialization: 'Vehicle Insurance', languages: ['English', 'Tamil', 'Telugu'] },
+      ]);
+    }
+  }, []);
+
+  // Initial data fetch
+  useEffect(() => {
+    fetchLeads();
+    fetchAgents();
+  }, []);
 
   const statusOptions = ['New', 'Contacted', 'Qualified', 'Proposal', 'Negotiation', 'Closed Won', 'Closed Lost'];
   const priorityOptions = ['Low', 'Medium', 'High', 'Urgent'];
@@ -777,6 +903,19 @@ const LeadManagement = () => {
   ];
 
   // Filter and search functionality
+  // Handle editLead query parameter
+  useEffect(() => {
+    const editLeadId = searchParams.get('editLead');
+    if (editLeadId) {
+      const leadToEdit = leads.find(lead => lead.id === parseInt(editLeadId));
+      if (leadToEdit) {
+        handleOpenDialog(leadToEdit);
+        // Remove the query parameter after opening the dialog
+        setSearchParams({});
+      }
+    }
+  }, [searchParams, leads]);
+
   useEffect(() => {
     let filtered = leads;
 
@@ -874,9 +1013,28 @@ const LeadManagement = () => {
   };
 
   const handleSaveLead = () => {
+    // Sanitize lead data first
+    const { sanitized, validationReport } = leadSanitizationService.sanitizeLead(formData);
+
+    // Show validation warnings/errors
+    if (validationReport.warnings.length > 0) {
+      console.warn('Lead validation warnings:', validationReport.warnings);
+    }
+
+    if (!validationReport.isValid) {
+      alert(`Lead validation failed:\n\n${validationReport.errors.join('\n')}\n\nQuality Score: ${validationReport.qualityScore}/100 (${validationReport.qualityLevel})`);
+      return;
+    }
+
+    // Show quality score notification
+    if (validationReport.corrections.length > 0) {
+      console.log('Auto-corrections applied:', validationReport.corrections);
+    }
+    console.log(`Lead Quality Score: ${validationReport.qualityScore}/100 (${validationReport.qualityLevel})`);
+
     // Real-time duplicate check for new leads
     if (!editingLead) {
-      const dedupeCheck = checkDuplicate(formData, leads, 'leads');
+      const dedupeCheck = checkDuplicate(sanitized, leads, 'leads');
       if (dedupeCheck.isDuplicate) {
         let duplicateInfo = dedupeCheck.duplicates.map(d => {
           if (d.type === 'fleet') {
@@ -896,44 +1054,67 @@ const LeadManagement = () => {
       }
     }
 
+    // Use sanitized data instead of formData
+    const dataToSave = sanitized;
+
     setLoading(true);
 
-    // Simulate API call
-    setTimeout(() => {
-      if (editingLead) {
-        // Update existing lead
-        const updatedLeads = leads.map(lead =>
-          lead.id === editingLead.id
-            ? {
-                ...lead,
-                ...formData,
-                updatedAt: new Date().toISOString().split('T')[0]
-              }
-            : lead
-        );
-        setLeads(updatedLeads);
-        setSnackbar({ open: true, message: 'Lead updated successfully!', severity: 'success' });
-      } else {
-        // Add new lead
-        const newLead = {
-          id: Math.max(...leads.map(l => l.id)) + 1,
-          ...formData,
-          createdAt: new Date().toISOString().split('T')[0],
-          updatedAt: new Date().toISOString().split('T')[0],
-          lastContactDate: null
-        };
-        setLeads([...leads, newLead]);
-        setSnackbar({ open: true, message: 'Lead added successfully!', severity: 'success' });
-      }
+    // API call for create/update
+    const saveLeadAsync = async () => {
+      try {
+        const apiData = transformLeadToAPI(dataToSave);
 
-      setLoading(false);
-      handleCloseDialog();
-    }, 1000);
+        if (editingLead) {
+          // Update existing lead via API
+          const leadId = editingLead.lead_id || editingLead.id;
+          await leadService.updateLead(leadId, apiData);
+          setSnackbar({ open: true, message: 'Lead updated successfully!', severity: 'success' });
+        } else {
+          // Create new lead via API
+          await leadService.createLead(apiData);
+          setSnackbar({
+            open: true,
+            message: `Lead added successfully! Quality Score: ${validationReport.qualityScore}/100 (${validationReport.qualityLevel})`,
+            severity: 'success'
+          });
+        }
+
+        // Refresh leads list from API
+        await fetchLeads();
+        handleCloseDialog();
+      } catch (error) {
+        console.error('Error saving lead:', error);
+        setSnackbar({
+          open: true,
+          message: `Failed to save lead: ${error.message || 'Unknown error'}`,
+          severity: 'error'
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    saveLeadAsync();
   };
 
-  const handleArchiveLead = (leadId) => {
-    setLeads(leads.filter(lead => lead.id !== leadId));
-    setSnackbar({ open: true, message: 'Lead archived successfully!', severity: 'success' });
+  const handleArchiveLead = async (leadId) => {
+    try {
+      setLoading(true);
+      // Find the lead to get its lead_id
+      const lead = leads.find(l => l.id === leadId || l.lead_id === leadId);
+      const apiLeadId = lead?.lead_id || leadId;
+
+      await leadService.archiveLead(apiLeadId, 'Archived via UI');
+
+      // Refresh leads list
+      await fetchLeads();
+      setSnackbar({ open: true, message: 'Lead archived successfully!', severity: 'success' });
+    } catch (error) {
+      console.error('Error archiving lead:', error);
+      setSnackbar({ open: true, message: `Failed to archive lead: ${error.message}`, severity: 'error' });
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleSendEmail = (lead) => {
@@ -1136,11 +1317,40 @@ const LeadManagement = () => {
     setLanguageAssignDialog(true);
   };
   
-  const confirmLanguageAssignment = () => {
-    autoAssignByLanguage(selectedLeads);
-    setSelectedLeads([]);
-    setLanguageAssignDialog(false);
-    setAssignmentPreview([]);
+  const confirmLanguageAssignment = async () => {
+    try {
+      setLoading(true);
+
+      // Get lead_ids for the API call
+      const leadIds = selectedLeads.map(id => {
+        const lead = leads.find(l => l.id === id);
+        return lead?.lead_id || id;
+      });
+
+      // Call the API for language-based assignment
+      const result = await leadService.languageMatchAssign(leadIds);
+
+      // Refresh leads list
+      await fetchLeads();
+
+      setSelectedLeads([]);
+      setLanguageAssignDialog(false);
+      setAssignmentPreview([]);
+      setSnackbar({
+        open: true,
+        message: result.message || 'Leads assigned based on language preference',
+        severity: 'success'
+      });
+    } catch (error) {
+      console.error('Error language-based assignment:', error);
+      setSnackbar({
+        open: true,
+        message: `Failed to assign leads: ${error.message}`,
+        severity: 'error'
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleSelectAllLeads = () => {
@@ -1294,63 +1504,66 @@ const LeadManagement = () => {
     });
   };
 
-  const handleConfirmBulkAssignment = () => {
+  const handleConfirmBulkAssignment = async () => {
     if (!bulkAssignmentAgent) {
       setSnackbar({ open: true, message: 'Please select an agent', severity: 'warning' });
       return;
     }
 
-    const agent = agents.find(u => u.id === bulkAssignmentAgent);
-    const updatedLeads = leads.map(lead => 
-      selectedLeads.includes(lead.id) 
-        ? { ...lead, assignedTo: agent.name, assignedToId: agent.id, updatedAt: new Date().toISOString().split('T')[0] }
-        : lead
-    );
-    
-    setLeads(updatedLeads);
-    setSelectedLeads([]);
-    setBulkAssignmentDialog(false);
-    setBulkAssignmentAgent('');
-    setSnackbar({ open: true, message: `${selectedLeads.length} leads assigned to ${agent.name}`, severity: 'success' });
+    try {
+      setLoading(true);
+      const agent = agents.find(u => u.id === bulkAssignmentAgent);
+
+      // Get lead_ids for the API call
+      const leadIds = selectedLeads.map(id => {
+        const lead = leads.find(l => l.id === id);
+        return lead?.lead_id || id;
+      });
+
+      await leadService.bulkAssignLeads(leadIds, bulkAssignmentAgent);
+
+      // Refresh leads list
+      await fetchLeads();
+
+      setSelectedLeads([]);
+      setBulkAssignmentDialog(false);
+      setBulkAssignmentAgent('');
+      setSnackbar({ open: true, message: `${selectedLeads.length} leads assigned to ${agent?.name || 'agent'}`, severity: 'success' });
+    } catch (error) {
+      console.error('Error bulk assigning leads:', error);
+      setSnackbar({ open: true, message: `Failed to assign leads: ${error.message}`, severity: 'error' });
+    } finally {
+      setLoading(false);
+    }
   };
 
   // Auto-assign Premium leads to top-rated agents
-  const handleAutoAssign = () => {
-    const premiumLeads = leads.filter(lead => lead.leadType === 'Premium' && !lead.assignedTo);
-    if (premiumLeads.length === 0) {
-      setSnackbar({ open: true, message: 'No unassigned Premium leads found', severity: 'info' });
-      return;
+  const handleAutoAssign = async () => {
+    try {
+      setLoading(true);
+
+      // Call the API to auto-assign premium leads
+      const result = await leadService.autoAssignPremium();
+
+      // Refresh leads list
+      await fetchLeads();
+
+      setAutoAssignDialog(false);
+      setSnackbar({
+        open: true,
+        message: result.message || 'Premium leads auto-assigned to top-rated agents',
+        severity: 'success'
+      });
+    } catch (error) {
+      console.error('Error auto-assigning leads:', error);
+      setSnackbar({
+        open: true,
+        message: `Failed to auto-assign: ${error.message}`,
+        severity: 'error'
+      });
+    } finally {
+      setLoading(false);
     }
-
-    // Sort agents by rating (highest first)
-    const topAgents = [...agents].sort((a, b) => b.rating - a.rating);
-    
-    const updatedLeads = leads.map(lead => {
-      if (lead.leadType === 'Premium' && !lead.assignedTo) {
-        // Assign to top-rated agent with least current workload
-        const bestAgent = topAgents.reduce((best, current) => {
-          const bestWorkload = leads.filter(l => l.assignedToId === best.id).length;
-          const currentWorkload = leads.filter(l => l.assignedToId === current.id).length;
-          return currentWorkload < bestWorkload ? current : best;
-        });
-        
-        return {
-          ...lead,
-          assignedTo: bestAgent.name,
-          assignedToId: bestAgent.id,
-          updatedAt: new Date().toISOString().split('T')[0]
-        };
-      }
-      return lead;
-    });
-
-    setLeads(updatedLeads);
-    setAutoAssignDialog(false);
-    setSnackbar({ 
-      open: true, 
-      message: `${premiumLeads.length} Premium leads auto-assigned to top-rated agents`, 
-      severity: 'success' 
-    });
   };
 
   // ============ VAHAN VERIFICATION HANDLERS ============
@@ -1574,19 +1787,6 @@ const LeadManagement = () => {
               onClick={() => setAgentTableOpen(true)}
             >
               View Agents
-            </Button>
-            <Button
-              variant="outlined"
-              color="secondary"
-              onClick={() => {
-                console.log('🔍 Debug Info:');
-                console.log('Total leads:', leads.length);
-                console.log('Unassigned leads:', leads.filter(l => !l.assignedTo || l.assignedTo.trim() === '').map(l => ({ id: l.id, name: `${l.firstName} ${l.lastName}`, language: l.preferredLanguage })));
-                console.log('Agents:', agents.map(a => ({ name: a.name, languages: a.languages })));
-                console.log('Selected leads:', selectedLeads);
-              }}
-            >
-              Debug Info
             </Button>
           </Box>
           <Button
@@ -2637,13 +2837,13 @@ const LeadManagement = () => {
               
               <Grid container spacing={2} sx={{ mb: 3 }}>
                 <Grid item xs={6}>
-                  <Paper sx={{ p: 2, bgcolor: 'primary.light', color: 'primary.contrastText' }}>
+                  <Paper sx={{ p: 2, bgcolor: 'primary.main', color: '#fff' }}>
                     <Typography variant="caption">CRM System</Typography>
                     <Typography variant="h6">{selectedPolicy.crmExpiryDate}</Typography>
                   </Paper>
                 </Grid>
                 <Grid item xs={6}>
-                  <Paper sx={{ p: 2, bgcolor: 'secondary.light', color: 'secondary.contrastText' }}>
+                  <Paper sx={{ p: 2, bgcolor: 'secondary.main', color: '#fff' }}>
                     <Typography variant="caption">NAV System</Typography>
                     <Typography variant="h6">{selectedPolicy.navExpiryDate}</Typography>
                   </Paper>

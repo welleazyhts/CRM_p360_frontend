@@ -104,7 +104,7 @@ export const AuthProvider = ({ children }) => {
           'dashboard', 'upload', 'cases', 'closed-cases', 'policy-timeline', 'logs', 'claims',
           'policy-servicing', 'new-business', 'medical-management',
           // Lead Management
-          'leads', 'lead-management', 'lead-analytics', 'pipeline',
+          'leads', 'lead-management', 'lead-analytics', 'pipeline', 'payments',
           // HR Management & Leave
           'attendance', 'kpi', 'leave-management',
           // Customer Management

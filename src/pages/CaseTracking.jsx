@@ -638,10 +638,11 @@ const CaseTracking = () => {
   // Available statuses for bulk change
   const availableStatuses = [
     'Uploaded',
-    'Assigned', 
+    'Assigned',
     'In Progress',
     'Pending',
     'Failed',
+    'Renewal Failed',
     'Renewed',
     'Not Interested',
     'DNC Email',
@@ -686,8 +687,12 @@ const CaseTracking = () => {
 
   // Mock data for demonstration
   useEffect(() => {
-    // Initialize cases with all non-renewed cases
-    const initialCases = mockCases.filter(caseItem => caseItem.status !== 'Renewed');
+    // Initialize cases excluding: Renewed, Not Interested, and Renewal Failed cases
+    const initialCases = mockCases.filter(caseItem =>
+      caseItem.status !== 'Renewed' &&
+      caseItem.status !== 'Not Interested' &&
+      caseItem.status !== 'Renewal Failed'
+    );
     setCases(initialCases);
   }, [mockCases]);
 
@@ -848,11 +853,12 @@ const CaseTracking = () => {
       );
       
       // Filter by status
-      const matchesStatus = status === 'all' || 
+      const matchesStatus = status === 'all' ||
         caseItem.status.toLowerCase() === status.toLowerCase() ||
         // Handle specific status mappings
         (status === 'inProgress' && caseItem.status.toLowerCase() === 'in progress') ||
         (status === 'processed' && caseItem.status.toLowerCase() === 'payment processed') ||
+        (status === 'renewalFailed' && caseItem.status.toLowerCase() === 'renewal failed') ||
         (status === 'notInterested' && caseItem.status.toLowerCase() === 'not interested') ||
         (status === 'dncEmail' && caseItem.status.toLowerCase() === 'dnc email') ||
         (status === 'dncWhatsApp' && caseItem.status.toLowerCase() === 'dnc whatsapp') ||
@@ -2232,6 +2238,7 @@ const CaseTracking = () => {
                 <MenuItem value="processed">Payment Processed</MenuItem>
                 <MenuItem value="renewed">Renewed</MenuItem>
                 <MenuItem value="failed">Failed</MenuItem>
+                <MenuItem value="renewalFailed">Renewal Failed</MenuItem>
                 <MenuItem value="notInterested">Not Interested</MenuItem>
                 <MenuItem value="dncEmail">DNC Email</MenuItem>
                 <MenuItem value="dncWhatsApp">DNC WhatsApp</MenuItem>
