@@ -54,6 +54,8 @@ import {
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { LocalizationProvider, DateTimePicker } from '@mui/x-date-pickers';
 
+import qrcService from '../services/qrcService';// <-- service import
+
 const QRCManagement = () => {
   const theme = useTheme();
   const [openDialog, setOpenDialog] = useState(false);
@@ -62,7 +64,7 @@ const QRCManagement = () => {
   const [currentTab, setCurrentTab] = useState(0);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterType, setFilterType] = useState('all');
-  
+
   // Form state
   const [formData, setFormData] = useState({
     communicationMode: 'Call',
@@ -124,59 +126,159 @@ const QRCManagement = () => {
     // Add more states as needed
   ];
 
+  // Helper: format incoming date/time values for display
+  const _formatDateTimeForDisplay = (val) => {
+    if (!val) return val;
+    try {
+      const d = new Date(val);
+      if (!Number.isNaN(d.getTime())) {
+        return d.toLocaleString(); // browser-local formatted string
+      }
+    } catch (e) {
+      // ignore
+    }
+    return val; // fallback to original if not a date
+  };
+
   useEffect(() => {
-    // Mock data
-    setEntries([
-      {
-        id: 1,
-        communicationMode: 'Call',
-        caller: 'Customer',
-        callType: 'Query',
-        resolution: 'Resolved',
-        callReason: 'Policy Information',
-        callDateTime: '2025-10-10 09:30 AM',
-        callerName: 'Rajesh Kumar',
-        taCode: 'TA123456',
-        csrName: 'Firoz Khan Ummer',
-        icName: 'Pnb Metlife IC',
-        callerEmail: 'rajesh.kumar@email.com',
-        state: 'Karnataka',
-        city: 'Bangalore',
-        contactNumber: '9876543210',
-        remarks: 'Customer inquired about policy renewal process',
-        callId: 'CALL001',
-        isSuspiciousCase: false
-      },
-      // Add more mock entries as needed
-    ]);
+    // Fetch real data from backend via qrcService.list()
+    // If the call fails, fall back to a small local mock so UI still shows something.
+    const fetchEntries = async () => {
+      try {
+        const res = await qrcService.list();
+        // normalize any date fields for display
+        if (Array.isArray(res)) {
+          const normalized = res.map((item) => ({
+            ...item,
+            callDateTime: _formatDateTimeForDisplay(item.callDateTime),
+          }));
+          setEntries(normalized);
+        } else if (res && Array.isArray(res.results)) {
+          // handle paginated responses like { results: [...] }
+          const normalized = res.results.map((item) => ({
+            ...item,
+            callDateTime: _formatDateTimeForDisplay(item.callDateTime),
+          }));
+          setEntries(normalized);
+        } else {
+          // unexpected structure: set empty array
+          setEntries([]);
+        }
+      } catch (err) {
+        console.error('Failed to load QRC entries from API, using mock data as fallback:', err);
+        // fallback mock data (same as previous mock)
+        setEntries([
+          {
+            id: 1,
+            communicationMode: 'Call',
+            caller: 'Customer',
+            callType: 'Query',
+            resolution: 'Resolved',
+            callReason: 'Policy Information',
+            callDateTime: '2025-10-10 09:30 AM',
+            callerName: 'Rajesh Kumar',
+            taCode: 'TA123456',
+            csrName: 'Firoz Khan Ummer',
+            icName: 'Pnb Metlife IC',
+            callerEmail: 'rajesh.kumar@email.com',
+            state: 'Karnataka',
+            city: 'Bangalore',
+            contactNumber: '9876543210',
+            remarks: 'Customer inquired about policy renewal process',
+            callId: 'CALL001',
+            isSuspiciousCase: false
+          },
+        ]);
+      }
+    };
+
+    fetchEntries();
   }, []);
 
-  const handleFormSubmit = () => {
-    const newEntry = {
-      id: entries.length + 1,
-      ...formData
+  const handleFormSubmit = async () => {
+    // prepare payload - keep keys same as formData; qrcService will handle date conversion
+    const payload = {
+      ...formData,
     };
-    
-    if (selectedEntry) {
-      setEntries(entries.map(entry => 
-        entry.id === selectedEntry.id ? { ...entry, ...formData } : entry
-      ));
-    } else {
-      setEntries([...entries, newEntry]);
+    try {
+      if (selectedEntry && selectedEntry.id) {
+        // update via API
+        const updated = await qrcService.update(selectedEntry.id, payload);
+        // normalize date for display
+        const normalized = { ...updated, callDateTime: _formatDateTimeForDisplay(updated.callDateTime) };
+        setEntries(prev => prev.map(entry => (entry.id === selectedEntry.id ? normalized : entry)));
+      } else {
+        // create via API
+        const created = await qrcService.create(payload);
+        const normalized = { ...created, callDateTime: _formatDateTimeForDisplay(created.callDateTime) };
+        setEntries(prev => [...prev, normalized]);
+      }
+      setOpenDialog(false);
+      resetForm();
+    } catch (err) {
+      // If API persist fails (backend unavailable or network), fall back to a local in-memory save
+      console.error('Failed to save entry to API, falling back to local:', err);
+      try {
+        if (selectedEntry && selectedEntry.id) {
+          // local update
+          const normalized = {
+            ...selectedEntry,
+            ...payload,
+            callDateTime: _formatDateTimeForDisplay(payload.callDateTime || selectedEntry.callDateTime),
+          };
+          setEntries(prev => prev.map(entry => (entry.id === selectedEntry.id ? normalized : entry)));
+        } else {
+          // local create: synthesize an id and callId when backend is unavailable
+          const id = Date.now();
+          const callId = formData.callId || `CALL${id}`;
+          const local = {
+            id,
+            callId,
+            ...payload,
+            callDateTime: _formatDateTimeForDisplay(payload.callDateTime),
+          };
+          setEntries(prev => [...prev, local]);
+        }
+        setOpenDialog(false);
+        resetForm();
+      } catch (localErr) {
+        console.error('Failed to perform local fallback save:', localErr);
+      }
     }
-    
-    setOpenDialog(false);
-    resetForm();
   };
 
   const handleEdit = (entry) => {
     setSelectedEntry(entry);
-    setFormData(entry);
+    // convert callDateTime back to Date for the DateTimePicker if possible
+    const prepared = {
+      ...entry,
+    };
+    try {
+      const d = new Date(entry.callDateTime);
+      if (!Number.isNaN(d.getTime())) prepared.callDateTime = d;
+    } catch (e) {
+      // leave as-is
+    }
+    setFormData(prepared);
     setOpenDialog(true);
   };
 
-  const handleDelete = (id) => {
-    setEntries(entries.filter(entry => entry.id !== id));
+  const handleDelete = async (id) => {
+    // Add confirmation dialog
+    if (!window.confirm('Are you sure you want to delete this entry?')) {
+      return;
+    }
+
+    try {
+      await qrcService.destroy(id);
+      setEntries(entries.filter(entry => entry.id !== id));
+    } catch (err) {
+      console.error('Failed to delete entry via API:', err);
+      // Fallback: delete locally even if API fails
+      setEntries(entries.filter(entry => entry.id !== id));
+      // Optionally show a warning that it was deleted locally but may not persist
+      alert('Entry deleted locally. Note: Server may not have been updated due to connection issues.');
+    }
   };
 
   const resetForm = () => {
@@ -231,7 +333,7 @@ const QRCManagement = () => {
   };
 
   const filteredEntries = entries.filter(entry => {
-    const matchesSearch = Object.values(entry).some(value => 
+    const matchesSearch = Object.values(entry).some(value =>
       value?.toString().toLowerCase().includes(searchTerm.toLowerCase())
     );
     const matchesType = filterType === 'all' || entry.callType.toLowerCase() === filterType;
@@ -370,8 +472,8 @@ const QRCManagement = () => {
       </Card>
 
       {/* Add/Edit Dialog */}
-      <Dialog 
-        open={openDialog} 
+      <Dialog
+        open={openDialog}
         onClose={() => setOpenDialog(false)}
         maxWidth="md"
         fullWidth
@@ -395,7 +497,7 @@ const QRCManagement = () => {
                 </Select>
               </FormControl>
             </Grid>
-            
+
             <Grid item xs={12} md={6}>
               <FormControl fullWidth>
                 <InputLabel>Caller Type</InputLabel>

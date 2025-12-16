@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import trainingService from '../services/trainingService';
 import {
   Box,
   Container,
@@ -80,6 +81,39 @@ const TrainingManagement = () => {
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
   const [documentDialog, setDocumentDialog] = useState(false);
   const [selectedModule, setSelectedModule] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  // Process Training states
+  const [processDetailDialog, setProcessDetailDialog] = useState(false);
+  const [selectedProcessModule, setSelectedProcessModule] = useState(null);
+
+  // Load data from API on component mount
+  useEffect(() => {
+    loadTrainingModules();
+    loadAgentProgress();
+  }, []);
+
+  const loadTrainingModules = async () => {
+    try {
+      setLoading(true);
+      const data = await trainingService.getTrainingModules();
+      setModules(data);
+    } catch (error) {
+      console.error('Error loading training modules:', error);
+      setSnackbar({ open: true, message: 'Failed to load training modules', severity: 'error' });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const loadAgentProgress = async () => {
+    try {
+      const data = await trainingService.getAgentProgress();
+      setAgentProgress(data);
+    } catch (error) {
+      console.error('Error loading agent progress:', error);
+    }
+  };
 
   // Training Modules State
   const [modules, setModules] = useState([
@@ -316,6 +350,7 @@ const TrainingManagement = () => {
     type: '',
     size: '',
   });
+  const [selectedFile, setSelectedFile] = useState(null);
 
   const handleTabChange = (event, newValue) => {
     setActiveTab(newValue);
@@ -353,38 +388,48 @@ const TrainingManagement = () => {
     setEditingModule(null);
   };
 
-  const handleSaveModule = () => {
-    if (editingModule) {
-      setModules(modules.map(m => m.id === editingModule.id ? {
-        ...m,
-        ...moduleForm,
-      } : m));
-      setSnackbar({ open: true, message: 'Module updated successfully!', severity: 'success' });
-    } else {
-      const newModule = {
-        id: modules.length + 1,
-        ...moduleForm,
-        enrolledAgents: 0,
-        completionRate: 0,
-        documents: [],
-        assessments: 0,
-        createdBy: 'Admin',
-        createdDate: new Date().toISOString().split('T')[0],
-      };
-      setModules([...modules, newModule]);
-      setSnackbar({ open: true, message: 'Module created successfully!', severity: 'success' });
+  const handleSaveModule = async () => {
+    try {
+      if (editingModule) {
+        const updatedModule = await trainingService.updateTrainingModule(editingModule.id, moduleForm);
+        setModules(modules.map(m => m.id === editingModule.id ? {
+          ...m,
+          ...moduleForm,
+        } : m));
+        setSnackbar({ open: true, message: 'Module updated successfully!', severity: 'success' });
+      } else {
+        const newModule = await trainingService.createTrainingModule(moduleForm);
+        setModules([...modules, {
+          ...newModule,
+          enrolledAgents: 0,
+          completionRate: 0,
+          documents: [],
+          assessments: 0,
+        }]);
+        setSnackbar({ open: true, message: 'Module created successfully!', severity: 'success' });
+      }
+      handleCloseModuleDialog();
+    } catch (error) {
+      console.error('Error saving module:', error);
+      setSnackbar({ open: true, message: 'Failed to save module', severity: 'error' });
     }
-    handleCloseModuleDialog();
   };
 
-  const handleDeleteModule = (moduleId) => {
-    setModules(modules.filter(m => m.id !== moduleId));
-    setSnackbar({ open: true, message: 'Module deleted successfully!', severity: 'warning' });
+  const handleDeleteModule = async (moduleId) => {
+    try {
+      await trainingService.deleteTrainingModule(moduleId);
+      setModules(modules.filter(m => m.id !== moduleId));
+      setSnackbar({ open: true, message: 'Module deleted successfully!', severity: 'warning' });
+    } catch (error) {
+      console.error('Error deleting module:', error);
+      setSnackbar({ open: true, message: 'Failed to delete module', severity: 'error' });
+    }
   };
 
   const handleOpenDocumentDialog = (module) => {
     setSelectedModule(module);
     setDocumentForm({ name: '', type: '', size: '' });
+    setSelectedFile(null);
     setDocumentDialog(true);
   };
 
@@ -393,33 +438,118 @@ const TrainingManagement = () => {
     setSelectedModule(null);
   };
 
-  const handleUploadDocument = () => {
-    if (selectedModule && documentForm.name) {
-      const newDocument = {
-        id: Date.now(),
-        name: documentForm.name,
-        type: documentForm.type,
-        size: documentForm.size,
-        uploadDate: new Date().toISOString().split('T')[0],
-      };
+  const handleFileSelect = (event) => {
+    const file = event.target.files[0];
+    if (file) {
+      setSelectedFile(file);
 
-      setModules(modules.map(m => m.id === selectedModule.id ? {
-        ...m,
-        documents: [...m.documents, newDocument],
-      } : m));
+      // Auto-fill form fields
+      const fileName = file.name;
+      const fileSize = (file.size / (1024 * 1024)).toFixed(2) + ' MB';
+      const fileExtension = fileName.split('.').pop().toLowerCase();
 
-      setSnackbar({ open: true, message: 'Document uploaded successfully!', severity: 'success' });
-      handleCloseDocumentDialog();
+      let fileType = 'doc';
+      if (fileExtension === 'pdf') fileType = 'pdf';
+      else if (['mp4', 'avi', 'mov', 'wmv'].includes(fileExtension)) fileType = 'video';
+
+      setDocumentForm({
+        name: fileName,
+        type: fileType,
+        size: fileSize,
+      });
     }
   };
 
-  const handleDeleteDocument = (moduleId, documentId) => {
-    setModules(modules.map(m => m.id === moduleId ? {
-      ...m,
-      documents: m.documents.filter(d => d.id !== documentId),
-    } : m));
-    setSnackbar({ open: true, message: 'Document deleted successfully!', severity: 'warning' });
+  const handleUploadDocument = async () => {
+    if (selectedModule && documentForm.name && selectedFile) {
+      try {
+        // In a real app, you would upload the file to a server
+        // For now, we'll create a document record with the file info
+        const newDocument = await trainingService.uploadDocument(selectedModule.id, {
+          ...documentForm,
+          file: selectedFile,
+        });
+
+        setModules(modules.map(m => m.id === selectedModule.id ? {
+          ...m,
+          documents: [...m.documents, newDocument],
+        } : m));
+
+        setSnackbar({ open: true, message: 'Document uploaded successfully!', severity: 'success' });
+        handleCloseDocumentDialog();
+      } catch (error) {
+        console.error('Error uploading document:', error);
+        setSnackbar({ open: true, message: 'Failed to upload document', severity: 'error' });
+      }
+    } else {
+      setSnackbar({ open: true, message: 'Please select a file to upload', severity: 'warning' });
+    }
   };
+
+  const handleDeleteDocument = async (moduleId, documentId) => {
+    try {
+      await trainingService.deleteDocument(moduleId, documentId);
+      setModules(modules.map(m => m.id === moduleId ? {
+        ...m,
+        documents: m.documents.filter(d => d.id !== documentId),
+      } : m));
+      setSnackbar({ open: true, message: 'Document deleted successfully!', severity: 'warning' });
+    } catch (error) {
+      console.error('Error deleting document:', error);
+      setSnackbar({ open: true, message: 'Failed to delete document', severity: 'error' });
+    }
+  };
+
+  // Process Training Handlers
+  const handleViewDetails = (module) => {
+    setSelectedProcessModule(module);
+    setProcessDetailDialog(true);
+  };
+
+  const handleStartModule = (module) => {
+    setSnackbar({
+      open: true,
+      message: `Starting module: ${module.title}. Redirecting to training portal...`,
+      severity: 'info'
+    });
+    // TODO: Implement actual module start logic (e.g., navigate to training portal)
+    console.log('Starting module:', module);
+  };
+
+  const handleDownloadMaterials = (module) => {
+    setSnackbar({
+      open: true,
+      message: `Downloading materials for: ${module.title}`,
+      severity: 'success'
+    });
+    // TODO: Implement actual download logic
+    console.log('Downloading materials for module:', module);
+
+    // Simulate download
+    const materials = {
+      moduleName: module.title,
+      topics: module.topics,
+      duration: module.duration,
+      description: module.description
+    };
+
+    // Create a blob and download as JSON (placeholder for actual materials)
+    const blob = new Blob([JSON.stringify(materials, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `${module.title.replace(/\s+/g, '_')}_Materials.json`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
+  const handleCloseProcessDetailDialog = () => {
+    setProcessDetailDialog(false);
+    setSelectedProcessModule(null);
+  };
+
 
   const getCategoryColor = (category) => {
     const colors = {
@@ -817,13 +947,13 @@ const TrainingManagement = () => {
                   </CardContent>
 
                   <CardActions>
-                    <Button size="small" startIcon={<PlayIcon />}>
+                    <Button size="small" startIcon={<PlayIcon />} onClick={() => handleStartModule(module)}>
                       Start Module
                     </Button>
-                    <Button size="small" startIcon={<ViewIcon />}>
+                    <Button size="small" startIcon={<ViewIcon />} onClick={() => handleViewDetails(module)}>
                       View Details
                     </Button>
-                    <Button size="small" startIcon={<DownloadIcon />}>
+                    <Button size="small" startIcon={<DownloadIcon />} onClick={() => handleDownloadMaterials(module)}>
                       Download Materials
                     </Button>
                   </CardActions>
@@ -913,13 +1043,13 @@ const TrainingManagement = () => {
                   </CardContent>
 
                   <CardActions>
-                    <Button size="small" startIcon={<PlayIcon />}>
+                    <Button size="small" startIcon={<PlayIcon />} onClick={() => handleStartModule(module)}>
                       Start Module
                     </Button>
-                    <Button size="small" startIcon={<ViewIcon />}>
+                    <Button size="small" startIcon={<ViewIcon />} onClick={() => handleViewDetails(module)}>
                       View Details
                     </Button>
-                    <Button size="small" startIcon={<DownloadIcon />}>
+                    <Button size="small" startIcon={<DownloadIcon />} onClick={() => handleDownloadMaterials(module)}>
                       Download Materials
                     </Button>
                   </CardActions>
@@ -1227,17 +1357,32 @@ const TrainingManagement = () => {
               />
             </Grid>
             <Grid item xs={12}>
-              <Button
-                variant="outlined"
-                fullWidth
-                startIcon={<UploadIcon />}
-                sx={{ height: 100, borderStyle: 'dashed' }}
-              >
-                Click to Upload or Drag & Drop
-              </Button>
+              <input
+                type="file"
+                accept=".pdf,.mp4,.avi,.mov,.wmv,.doc,.docx,.ppt,.pptx"
+                style={{ display: 'none' }}
+                id="file-upload-input"
+                onChange={handleFileSelect}
+              />
+              <label htmlFor="file-upload-input" style={{ width: '100%', display: 'block' }}>
+                <Button
+                  variant="outlined"
+                  fullWidth
+                  component="span"
+                  startIcon={<UploadIcon />}
+                  sx={{ height: 100, borderStyle: 'dashed' }}
+                >
+                  {selectedFile ? selectedFile.name : 'Click to Upload or Drag & Drop'}
+                </Button>
+              </label>
               <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
                 Supported formats: PDF, MP4, DOCX, PPTX (Max 100MB)
               </Typography>
+              {selectedFile && (
+                <Typography variant="body2" color="primary" sx={{ mt: 1 }}>
+                  Selected: {selectedFile.name} ({(selectedFile.size / (1024 * 1024)).toFixed(2)} MB)
+                </Typography>
+              )}
             </Grid>
           </Grid>
         </DialogContent>
@@ -1245,6 +1390,165 @@ const TrainingManagement = () => {
           <Button onClick={handleCloseDocumentDialog}>Cancel</Button>
           <Button onClick={handleUploadDocument} variant="contained" startIcon={<UploadIcon />}>
             Upload Document
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Process Training Detail Dialog */}
+      <Dialog
+        open={processDetailDialog}
+        onClose={handleCloseProcessDetailDialog}
+        maxWidth="md"
+        fullWidth
+      >
+        <DialogTitle>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+            <Avatar sx={{ bgcolor: 'success.main' }}>
+              <CodeIcon />
+            </Avatar>
+            <Box>
+              <Typography variant="h6" fontWeight="600">
+                {selectedProcessModule?.title}
+              </Typography>
+              <Typography variant="caption" color="text.secondary">
+                Process Training Module
+              </Typography>
+            </Box>
+          </Box>
+        </DialogTitle>
+        <DialogContent dividers>
+          {selectedProcessModule && (
+            <Grid container spacing={3}>
+              {/* Module Description */}
+              <Grid item xs={12}>
+                <Typography variant="body1" color="text.secondary">
+                  {selectedProcessModule.description}
+                </Typography>
+              </Grid>
+
+              {/* Module Stats */}
+              <Grid item xs={12}>
+                <Grid container spacing={2}>
+                  <Grid item xs={6} sm={3}>
+                    <Paper sx={{ p: 2, textAlign: 'center' }}>
+                      <TimerIcon color="action" />
+                      <Typography variant="h6" fontWeight="600" sx={{ mt: 1 }}>
+                        {selectedProcessModule.duration}
+                      </Typography>
+                      <Typography variant="caption" color="text.secondary">
+                        Duration
+                      </Typography>
+                    </Paper>
+                  </Grid>
+                  <Grid item xs={6} sm={3}>
+                    <Paper sx={{ p: 2, textAlign: 'center' }}>
+                      <GroupIcon color="action" />
+                      <Typography variant="h6" fontWeight="600" sx={{ mt: 1 }}>
+                        {selectedProcessModule.enrolled}
+                      </Typography>
+                      <Typography variant="caption" color="text.secondary">
+                        Enrolled
+                      </Typography>
+                    </Paper>
+                  </Grid>
+                  <Grid item xs={6} sm={3}>
+                    <Paper sx={{ p: 2, textAlign: 'center' }}>
+                      <TrendingUpIcon color="action" />
+                      <Typography variant="h6" fontWeight="600" sx={{ mt: 1 }}>
+                        {selectedProcessModule.completionRate}%
+                      </Typography>
+                      <Typography variant="caption" color="text.secondary">
+                        Completion
+                      </Typography>
+                    </Paper>
+                  </Grid>
+                  <Grid item xs={6} sm={3}>
+                    <Paper sx={{ p: 2, textAlign: 'center' }}>
+                      <StarIcon color="warning" />
+                      <Typography variant="h6" fontWeight="600" sx={{ mt: 1 }}>
+                        4.5
+                      </Typography>
+                      <Typography variant="caption" color="text.secondary">
+                        Rating
+                      </Typography>
+                    </Paper>
+                  </Grid>
+                </Grid>
+              </Grid>
+
+              {/* Topics Covered */}
+              <Grid item xs={12}>
+                <Typography variant="h6" fontWeight="600" gutterBottom>
+                  Topics Covered
+                </Typography>
+                <List>
+                  {selectedProcessModule.topics.map((topic, index) => (
+                    <ListItem key={index}>
+                      <ListItemIcon>
+                        <CheckCircleIcon color="success" />
+                      </ListItemIcon>
+                      <ListItemText primary={topic} />
+                    </ListItem>
+                  ))}
+                </List>
+              </Grid>
+
+              {/* Completion Progress */}
+              <Grid item xs={12}>
+                <Typography variant="h6" fontWeight="600" gutterBottom>
+                  Overall Progress
+                </Typography>
+                <Box sx={{ mt: 2 }}>
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
+                    <Typography variant="body2" color="text.secondary">
+                      Completion Rate
+                    </Typography>
+                    <Typography variant="body2" fontWeight="600">
+                      {selectedProcessModule.completionRate}%
+                    </Typography>
+                  </Box>
+                  <LinearProgress
+                    variant="determinate"
+                    value={selectedProcessModule.completionRate}
+                    sx={{ height: 8, borderRadius: 4 }}
+                  />
+                </Box>
+              </Grid>
+
+              {/* Additional Info */}
+              <Grid item xs={12}>
+                <Alert severity="info">
+                  <Typography variant="body2">
+                    This module is part of the Process Training curriculum. Complete all topics to earn your certification.
+                  </Typography>
+                </Alert>
+              </Grid>
+            </Grid>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseProcessDetailDialog}>
+            Close
+          </Button>
+          <Button
+            variant="outlined"
+            startIcon={<DownloadIcon />}
+            onClick={() => {
+              handleDownloadMaterials(selectedProcessModule);
+              handleCloseProcessDetailDialog();
+            }}
+          >
+            Download Materials
+          </Button>
+          <Button
+            variant="contained"
+            startIcon={<PlayIcon />}
+            onClick={() => {
+              handleStartModule(selectedProcessModule);
+              handleCloseProcessDetailDialog();
+            }}
+          >
+            Start Module
           </Button>
         </DialogActions>
       </Dialog>

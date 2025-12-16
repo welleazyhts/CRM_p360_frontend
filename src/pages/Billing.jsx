@@ -6,10 +6,12 @@ import {
   FormControl, InputLabel, Select, MenuItem, TextField, Button,
   IconButton, Tooltip, Chip, Tabs, Tab, Dialog, DialogTitle,
   DialogContent, DialogActions, Badge,
-  Avatar, InputAdornment, Alert, LinearProgress, CircularProgress
+  Avatar, InputAdornment, Alert, LinearProgress, CircularProgress,
+  Snackbar
 } from '@mui/material';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { LocalizationProvider, DatePicker } from '@mui/x-date-pickers';
+import { jsPDF } from 'jspdf';
 import {
   Receipt as ReceiptIcon,
   FilterList as FilterIcon,
@@ -35,6 +37,7 @@ import {
   Notifications as NotificationsIcon
 } from '@mui/icons-material';
 import { useSettings } from '../context/SettingsContext';
+import billingService from '../services/billingService';
 
 const Billing = () => {
   const theme = useTheme();
@@ -78,263 +81,35 @@ const Billing = () => {
   });
 
   // Vendor communication data
-  const [vendorCommunications] = useState([
-    {
-      vendorId: 'VEN001',
-      vendorName: 'SMS Gateway Pro',
-      vendorType: 'SMS Provider',
-      totalCommunications: 1247,
-      deliveryStats: {
-        delivered: 1198,
-        failed: 35,
-        pending: 14
-      },
-      costPerMessage: 0.05,
-      totalCost: 62.35,
-      lastActivity: '2024-01-15T10:30:00Z',
-      contactPerson: 'John Smith',
-      supportEmail: 'support@smsgateway.com'
-    },
-    {
-      vendorId: 'VEN002',
-      vendorName: 'Email Service Plus',
-      vendorType: 'Email Provider',
-      totalCommunications: 892,
-      deliveryStats: {
-        delivered: 856,
-        failed: 23,
-        pending: 13
-      },
-      costPerMessage: 0.02,
-      totalCost: 17.84,
-      lastActivity: '2024-01-15T09:45:00Z',
-      contactPerson: 'Sarah Johnson',
-      supportEmail: 'support@emailplus.com'
-    },
-    {
-      vendorId: 'VEN003',
-      vendorName: 'WhatsApp Business API',
-      vendorType: 'WhatsApp Provider',
-      totalCommunications: 634,
-      deliveryStats: {
-        delivered: 612,
-        failed: 18,
-        pending: 4
-      },
-      costPerMessage: 0.08,
-      totalCost: 50.72,
-      lastActivity: '2024-01-15T11:20:00Z',
-      contactPerson: 'Mike Chen',
-      supportEmail: 'api-support@whatsapp.com'
-    }
-  ]);
+  const [vendorCommunications, setVendorCommunications] = useState([]);
 
   // Communication delivery status tracking
   const [deliveryStatusView, setDeliveryStatusView] = useState('individual'); // 'individual' or 'bulk'
-  const [individualCases] = useState([
-    {
-      caseId: 'CASE001',
-      customerName: 'Arjun Sharma',
-      policyNumber: 'POL123456',
-      communicationType: 'SMS',
-      message: 'Policy renewal reminder - Due in 7 days',
-      sentAt: '2024-01-15T08:30:00Z',
-      deliveryStatus: 'delivered',
-      deliveredAt: '2024-01-15T08:30:15Z',
-      vendor: 'SMS Gateway Pro',
-      cost: 0.05,
-      attempts: 1,
-      errorMessage: null
-    },
-    {
-      caseId: 'CASE002',
-      customerName: 'Priya Patel',
-      policyNumber: 'POL789012',
-      communicationType: 'Email',
-      message: 'Welcome to your new policy',
-      sentAt: '2024-01-15T09:15:00Z',
-      deliveryStatus: 'failed',
-      deliveredAt: null,
-      vendor: 'Email Service Plus',
-      cost: 0.02,
-      attempts: 3,
-      errorMessage: 'Invalid email address'
-    },
-    {
-      caseId: 'CASE003',
-      customerName: 'Rajesh Kumar',
-      policyNumber: 'POL345678',
-      communicationType: 'WhatsApp',
-      message: 'Claim status update - Approved',
-      sentAt: '2024-01-15T10:00:00Z',
-      deliveryStatus: 'pending',
-      deliveredAt: null,
-      vendor: 'WhatsApp Business API',
-      cost: 0.08,
-      attempts: 1,
-      errorMessage: null
-    }
-  ]);
+  const [individualCases, setIndividualCases] = useState([]);
 
-  const [bulkCampaigns] = useState([
-    {
-      campaignId: 'BULK001',
-      campaignName: 'Monthly Policy Renewal Reminders',
-      type: 'SMS',
-      totalRecipients: 1500,
-      sentCount: 1500,
-      deliveredCount: 1435,
-      failedCount: 45,
-      pendingCount: 20,
-      startedAt: '2024-01-15T06:00:00Z',
-      completedAt: '2024-01-15T06:45:00Z',
-      vendor: 'SMS Gateway Pro',
-      totalCost: 75.00,
-      deliveryRate: 95.67
-    },
-    {
-      campaignId: 'BULK002',
-      campaignName: 'New Product Launch Announcement',
-      type: 'Email',
-      totalRecipients: 2500,
-      sentCount: 2500,
-      deliveredCount: 2387,
-      failedCount: 89,
-      pendingCount: 24,
-      startedAt: '2024-01-14T14:00:00Z',
-      completedAt: '2024-01-14T15:30:00Z',
-      vendor: 'Email Service Plus',
-      totalCost: 50.00,
-      deliveryRate: 95.48
-    }
-  ]);
-  
+  const [bulkCampaigns, setBulkCampaigns] = useState([]);
+
   // Sample communication statistics data
-  const [communicationStats] = useState({
-    sms: [
-      { date: '2024-01-01', count: 150, status: 'Delivered' },
-      { date: '2024-01-02', count: 200, status: 'Delivered' },
-      { date: '2024-01-03', count: 180, status: 'Delivered' }
-    ],
-    email: [
-      { date: '2024-01-01', count: 75, status: 'Sent' },
-      { date: '2024-01-02', count: 90, status: 'Sent' },
-      { date: '2024-01-03', count: 85, status: 'Sent' }
-    ],
-    whatsapp: [
-      { date: '2024-01-01', count: 120, status: 'Delivered' },
-      { date: '2024-01-02', count: 150, status: 'Delivered' },
-      { date: '2024-01-03', count: 130, status: 'Delivered' }
-    ]
-  });
+  const [communicationStats, setCommunicationStats] = useState({ sms: [], email: [], whatsapp: [] });
 
   // Sample invoice data with enhanced receivable information
-  const [invoices, setInvoices] = useState([
-    { 
-      id: 'INV-2023-IN001', 
-      date: '2023-10-01', 
-      amount: 95000.00, 
-      status: 'Paid', 
-      pdfUrl: '#',
-      receivableInfo: {
-        dueDate: '2023-10-31',
-        paymentTerms: 'Net 30',
-        creditLimit: '500000',
-        accountingCode: 'ACC-001',
-        taxId: 'TAX123456',
-        billingAddress: '123 Business St, Mumbai, MH 400001',
-        contactPerson: 'Finance Manager',
-        contactEmail: 'finance@company.com',
-        contactPhone: '+91-9876543210',
-        paymentMethod: 'bank_transfer',
-        bankDetails: {
-          accountNumber: '1234567890',
-          routingNumber: 'HDFC0001234',
-          bankName: 'HDFC Bank',
-          swiftCode: 'HDFCINBB'
-        },
-        notes: 'Payment received on time'
-      }
-    },
-    { 
-      id: 'INV-2023-IN002', 
-      date: '2023-11-01', 
-      amount: 102500.50, 
-      status: 'Paid', 
-      pdfUrl: '#',
-      receivableInfo: {
-        dueDate: '2023-11-30',
-        paymentTerms: 'Net 30',
-        creditLimit: '500000',
-        accountingCode: 'ACC-002',
-        taxId: 'TAX789012',
-        billingAddress: '456 Corporate Ave, Delhi, DL 110001',
-        contactPerson: 'Accounts Payable',
-        contactEmail: 'ap@company.com',
-        contactPhone: '+91-9876543211',
-        paymentMethod: 'cheque',
-        bankDetails: {
-          accountNumber: '',
-          routingNumber: '',
-          bankName: '',
-          swiftCode: ''
-        },
-        notes: 'Paid via cheque'
-      }
-    },
-    { 
-      id: 'INV-2023-IN003', 
-      date: '2023-12-01', 
-      amount: 108750.75, 
-      status: 'Pending', 
-      pdfUrl: '#',
-      receivableInfo: {
-        dueDate: '2023-12-31',
-        paymentTerms: 'Net 30',
-        creditLimit: '500000',
-        accountingCode: 'ACC-003',
-        taxId: 'TAX345678',
-        billingAddress: '789 Enterprise Blvd, Bangalore, KA 560001',
-        contactPerson: 'CFO',
-        contactEmail: 'cfo@company.com',
-        contactPhone: '+91-9876543212',
-        paymentMethod: 'bank_transfer',
-        bankDetails: {
-          accountNumber: '9876543210',
-          routingNumber: 'ICIC0001234',
-          bankName: 'ICICI Bank',
-          swiftCode: 'ICICINBB'
-        },
-        notes: 'Follow up required'
-      }
-    },
-    { 
-      id: 'INV-2024-IN001', 
-      date: '2024-01-01', 
-      amount: 105000.25, 
-      status: 'Pending', 
-      pdfUrl: '#',
-      receivableInfo: {
-        dueDate: '2024-01-31',
-        paymentTerms: 'Net 30',
-        creditLimit: '500000',
-        accountingCode: 'ACC-004',
-        taxId: 'TAX901234',
-        billingAddress: '321 Business Park, Pune, MH 411001',
-        contactPerson: 'Finance Director',
-        contactEmail: 'finance.director@company.com',
-        contactPhone: '+91-9876543213',
-        paymentMethod: 'bank_transfer',
-        bankDetails: {
-          accountNumber: '5432109876',
-          routingNumber: 'SBIN0001234',
-          bankName: 'State Bank of India',
-          swiftCode: 'SBININBB'
-        },
-        notes: 'New client - monitor closely'
-      }
-    }
-  ]);
+  const [invoices, setInvoices] = useState([]);
+
+  // View Invoice Dialog state
+  const [viewInvoiceDialog, setViewInvoiceDialog] = useState({
+    open: false,
+    invoice: null
+  });
+
+  // Snackbar state
+  const [snackbar, setSnackbar] = useState({
+    open: false,
+    message: '',
+    severity: 'success'
+  });
+
+  // Filter applied state
+  const [filtersApplied, setFiltersApplied] = useState(false);
 
   // Months array for dropdown
   const months = [
@@ -346,16 +121,38 @@ const Billing = () => {
   const currentYear = new Date().getFullYear();
   const years = [currentYear, currentYear - 1, currentYear - 2];
 
-  // Load animation effect
+  // Load animation effect and data from service
   useEffect(() => {
-    setLoaded(true);
+    const loadBillingData = async () => {
+      try {
+        const [invoicesData, vendorCommsData, statsData, individualCasesData, bulkCampaignsData] = await Promise.all([
+          billingService.getInvoices(),
+          billingService.getVendorCommunications(),
+          billingService.getCommunicationStats(),
+          billingService.getIndividualCases(),
+          billingService.getBulkCampaigns()
+        ]);
+
+        setInvoices(invoicesData);
+        setVendorCommunications(vendorCommsData);
+        setCommunicationStats(statsData);
+        setIndividualCases(individualCasesData);
+        setBulkCampaigns(bulkCampaignsData);
+      } catch (error) {
+        console.error('Failed to load billing data:', error);
+      } finally {
+        setLoaded(true);
+      }
+    };
+
+    loadBillingData();
   }, []);
 
   // Apply filters and update data
   useEffect(() => {
     // In a real app, this would fetch filtered data from an API
     // For this demo, we'll just use the sample data from settings
-    
+
     // Simulate filtered data based on selected filters
     // In a real app, you would fetch this data from your backend
     setFilteredData({
@@ -363,13 +160,13 @@ const Billing = () => {
       platform: settings.billing.platform,
       totalMonthly: settings.billing.totalMonthly
     });
-    
+
     // Just for demonstration, we'll log the filter criteria
     if (filterType === 'month') {
-              // Filtering for specific month and year
-      } else {
-        // Filtering by date range
-      }
+      // Filtering for specific month and year
+    } else {
+      // Filtering by date range
+    }
   }, [filterType, selectedMonth, selectedYear, startDate, endDate, settings.billing]);
 
   const handleTabChange = (event, newValue) => {
@@ -392,21 +189,281 @@ const Billing = () => {
     window.print();
   };
 
+  // Apply filters handler
+  const handleApplyFilters = () => {
+    // Filter invoices based on selected criteria
+    let filtered = [...invoices];
+
+    if (filterType === 'month') {
+      filtered = invoices.filter(invoice => {
+        const invoiceDate = new Date(invoice.date);
+        return invoiceDate.getMonth() === selectedMonth &&
+          invoiceDate.getFullYear() === selectedYear;
+      });
+    } else if (startDate && endDate) {
+      filtered = invoices.filter(invoice => {
+        const invoiceDate = new Date(invoice.date);
+        return invoiceDate >= startDate && invoiceDate <= endDate;
+      });
+    }
+
+    // Update filtered data with actual billing calculations
+    const totalUtilization = settings.billing.utilization.reduce((sum, item) => sum + item.cost, 0);
+    const totalPlatform = settings.billing.platform.reduce((sum, item) => sum + item.cost, 0);
+
+    setFilteredData({
+      utilization: settings.billing.utilization,
+      platform: settings.billing.platform,
+      totalMonthly: totalUtilization + totalPlatform
+    });
+
+    setFiltersApplied(true);
+    setSnackbar({
+      open: true,
+      message: `Filters applied successfully! Showing data for ${filterType === 'month' ? `${months[selectedMonth]} ${selectedYear}` : `${startDate?.toLocaleDateString()} - ${endDate?.toLocaleDateString()}`}`,
+      severity: 'success'
+    });
+  };
+
+  // Download billing summary as PDF
   const handleDownload = () => {
-    // In a real app, this would generate and download a PDF or CSV
-    alert('Download functionality would be implemented here');
+    const doc = new jsPDF();
+    const pageWidth = doc.internal.pageSize.getWidth();
+
+    // Title
+    doc.setFontSize(20);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Billing Summary Report', pageWidth / 2, 20, { align: 'center' });
+
+    // Date range
+    doc.setFontSize(12);
+    doc.setFont('helvetica', 'normal');
+    const dateRange = filterType === 'month'
+      ? `${months[selectedMonth]} ${selectedYear}`
+      : startDate && endDate
+        ? `${startDate.toLocaleDateString()} - ${endDate.toLocaleDateString()}`
+        : 'All Time';
+    doc.text(`Period: ${dateRange}`, pageWidth / 2, 30, { align: 'center' });
+    doc.text(`Generated: ${new Date().toLocaleDateString()}`, pageWidth / 2, 37, { align: 'center' });
+
+    // Add line
+    doc.setLineWidth(0.5);
+    doc.line(20, 42, pageWidth - 20, 42);
+
+    // Utilization Charges Section
+    doc.setFontSize(14);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Portal Usage - Utilization Charges', 20, 52);
+
+    // Table headers
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'bold');
+    let yPos = 62;
+    doc.text('Service', 20, yPos);
+    doc.text('Count', 100, yPos);
+    doc.text('Cost (₹)', 160, yPos);
+
+    // Utilization data
+    doc.setFont('helvetica', 'normal');
+    yPos += 8;
+    filteredData.utilization.forEach((item) => {
+      doc.text(item.service, 20, yPos);
+      doc.text(item.count.toLocaleString(), 100, yPos);
+      doc.text(item.cost.toFixed(2), 160, yPos);
+      yPos += 7;
+    });
+
+    // Platform Charges Section
+    yPos += 10;
+    doc.setFontSize(14);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Platform Charges', 20, yPos);
+
+    // Table headers
+    yPos += 10;
+    doc.setFontSize(10);
+    doc.text('Service', 20, yPos);
+    doc.text('Period', 100, yPos);
+    doc.text('Cost (₹)', 160, yPos);
+
+    // Platform data
+    doc.setFont('helvetica', 'normal');
+    yPos += 8;
+    filteredData.platform.forEach((item) => {
+      doc.text(item.service, 20, yPos);
+      doc.text(item.period, 100, yPos);
+      doc.text(item.cost.toFixed(2), 160, yPos);
+      yPos += 7;
+    });
+
+    // Total
+    yPos += 10;
+    doc.setLineWidth(0.3);
+    doc.line(20, yPos - 5, pageWidth - 20, yPos - 5);
+    doc.setFontSize(12);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Total Monthly Charges:', 20, yPos);
+    doc.text(`₹${filteredData.totalMonthly.toFixed(2)}`, 160, yPos);
+
+    // Footer
+    yPos += 20;
+    doc.setFontSize(8);
+    doc.setFont('helvetica', 'italic');
+    doc.text('This is a system generated document.', pageWidth / 2, yPos, { align: 'center' });
+
+    // Save the PDF
+    doc.save(`Billing_Summary_${dateRange.replace(/[\s\/]/g, '_')}.pdf`);
+
+    setSnackbar({
+      open: true,
+      message: 'Billing summary PDF downloaded successfully!',
+      severity: 'success'
+    });
   };
 
-  // Handle view invoice
+  // Handle view invoice - opens dialog with invoice details
   const handleViewInvoice = (invoiceId) => {
-    // In a real app, this would open a modal or navigate to an invoice detail page
-    alert(`Viewing invoice ${invoiceId}`);
+    const invoice = invoices.find(inv => inv.id === invoiceId);
+    if (invoice) {
+      setViewInvoiceDialog({
+        open: true,
+        invoice: invoice
+      });
+    }
   };
 
-  // Handle download invoice
+  // Close view invoice dialog
+  const handleCloseViewInvoice = () => {
+    setViewInvoiceDialog({
+      open: false,
+      invoice: null
+    });
+  };
+
+  // Handle download invoice as PDF
   const handleDownloadInvoice = (invoiceId) => {
-    // In a real app, this would download the invoice PDF
-    alert(`Downloading invoice ${invoiceId}`);
+    const invoice = invoices.find(inv => inv.id === invoiceId);
+    if (!invoice) return;
+
+    const doc = new jsPDF();
+    const pageWidth = doc.internal.pageSize.getWidth();
+
+    // Header
+    doc.setFontSize(24);
+    doc.setFont('helvetica', 'bold');
+    doc.text('INVOICE', pageWidth / 2, 25, { align: 'center' });
+
+    // Invoice details box
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'normal');
+    doc.rect(pageWidth - 80, 35, 60, 30);
+    doc.text(`Invoice #: ${invoice.id}`, pageWidth - 75, 43);
+    doc.text(`Date: ${new Date(invoice.date).toLocaleDateString()}`, pageWidth - 75, 51);
+    doc.text(`Status: ${invoice.status}`, pageWidth - 75, 59);
+
+    // Company info
+    doc.setFontSize(12);
+    doc.setFont('helvetica', 'bold');
+    doc.text('From:', 20, 45);
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(10);
+    doc.text('CRM Portal Services', 20, 53);
+    doc.text('Insurance Management Platform', 20, 60);
+    doc.text('support@crmportal.com', 20, 67);
+
+    // Billing info
+    let yPos = 85;
+    doc.setFontSize(12);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Bill To:', 20, yPos);
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(10);
+    yPos += 8;
+    if (invoice.receivableInfo) {
+      doc.text(invoice.receivableInfo.contactPerson || 'Customer', 20, yPos);
+      yPos += 7;
+      if (invoice.receivableInfo.billingAddress) {
+        doc.text(invoice.receivableInfo.billingAddress, 20, yPos);
+        yPos += 7;
+      }
+      if (invoice.receivableInfo.contactEmail) {
+        doc.text(invoice.receivableInfo.contactEmail, 20, yPos);
+        yPos += 7;
+      }
+    }
+
+    // Line separator
+    yPos += 10;
+    doc.setLineWidth(0.5);
+    doc.line(20, yPos, pageWidth - 20, yPos);
+
+    // Invoice items table header
+    yPos += 15;
+    doc.setFillColor(240, 240, 240);
+    doc.rect(20, yPos - 5, pageWidth - 40, 10, 'F');
+    doc.setFont('helvetica', 'bold');
+    doc.text('Description', 25, yPos);
+    doc.text('Amount', 160, yPos);
+
+    // Invoice items
+    yPos += 12;
+    doc.setFont('helvetica', 'normal');
+    doc.text(invoice.description || 'Monthly Service Charges', 25, yPos);
+    doc.text(`₹${invoice.amount.toFixed(2)}`, 160, yPos);
+
+    // Subtotal and Total
+    yPos += 20;
+    doc.setLineWidth(0.3);
+    doc.line(120, yPos, pageWidth - 20, yPos);
+    yPos += 10;
+    doc.text('Subtotal:', 120, yPos);
+    doc.text(`₹${invoice.amount.toFixed(2)}`, 160, yPos);
+    yPos += 8;
+    doc.text('Tax (18% GST):', 120, yPos);
+    doc.text(`₹${(invoice.amount * 0.18).toFixed(2)}`, 160, yPos);
+    yPos += 10;
+    doc.setLineWidth(0.5);
+    doc.line(120, yPos - 3, pageWidth - 20, yPos - 3);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Total:', 120, yPos + 5);
+    doc.setFontSize(12);
+    doc.text(`₹${(invoice.amount * 1.18).toFixed(2)}`, 160, yPos + 5);
+
+    // Payment terms
+    yPos += 25;
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Payment Terms:', 20, yPos);
+    doc.setFont('helvetica', 'normal');
+    yPos += 7;
+    doc.text(invoice.receivableInfo?.paymentTerms || 'Net 30', 20, yPos);
+
+    // Bank details if available
+    if (invoice.receivableInfo?.bankDetails?.bankName) {
+      yPos += 15;
+      doc.setFont('helvetica', 'bold');
+      doc.text('Bank Details:', 20, yPos);
+      doc.setFont('helvetica', 'normal');
+      yPos += 7;
+      doc.text(`Bank: ${invoice.receivableInfo.bankDetails.bankName}`, 20, yPos);
+      yPos += 7;
+      doc.text(`Account: ${invoice.receivableInfo.bankDetails.accountNumber}`, 20, yPos);
+    }
+
+    // Footer
+    doc.setFontSize(8);
+    doc.setFont('helvetica', 'italic');
+    doc.text('Thank you for your business!', pageWidth / 2, 270, { align: 'center' });
+    doc.text('This is a computer generated invoice.', pageWidth / 2, 277, { align: 'center' });
+
+    // Save the PDF
+    doc.save(`Invoice_${invoice.id}.pdf`);
+
+    setSnackbar({
+      open: true,
+      message: `Invoice ${invoice.id} downloaded successfully!`,
+      severity: 'success'
+    });
   };
 
   // Payment gateway state
@@ -462,14 +519,24 @@ const Billing = () => {
     }
   };
 
-  const handleQuickEditSave = () => {
-    setInvoices(prev => prev.map(invoice => 
-      invoice.id === quickEditDialog.invoiceId 
-        ? { ...invoice, receivableInfo: { ...quickEditDialog.receivableInfo } }
-        : invoice
-    ));
-    setQuickEditDialog({ open: false, invoiceId: null, receivableInfo: {} });
-    alert('Receivable information updated successfully!');
+  const handleQuickEditSave = async () => {
+    try {
+      await billingService.updateReceivableInfo(
+        quickEditDialog.invoiceId,
+        quickEditDialog.receivableInfo
+      );
+
+      setInvoices(prev => prev.map(invoice =>
+        invoice.id === quickEditDialog.invoiceId
+          ? { ...invoice, receivableInfo: { ...quickEditDialog.receivableInfo } }
+          : invoice
+      ));
+      setQuickEditDialog({ open: false, invoiceId: null, receivableInfo: {} });
+      alert('Receivable information updated successfully!');
+    } catch (error) {
+      console.error('Failed to update receivable info:', error);
+      alert('Failed to update receivable information. Please try again.');
+    }
   };
 
   const handleQuickEditCancel = () => {
@@ -517,37 +584,38 @@ const Billing = () => {
 
   const handleProcessPayment = async () => {
     setPaymentDialog(prev => ({ ...prev, processing: true }));
-    
-    // Simulate payment processing
-    setTimeout(() => {
-      const success = Math.random() > 0.1; // 90% success rate
-      const transactionId = `TXN${Date.now()}`;
-      
-      if (success) {
-        // Update invoice status to paid
-        setInvoices(prev => prev.map(invoice => 
-          invoice.id === paymentDialog.invoiceId 
-            ? { ...invoice, status: 'Paid' }
-            : invoice
-        ));
-        
-        setPaymentStatus({
-          show: true,
-          success: true,
-          transactionId,
-          message: 'Payment processed successfully!'
-        });
-      } else {
-        setPaymentStatus({
-          show: true,
-          success: false,
-          transactionId: '',
-          message: 'Payment failed. Please try again.'
-        });
-      }
-      
+
+    try {
+      const result = await billingService.processPayment(paymentDialog.invoiceId, {
+        method: paymentDialog.method,
+        cardDetails: paymentDialog.cardDetails,
+        upiId: paymentDialog.upiId,
+        netBankingBank: paymentDialog.netBankingBank
+      });
+
+      // Update invoice status to paid
+      setInvoices(prev => prev.map(invoice =>
+        invoice.id === paymentDialog.invoiceId
+          ? { ...invoice, status: 'Paid' }
+          : invoice
+      ));
+
+      setPaymentStatus({
+        show: true,
+        success: true,
+        transactionId: result.transactionId,
+        message: result.message
+      });
+    } catch (error) {
+      setPaymentStatus({
+        show: true,
+        success: false,
+        transactionId: '',
+        message: error.message || 'Payment failed. Please try again.'
+      });
+    } finally {
       setPaymentDialog(prev => ({ ...prev, processing: false, open: false }));
-    }, 3000);
+    }
   };
 
   const handleClosePaymentDialog = () => {
@@ -589,15 +657,15 @@ const Billing = () => {
   // Filter communication statistics based on date range
   const getFilteredCommunicationStats = () => {
     let filtered = {
-      sms: [...communicationStats.sms],
-      email: [...communicationStats.email],
-      whatsapp: [...communicationStats.whatsapp]
+      sms: [...(communicationStats?.sms || [])],
+      email: [...(communicationStats?.email || [])],
+      whatsapp: [...(communicationStats?.whatsapp || [])]
     };
 
     if (filterType === 'month') {
       const startOfMonth = new Date(selectedYear, selectedMonth, 1);
       const endOfMonth = new Date(selectedYear, selectedMonth + 1, 0);
-      
+
       filtered = {
         sms: filtered.sms.filter(item => {
           const date = new Date(item.date);
@@ -635,9 +703,9 @@ const Billing = () => {
   // Calculate totals for communication statistics
   const calculateCommunicationTotals = (stats) => {
     return {
-      sms: stats.sms.reduce((sum, item) => sum + item.count, 0),
-      email: stats.email.reduce((sum, item) => sum + item.count, 0),
-      whatsapp: stats.whatsapp.reduce((sum, item) => sum + item.count, 0)
+      sms: (stats?.sms || []).reduce((sum, item) => sum + item.count, 0),
+      email: (stats?.email || []).reduce((sum, item) => sum + item.count, 0),
+      whatsapp: (stats?.whatsapp || []).reduce((sum, item) => sum + item.count, 0)
     };
   };
 
@@ -655,9 +723,9 @@ const Billing = () => {
       </Fade>
 
       <Grow in={loaded} timeout={1000}>
-        <Card 
+        <Card
           elevation={0}
-          sx={{ 
+          sx={{
             borderRadius: 3,
             mb: 4,
             boxShadow: '0 8px 24px rgba(0,0,0,0.05)',
@@ -666,8 +734,8 @@ const Billing = () => {
         >
           <CardContent sx={{ p: 3 }}>
             <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 3 }}>
-              <Tabs 
-                value={activeTab} 
+              <Tabs
+                value={activeTab}
                 onChange={handleTabChange}
                 aria-label="billing tabs"
                 variant="scrollable"
@@ -787,11 +855,12 @@ const Billing = () => {
               )}
 
               <Grid item xs={12} md={3}>
-                <Button 
-                  variant="contained" 
+                <Button
+                  variant="contained"
                   color="primary"
                   fullWidth
-                  sx={{ 
+                  onClick={handleApplyFilters}
+                  sx={{
                     py: 1.7,
                     borderRadius: 2,
                     fontWeight: 600,
@@ -809,9 +878,9 @@ const Billing = () => {
       {activeTab === 0 ? (
         <>
           <Grow in={loaded} timeout={1200}>
-            <Card 
+            <Card
               elevation={0}
-              sx={{ 
+              sx={{
                 borderRadius: 3,
                 boxShadow: '0 8px 24px rgba(0,0,0,0.05)',
                 overflow: 'visible',
@@ -831,11 +900,11 @@ const Billing = () => {
                   </Typography>
                 </Box>
                 <Divider sx={{ mb: 2 }} />
-                
+
                 <Typography variant="subtitle1" fontWeight="500" sx={{ mb: 2 }}>
                   Portal Usage - Utilization Charges
                 </Typography>
-                
+
                 <TableContainer component={Paper} elevation={0} sx={{ mb: 3, borderRadius: 2 }}>
                   <Table>
                     <TableHead>
@@ -856,11 +925,11 @@ const Billing = () => {
                     </TableBody>
                   </Table>
                 </TableContainer>
-                
+
                 <Typography variant="subtitle1" fontWeight="500" sx={{ mb: 2 }}>
                   Platform Charges
                 </Typography>
-                
+
                 <TableContainer component={Paper} elevation={0} sx={{ borderRadius: 2 }}>
                   <Table>
                     <TableHead>
@@ -891,9 +960,9 @@ const Billing = () => {
           </Grow>
 
           <Grow in={loaded} timeout={1400}>
-            <Card 
+            <Card
               elevation={0}
-              sx={{ 
+              sx={{
                 borderRadius: 3,
                 boxShadow: '0 8px 24px rgba(0,0,0,0.05)',
                 overflow: 'visible',
@@ -912,11 +981,11 @@ const Billing = () => {
                   </Typography>
                 </Box>
                 <Divider sx={{ mb: 2 }} />
-                
+
                 <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
                   View, download, and pay your invoices directly from the portal
                 </Typography>
-                
+
                 <TableContainer component={Paper} elevation={0} sx={{ borderRadius: 2 }}>
                   <Table>
                     <TableHead>
@@ -940,11 +1009,11 @@ const Billing = () => {
                           <TableCell>{new Date(invoice.date).toLocaleDateString()}</TableCell>
                           <TableCell align="right">₹{invoice.amount.toFixed(2)}</TableCell>
                           <TableCell align="center">
-                            <Chip 
-                              label={invoice.status} 
+                            <Chip
+                              label={invoice.status}
                               size="small"
                               color={invoice.status === 'Paid' ? 'success' : 'warning'}
-                              sx={{ 
+                              sx={{
                                 fontWeight: 500,
                                 minWidth: 80
                               }}
@@ -953,37 +1022,37 @@ const Billing = () => {
                           <TableCell align="center">
                             <Box sx={{ display: 'flex', justifyContent: 'center', gap: 1 }}>
                               <Tooltip title="Quick Edit Receivables">
-                                <IconButton 
-                                  size="small" 
+                                <IconButton
+                                  size="small"
                                   color="info"
                                   onClick={() => handleQuickEdit(invoice.id)}
                                 >
                                   <EditIcon fontSize="small" />
                                 </IconButton>
                               </Tooltip>
-                              
+
                               <Tooltip title="View Invoice">
-                                <IconButton 
-                                  size="small" 
+                                <IconButton
+                                  size="small"
                                   onClick={() => handleViewInvoice(invoice.id)}
                                 >
                                   <VisibilityIcon fontSize="small" />
                                 </IconButton>
                               </Tooltip>
-                              
+
                               <Tooltip title="Download Invoice">
-                                <IconButton 
-                                  size="small" 
+                                <IconButton
+                                  size="small"
                                   onClick={() => handleDownloadInvoice(invoice.id)}
                                 >
                                   <FileDownloadIcon fontSize="small" />
                                 </IconButton>
                               </Tooltip>
-                              
+
                               {invoice.status === 'Pending' && (
                                 <Tooltip title="Pay Now">
-                                  <IconButton 
-                                    size="small" 
+                                  <IconButton
+                                    size="small"
                                     color="primary"
                                     onClick={() => handlePayInvoice(invoice.id)}
                                   >
@@ -1005,9 +1074,9 @@ const Billing = () => {
       ) : activeTab === 1 ? (
         // Communication Statistics Tab
         <Grow in={loaded} timeout={1200}>
-          <Card 
+          <Card
             elevation={0}
-            sx={{ 
+            sx={{
               borderRadius: 3,
               boxShadow: '0 8px 24px rgba(0,0,0,0.05)',
               overflow: 'visible'
@@ -1024,9 +1093,9 @@ const Billing = () => {
               <Grid container spacing={3}>
                 {/* SMS Statistics */}
                 <Grid item xs={12} md={4}>
-                  <Card 
+                  <Card
                     elevation={0}
-                    sx={{ 
+                    sx={{
                       p: 2,
                       borderRadius: 2,
                       bgcolor: alpha(theme.palette.primary.main, 0.05)
@@ -1049,9 +1118,9 @@ const Billing = () => {
 
                 {/* Email Statistics */}
                 <Grid item xs={12} md={4}>
-                  <Card 
+                  <Card
                     elevation={0}
-                    sx={{ 
+                    sx={{
                       p: 2,
                       borderRadius: 2,
                       bgcolor: alpha(theme.palette.info.main, 0.05)
@@ -1074,9 +1143,9 @@ const Billing = () => {
 
                 {/* WhatsApp Statistics */}
                 <Grid item xs={12} md={4}>
-                  <Card 
+                  <Card
                     elevation={0}
-                    sx={{ 
+                    sx={{
                       p: 2,
                       borderRadius: 2,
                       bgcolor: alpha(theme.palette.success.main, 0.05)
@@ -1159,9 +1228,9 @@ const Billing = () => {
       ) : activeTab === 2 ? (
         // Vendor Communications Tab
         <Grow in={loaded} timeout={1200}>
-          <Card 
+          <Card
             elevation={0}
-            sx={{ 
+            sx={{
               borderRadius: 3,
               boxShadow: '0 8px 24px rgba(0,0,0,0.05)',
               overflow: 'visible'
@@ -1182,9 +1251,9 @@ const Billing = () => {
               <Grid container spacing={3}>
                 {vendorCommunications.map((vendor) => (
                   <Grid item xs={12} md={4} key={vendor.vendorId}>
-                    <Card 
+                    <Card
                       elevation={0}
-                      sx={{ 
+                      sx={{
                         p: 3,
                         borderRadius: 2,
                         border: '1px solid',
@@ -1198,8 +1267,8 @@ const Billing = () => {
                       }}
                     >
                       <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                        <Avatar 
-                          sx={{ 
+                        <Avatar
+                          sx={{
                             bgcolor: theme.palette.primary.main,
                             width: 40,
                             height: 40,
@@ -1236,8 +1305,8 @@ const Billing = () => {
                             {((vendor.deliveryStats.delivered / vendor.totalCommunications) * 100).toFixed(1)}%
                           </Typography>
                         </Box>
-                        <LinearProgress 
-                          variant="determinate" 
+                        <LinearProgress
+                          variant="determinate"
                           value={(vendor.deliveryStats.delivered / vendor.totalCommunications) * 100}
                           sx={{ height: 6, borderRadius: 3 }}
                         />
@@ -1299,10 +1368,10 @@ const Billing = () => {
                         <Typography variant="caption" color="text.secondary">
                           Last activity: {new Date(vendor.lastActivity).toLocaleDateString()}
                         </Typography>
-                        <Chip 
-                          label="Active" 
-                          size="small" 
-                          color="success" 
+                        <Chip
+                          label="Active"
+                          size="small"
+                          color="success"
                           sx={{ fontWeight: 500 }}
                         />
                       </Box>
@@ -1347,9 +1416,9 @@ const Billing = () => {
                             </Box>
                           </TableCell>
                           <TableCell align="center">
-                            <Chip 
-                              label={vendor.vendorType} 
-                              size="small" 
+                            <Chip
+                              label={vendor.vendorType}
+                              size="small"
                               variant="outlined"
                               sx={{ fontWeight: 500 }}
                             />
@@ -1364,12 +1433,12 @@ const Billing = () => {
                               <Typography variant="body2" fontWeight="600" sx={{ mr: 1 }}>
                                 {((vendor.deliveryStats.delivered / vendor.totalCommunications) * 100).toFixed(1)}%
                               </Typography>
-                              <Chip 
-                                label={vendor.deliveryStats.delivered > vendor.totalCommunications * 0.95 ? 'Excellent' : 
-                                       vendor.deliveryStats.delivered > vendor.totalCommunications * 0.90 ? 'Good' : 'Needs Attention'}
+                              <Chip
+                                label={vendor.deliveryStats.delivered > vendor.totalCommunications * 0.95 ? 'Excellent' :
+                                  vendor.deliveryStats.delivered > vendor.totalCommunications * 0.90 ? 'Good' : 'Needs Attention'}
                                 size="small"
-                                color={vendor.deliveryStats.delivered > vendor.totalCommunications * 0.95 ? 'success' : 
-                                       vendor.deliveryStats.delivered > vendor.totalCommunications * 0.90 ? 'info' : 'warning'}
+                                color={vendor.deliveryStats.delivered > vendor.totalCommunications * 0.95 ? 'success' :
+                                  vendor.deliveryStats.delivered > vendor.totalCommunications * 0.90 ? 'info' : 'warning'}
                               />
                             </Box>
                           </TableCell>
@@ -1400,9 +1469,9 @@ const Billing = () => {
       ) : activeTab === 3 ? (
         // Delivery Status Tab
         <Grow in={loaded} timeout={1200}>
-          <Card 
+          <Card
             elevation={0}
-            sx={{ 
+            sx={{
               borderRadius: 3,
               boxShadow: '0 8px 24px rgba(0,0,0,0.05)',
               overflow: 'visible'
@@ -1468,19 +1537,19 @@ const Billing = () => {
                               </Box>
                             </TableCell>
                             <TableCell align="center">
-                              <Chip 
+                              <Chip
                                 label={case_.communicationType}
                                 size="small"
-                                color={case_.communicationType === 'SMS' ? 'primary' : 
-                                       case_.communicationType === 'Email' ? 'info' : 'success'}
-                                icon={case_.communicationType === 'SMS' ? <SmsIcon /> : 
-                                      case_.communicationType === 'Email' ? <EmailIcon /> : <WhatsAppIcon />}
+                                color={case_.communicationType === 'SMS' ? 'primary' :
+                                  case_.communicationType === 'Email' ? 'info' : 'success'}
+                                icon={case_.communicationType === 'SMS' ? <SmsIcon /> :
+                                  case_.communicationType === 'Email' ? <EmailIcon /> : <WhatsAppIcon />}
                               />
                             </TableCell>
                             <TableCell>
-                              <Typography 
-                                variant="body2" 
-                                sx={{ 
+                              <Typography
+                                variant="body2"
+                                sx={{
                                   maxWidth: 200,
                                   overflow: 'hidden',
                                   textOverflow: 'ellipsis',
@@ -1542,9 +1611,9 @@ const Billing = () => {
                   <Grid container spacing={3} sx={{ mb: 4 }}>
                     {bulkCampaigns.map((campaign) => (
                       <Grid item xs={12} md={6} key={campaign.campaignId}>
-                        <Card 
+                        <Card
                           elevation={0}
-                          sx={{ 
+                          sx={{
                             p: 3,
                             borderRadius: 2,
                             border: '1px solid',
@@ -1556,11 +1625,11 @@ const Billing = () => {
                             <Typography variant="h6" fontWeight="600">
                               {campaign.campaignName}
                             </Typography>
-                            <Chip 
+                            <Chip
                               label={campaign.type}
                               size="small"
-                              color={campaign.type === 'SMS' ? 'primary' : 
-                                     campaign.type === 'Email' ? 'info' : 'success'}
+                              color={campaign.type === 'SMS' ? 'primary' :
+                                campaign.type === 'Email' ? 'info' : 'success'}
                             />
                           </Box>
 
@@ -1598,8 +1667,8 @@ const Billing = () => {
                                 {campaign.deliveredCount} / {campaign.totalRecipients}
                               </Typography>
                             </Box>
-                            <LinearProgress 
-                              variant="determinate" 
+                            <LinearProgress
+                              variant="determinate"
                               value={(campaign.deliveredCount / campaign.totalRecipients) * 100}
                               sx={{ height: 8, borderRadius: 4 }}
                             />
@@ -1698,11 +1767,11 @@ const Billing = () => {
                               </Box>
                             </TableCell>
                             <TableCell align="center">
-                              <Chip 
+                              <Chip
                                 label={campaign.type}
                                 size="small"
-                                color={campaign.type === 'SMS' ? 'primary' : 
-                                       campaign.type === 'Email' ? 'info' : 'success'}
+                                color={campaign.type === 'SMS' ? 'primary' :
+                                  campaign.type === 'Email' ? 'info' : 'success'}
                               />
                             </TableCell>
                             <TableCell align="center">
@@ -1715,17 +1784,17 @@ const Billing = () => {
                                 <Typography variant="body2" fontWeight="600" sx={{ mr: 1 }}>
                                   {campaign.deliveryRate.toFixed(1)}%
                                 </Typography>
-                                <Chip 
-                                  label={campaign.deliveryRate > 95 ? 'Excellent' : 
-                                         campaign.deliveryRate > 90 ? 'Good' : 'Needs Attention'}
+                                <Chip
+                                  label={campaign.deliveryRate > 95 ? 'Excellent' :
+                                    campaign.deliveryRate > 90 ? 'Good' : 'Needs Attention'}
                                   size="small"
-                                  color={campaign.deliveryRate > 95 ? 'success' : 
-                                         campaign.deliveryRate > 90 ? 'info' : 'warning'}
+                                  color={campaign.deliveryRate > 95 ? 'success' :
+                                    campaign.deliveryRate > 90 ? 'info' : 'warning'}
                                 />
                               </Box>
                             </TableCell>
                             <TableCell align="center">
-                              <Chip 
+                              <Chip
                                 label="Completed"
                                 size="small"
                                 color="success"
@@ -2015,9 +2084,9 @@ const Billing = () => {
           </Typography>
           <Grid container spacing={2} sx={{ mb: 3 }}>
             <Grid item xs={4}>
-              <Card 
-                sx={{ 
-                  p: 2, 
+              <Card
+                sx={{
+                  p: 2,
                   cursor: 'pointer',
                   border: paymentDialog.method === 'card' ? 2 : 1,
                   borderColor: paymentDialog.method === 'card' ? 'primary.main' : 'divider',
@@ -2034,9 +2103,9 @@ const Billing = () => {
               </Card>
             </Grid>
             <Grid item xs={4}>
-              <Card 
-                sx={{ 
-                  p: 2, 
+              <Card
+                sx={{
+                  p: 2,
                   cursor: 'pointer',
                   border: paymentDialog.method === 'upi' ? 2 : 1,
                   borderColor: paymentDialog.method === 'upi' ? 'primary.main' : 'divider',
@@ -2053,9 +2122,9 @@ const Billing = () => {
               </Card>
             </Grid>
             <Grid item xs={4}>
-              <Card 
-                sx={{ 
-                  p: 2, 
+              <Card
+                sx={{
+                  p: 2,
                   cursor: 'pointer',
                   border: paymentDialog.method === 'netbanking' ? 2 : 1,
                   borderColor: paymentDialog.method === 'netbanking' ? 'primary.main' : 'divider',
@@ -2187,7 +2256,7 @@ const Billing = () => {
 
           <Alert severity="info" sx={{ mt: 2 }}>
             <Typography variant="body2">
-              <strong>Secure Payment:</strong> Your payment information is encrypted and secure. 
+              <strong>Secure Payment:</strong> Your payment information is encrypted and secure.
               Processing fee of 2% applies to all transactions.
             </Typography>
           </Alert>
@@ -2204,7 +2273,7 @@ const Billing = () => {
           <Button
             onClick={handleProcessPayment}
             variant="contained"
-            disabled={paymentDialog.processing || 
+            disabled={paymentDialog.processing ||
               (paymentDialog.method === 'card' && (!paymentDialog.cardDetails.name || !paymentDialog.cardDetails.number || !paymentDialog.cardDetails.expiry || !paymentDialog.cardDetails.cvv)) ||
               (paymentDialog.method === 'upi' && !paymentDialog.upiId) ||
               (paymentDialog.method === 'netbanking' && !paymentDialog.netBankingBank)
@@ -2226,8 +2295,8 @@ const Billing = () => {
         PaperProps={{ sx: { borderRadius: 3 } }}
       >
         <DialogContent sx={{ textAlign: 'center', py: 4 }}>
-          <Avatar 
-            sx={{ 
+          <Avatar
+            sx={{
               bgcolor: paymentStatus.success ? 'success.main' : 'error.main',
               width: 80,
               height: 80,
@@ -2237,15 +2306,15 @@ const Billing = () => {
           >
             {paymentStatus.success ? <CheckCircleIcon sx={{ fontSize: 40 }} /> : <ErrorIcon sx={{ fontSize: 40 }} />}
           </Avatar>
-          
+
           <Typography variant="h5" fontWeight="600" sx={{ mb: 1 }}>
             {paymentStatus.success ? 'Payment Successful!' : 'Payment Failed'}
           </Typography>
-          
+
           <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>
             {paymentStatus.message}
           </Typography>
-          
+
           {paymentStatus.success && paymentStatus.transactionId && (
             <Box sx={{ p: 2, bgcolor: 'success.50', borderRadius: 2, mb: 3 }}>
               <Typography variant="body2" color="text.secondary">
@@ -2256,7 +2325,7 @@ const Billing = () => {
               </Typography>
             </Box>
           )}
-          
+
           <Button
             onClick={handleClosePaymentStatus}
             variant="contained"
@@ -2266,6 +2335,201 @@ const Billing = () => {
           </Button>
         </DialogContent>
       </Dialog>
+
+      {/* View Invoice Dialog */}
+      <Dialog
+        open={viewInvoiceDialog.open}
+        onClose={handleCloseViewInvoice}
+        maxWidth="md"
+        fullWidth
+        PaperProps={{
+          sx: { borderRadius: 3 }
+        }}
+      >
+        <DialogTitle sx={{ bgcolor: 'primary.main', color: 'white', pb: 2 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <Box sx={{ display: 'flex', alignItems: 'center' }}>
+              <ReceiptIcon sx={{ mr: 1 }} />
+              <Typography variant="h6" fontWeight="600">
+                Invoice Details
+              </Typography>
+            </Box>
+            <IconButton onClick={handleCloseViewInvoice} sx={{ color: 'white' }}>
+              <CancelIcon />
+            </IconButton>
+          </Box>
+        </DialogTitle>
+        <DialogContent dividers>
+          {viewInvoiceDialog.invoice && (
+            <Box>
+              {/* Invoice Header */}
+              <Grid container spacing={3} sx={{ mb: 3 }}>
+                <Grid item xs={12} md={6}>
+                  <Typography variant="h4" fontWeight="700" color="primary">
+                    {viewInvoiceDialog.invoice.id}
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    Invoice Number
+                  </Typography>
+                </Grid>
+                <Grid item xs={12} md={6} sx={{ textAlign: { md: 'right' } }}>
+                  <Chip
+                    label={viewInvoiceDialog.invoice.status}
+                    color={viewInvoiceDialog.invoice.status === 'Paid' ? 'success' : 'warning'}
+                    sx={{ fontWeight: 600, fontSize: '1rem', px: 2, py: 2.5 }}
+                  />
+                </Grid>
+              </Grid>
+
+              <Divider sx={{ mb: 3 }} />
+
+              {/* Invoice Details */}
+              <Grid container spacing={3}>
+                <Grid item xs={12} md={6}>
+                  <Card elevation={0} sx={{ bgcolor: alpha(theme.palette.primary.main, 0.05), p: 2, borderRadius: 2 }}>
+                    <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                      Invoice Date
+                    </Typography>
+                    <Typography variant="h6" fontWeight="600">
+                      {new Date(viewInvoiceDialog.invoice.date).toLocaleDateString('en-IN', {
+                        weekday: 'long',
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric'
+                      })}
+                    </Typography>
+                  </Card>
+                </Grid>
+                <Grid item xs={12} md={6}>
+                  <Card elevation={0} sx={{ bgcolor: alpha(theme.palette.success.main, 0.05), p: 2, borderRadius: 2 }}>
+                    <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                      Amount
+                    </Typography>
+                    <Typography variant="h6" fontWeight="600" color="success.main">
+                      ₹{viewInvoiceDialog.invoice.amount.toFixed(2)}
+                    </Typography>
+                  </Card>
+                </Grid>
+              </Grid>
+
+              {/* Description */}
+              <Box sx={{ mt: 3, p: 2, bgcolor: 'grey.50', borderRadius: 2 }}>
+                <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                  Description
+                </Typography>
+                <Typography variant="body1">
+                  {viewInvoiceDialog.invoice.description || 'Monthly Service Charges for CRM Portal Usage'}
+                </Typography>
+              </Box>
+
+              {/* Receivable Info */}
+              {viewInvoiceDialog.invoice.receivableInfo && (
+                <Box sx={{ mt: 3 }}>
+                  <Typography variant="subtitle1" fontWeight="600" gutterBottom>
+                    Billing Information
+                  </Typography>
+                  <Grid container spacing={2}>
+                    {viewInvoiceDialog.invoice.receivableInfo.contactPerson && (
+                      <Grid item xs={12} md={6}>
+                        <Typography variant="body2" color="text.secondary">Contact Person</Typography>
+                        <Typography variant="body1">{viewInvoiceDialog.invoice.receivableInfo.contactPerson}</Typography>
+                      </Grid>
+                    )}
+                    {viewInvoiceDialog.invoice.receivableInfo.contactEmail && (
+                      <Grid item xs={12} md={6}>
+                        <Typography variant="body2" color="text.secondary">Email</Typography>
+                        <Typography variant="body1">{viewInvoiceDialog.invoice.receivableInfo.contactEmail}</Typography>
+                      </Grid>
+                    )}
+                    {viewInvoiceDialog.invoice.receivableInfo.contactPhone && (
+                      <Grid item xs={12} md={6}>
+                        <Typography variant="body2" color="text.secondary">Phone</Typography>
+                        <Typography variant="body1">{viewInvoiceDialog.invoice.receivableInfo.contactPhone}</Typography>
+                      </Grid>
+                    )}
+                    {viewInvoiceDialog.invoice.receivableInfo.billingAddress && (
+                      <Grid item xs={12} md={6}>
+                        <Typography variant="body2" color="text.secondary">Billing Address</Typography>
+                        <Typography variant="body1">{viewInvoiceDialog.invoice.receivableInfo.billingAddress}</Typography>
+                      </Grid>
+                    )}
+                    {viewInvoiceDialog.invoice.receivableInfo.paymentTerms && (
+                      <Grid item xs={12} md={6}>
+                        <Typography variant="body2" color="text.secondary">Payment Terms</Typography>
+                        <Typography variant="body1">{viewInvoiceDialog.invoice.receivableInfo.paymentTerms}</Typography>
+                      </Grid>
+                    )}
+                    {viewInvoiceDialog.invoice.receivableInfo.dueDate && (
+                      <Grid item xs={12} md={6}>
+                        <Typography variant="body2" color="text.secondary">Due Date</Typography>
+                        <Typography variant="body1">
+                          {new Date(viewInvoiceDialog.invoice.receivableInfo.dueDate).toLocaleDateString()}
+                        </Typography>
+                      </Grid>
+                    )}
+                  </Grid>
+                </Box>
+              )}
+
+              {/* Amount Breakdown */}
+              <Box sx={{ mt: 3, p: 2, bgcolor: alpha(theme.palette.primary.main, 0.02), borderRadius: 2, border: `1px solid ${alpha(theme.palette.divider, 0.5)}` }}>
+                <Typography variant="subtitle1" fontWeight="600" gutterBottom>
+                  Amount Breakdown
+                </Typography>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
+                  <Typography variant="body1">Subtotal</Typography>
+                  <Typography variant="body1">₹{viewInvoiceDialog.invoice.amount.toFixed(2)}</Typography>
+                </Box>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
+                  <Typography variant="body1">GST (18%)</Typography>
+                  <Typography variant="body1">₹{(viewInvoiceDialog.invoice.amount * 0.18).toFixed(2)}</Typography>
+                </Box>
+                <Divider sx={{ my: 1 }} />
+                <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <Typography variant="h6" fontWeight="600">Total</Typography>
+                  <Typography variant="h6" fontWeight="600" color="primary">
+                    ₹{(viewInvoiceDialog.invoice.amount * 1.18).toFixed(2)}
+                  </Typography>
+                </Box>
+              </Box>
+            </Box>
+          )}
+        </DialogContent>
+        <DialogActions sx={{ p: 2, gap: 1 }}>
+          <Button
+            onClick={() => handleDownloadInvoice(viewInvoiceDialog.invoice?.id)}
+            variant="outlined"
+            startIcon={<FileDownloadIcon />}
+            sx={{ borderRadius: 2 }}
+          >
+            Download PDF
+          </Button>
+          <Button
+            onClick={handleCloseViewInvoice}
+            variant="contained"
+            sx={{ borderRadius: 2 }}
+          >
+            Close
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Snackbar for notifications */}
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={4000}
+        onClose={() => setSnackbar(prev => ({ ...prev, open: false }))}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+      >
+        <Alert
+          onClose={() => setSnackbar(prev => ({ ...prev, open: false }))}
+          severity={snackbar.severity}
+          variant="filled"
+          sx={{ width: '100%', borderRadius: 2 }}
+        >
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
     </Box>
   );
 };

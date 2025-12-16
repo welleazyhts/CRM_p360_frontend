@@ -15,20 +15,21 @@ import {
   CloudUpload as CloudUploadIcon, GetApp as GetAppIcon, Verified as VerifiedIcon,
   Security as SecurityIcon, Assignment as AssignmentIcon,
   Analytics as AnalyticsIcon, FilterList as FilterIcon, Search as SearchIcon,
-  Refresh as RefreshIcon
+  Refresh as RefreshIcon, TuneOutlined as TuneIcon, Clear as ClearIcon
 } from '@mui/icons-material';
+import * as XLSX from 'xlsx';
 
 const TemplateManager = () => {
   const theme = useTheme();
   const [loaded, setLoaded] = useState(false);
   const [templates, setTemplates] = useState([]);
   const [filteredTemplates, setFilteredTemplates] = useState([]);
-  
+
   // Dialog states
   const [createTemplateDialog, setCreateTemplateDialog] = useState(false);
   const [editTemplateDialog, setEditTemplateDialog] = useState(false);
   const [previewDialog, setPreviewDialog] = useState(false);
-  
+
   // Template editor states
   const [selectedTemplate, setSelectedTemplate] = useState(null);
   const [templateStep, setTemplateStep] = useState(0);
@@ -45,22 +46,31 @@ const TemplateManager = () => {
     status: 'draft',
     language: 'english'
   });
-  
+
   // Language states
   const [selectedLanguage, setSelectedLanguage] = useState('english');
   const [languagePreview, setLanguagePreview] = useState(false);
-  
+
   // Filter and search states
   const [searchTerm, setSearchTerm] = useState('');
   const [typeFilter, setTypeFilter] = useState('all');
   const [categoryFilter, setCategoryFilter] = useState('all');
   const [statusFilter, setStatusFilter] = useState('all');
   const [languageFilter, setLanguageFilter] = useState('all');
-  
+
   // Editor states
   const [editorMode, setEditorMode] = useState('visual');
   const [previewData, setPreviewData] = useState({});
-  
+
+  // Import/Export and Advanced Filter states
+  const [advancedFilterDialog, setAdvancedFilterDialog] = useState(false);
+  const [importDialog, setImportDialog] = useState(false);
+  const [importFile, setImportFile] = useState(null);
+  const [dltFilter, setDltFilter] = useState('all');
+  const [dateRangeFilter, setDateRangeFilter] = useState({ start: '', end: '' });
+  const [usageRangeFilter, setUsageRangeFilter] = useState({ min: '', max: '' });
+  const [createdByFilter, setCreatedByFilter] = useState('all');
+
   useEffect(() => {
     loadTemplates();
     setTimeout(() => setLoaded(true), 100);
@@ -355,10 +365,192 @@ Thank you for choosing us! 🙏`,
     return processed;
   };
 
+  // Export Templates to Excel
+  const handleExportTemplates = () => {
+    const exportData = filteredTemplates.map(template => ({
+      'ID': template.id,
+      'Name': template.name,
+      'Type': template.type,
+      'Category': template.category,
+      'Language': template.language,
+      'Subject': template.subject || '',
+      'Content': template.content,
+      'Variables': template.variables.join(', '),
+      'DLT Template ID': template.dltTemplateId || '',
+      'DLT Approved': template.dltApproved ? 'Yes' : 'No',
+      'Tags': template.tags.join(', '),
+      'Status': template.status,
+      'Last Modified': template.lastModified,
+      'Usage Count': template.usage,
+      'Created By': template.createdBy
+    }));
+
+    const worksheet = XLSX.utils.json_to_sheet(exportData);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Templates');
+
+    // Generate filename with timestamp
+    const timestamp = new Date().toISOString().slice(0, 10);
+    XLSX.writeFile(workbook, `Templates_Export_${timestamp}.xlsx`);
+  };
+
+  // Import Templates from Excel/JSON
+  const handleImportTemplates = (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        let importedTemplates = [];
+
+        if (file.name.endsWith('.json')) {
+          // Handle JSON import
+          const jsonData = JSON.parse(e.target.result);
+          importedTemplates = Array.isArray(jsonData) ? jsonData : [jsonData];
+        } else {
+          // Handle Excel import
+          const data = new Uint8Array(e.target.result);
+          const workbook = XLSX.read(data, { type: 'array' });
+          const sheetName = workbook.SheetNames[0];
+          const worksheet = workbook.Sheets[sheetName];
+          const jsonData = XLSX.utils.sheet_to_json(worksheet);
+
+          // Map Excel columns to template structure
+          importedTemplates = jsonData.map((row, index) => ({
+            id: templates.length + index + 1,
+            name: row['Name'] || row['name'] || `Imported Template ${index + 1}`,
+            type: row['Type'] || row['type'] || 'email',
+            category: row['Category'] || row['category'] || 'promotional',
+            language: row['Language'] || row['language'] || 'english',
+            subject: row['Subject'] || row['subject'] || '',
+            content: row['Content'] || row['content'] || '',
+            variables: (row['Variables'] || row['variables'] || '').split(',').map(v => v.trim()).filter(v => v),
+            dltTemplateId: row['DLT Template ID'] || row['dltTemplateId'] || '',
+            dltApproved: row['DLT Approved'] === 'Yes' || row['dltApproved'] === true,
+            tags: (row['Tags'] || row['tags'] || '').split(',').map(t => t.trim()).filter(t => t),
+            status: row['Status'] || row['status'] || 'draft',
+            lastModified: new Date().toISOString().split('T')[0],
+            usage: 0,
+            createdBy: 'Imported'
+          }));
+        }
+
+        // Add imported templates to existing templates
+        setTemplates(prev => [...prev, ...importedTemplates]);
+        setImportDialog(false);
+        setImportFile(null);
+        alert(`Successfully imported ${importedTemplates.length} template(s)!`);
+      } catch (error) {
+        console.error('Import error:', error);
+        alert('Error importing templates. Please check the file format.');
+      }
+    };
+
+    if (file.name.endsWith('.json')) {
+      reader.readAsText(file);
+    } else {
+      reader.readAsArrayBuffer(file);
+    }
+  };
+
+  // Refresh templates
+  const handleRefresh = () => {
+    setLoaded(false);
+    loadTemplates();
+    setTimeout(() => setLoaded(true), 100);
+  };
+
+  // Apply advanced filters
+  const handleApplyAdvancedFilters = () => {
+    let filtered = templates;
+
+    // Apply basic filters
+    if (searchTerm) {
+      filtered = filtered.filter(template =>
+        template.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        template.content.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        template.tags.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase()))
+      );
+    }
+
+    if (typeFilter !== 'all') {
+      filtered = filtered.filter(template => template.type === typeFilter);
+    }
+
+    if (categoryFilter !== 'all') {
+      filtered = filtered.filter(template => template.category === categoryFilter);
+    }
+
+    if (statusFilter !== 'all') {
+      filtered = filtered.filter(template => template.status === statusFilter);
+    }
+
+    if (languageFilter !== 'all') {
+      filtered = filtered.filter(template => template.language === languageFilter);
+    }
+
+    // Apply advanced filters
+    if (dltFilter !== 'all') {
+      filtered = filtered.filter(template =>
+        dltFilter === 'approved' ? template.dltApproved : !template.dltApproved
+      );
+    }
+
+    if (dateRangeFilter.start) {
+      filtered = filtered.filter(template =>
+        new Date(template.lastModified) >= new Date(dateRangeFilter.start)
+      );
+    }
+
+    if (dateRangeFilter.end) {
+      filtered = filtered.filter(template =>
+        new Date(template.lastModified) <= new Date(dateRangeFilter.end)
+      );
+    }
+
+    if (usageRangeFilter.min !== '') {
+      filtered = filtered.filter(template =>
+        template.usage >= parseInt(usageRangeFilter.min)
+      );
+    }
+
+    if (usageRangeFilter.max !== '') {
+      filtered = filtered.filter(template =>
+        template.usage <= parseInt(usageRangeFilter.max)
+      );
+    }
+
+    if (createdByFilter !== 'all') {
+      filtered = filtered.filter(template => template.createdBy === createdByFilter);
+    }
+
+    setFilteredTemplates(filtered);
+    setAdvancedFilterDialog(false);
+  };
+
+  // Clear all filters
+  const handleClearAllFilters = () => {
+    setSearchTerm('');
+    setTypeFilter('all');
+    setCategoryFilter('all');
+    setStatusFilter('all');
+    setLanguageFilter('all');
+    setDltFilter('all');
+    setDateRangeFilter({ start: '', end: '' });
+    setUsageRangeFilter({ min: '', max: '' });
+    setCreatedByFilter('all');
+    setFilteredTemplates(templates);
+    setAdvancedFilterDialog(false);
+  };
+
+  // Get unique creators for filter
+  const uniqueCreators = [...new Set(templates.map(t => t.createdBy))];
+
   const TemplateCard = ({ template }) => (
     <Grow in={loaded} timeout={300}>
-      <Card sx={{ 
-        mb: 2, 
+      <Card sx={{
+        mb: 2,
         borderRadius: 3,
         boxShadow: '0 4px 12px rgba(0,0,0,0.05)',
         transition: 'transform 0.2s, box-shadow 0.2s',
@@ -371,10 +563,10 @@ Thank you for choosing us! 🙏`,
           <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
             <Box sx={{ flex: 1 }}>
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 1 }}>
-                <Avatar 
-                  sx={{ 
-                    width: 40, 
-                    height: 40, 
+                <Avatar
+                  sx={{
+                    width: 40,
+                    height: 40,
                     bgcolor: getChannelColor(template.type)
                   }}
                 >
@@ -389,15 +581,15 @@ Thank you for choosing us! 🙏`,
                   </Typography>
                 </Box>
               </Box>
-              
+
               <Box sx={{ display: 'flex', gap: 1, mb: 2 }}>
-                <Chip 
+                <Chip
                   label={template.status?.toUpperCase()}
                   color={getStatusColor(template.status)}
                   size="small"
                 />
                 {template.dltApproved && (
-                  <Chip 
+                  <Chip
                     icon={<VerifiedIcon />}
                     label="DLT Approved"
                     color="success"
@@ -405,24 +597,24 @@ Thank you for choosing us! 🙏`,
                     variant="outlined"
                   />
                 )}
-                <Chip 
+                <Chip
                   label={`Used ${template.usage} times`}
                   size="small"
                   variant="outlined"
                 />
               </Box>
-              
+
               <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
                 {template.subject || 'No subject'}
               </Typography>
-              
+
               <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
                 {template.tags.map((tag, index) => (
                   <Chip key={index} label={tag} size="small" variant="outlined" />
                 ))}
               </Box>
             </Box>
-            
+
             <Box sx={{ display: 'flex', gap: 1 }}>
               <Tooltip title="Preview Template">
                 <IconButton size="small" onClick={() => handlePreviewTemplate(template)}>
@@ -446,7 +638,7 @@ Thank you for choosing us! 🙏`,
               </Tooltip>
             </Box>
           </Box>
-          
+
           <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', pt: 2, borderTop: `1px solid ${theme.palette.divider}` }}>
             <Typography variant="caption" color="text.secondary">
               Modified: {new Date(template.lastModified).toLocaleDateString()}
@@ -461,8 +653,8 @@ Thank you for choosing us! 🙏`,
   );
 
   const CreateTemplateDialog = () => (
-    <Dialog 
-      open={createTemplateDialog || editTemplateDialog} 
+    <Dialog
+      open={createTemplateDialog || editTemplateDialog}
       onClose={() => {
         setCreateTemplateDialog(false);
         setEditTemplateDialog(false);
@@ -473,8 +665,8 @@ Thank you for choosing us! 🙏`,
         sx: { borderRadius: 3, minHeight: '80vh' }
       }}
     >
-      <DialogTitle sx={{ 
-        fontWeight: 600, 
+      <DialogTitle sx={{
+        fontWeight: 600,
         pb: 1,
         display: 'flex',
         justifyContent: 'space-between',
@@ -489,7 +681,7 @@ Thank you for choosing us! 🙏`,
             Step {templateStep + 1} of 3 - {['Basic Information', 'Content Editor', 'Review & Save'][templateStep]}
           </Typography>
         </Box>
-        <IconButton 
+        <IconButton
           onClick={() => {
             setCreateTemplateDialog(false);
             setEditTemplateDialog(false);
@@ -519,6 +711,7 @@ Thank you for choosing us! 🙏`,
                   <FormControl fullWidth>
                     <InputLabel>Language</InputLabel>
                     <Select
+                      label="Language"
                       value={newTemplate.language}
                       onChange={(e) => setNewTemplate(prev => ({ ...prev, language: e.target.value }))}
                     >
@@ -534,6 +727,7 @@ Thank you for choosing us! 🙏`,
                   <FormControl fullWidth>
                     <InputLabel>Channel Type</InputLabel>
                     <Select
+                      label="Channel Type"
                       value={newTemplate.type}
                       onChange={(e) => setNewTemplate(prev => ({ ...prev, type: e.target.value }))}
                     >
@@ -547,6 +741,7 @@ Thank you for choosing us! 🙏`,
                   <FormControl fullWidth>
                     <InputLabel>Category</InputLabel>
                     <Select
+                      label="Category"
                       value={newTemplate.category}
                       onChange={(e) => setNewTemplate(prev => ({ ...prev, category: e.target.value }))}
                     >
@@ -621,11 +816,11 @@ Thank you for choosing us! 🙏`,
                   <Tab label="Code Editor" value="code" />
                 </Tabs>
               </Box>
-              
+
               <Alert severity="info" sx={{ mb: 2 }}>
                 Use double curly braces for variables: {`{{VariableName}}`}
               </Alert>
-              
+
               <TextField
                 fullWidth
                 multiline
@@ -634,12 +829,12 @@ Thank you for choosing us! 🙏`,
                 value={newTemplate.content}
                 onChange={(e) => setNewTemplate(prev => ({ ...prev, content: e.target.value }))}
                 placeholder={
-                  newTemplate.type === 'email' 
+                  newTemplate.type === 'email'
                     ? 'Enter your email template content with HTML...'
                     : 'Enter your message template content...'
                 }
               />
-              
+
               <Box sx={{ mt: 2 }}>
                 <Typography variant="subtitle2" gutterBottom>
                   Detected Variables:
@@ -650,7 +845,7 @@ Thank you for choosing us! 🙏`,
                   ))}
                 </Box>
               </Box>
-              
+
               <Box sx={{ mt: 3, display: 'flex', gap: 1 }}>
                 <Button onClick={() => setTemplateStep(0)}>
                   Back
@@ -691,7 +886,7 @@ Thank you for choosing us! 🙏`,
                   </Grid>
                 </Grid>
               </Paper>
-              
+
               <FormControlLabel
                 control={
                   <Switch
@@ -701,7 +896,7 @@ Thank you for choosing us! 🙏`,
                 }
                 label="Mark as DLT Approved"
               />
-              
+
               <Box sx={{ mt: 3, display: 'flex', gap: 1 }}>
                 <Button onClick={() => setTemplateStep(1)}>
                   Back
@@ -722,8 +917,8 @@ Thank you for choosing us! 🙏`,
   );
 
   const PreviewDialog = () => (
-    <Dialog 
-      open={previewDialog} 
+    <Dialog
+      open={previewDialog}
       onClose={() => setPreviewDialog(false)}
       maxWidth="md"
       fullWidth
@@ -742,16 +937,16 @@ Thank you for choosing us! 🙏`,
             )}
             <Paper sx={{ p: 2, mt: 2, bgcolor: 'background.default' }}>
               {selectedTemplate.type === 'email' ? (
-                <div dangerouslySetInnerHTML={{ 
-                  __html: processTemplate(selectedTemplate.content, previewData) 
-                }} 
-                style={{ 
-                  maxWidth: '100%', 
-                  wordWrap: 'break-word',
-                  /* Add basic security styling */
-                  '& script': { display: 'none' },
-                  '& iframe': { display: 'none' }
-                }} />
+                <div dangerouslySetInnerHTML={{
+                  __html: processTemplate(selectedTemplate.content, previewData)
+                }}
+                  style={{
+                    maxWidth: '100%',
+                    wordWrap: 'break-word',
+                    /* Add basic security styling */
+                    '& script': { display: 'none' },
+                    '& iframe': { display: 'none' }
+                  }} />
               ) : (
                 <Typography variant="body1" sx={{ whiteSpace: 'pre-wrap' }}>
                   {processTemplate(selectedTemplate.content, previewData)}
@@ -771,10 +966,10 @@ Thank you for choosing us! 🙏`,
     <Fade in timeout={800}>
       <Box sx={{ px: 1 }}>
         {/* Header */}
-        <Box sx={{ 
-          display: 'flex', 
+        <Box sx={{
+          display: 'flex',
           justifyContent: 'space-between',
-          alignItems: 'center', 
+          alignItems: 'center',
           mb: 4
         }}>
           <Box>
@@ -789,6 +984,7 @@ Thank you for choosing us! 🙏`,
             <Button
               startIcon={<CloudUploadIcon />}
               variant="outlined"
+              onClick={() => setImportDialog(true)}
               sx={{ borderRadius: 2 }}
             >
               Import Templates
@@ -796,6 +992,7 @@ Thank you for choosing us! 🙏`,
             <Button
               startIcon={<GetAppIcon />}
               variant="outlined"
+              onClick={handleExportTemplates}
               sx={{ borderRadius: 2 }}
             >
               Export Templates
@@ -891,6 +1088,7 @@ Thank you for choosing us! 🙏`,
             </Typography>
             <FormControl sx={{ minWidth: 200 }}>
               <Select
+                label="Language"
                 value={selectedLanguage}
                 onChange={(e) => {
                   setSelectedLanguage(e.target.value);
@@ -935,6 +1133,7 @@ Thank you for choosing us! 🙏`,
               <FormControl fullWidth>
                 <InputLabel>Type</InputLabel>
                 <Select
+                  label="Type"
                   value={typeFilter}
                   onChange={(e) => setTypeFilter(e.target.value)}
                 >
@@ -949,6 +1148,7 @@ Thank you for choosing us! 🙏`,
               <FormControl fullWidth>
                 <InputLabel>Category</InputLabel>
                 <Select
+                  label="Category"
                   value={categoryFilter}
                   onChange={(e) => setCategoryFilter(e.target.value)}
                 >
@@ -966,6 +1166,7 @@ Thank you for choosing us! 🙏`,
               <FormControl fullWidth>
                 <InputLabel>Status</InputLabel>
                 <Select
+                  label="Status"
                   value={statusFilter}
                   onChange={(e) => setStatusFilter(e.target.value)}
                 >
@@ -979,18 +1180,28 @@ Thank you for choosing us! 🙏`,
             <Grid item xs={12} md={3}>
               <Box sx={{ display: 'flex', gap: 1 }}>
                 <Button
-                  startIcon={<FilterIcon />}
+                  startIcon={<TuneIcon />}
                   variant="outlined"
+                  onClick={() => setAdvancedFilterDialog(true)}
                 >
                   Advanced
                 </Button>
                 <Button
                   startIcon={<RefreshIcon />}
                   variant="outlined"
-                  onClick={loadTemplates}
+                  onClick={handleRefresh}
                 >
                   Refresh
                 </Button>
+                <Tooltip title="Clear All Filters">
+                  <IconButton
+                    onClick={handleClearAllFilters}
+                    color="error"
+                    sx={{ border: `1px solid ${theme.palette.error.main}` }}
+                  >
+                    <ClearIcon />
+                  </IconButton>
+                </Tooltip>
               </Box>
             </Grid>
           </Grid>
@@ -1028,12 +1239,12 @@ Thank you for choosing us! 🙏`,
         </Box>
 
         {/* Dialogs */}
-        <CreateTemplateDialog />
+        {CreateTemplateDialog()}
         <PreviewDialog />
-        
+
         {/* Language Preview Dialog */}
-        <Dialog 
-          open={languagePreview} 
+        <Dialog
+          open={languagePreview}
           onClose={() => setLanguagePreview(false)}
           maxWidth="lg"
           fullWidth
@@ -1085,6 +1296,217 @@ Thank you for choosing us! 🙏`,
           </DialogContent>
           <DialogActions>
             <Button onClick={() => setLanguagePreview(false)}>Close</Button>
+          </DialogActions>
+        </Dialog>
+
+        {/* Import Templates Dialog */}
+        <Dialog
+          open={importDialog}
+          onClose={() => setImportDialog(false)}
+          maxWidth="sm"
+          fullWidth
+        >
+          <DialogTitle sx={{ fontWeight: 600 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <CloudUploadIcon color="primary" />
+              Import Templates
+            </Box>
+          </DialogTitle>
+          <DialogContent>
+            <Alert severity="info" sx={{ mb: 3 }}>
+              Upload an Excel (.xlsx, .xls) or JSON file to import templates.
+              The file should contain columns: Name, Type, Category, Language, Subject, Content, Variables, Tags, Status.
+            </Alert>
+            <Box
+              sx={{
+                border: `2px dashed ${theme.palette.primary.main}`,
+                borderRadius: 2,
+                p: 4,
+                textAlign: 'center',
+                bgcolor: 'background.default',
+                cursor: 'pointer',
+                '&:hover': {
+                  bgcolor: 'action.hover'
+                }
+              }}
+              onClick={() => document.getElementById('import-file-input').click()}
+            >
+              <CloudUploadIcon sx={{ fontSize: 48, color: 'primary.main', mb: 2 }} />
+              <Typography variant="h6" gutterBottom>
+                Drag and drop file here
+              </Typography>
+              <Typography variant="body2" color="text.secondary" gutterBottom>
+                or click to browse
+              </Typography>
+              <Typography variant="caption" color="text.secondary">
+                Supports: .xlsx, .xls, .json
+              </Typography>
+              <input
+                id="import-file-input"
+                type="file"
+                accept=".xlsx,.xls,.json"
+                style={{ display: 'none' }}
+                onChange={handleImportTemplates}
+              />
+            </Box>
+            {importFile && (
+              <Box sx={{ mt: 2, p: 2, bgcolor: 'background.default', borderRadius: 1 }}>
+                <Typography variant="body2">
+                  Selected: {importFile.name}
+                </Typography>
+              </Box>
+            )}
+          </DialogContent>
+          <DialogActions sx={{ p: 2 }}>
+            <Button onClick={() => setImportDialog(false)}>Cancel</Button>
+            <Button
+              variant="contained"
+              component="label"
+              startIcon={<CloudUploadIcon />}
+            >
+              Choose File
+              <input
+                type="file"
+                accept=".xlsx,.xls,.json"
+                hidden
+                onChange={handleImportTemplates}
+              />
+            </Button>
+          </DialogActions>
+        </Dialog>
+
+        {/* Advanced Filter Dialog */}
+        <Dialog
+          open={advancedFilterDialog}
+          onClose={() => setAdvancedFilterDialog(false)}
+          maxWidth="md"
+          fullWidth
+        >
+          <DialogTitle sx={{ fontWeight: 600 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <TuneIcon color="primary" />
+              Advanced Filters
+            </Box>
+          </DialogTitle>
+          <DialogContent dividers>
+            <Grid container spacing={3}>
+              <Grid item xs={12}>
+                <Typography variant="subtitle2" fontWeight="600" gutterBottom>
+                  DLT Approval Status
+                </Typography>
+              </Grid>
+              <Grid item xs={12} sm={6} md={4}>
+                <FormControl fullWidth size="small">
+                  <InputLabel>DLT Status</InputLabel>
+                  <Select
+                    label="DLT Status"
+                    value={dltFilter}
+                    onChange={(e) => setDltFilter(e.target.value)}
+                  >
+                    <MenuItem value="all">All Templates</MenuItem>
+                    <MenuItem value="approved">DLT Approved</MenuItem>
+                    <MenuItem value="pending">Pending Approval</MenuItem>
+                  </Select>
+                </FormControl>
+              </Grid>
+
+              <Grid item xs={12}>
+                <Typography variant="subtitle2" fontWeight="600" gutterBottom sx={{ mt: 2 }}>
+                  Date Range (Last Modified)
+                </Typography>
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  fullWidth
+                  size="small"
+                  label="From Date"
+                  type="date"
+                  value={dateRangeFilter.start}
+                  onChange={(e) => setDateRangeFilter(prev => ({ ...prev, start: e.target.value }))}
+                  InputLabelProps={{ shrink: true }}
+                />
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  fullWidth
+                  size="small"
+                  label="To Date"
+                  type="date"
+                  value={dateRangeFilter.end}
+                  onChange={(e) => setDateRangeFilter(prev => ({ ...prev, end: e.target.value }))}
+                  InputLabelProps={{ shrink: true }}
+                />
+              </Grid>
+
+              <Grid item xs={12}>
+                <Typography variant="subtitle2" fontWeight="600" gutterBottom sx={{ mt: 2 }}>
+                  Usage Count Range
+                </Typography>
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  fullWidth
+                  size="small"
+                  label="Minimum Usage"
+                  type="number"
+                  value={usageRangeFilter.min}
+                  onChange={(e) => setUsageRangeFilter(prev => ({ ...prev, min: e.target.value }))}
+                  InputProps={{ inputProps: { min: 0 } }}
+                />
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  fullWidth
+                  size="small"
+                  label="Maximum Usage"
+                  type="number"
+                  value={usageRangeFilter.max}
+                  onChange={(e) => setUsageRangeFilter(prev => ({ ...prev, max: e.target.value }))}
+                  InputProps={{ inputProps: { min: 0 } }}
+                />
+              </Grid>
+
+              <Grid item xs={12}>
+                <Typography variant="subtitle2" fontWeight="600" gutterBottom sx={{ mt: 2 }}>
+                  Created By
+                </Typography>
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <FormControl fullWidth size="small">
+                  <InputLabel>Creator</InputLabel>
+                  <Select
+                    label="Creator"
+                    value={createdByFilter}
+                    onChange={(e) => setCreatedByFilter(e.target.value)}
+                  >
+                    <MenuItem value="all">All Creators</MenuItem>
+                    {uniqueCreators.map((creator) => (
+                      <MenuItem key={creator} value={creator}>{creator}</MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+              </Grid>
+            </Grid>
+          </DialogContent>
+          <DialogActions sx={{ p: 2, gap: 1 }}>
+            <Button
+              onClick={handleClearAllFilters}
+              color="error"
+              startIcon={<ClearIcon />}
+            >
+              Clear All
+            </Button>
+            <Box sx={{ flex: 1 }} />
+            <Button onClick={() => setAdvancedFilterDialog(false)}>
+              Cancel
+            </Button>
+            <Button
+              variant="contained"
+              onClick={handleApplyAdvancedFilters}
+              startIcon={<FilterIcon />}
+            >
+              Apply Filters
+            </Button>
           </DialogActions>
         </Dialog>
       </Box>

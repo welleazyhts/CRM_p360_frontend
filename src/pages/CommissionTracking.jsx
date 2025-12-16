@@ -37,7 +37,8 @@ import {
   CheckCircle as ApproveIcon,
   Payment as PaymentIcon,
   FileDownload as ExportIcon,
-  Receipt as StatementIcon
+  Receipt as StatementIcon,
+  Add as AddIcon
 } from '@mui/icons-material';
 import { useCommission } from '../context/CommissionContext';
 
@@ -55,7 +56,8 @@ const CommissionTracking = () => {
     batchMarkAsPaid,
     getFilteredCommissions,
     PAYMENT_STATUS,
-    PRODUCT_TYPE
+    PRODUCT_TYPE,
+    addCommission
   } = useCommission();
 
   const [currentTab, setCurrentTab] = useState(0);
@@ -68,6 +70,18 @@ const CommissionTracking = () => {
     productType: '',
     paymentStatus: ''
   });
+  const [addDialogOpen, setAddDialogOpen] = useState(false);
+  const [newCommission, setNewCommission] = useState({
+    policyNumber: '',
+    agentName: '',
+    productType: 'HEALTH',
+    premium: '',
+    rate: '',
+    premium: '',
+    rate: '',
+    policyDate: new Date().toISOString().split('T')[0],
+    paymentStatus: 'pending'
+  });
 
   // Get statistics
   const stats = useMemo(() => getStatistics(), [commissions]);
@@ -77,14 +91,18 @@ const CommissionTracking = () => {
 
   // Get display commissions based on tab
   const displayCommissions = useMemo(() => {
-    let comms = commissions;
+    // Base filters from the filter controls
+    const activeFilters = { ...filters };
 
-    if (currentTab === 1) comms = pendingComms;
-    else if (currentTab === 2) comms = approvedComms;
-    else if (currentTab === 3) comms = paidComms;
+    // Override/Set paymentStatus based on tab
+    if (currentTab === 1) activeFilters.paymentStatus = PAYMENT_STATUS.PENDING;
+    else if (currentTab === 2) activeFilters.paymentStatus = PAYMENT_STATUS.APPROVED;
+    else if (currentTab === 3) activeFilters.paymentStatus = PAYMENT_STATUS.PAID;
 
-    return getFilteredCommissions(filters, 'policyDate', 'desc');
-  }, [commissions, currentTab, filters, pendingComms, approvedComms, paidComms]);
+    // If tab is 0 (All), we stick with whatever is in filters.paymentStatus
+
+    return getFilteredCommissions(activeFilters, 'policyDate', 'desc');
+  }, [currentTab, filters, getFilteredCommissions, PAYMENT_STATUS]);
 
   // Handle tab change
   const handleTabChange = (event, newValue) => {
@@ -113,6 +131,7 @@ const CommissionTracking = () => {
   const handleMarkAsPaid = () => {
     if (selectedCommission) {
       markAsPaid(selectedCommission.id, paymentDate);
+      alert(`Commission for ${selectedCommission.agentName} marked as paid!`);
       setPaymentDialogOpen(false);
       handleMenuClose();
     }
@@ -126,6 +145,7 @@ const CommissionTracking = () => {
 
   const handleBatchMarkAsPaid = () => {
     batchMarkAsPaid(selectedCommissions, paymentDate);
+    alert(`${selectedCommissions.length} commissions marked as paid!`);
     setSelectedCommissions([]);
     setPaymentDialogOpen(false);
   };
@@ -185,6 +205,61 @@ const CommissionTracking = () => {
     URL.revokeObjectURL(url);
   };
 
+  // Handle add commission
+  const handleAddCommission = () => {
+    setNewCommission({
+      policyNumber: '',
+      agentName: '',
+      productType: 'HEALTH',
+      premium: '',
+      rate: '',
+      premium: '',
+      rate: '',
+      policyDate: new Date().toISOString().split('T')[0],
+      paymentStatus: 'pending'
+    });
+    setAddDialogOpen(true);
+  };
+
+  const handleSaveCommission = () => {
+    const premium = parseFloat(newCommission.premium) || 0;
+    const rate = parseFloat(newCommission.rate) || 0;
+    const grossCommission = (premium * rate) / 100;
+    const tds = grossCommission * 0.05; // 5% TDS
+    const netCommission = grossCommission - tds;
+
+    const commission = {
+      id: `COMM-${Date.now()}`,
+      policyNumber: newCommission.policyNumber,
+      agentName: newCommission.agentName,
+      productType: newCommission.productType,
+      premium: premium,
+      rate: rate,
+      grossCommission: grossCommission,
+      tds: tds,
+      netCommission: netCommission,
+      paymentStatus: newCommission.paymentStatus,
+      policyDate: newCommission.policyDate,
+      createdAt: new Date().toISOString()
+    };
+
+    // Add to state
+    addCommission(commission);
+
+    setAddDialogOpen(false);
+
+    // Reset form
+    setNewCommission({
+      policyNumber: '',
+      agentName: '',
+      productType: 'HEALTH',
+      premium: '',
+      rate: '',
+      policyDate: new Date().toISOString().split('T')[0],
+      paymentStatus: 'pending'
+    });
+  };
+
   return (
     <Box sx={{ p: 3 }}>
       {/* Header */}
@@ -197,9 +272,18 @@ const CommissionTracking = () => {
             Track and manage agent commissions and payments
           </Typography>
         </Box>
-        <Button variant="outlined" startIcon={<ExportIcon />} onClick={handleExport}>
-          Export
-        </Button>
+        <Box sx={{ display: 'flex', gap: 2 }}>
+          <Button
+            variant="contained"
+            startIcon={<AddIcon />}
+            onClick={handleAddCommission}
+          >
+            Add Commission
+          </Button>
+          <Button variant="outlined" startIcon={<ExportIcon />} onClick={handleExport}>
+            Export
+          </Button>
+        </Box>
       </Box>
 
       {/* Statistics Cards */}
@@ -266,7 +350,7 @@ const CommissionTracking = () => {
                       const paymentDate = new Date(c.paymentDate);
                       const now = new Date();
                       return paymentDate.getMonth() === now.getMonth() &&
-                             paymentDate.getFullYear() === now.getFullYear();
+                        paymentDate.getFullYear() === now.getFullYear();
                     })
                     .reduce((sum, c) => sum + (c.netCommission || 0), 0)
                 )}
@@ -447,7 +531,7 @@ const CommissionTracking = () => {
           <MenuItem
             onClick={() => {
               setPaymentDialogOpen(true);
-              handleMenuClose();
+              setMenuAnchor(null); // Close menu but keep selectedCommission
             }}
           >
             <PaymentIcon sx={{ mr: 1 }} /> Mark as Paid
@@ -456,7 +540,13 @@ const CommissionTracking = () => {
       </Menu>
 
       {/* Payment Dialog */}
-      <Dialog open={paymentDialogOpen} onClose={() => setPaymentDialogOpen(false)}>
+      <Dialog
+        open={paymentDialogOpen}
+        onClose={() => {
+          setPaymentDialogOpen(false);
+          setSelectedCommission(null);
+        }}
+      >
         <DialogTitle>Mark as Paid</DialogTitle>
         <DialogContent>
           <TextField
@@ -470,12 +560,114 @@ const CommissionTracking = () => {
           />
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setPaymentDialogOpen(false)}>Cancel</Button>
+          <Button onClick={() => {
+            setPaymentDialogOpen(false);
+            setSelectedCommission(null);
+          }}>Cancel</Button>
           <Button
             onClick={selectedCommissions.length > 0 ? handleBatchMarkAsPaid : handleMarkAsPaid}
             variant="contained"
           >
             Confirm
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Add Commission Dialog */}
+      <Dialog open={addDialogOpen} onClose={() => setAddDialogOpen(false)} maxWidth="sm" fullWidth>
+        <DialogTitle>Add New Commission</DialogTitle>
+        <DialogContent>
+          <Grid container spacing={2} sx={{ mt: 1 }}>
+            <Grid item xs={12}>
+              <TextField
+                fullWidth
+                label="Policy Number"
+                value={newCommission.policyNumber}
+                onChange={(e) => setNewCommission({ ...newCommission, policyNumber: e.target.value })}
+                required
+              />
+            </Grid>
+            <Grid item xs={12}>
+              <TextField
+                fullWidth
+                label="Agent Name"
+                value={newCommission.agentName}
+                onChange={(e) => setNewCommission({ ...newCommission, agentName: e.target.value })}
+                required
+              />
+            </Grid>
+            <Grid item xs={12} md={6}>
+              <FormControl fullWidth>
+                <InputLabel>Product Type</InputLabel>
+                <Select
+                  value={newCommission.productType}
+                  onChange={(e) => setNewCommission({ ...newCommission, productType: e.target.value })}
+                  label="Product Type"
+                >
+                  {Object.entries(PRODUCT_TYPE).map(([key, value]) => (
+                    <MenuItem key={value} value={value}>
+                      {key}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            </Grid>
+            <Grid item xs={12} md={6}>
+              <TextField
+                fullWidth
+                type="date"
+                label="Policy Date"
+                value={newCommission.policyDate}
+                onChange={(e) => setNewCommission({ ...newCommission, policyDate: e.target.value })}
+                InputLabelProps={{ shrink: true }}
+              />
+            </Grid>
+            <Grid item xs={12} md={6}>
+              <TextField
+                fullWidth
+                type="number"
+                label="Premium Amount"
+                value={newCommission.premium}
+                onChange={(e) => setNewCommission({ ...newCommission, premium: e.target.value })}
+                required
+              />
+            </Grid>
+            <Grid item xs={12} md={6}>
+              <TextField
+                fullWidth
+                type="number"
+                label="Commission Rate (%)"
+                value={newCommission.rate}
+                onChange={(e) => setNewCommission({ ...newCommission, rate: e.target.value })}
+                required
+              />
+            </Grid>
+            <Grid item xs={12} md={6}>
+              <FormControl fullWidth>
+                <InputLabel>Status</InputLabel>
+                <Select
+                  value={newCommission.paymentStatus}
+                  onChange={(e) => setNewCommission({ ...newCommission, paymentStatus: e.target.value })}
+                  label="Status"
+                >
+                  {Object.entries(PAYMENT_STATUS).map(([key, value]) => (
+                    <MenuItem key={value} value={value}>
+                      {key.replace(/_/g, ' ')}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            </Grid>
+          </Grid>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setAddDialogOpen(false)}>Cancel</Button>
+          <Button
+            onClick={handleSaveCommission}
+            variant="contained"
+            disabled={!newCommission.policyNumber || !newCommission.agentName || !newCommission.premium || !newCommission.rate}
+          >
+            Add Commission
           </Button>
         </DialogActions>
       </Dialog>

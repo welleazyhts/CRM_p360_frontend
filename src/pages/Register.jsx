@@ -140,16 +140,36 @@ const Register = () => {
       return;
     }
 
-    setLoading(true);
+    setLoading(true);  
     setError('');
 
     try {
+<<<<<<< HEAD
       const result = await register(formData);
 
       if (result.success) {
         // Registration successful
         alert('Registration successful! Please login with your credentials.');
         navigate('/login');
+=======
+      // Call the registration API
+      const result = await registerUser({
+        firstName: formData.firstName,
+        lastName: formData.lastName,
+        email: formData.email,
+        companyName: formData.companyName,
+        numberOfUsers: formData.numberOfUsers,
+        industry: formData.industry,
+        password: formData.password,
+        additionalFields: formData.additionalFields  
+      });
+
+      if (result.success) {
+        // Registration successful
+        // Show success message and redirect to login
+        alert(result.message || 'Registration successful! Please login with your credentials.');
+        navigate('/login');      
+>>>>>>> 0f0db02199acd11bdcb8309679f62aa88a7a39ee
       } else {
         setError(result.message || 'Registration failed. Please try again.');
       }

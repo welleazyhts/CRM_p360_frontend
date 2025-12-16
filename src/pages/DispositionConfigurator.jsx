@@ -231,9 +231,9 @@ const DispositionConfigurator = () => {
         showSnackbar('Sub-disposition added successfully');
         handleCloseSubDispDialog();
       }
-    } else {
+    } else {  
       const result = updateSubDisposition(parentId, data.id, data);
-      if (result.success) {
+      if (result.success) {  
         showSnackbar('Sub-disposition updated successfully');
         handleCloseSubDispDialog();
       }
@@ -380,7 +380,7 @@ const DispositionConfigurator = () => {
             Disposition Library
           </Typography>
 
-          {dispositions.map((disp) => (
+          {(dispositions || []).map((disp) => (
             <Accordion
               key={disp.id}
               expanded={expandedDisp === disp.id}
@@ -582,7 +582,7 @@ const DispositionConfigurator = () => {
             </Accordion>
           ))}
 
-          {dispositions.length === 0 && (
+          {(dispositions?.length || 0) === 0 && (
             <Alert severity="info">
               No dispositions configured. Click "Add Disposition" to get started.
             </Alert>

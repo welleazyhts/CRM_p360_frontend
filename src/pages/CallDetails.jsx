@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import callService from '../services/callService';
 import {
   Box, Typography, Paper, Button, Grid, Divider
 } from '@mui/material';
@@ -13,11 +14,22 @@ import {
 const CallDetails = () => {
   const { callId } = useParams();
   const navigate = useNavigate();
+  const [callData, setCallData] = useState(null);
+  const [loading, setLoading] = useState(true);
 
-  // Mock call data - in real app, fetch based on callId
-  const callData = {
+  useEffect(() => {
+    const fetchCallData = async () => {
+      try {
+        // Try to get call from history first
+        const callHistory = callService.getCallHistory();
+        let foundCall = callHistory.find(call => call.id === callId);
+        
+        if (!foundCall) {
+          // If not in history, create mock data and try customer lookup
+          const mockData = {
     id: callId,
     customerName: 'Rajesh Kumar',
+    customerPhone: '+91 98765 43210',
     agent: 'Priya Sharma',
     callDateTime: '2025-01-20 10:15 AM',
     duration: '05:23',
@@ -37,7 +49,38 @@ const CallDetails = () => {
       { speaker: 'Rajesh Kumar', message: 'No, that covers everything. Thank you for your assistance.', timestamp: '10:16:35' },
       { speaker: 'Priya Sharma', message: 'Thank you for choosing ABC Insurance, Mr. Kumar. Have a great day!', timestamp: '10:16:40' }
     ]
-  };
+          };
+          
+          // Try to lookup customer by phone if available
+          if (mockData.customerPhone) {
+            const customerLookup = await callService.lookupCustomerByPhone(mockData.customerPhone);
+            if (customerLookup.found) {
+              mockData.customerName = customerLookup.customer.name;
+              mockData.customerEmail = customerLookup.customer.email;
+              mockData.customerPolicies = customerLookup.customer.policies;
+            }
+          }
+          
+          foundCall = mockData;
+        }
+        
+        setCallData(foundCall);
+      } catch (error) {
+        console.error('Error fetching call data:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchCallData();
+  }, [callId]);
+
+  if (loading) {
+    return <Box sx={{ p: 3 }}><Typography>Loading call details...</Typography></Box>;
+  }
+
+  if (!callData) {
+    return <Box sx={{ p: 3 }}><Typography>Call not found</Typography></Box>;
+  }
 
   return (
     <Box sx={{ p: 3 }}>

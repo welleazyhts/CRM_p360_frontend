@@ -1,14 +1,14 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { 
-  Box, Typography, TextField, InputAdornment, 
-  Table, TableBody, TableCell, TableContainer, TableHead, 
-  TableRow, TablePagination, Chip, IconButton, 
+import {
+  Box, Typography, TextField, InputAdornment,
+  Table, TableBody, TableCell, TableContainer, TableHead,
+  TableRow, TablePagination, Chip, IconButton,
   Menu, MenuItem, Tooltip, Button, FormControl,
   InputLabel, Select, ListItemText, Divider, Alert,
   ListItemIcon, Card, CardContent, Grow, Fade, Zoom, alpha
 } from '@mui/material';
-import { 
-  Search as SearchIcon, 
+import {
+  Search as SearchIcon,
   FilterList as FilterIcon,
   Visibility as ViewIcon,
   FileDownload as FileDownloadIcon,
@@ -23,13 +23,14 @@ import {
 import { useNavigate } from 'react-router-dom';
 // import { useSettings } from '../context/SettingsContext';
 import { useTheme } from '@mui/material/styles';
+import * as XLSX from 'xlsx';
 
 const ClosedCases = () => {
   const navigate = useNavigate();
   // const { settings } = useSettings();
   const theme = useTheme();
   const [loaded, setLoaded] = useState(false);
-  
+
   const mockCases = useMemo(() => [
     {
       id: 'CASE-002',
@@ -379,7 +380,7 @@ const ClosedCases = () => {
   const handleSearchChange = (event) => {
     const searchValue = event.target.value;
     setSearchTerm(searchValue);
-    
+
     // Apply all filters
     applyAllFilters(searchValue, agentFilter, dateFilter);
   };
@@ -390,7 +391,7 @@ const ClosedCases = () => {
 
   const handleFilterClose = () => {
     setFilterAnchorEl(null);
-    
+
     // Apply all filters when the filter menu is closed
     applyAllFilters(searchTerm, agentFilter, dateFilter);
   };
@@ -398,7 +399,7 @@ const ClosedCases = () => {
   const handleAgentFilterChange = (event) => {
     const newAgentFilter = event.target.value;
     setAgentFilter(newAgentFilter);
-    
+
     // Apply all filters
     applyAllFilters(searchTerm, newAgentFilter, dateFilter);
   };
@@ -406,11 +407,11 @@ const ClosedCases = () => {
   const handleDateFilterChange = (event) => {
     const newDateFilter = event.target.value;
     setDateFilter(newDateFilter);
-    
+
     // Apply all filters
     applyAllFilters(searchTerm, agentFilter, newDateFilter);
   };
-  
+
   // Helper function to apply all filters
   const applyAllFilters = (search, agent, date) => {
     // Process comma-separated search terms
@@ -418,26 +419,26 @@ const ClosedCases = () => {
       .split(',')
       .map(term => term.trim().toLowerCase())
       .filter(term => term !== '');
-    
+
     // Filter cases based on all criteria
     const filteredCases = mockCases.filter(caseItem => {
       // Filter by search terms
-      const matchesSearch = searchTerms.length === 0 || searchTerms.some(term => 
+      const matchesSearch = searchTerms.length === 0 || searchTerms.some(term =>
         caseItem.id.toLowerCase().includes(term) ||
         caseItem.customerName.toLowerCase().includes(term) ||
         caseItem.policyNumber.toLowerCase().includes(term)
       );
-      
+
       // Filter by agent
-      const matchesAgent = agent === 'all' || 
+      const matchesAgent = agent === 'all' ||
         caseItem.agent.toLowerCase() === agent.toLowerCase();
-        
+
       // Filter by date if needed (example implementation)
       let matchesDate = true;
       if (date !== 'all') {
         const today = new Date();
         const caseDate = new Date(caseItem.closedDate); // Use closedDate for closed cases
-        
+
         if (date === 'today') {
           matchesDate = caseDate.toDateString() === today.toDateString();
         } else if (date === 'yesterday') {
@@ -454,11 +455,11 @@ const ClosedCases = () => {
           matchesDate = caseDate >= lastMonth;
         }
       }
-      
+
       // Only show cases with Renewed status
       return matchesSearch && matchesAgent && matchesDate && caseItem.status === 'Renewed';
     });
-    
+
     setCases(filteredCases);
     setPage(0); // Reset to first page when filtering
   };
@@ -469,6 +470,83 @@ const ClosedCases = () => {
 
   const handleExportClose = () => {
     setExportAnchorEl(null);
+  };
+
+  // Export to XLS functionality
+  const exportToXLS = () => {
+    try {
+      const exportData = cases.map(caseItem => ({
+        'Case ID': caseItem.id,
+        'Customer Name': caseItem.customerName,
+        'Customer Profile': caseItem.customerProfile,
+        'Mobile': caseItem.customerMobile,
+        'Email': caseItem.contactInfo?.email || '',
+        'Language': caseItem.preferredLanguage,
+        'Policy Number': caseItem.policyNumber,
+        'Product Name': caseItem.productName,
+        'Product Category': caseItem.productCategory,
+        'Channel': caseItem.channel,
+        'Sub Channel': caseItem.subChannel,
+        'Batch ID': caseItem.batchId,
+        'Status': caseItem.status,
+        'Policy Status': caseItem.policyStatus,
+        'Agent': caseItem.agent,
+        'Priority': caseItem.isPriority ? 'Yes' : 'No',
+        'Total Calls': caseItem.totalCalls,
+        'Premium': caseItem.policyDetails?.premium || '',
+        'Renewal Date': caseItem.policyDetails?.renewalDate || '',
+        'Closed Date': caseItem.closedDate,
+        'Upload Date': caseItem.uploadDate
+      }));
+
+      const ws = XLSX.utils.json_to_sheet(exportData);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, 'Closed Cases');
+      const date = new Date().toISOString().split('T')[0];
+      XLSX.writeFile(wb, `closed_cases_export_${date}.xlsx`);
+
+      handleExportClose();
+      setSuccessMessage(`Successfully exported ${cases.length} cases to Excel`);
+      setTimeout(() => setSuccessMessage(''), 3000);
+    } catch (error) {
+      console.error('Error exporting to XLS:', error);
+      handleExportClose();
+    }
+  };
+
+  // Export to CSV functionality
+  const exportToCSV = () => {
+    try {
+      const headers = ['Case ID', 'Customer Name', 'Profile', 'Mobile', 'Email', 'Language', 'Policy Number', 'Product Name', 'Category', 'Channel', 'Sub Channel', 'Batch ID', 'Status', 'Policy Status', 'Agent', 'Priority', 'Total Calls', 'Premium', 'Renewal Date', 'Closed Date', 'Upload Date'];
+
+      const rows = cases.map(caseItem => [
+        caseItem.id, caseItem.customerName, caseItem.customerProfile, caseItem.customerMobile,
+        caseItem.contactInfo?.email || '', caseItem.preferredLanguage, caseItem.policyNumber,
+        caseItem.productName, caseItem.productCategory, caseItem.channel, caseItem.subChannel,
+        caseItem.batchId, caseItem.status, caseItem.policyStatus, caseItem.agent,
+        caseItem.isPriority ? 'Yes' : 'No', caseItem.totalCalls, caseItem.policyDetails?.premium || '',
+        caseItem.policyDetails?.renewalDate || '', caseItem.closedDate, caseItem.uploadDate
+      ]);
+
+      const csvContent = [headers.join(','), ...rows.map(row => row.map(cell => typeof cell === 'string' && cell.includes(',') ? `"${cell}"` : cell).join(','))].join('\n');
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      const date = new Date().toISOString().split('T')[0];
+      link.href = url;
+      link.download = `closed_cases_export_${date}.csv`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+
+      handleExportClose();
+      setSuccessMessage(`Successfully exported ${cases.length} cases to CSV`);
+      setTimeout(() => setSuccessMessage(''), 3000);
+    } catch (error) {
+      console.error('Error exporting to CSV:', error);
+      handleExportClose();
+    }
   };
 
   const handleViewFlow = (caseData) => {
@@ -507,16 +585,16 @@ const ClosedCases = () => {
   return (
     <Fade in={true} timeout={800}>
       <Box sx={{ px: 1 }}>
-        <Box sx={{ 
-          display: 'flex', 
-          justifyContent: 'space-between', 
-          alignItems: 'center', 
+        <Box sx={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
           mb: 4
         }}>
           <Typography variant="h4" fontWeight="600">
             Closed Cases
           </Typography>
-          
+
           <Box sx={{ display: 'flex', gap: 2 }}>
             <Zoom in={loaded} style={{ transitionDelay: '200ms' }}>
               <Button
@@ -563,13 +641,13 @@ const ClosedCases = () => {
             </Zoom>
           </Box>
         </Box>
-        
+
         {successMessage && (
           <Grow in={!!successMessage}>
-            <Alert 
-              severity="success" 
-              sx={{ 
-                mb: 3, 
+            <Alert
+              severity="success"
+              sx={{
+                mb: 3,
                 borderRadius: 2,
                 boxShadow: '0 4px 12px rgba(0,0,0,0.05)'
               }}
@@ -578,13 +656,13 @@ const ClosedCases = () => {
             </Alert>
           </Grow>
         )}
-        
+
         {error && (
           <Grow in={!!error}>
-            <Alert 
-              severity="error" 
-              sx={{ 
-                mb: 3, 
+            <Alert
+              severity="error"
+              sx={{
+                mb: 3,
                 borderRadius: 2,
                 boxShadow: '0 4px 12px rgba(0,0,0,0.05)'
               }}
@@ -593,12 +671,12 @@ const ClosedCases = () => {
             </Alert>
           </Grow>
         )}
-        
+
         <Grow in={loaded} timeout={400}>
-          <Card 
+          <Card
             elevation={0}
-            sx={{ 
-              mb: 4, 
+            sx={{
+              mb: 4,
               borderRadius: 3,
               boxShadow: '0 8px 24px rgba(0,0,0,0.05)',
               overflow: 'visible',
@@ -643,14 +721,14 @@ const ClosedCases = () => {
             </CardContent>
           </Card>
         </Grow>
-        
+
 
 
         {/* Scrollable Table Section */}
         <Grow in={loaded} timeout={600}>
-          <Card 
+          <Card
             elevation={0}
-            sx={{ 
+            sx={{
               borderRadius: 3,
               boxShadow: '0 8px 24px rgba(0,0,0,0.05)',
               mb: 4,
@@ -661,8 +739,8 @@ const ClosedCases = () => {
               }
             }}
           >
-            <TableContainer 
-              sx={{ 
+            <TableContainer
+              sx={{
                 maxHeight: '70vh',
                 overflowX: 'auto',
                 overflowY: 'auto',
@@ -683,20 +761,20 @@ const ClosedCases = () => {
                 }
               }}
             >
-              <Table 
-                sx={{ 
+              <Table
+                sx={{
                   minWidth: 2400,
                   tableLayout: 'fixed'
-                }} 
+                }}
                 aria-label="closed cases table"
               >
-                <TableHead sx={{ 
+                <TableHead sx={{
                   position: 'sticky',
                   top: 0,
                   zIndex: 10,
                   bgcolor: 'background.paper'
                 }}>
-                  <TableRow sx={{ 
+                  <TableRow sx={{
                     bgcolor: alpha(theme.palette.success.main, 0.08),
                     '& .MuiTableCell-head': {
                       borderBottom: `2px solid ${alpha(theme.palette.success.main, 0.15)}`,
@@ -734,11 +812,11 @@ const ClosedCases = () => {
                   {cases
                     .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
                     .map((caseItem, index) => (
-                      <TableRow 
+                      <TableRow
                         key={caseItem.id}
                         hover
                         onClick={() => navigate(`/cases/${caseItem.id}`)}
-                        sx={{ 
+                        sx={{
                           cursor: 'pointer',
                           transition: 'background-color 0.2s, transform 0.1s',
                           bgcolor: index % 2 === 0 ? 'transparent' : alpha(theme.palette.success.main, 0.02),
@@ -766,7 +844,7 @@ const ClosedCases = () => {
                                   e.stopPropagation();
                                   navigate(`/cases/${caseItem.id}`);
                                 }}
-                                sx={{ 
+                                sx={{
                                   color: 'primary.main',
                                   transition: 'transform 0.2s',
                                   '&:hover': { transform: 'scale(1.15)' }
@@ -782,7 +860,7 @@ const ClosedCases = () => {
                                   e.stopPropagation();
                                   handleViewFlow(caseItem);
                                 }}
-                                sx={{ 
+                                sx={{
                                   color: 'info.main',
                                   transition: 'transform 0.2s',
                                   '&:hover': { transform: 'scale(1.15)' }
@@ -808,7 +886,7 @@ const ClosedCases = () => {
                             label={caseItem.customerProfile}
                             color={getCustomerProfileColor(caseItem.customerProfile)}
                             size="small"
-                            sx={{ 
+                            sx={{
                               fontWeight: 500,
                               minWidth: '100px',
                               boxShadow: '0 2px 5px rgba(0,0,0,0.08)',
@@ -842,7 +920,7 @@ const ClosedCases = () => {
                             color="info"
                             variant="outlined"
                             size="small"
-                            sx={{ 
+                            sx={{
                               fontWeight: 500,
                               minWidth: '110px',
                               borderRadius: 5
@@ -869,7 +947,7 @@ const ClosedCases = () => {
                             label={caseItem.status}
                             color={getStatusColor(caseItem.status)}
                             size="small"
-                            sx={{ 
+                            sx={{
                               fontWeight: 500,
                               minWidth: '110px',
                               boxShadow: '0 2px 5px rgba(0,0,0,0.08)',
@@ -882,7 +960,7 @@ const ClosedCases = () => {
                             label={caseItem.policyStatus}
                             color={getPolicyStatusColor(caseItem.policyStatus)}
                             size="small"
-                            sx={{ 
+                            sx={{
                               fontWeight: 500,
                               minWidth: '130px',
                               boxShadow: '0 2px 5px rgba(0,0,0,0.08)',
@@ -902,7 +980,7 @@ const ClosedCases = () => {
                             color={caseItem.isPriority ? "error" : "primary"}
                             variant={caseItem.isPriority ? "filled" : "outlined"}
                             size="small"
-                            sx={{ 
+                            sx={{
                               cursor: 'pointer',
                               minWidth: '100px',
                               fontWeight: 500,
@@ -935,15 +1013,15 @@ const ClosedCases = () => {
                           </Box>
                         </TableCell>
                         <TableCell sx={{ width: 150 }}>
-                          <Typography 
-                            variant="body2" 
+                          <Typography
+                            variant="body2"
                             fontWeight="500"
                             sx={{
                               color: (() => {
                                 const renewalDate = new Date(caseItem.policyDetails.renewalDate);
                                 const today = new Date();
                                 const daysUntilRenewal = Math.ceil((renewalDate - today) / (1000 * 60 * 60 * 24));
-                                
+
                                 if (daysUntilRenewal <= 0) {
                                   return 'error.main';
                                 } else if (daysUntilRenewal <= 7) {
@@ -990,9 +1068,9 @@ const ClosedCases = () => {
 
         {/* Fixed Pagination Outside Scrollable Area */}
         <Grow in={loaded} timeout={800}>
-          <Card 
+          <Card
             elevation={0}
-            sx={{ 
+            sx={{
               borderRadius: 3,
               boxShadow: '0 4px 12px rgba(0,0,0,0.03)',
               mt: 2
@@ -1025,7 +1103,7 @@ const ClosedCases = () => {
             </Box>
           </Card>
         </Grow>
-        
+
         {/* Export Menu */}
         <Menu
           anchorEl={exportAnchorEl}
@@ -1036,19 +1114,14 @@ const ClosedCases = () => {
           PaperProps={{
             elevation: 3,
             sx: {
-              borderRadius: 2, 
+              borderRadius: 2,
               mt: 1,
               boxShadow: '0 8px 24px rgba(0,0,0,0.15)'
             }
           }}
         >
-          <MenuItem 
-            onClick={() => {
-              // Export logic would go here
-              handleExportClose();
-              setSuccessMessage('Export completed successfully');
-              setTimeout(() => setSuccessMessage(''), 3000);
-            }} 
+          <MenuItem
+            onClick={exportToXLS}
             sx={{
               borderRadius: 1,
               py: 1.5,
@@ -1063,13 +1136,8 @@ const ClosedCases = () => {
             </ListItemIcon>
             <ListItemText primary="Export as XLS" />
           </MenuItem>
-          <MenuItem 
-            onClick={() => {
-              // Export logic would go here
-              handleExportClose();
-              setSuccessMessage('Export completed successfully');
-              setTimeout(() => setSuccessMessage(''), 3000);
-            }} 
+          <MenuItem
+            onClick={exportToCSV}
             sx={{
               borderRadius: 1,
               py: 1.5,
@@ -1085,7 +1153,7 @@ const ClosedCases = () => {
             <ListItemText primary="Export as CSV" />
           </MenuItem>
         </Menu>
-        
+
         {/* Advanced Filter Menu */}
         <Menu
           anchorEl={filterAnchorEl}
@@ -1096,10 +1164,10 @@ const ClosedCases = () => {
           PaperProps={{
             elevation: 3,
             sx: {
-              borderRadius: 2, 
+              borderRadius: 2,
               minWidth: '220px',
               mt: 1,
-              p: 1, 
+              p: 1,
               boxShadow: '0 8px 24px rgba(0,0,0,0.15)'
             }
           }}
@@ -1114,7 +1182,7 @@ const ClosedCases = () => {
                 value={agentFilter}
                 label="Agent"
                 onChange={handleAgentFilterChange}
-                sx={{ 
+                sx={{
                   borderRadius: 2,
                   '.MuiOutlinedInput-notchedOutline': {
                     borderColor: alpha(theme.palette.primary.main, 0.2),
@@ -1132,7 +1200,7 @@ const ClosedCases = () => {
               </Select>
             </FormControl>
           </MenuItem>
-          
+
           <MenuItem sx={{ py: 1.5 }}>
             <FormControl fullWidth size="small">
               <InputLabel>Date</InputLabel>
@@ -1140,7 +1208,7 @@ const ClosedCases = () => {
                 value={dateFilter}
                 label="Date"
                 onChange={handleDateFilterChange}
-                sx={{ 
+                sx={{
                   borderRadius: 2,
                   '.MuiOutlinedInput-notchedOutline': {
                     borderColor: alpha(theme.palette.primary.main, 0.2),
@@ -1158,10 +1226,10 @@ const ClosedCases = () => {
               </Select>
             </FormControl>
           </MenuItem>
-          
+
           <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 2, px: 1 }}>
-            <Button 
-              variant="contained" 
+            <Button
+              variant="contained"
               onClick={handleFilterClose}
               sx={{
                 borderRadius: 2,
@@ -1180,12 +1248,12 @@ const ClosedCases = () => {
             </Button>
           </Box>
         </Menu>
-        
+
         {/* Auto-refresh button at the bottom right */}
         <Box sx={{ position: 'fixed', right: 30, bottom: 30 }}>
           <Zoom in={loaded} style={{ transitionDelay: '800ms' }}>
             <Tooltip title="Refresh closed cases" arrow>
-              <IconButton 
+              <IconButton
                 color="success"
                 onClick={() => {
                   // Refresh data

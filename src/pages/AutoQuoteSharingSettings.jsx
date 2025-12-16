@@ -93,10 +93,12 @@ const AutoQuoteSharingSettings = () => {
     enableAnalytics: true,
     requireApproval: false
   });
-  
+
   const [customers, setCustomers] = useState([]);
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
   const [loading, setLoading] = useState(false);
+  const [confirmDialog, setConfirmDialog] = useState({ open: false, customer: null });
+  const [sendingCustomerId, setSendingCustomerId] = useState(null);
 
   // Mock customer data
   useEffect(() => {
@@ -153,12 +155,12 @@ const AutoQuoteSharingSettings = () => {
     setLoading(true);
     // Simulate API delay
     await new Promise(resolve => setTimeout(resolve, 1500));
-    
+
     // Mock 5% failure rate
     if (Math.random() < 0.05) {
       throw new Error('Network error');
     }
-    
+
     setLoading(false);
     return { success: true, message: 'Settings updated successfully' };
   };
@@ -169,7 +171,7 @@ const AutoQuoteSharingSettings = () => {
       setSettings(newSettings);
 
       await mockApiCall('/api/quotes/auto-share/settings', newSettings);
-      
+
       setSnackbar({
         open: true,
         message: `Auto-quote ${field} updated successfully!`,
@@ -187,9 +189,9 @@ const AutoQuoteSharingSettings = () => {
   const handleCustomerStatusToggle = async (customerId, currentStatus) => {
     try {
       const newStatus = currentStatus === 'Active' ? 'Paused' : 'Active';
-      
-      setCustomers(prev => prev.map(customer => 
-        customer.id === customerId 
+
+      setCustomers(prev => prev.map(customer =>
+        customer.id === customerId
           ? { ...customer, status: newStatus }
           : customer
       ));
@@ -214,17 +216,18 @@ const AutoQuoteSharingSettings = () => {
   };
 
   const handleSendQuoteNow = async (customerId, customerName) => {
+    setSendingCustomerId(customerId);
     try {
       await mockApiCall('/api/quotes/send-now', { customerId });
-      
+
       // Update last sent date
-      setCustomers(prev => prev.map(customer => 
-        customer.id === customerId 
-          ? { 
-              ...customer, 
-              lastQuoteSent: new Date().toISOString().split('T')[0],
-              nextScheduled: getNextScheduledDate(settings.frequency)
-            }
+      setCustomers(prev => prev.map(customer =>
+        customer.id === customerId
+          ? {
+            ...customer,
+            lastQuoteSent: new Date().toISOString().split('T')[0],
+            nextScheduled: getNextScheduledDate(settings.frequency)
+          }
           : customer
       ));
 
@@ -233,13 +236,26 @@ const AutoQuoteSharingSettings = () => {
         message: `Quote sent successfully to ${customerName}!`,
         severity: 'success'
       });
+
+      // Close confirmation dialog
+      setConfirmDialog({ open: false, customer: null });
     } catch (error) {
       setSnackbar({
         open: true,
         message: `Failed to send quote: ${error.message}`,
         severity: 'error'
       });
+    } finally {
+      setSendingCustomerId(null);
     }
+  };
+
+  const handleOpenConfirmDialog = (customer) => {
+    setConfirmDialog({ open: true, customer });
+  };
+
+  const handleCloseConfirmDialog = () => {
+    setConfirmDialog({ open: false, customer: null });
   };
 
   const getNextScheduledDate = (frequency) => {
@@ -308,7 +324,7 @@ const AutoQuoteSharingSettings = () => {
                     Basic Configuration
                   </Typography>
                 </Box>
-                
+
                 <Grid container spacing={3}>
                   <Grid item xs={12} md={6}>
                     <FormControlLabel
@@ -331,7 +347,7 @@ const AutoQuoteSharingSettings = () => {
                       }
                     />
                   </Grid>
-                  
+
                   <Grid item xs={12} md={6}>
                     <FormControl fullWidth disabled={!settings.enabled}>
                       <InputLabel>Sharing Frequency</InputLabel>
@@ -346,7 +362,7 @@ const AutoQuoteSharingSettings = () => {
                       </Select>
                     </FormControl>
                   </Grid>
-                  
+
                   <Grid item xs={12} md={6}>
                     <TextField
                       fullWidth
@@ -358,7 +374,7 @@ const AutoQuoteSharingSettings = () => {
                       InputLabelProps={{ shrink: true }}
                     />
                   </Grid>
-                  
+
                   <Grid item xs={12} md={6}>
                     <TextField
                       fullWidth
@@ -371,13 +387,13 @@ const AutoQuoteSharingSettings = () => {
                     />
                   </Grid>
                 </Grid>
-                
+
                 <Divider sx={{ my: 3 }} />
-                
+
                 <Typography variant="subtitle1" fontWeight="600" gutterBottom>
                   Advanced Options
                 </Typography>
-                
+
                 <Grid container spacing={2}>
                   <Grid item xs={12} sm={6}>
                     <FormControlLabel
@@ -391,7 +407,7 @@ const AutoQuoteSharingSettings = () => {
                       label="Include Weekends"
                     />
                   </Grid>
-                  
+
                   <Grid item xs={12} sm={6}>
                     <FormControlLabel
                       control={
@@ -404,7 +420,7 @@ const AutoQuoteSharingSettings = () => {
                       label="Retry Failed Quotes"
                     />
                   </Grid>
-                  
+
                   <Grid item xs={12} sm={6}>
                     <FormControlLabel
                       control={
@@ -417,7 +433,7 @@ const AutoQuoteSharingSettings = () => {
                       label="Enable Analytics"
                     />
                   </Grid>
-                  
+
                   <Grid item xs={12} sm={6}>
                     <FormControlLabel
                       control={
@@ -497,14 +513,14 @@ const AutoQuoteSharingSettings = () => {
             <TableContainer component={Paper} elevation={0}>
               <Table>
                 <TableHead>
-                  <TableRow sx={{ backgroundColor: theme.palette.grey[100] }}>
-                    <TableCell>Customer</TableCell>
-                    <TableCell>Contact Info</TableCell>
-                    <TableCell>Product Type</TableCell>
-                    <TableCell>Last Quote Sent</TableCell>
-                    <TableCell>Next Scheduled</TableCell>
-                    <TableCell>Status</TableCell>
-                    <TableCell align="center">Actions</TableCell>
+                  <TableRow sx={{ backgroundColor: theme.palette.grey[100], '&:hover': { backgroundColor: theme.palette.grey[100] } }}>
+                    <TableCell sx={{ fontWeight: 600, color: 'black' }}>Customer</TableCell>
+                    <TableCell sx={{ fontWeight: 600, color: 'black' }}>Contact Info</TableCell>
+                    <TableCell sx={{ fontWeight: 600, color: 'black' }}>Product Type</TableCell>
+                    <TableCell sx={{ fontWeight: 600, color: 'black' }}>Last Quote Sent</TableCell>
+                    <TableCell sx={{ fontWeight: 600, color: 'black' }}>Next Scheduled</TableCell>
+                    <TableCell sx={{ fontWeight: 600, color: 'black' }}>Status</TableCell>
+                    <TableCell align="center" sx={{ fontWeight: 600, color: 'black' }}>Actions</TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
@@ -538,11 +554,11 @@ const AutoQuoteSharingSettings = () => {
                         </Box>
                       </TableCell>
                       <TableCell>
-                        <Chip 
-                          label={customer.productType} 
-                          size="small" 
-                          color="primary" 
-                          variant="outlined" 
+                        <Chip
+                          label={customer.productType}
+                          size="small"
+                          color="primary"
+                          variant="outlined"
                         />
                       </TableCell>
                       <TableCell>
@@ -569,20 +585,26 @@ const AutoQuoteSharingSettings = () => {
                         />
                       </TableCell>
                       <TableCell align="center">
-                        <Tooltip title="Send Quote Now">
-                          <IconButton
-                            size="small"
-                            onClick={() => handleSendQuoteNow(customer.id, customer.name)}
-                            disabled={loading || customer.status === 'Paused'}
-                            sx={{
-                              color: theme.palette.success.main,
-                              '&:hover': {
-                                bgcolor: alpha(theme.palette.success.main, 0.1)
-                              }
-                            }}
-                          >
-                            <SendIcon />
-                          </IconButton>
+                        <Tooltip title={customer.status === 'Paused' ? 'Customer is paused' : 'Send Quote Now'}>
+                          <span>
+                            <IconButton
+                              size="small"
+                              onClick={() => handleOpenConfirmDialog(customer)}
+                              disabled={sendingCustomerId === customer.id || customer.status === 'Paused'}
+                              sx={{
+                                color: theme.palette.success.main,
+                                '&:hover': {
+                                  bgcolor: alpha(theme.palette.success.main, 0.1)
+                                }
+                              }}
+                            >
+                              {sendingCustomerId === customer.id ? (
+                                <RefreshIcon className="spinning" />
+                              ) : (
+                                <SendIcon />
+                              )}
+                            </IconButton>
+                          </span>
                         </Tooltip>
                       </TableCell>
                     </TableRow>
@@ -624,7 +646,7 @@ const AutoQuoteSharingSettings = () => {
               </CardContent>
             </Card>
           </Grid>
-          
+
           <Grid item xs={12} md={6}>
             <Card>
               <CardContent>
@@ -667,7 +689,7 @@ const AutoQuoteSharingSettings = () => {
             <Typography variant="h6" fontWeight="600" gutterBottom>
               🔔 Notification Settings
             </Typography>
-            
+
             <List>
               <ListItem>
                 <ListItemText
@@ -678,7 +700,7 @@ const AutoQuoteSharingSettings = () => {
                   <Switch defaultChecked color="primary" />
                 </ListItemSecondaryAction>
               </ListItem>
-              
+
               <ListItem>
                 <ListItemText
                   primary="SMS Notifications"
@@ -688,7 +710,7 @@ const AutoQuoteSharingSettings = () => {
                   <Switch color="primary" />
                 </ListItemSecondaryAction>
               </ListItem>
-              
+
               <ListItem>
                 <ListItemText
                   primary="Daily Summary"
@@ -698,7 +720,7 @@ const AutoQuoteSharingSettings = () => {
                   <Switch defaultChecked color="primary" />
                 </ListItemSecondaryAction>
               </ListItem>
-              
+
               <ListItem>
                 <ListItemText
                   primary="Failure Alerts"
@@ -712,6 +734,129 @@ const AutoQuoteSharingSettings = () => {
           </CardContent>
         </Card>
       </TabPanel>
+
+      {/* Confirmation Dialog */}
+      <Dialog
+        open={confirmDialog.open}
+        onClose={handleCloseConfirmDialog}
+        maxWidth="sm"
+        fullWidth
+      >
+        <DialogTitle>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <SendIcon color="primary" />
+            <Typography variant="h6" fontWeight="600">
+              Send Quote Now
+            </Typography>
+          </Box>
+        </DialogTitle>
+        <DialogContent>
+          {confirmDialog.customer && (
+            <Box>
+              <Alert severity="info" sx={{ mb: 3 }}>
+                You are about to send a quote to this customer. This will update their last sent date and schedule the next quote.
+              </Alert>
+
+              <Box sx={{ bgcolor: 'background.default', p: 2, borderRadius: 2, mb: 2 }}>
+                <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                  Customer Details
+                </Typography>
+                <Divider sx={{ mb: 2 }} />
+
+                <Grid container spacing={2}>
+                  <Grid item xs={12}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
+                      <Avatar sx={{ bgcolor: theme.palette.primary.main }}>
+                        {confirmDialog.customer.name.charAt(0)}
+                      </Avatar>
+                      <Box>
+                        <Typography variant="subtitle1" fontWeight="600">
+                          {confirmDialog.customer.name}
+                        </Typography>
+                        <Typography variant="caption" color="text.secondary">
+                          ID: {confirmDialog.customer.id}
+                        </Typography>
+                      </Box>
+                    </Box>
+                  </Grid>
+
+                  <Grid item xs={12}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+                      <EmailIcon fontSize="small" color="action" />
+                      <Typography variant="body2">{confirmDialog.customer.email}</Typography>
+                    </Box>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                      <PhoneIcon fontSize="small" color="action" />
+                      <Typography variant="body2">{confirmDialog.customer.phone}</Typography>
+                    </Box>
+                  </Grid>
+
+                  <Grid item xs={6}>
+                    <Typography variant="caption" color="text.secondary">
+                      Product Type
+                    </Typography>
+                    <Typography variant="body2" fontWeight="600">
+                      {confirmDialog.customer.productType}
+                    </Typography>
+                  </Grid>
+
+                  <Grid item xs={6}>
+                    <Typography variant="caption" color="text.secondary">
+                      Premium Amount
+                    </Typography>
+                    <Typography variant="body2" fontWeight="600" color="success.main">
+                      ₹{confirmDialog.customer.premiumAmount.toLocaleString()}
+                    </Typography>
+                  </Grid>
+
+                  <Grid item xs={6}>
+                    <Typography variant="caption" color="text.secondary">
+                      Last Quote Sent
+                    </Typography>
+                    <Typography variant="body2">
+                      {new Date(confirmDialog.customer.lastQuoteSent).toLocaleDateString()}
+                    </Typography>
+                  </Grid>
+
+                  <Grid item xs={6}>
+                    <Typography variant="caption" color="text.secondary">
+                      Current Next Scheduled
+                    </Typography>
+                    <Typography variant="body2">
+                      {new Date(confirmDialog.customer.nextScheduled).toLocaleDateString()}
+                    </Typography>
+                  </Grid>
+                </Grid>
+              </Box>
+
+              <Alert severity="success" icon={<ScheduleIcon />}>
+                <Typography variant="body2">
+                  <strong>New schedule:</strong> Next quote will be scheduled for{' '}
+                  <strong>{new Date(getNextScheduledDate(settings.frequency)).toLocaleDateString()}</strong>
+                  {' '}({settings.frequency.toLowerCase()})
+                </Typography>
+              </Alert>
+            </Box>
+          )}
+        </DialogContent>
+        <DialogActions sx={{ px: 3, pb: 2 }}>
+          <Button
+            onClick={handleCloseConfirmDialog}
+            disabled={sendingCustomerId !== null}
+          >
+            Cancel
+          </Button>
+          <Button
+            onClick={() => confirmDialog.customer && handleSendQuoteNow(confirmDialog.customer.id, confirmDialog.customer.name)}
+            variant="contained"
+            color="primary"
+            disabled={sendingCustomerId !== null}
+            startIcon={sendingCustomerId !== null ? <RefreshIcon className="spinning" /> : <SendIcon />}
+          >
+            {sendingCustomerId !== null ? 'Sending...' : 'Send Quote'}
+          </Button>
+        </DialogActions>
+      </Dialog>
 
       {/* Snackbar for notifications */}
       <Snackbar
@@ -727,6 +872,19 @@ const AutoQuoteSharingSettings = () => {
           {snackbar.message}
         </Alert>
       </Snackbar>
+
+      {/* Add spinning animation for loading icon */}
+      <style>
+        {`
+          @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+          }
+          .spinning {
+            animation: spin 1s linear infinite;
+          }
+        `}
+      </style>
     </Box>
   );
 };

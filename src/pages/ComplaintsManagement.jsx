@@ -15,6 +15,12 @@ import {
   Warning as ComplaintIcon, CheckCircle as ResolvedIcon,
   Schedule as PendingIcon, Error as CriticalIcon
 } from '@mui/icons-material';
+import {
+  fetchComplaints,
+  createComplaint,
+  updateComplaint,
+  getComplaintStats
+} from '../services/ComplaintService';
 
 const ComplaintsManagement = () => {
   const theme = useTheme();
@@ -24,6 +30,8 @@ const ComplaintsManagement = () => {
   const [complaintDialogOpen, setComplaintDialogOpen] = useState(false);
   const [detailDialogOpen, setDetailDialogOpen] = useState(false);
   const [selectedComplaint, setSelectedComplaint] = useState(null);
+  const [stats, setStats] = useState({ total: 0, open: 0, inProgress: 0, resolved: 0 });
+  const [loading, setLoading] = useState(false);
 
   const [formData, setFormData] = useState({
     customerName: '',
@@ -45,69 +53,20 @@ const ComplaintsManagement = () => {
     filterComplaints();
   }, [complaints, searchTerm]);
 
-  const loadComplaints = () => {
-    const mockComplaints = [
-      {
-        id: 'CMP-001',
-        customerName: 'Rajesh Kumar',
-        email: 'rajesh@example.com',
-        phone: '+91 98765 43210',
-        complaintType: 'Claim Processing',
-        severity: 'High',
-        subject: 'Delayed claim settlement',
-        description: 'My claim has been pending for over 30 days without any update',
-        status: 'In Progress',
-        assignedTo: 'Priya Sharma',
-        createdDate: '2025-01-08',
-        lastUpdated: '2025-01-12',
-        resolutionDeadline: '2025-01-15',
-        timeline: [
-          { date: '2025-01-08', action: 'Complaint registered', user: 'System' },
-          { date: '2025-01-09', action: 'Assigned to Priya Sharma', user: 'Admin' },
-          { date: '2025-01-12', action: 'Investigation in progress', user: 'Priya Sharma' }
-        ]
-      },
-      {
-        id: 'CMP-002',
-        customerName: 'Anita Desai',
-        email: 'anita@example.com',
-        phone: '+91 98765 43211',
-        complaintType: 'Service Quality',
-        severity: 'Medium',
-        subject: 'Poor customer service experience',
-        description: 'The customer service representative was unhelpful and rude',
-        status: 'Open',
-        assignedTo: 'Amit Patel',
-        createdDate: '2025-01-10',
-        lastUpdated: '2025-01-10',
-        resolutionDeadline: '2025-01-17',
-        timeline: [
-          { date: '2025-01-10', action: 'Complaint registered', user: 'System' }
-        ]
-      },
-      {
-        id: 'CMP-003',
-        customerName: 'Vikram Singh',
-        email: 'vikram@example.com',
-        phone: '+91 98765 43212',
-        complaintType: 'Policy Terms',
-        severity: 'Low',
-        subject: 'Confusion about policy coverage',
-        description: 'Need clarification on what is covered under my health policy',
-        status: 'Resolved',
-        assignedTo: 'Priya Sharma',
-        createdDate: '2025-01-05',
-        lastUpdated: '2025-01-09',
-        resolutionDeadline: '2025-01-12',
-        resolvedDate: '2025-01-09',
-        timeline: [
-          { date: '2025-01-05', action: 'Complaint registered', user: 'System' },
-          { date: '2025-01-06', action: 'Assigned to Priya Sharma', user: 'Admin' },
-          { date: '2025-01-09', action: 'Resolved with explanation provided', user: 'Priya Sharma' }
-        ]
-      }
-    ];
-    setComplaints(mockComplaints);
+  const loadComplaints = async () => {
+    setLoading(true);
+    try {
+      const [data, statsData] = await Promise.all([
+        fetchComplaints(),
+        getComplaintStats()
+      ]);
+      setComplaints(data);
+      setStats(statsData);
+    } catch (error) {
+      console.error('Failed to load complaints:', error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const filterComplaints = () => {
@@ -140,32 +99,22 @@ const ComplaintsManagement = () => {
     setComplaintDialogOpen(true);
   };
 
-  const handleSaveComplaint = () => {
-    if (selectedComplaint) {
-      setComplaints(complaints.map(c =>
-        c.id === selectedComplaint.id ? {
-          ...formData,
-          id: c.id,
-          createdDate: c.createdDate,
-          lastUpdated: new Date().toISOString().split('T')[0],
-          timeline: c.timeline
-        } : c
-      ));
-    } else {
-      const newComplaint = {
-        ...formData,
-        id: `CMP-${String(complaints.length + 1).padStart(3, '0')}`,
-        assignedTo: 'Unassigned',
-        createdDate: new Date().toISOString().split('T')[0],
-        lastUpdated: new Date().toISOString().split('T')[0],
-        resolutionDeadline: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-        timeline: [
-          { date: new Date().toISOString().split('T')[0], action: 'Complaint registered', user: 'System' }
-        ]
-      };
-      setComplaints([...complaints, newComplaint]);
+  const handleSaveComplaint = async () => {
+    try {
+      if (selectedComplaint) {
+        const updated = await updateComplaint(selectedComplaint.id, formData);
+        setComplaints(complaints.map(c => c.id === selectedComplaint.id ? updated : c));
+      } else {
+        const newComplaint = await createComplaint(formData);
+        setComplaints([newComplaint, ...complaints]); // Add new complaint at the beginning
+      }
+      setComplaintDialogOpen(false);
+      // Refresh only stats, not the entire complaints list
+      const statsData = await getComplaintStats();
+      setStats(statsData);
+    } catch (error) {
+      console.error('Failed to save complaint:', error);
     }
-    setComplaintDialogOpen(false);
   };
 
   const handleViewDetails = (complaint) => {
@@ -229,7 +178,7 @@ const ComplaintsManagement = () => {
             <Card sx={{ background: `linear-gradient(135deg, ${alpha(theme.palette.primary.main, 0.9)}, ${alpha(theme.palette.primary.dark, 0.7)})` }}>
               <CardContent>
                 <Typography variant="h4" color="white" fontWeight="bold">
-                  {complaints.length}
+                  {stats.total}
                 </Typography>
                 <Typography variant="body2" sx={{ color: 'white', opacity: 0.9 }}>
                   Total Complaints
@@ -241,7 +190,7 @@ const ComplaintsManagement = () => {
             <Card sx={{ background: `linear-gradient(135deg, ${alpha(theme.palette.error.main, 0.9)}, ${alpha(theme.palette.error.dark, 0.7)})` }}>
               <CardContent>
                 <Typography variant="h4" color="white" fontWeight="bold">
-                  {complaints.filter(c => c.status === 'Open').length}
+                  {stats.open}
                 </Typography>
                 <Typography variant="body2" sx={{ color: 'white', opacity: 0.9 }}>
                   Open
@@ -253,7 +202,7 @@ const ComplaintsManagement = () => {
             <Card sx={{ background: `linear-gradient(135deg, ${alpha(theme.palette.warning.main, 0.9)}, ${alpha(theme.palette.warning.dark, 0.7)})` }}>
               <CardContent>
                 <Typography variant="h4" color="white" fontWeight="bold">
-                  {complaints.filter(c => c.status === 'In Progress').length}
+                  {stats.inProgress}
                 </Typography>
                 <Typography variant="body2" sx={{ color: 'white', opacity: 0.9 }}>
                   In Progress
@@ -265,7 +214,7 @@ const ComplaintsManagement = () => {
             <Card sx={{ background: `linear-gradient(135deg, ${alpha(theme.palette.success.main, 0.9)}, ${alpha(theme.palette.success.dark, 0.7)})` }}>
               <CardContent>
                 <Typography variant="h4" color="white" fontWeight="bold">
-                  {complaints.filter(c => c.status === 'Resolved').length}
+                  {stats.resolved}
                 </Typography>
                 <Typography variant="body2" sx={{ color: 'white', opacity: 0.9 }}>
                   Resolved
@@ -294,7 +243,12 @@ const ComplaintsManagement = () => {
         <TableContainer component={Paper}>
           <Table>
             <TableHead>
-              <TableRow sx={{ backgroundColor: theme.palette.grey[100] }}>
+              <TableRow sx={{
+                backgroundColor: theme.palette.grey.main,
+                '&:hover': {
+                  backgroundColor: theme.palette.grey.main,
+                }
+              }}>
                 <TableCell>Complaint ID</TableCell>
                 <TableCell>Customer</TableCell>
                 <TableCell>Subject</TableCell>
@@ -388,6 +342,7 @@ const ComplaintsManagement = () => {
                 <FormControl fullWidth>
                   <InputLabel>Complaint Type</InputLabel>
                   <Select
+                    label="Complaint Type"
                     value={formData.complaintType}
                     onChange={(e) => setFormData({ ...formData, complaintType: e.target.value })}
                   >
@@ -404,6 +359,7 @@ const ComplaintsManagement = () => {
                 <FormControl fullWidth>
                   <InputLabel>Severity</InputLabel>
                   <Select
+                    label="Severity"
                     value={formData.severity}
                     onChange={(e) => setFormData({ ...formData, severity: e.target.value })}
                   >
@@ -418,6 +374,7 @@ const ComplaintsManagement = () => {
                 <FormControl fullWidth>
                   <InputLabel>Status</InputLabel>
                   <Select
+                    label="Status"
                     value={formData.status}
                     onChange={(e) => setFormData({ ...formData, status: e.target.value })}
                   >

@@ -319,7 +319,12 @@ const ContactDatabase = () => {
         <TableContainer component={Paper}>
           <Table>
             <TableHead>
-              <TableRow sx={{ backgroundColor: theme.palette.grey[100] }}>
+              <TableRow sx={{
+                backgroundColor: theme.palette.grey.main,
+                '&:hover': {
+                  backgroundColor: theme.palette.grey.main,
+                }
+              }}>
                 <TableCell>Contact</TableCell>
                 <TableCell>Company</TableCell>
                 <TableCell>Contact Info</TableCell>
@@ -336,7 +341,7 @@ const ContactDatabase = () => {
                   <TableCell>
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                       <Avatar sx={{ bgcolor: theme.palette.primary.main }}>
-                        {contact.name.charAt(0)}
+                        {contact.name?.charAt(0) || '?'}
                       </Avatar>
                       <Box>
                         <Typography variant="subtitle2" fontWeight="600">
@@ -481,6 +486,7 @@ const ContactDatabase = () => {
                 <FormControl fullWidth>
                   <InputLabel>Source</InputLabel>
                   <Select
+                    label="Source"
                     value={formData.source}
                     onChange={(e) => setFormData({ ...formData, source: e.target.value })}
                   >
@@ -496,6 +502,7 @@ const ContactDatabase = () => {
                 <FormControl fullWidth>
                   <InputLabel>Status</InputLabel>
                   <Select
+                    label="Status"
                     value={formData.status}
                     onChange={(e) => setFormData({ ...formData, status: e.target.value })}
                   >
@@ -543,6 +550,7 @@ const ContactDatabase = () => {
                 <FormControl fullWidth>
                   <InputLabel>Source</InputLabel>
                   <Select
+                    label="Source"
                     value={filters.source}
                     onChange={(e) => setFilters({ ...filters, source: e.target.value })}
                   >
@@ -559,6 +567,7 @@ const ContactDatabase = () => {
                 <FormControl fullWidth>
                   <InputLabel>Status</InputLabel>
                   <Select
+                    label="Status"
                     value={filters.status}
                     onChange={(e) => setFilters({ ...filters, status: e.target.value })}
                   >
@@ -574,6 +583,7 @@ const ContactDatabase = () => {
                 <FormControl fullWidth>
                   <InputLabel>Assigned To</InputLabel>
                   <Select
+                    label="Assigned To"
                     value={filters.assignedTo}
                     onChange={(e) => setFilters({ ...filters, assignedTo: e.target.value })}
                   >
@@ -596,7 +606,7 @@ const ContactDatabase = () => {
               Apply
             </Button>
           </DialogActions>
-        </Dialog>
+        </Dialog>  
 
         {/* Delete Confirmation Dialog */}
         <Dialog open={deleteDialogOpen} onClose={() => setDeleteDialogOpen(false)}>

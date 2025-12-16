@@ -216,7 +216,25 @@ const Dashboard = () => {
     }
   });
 
+  // Campaign Dialog State
+  const [viewCampaignDialog, setViewCampaignDialog] = useState(false);
+  const [selectedCampaign, setSelectedCampaign] = useState(null);
+
   // Memoize the loadDashboardData function to avoid recreating it on every render
+  const handleViewCampaign = (campaign) => {
+    setSelectedCampaign(campaign);
+    setViewCampaignDialog(true);
+  };
+
+  const handleToggleCampaignStatus = (id, currentStatus) => {
+    const newStatus = currentStatus === 'active' ? 'paused' : 'active';
+    setCampaignData(prevData =>
+      prevData.map(campaign =>
+        campaign.id === id ? { ...campaign, status: newStatus } : campaign
+      )
+    );
+  };
+
   const loadDashboardData = useCallback(async () => {
     try {
       const statsData = await fetchDashboardStats(dateRange, policyType, caseStatus, startDate, endDate, selectedTeam, selectedTeamMember);
@@ -238,9 +256,13 @@ const Dashboard = () => {
         setBatchData(batchStatusData);
       }
     } catch (error) {
+<<<<<<< HEAD
       console.error('Failed to load dashboard data:', error);
     } finally {
       setLoaded(true);
+=======
+      // Failed to load dashboard data
+>>>>>>> 0f0db02199acd11bdcb8309679f62aa88a7a39ee
     }
   }, [dateRange, policyType, caseStatus, startDate, endDate, selectedTeam, selectedTeamMember]);
 
@@ -356,6 +378,7 @@ const Dashboard = () => {
     // Load dashboard data
     loadDashboardData();
 
+<<<<<<< HEAD
     // For demo purposes, let's set some mock data with a slight delay to simulate API fetch
     const mockTimer = setTimeout(() => {
       setStats({
@@ -380,6 +403,10 @@ const Dashboard = () => {
     ];
 
     setTrendData(mockTrendData);
+=======
+    // Set loaded state
+    setTimeout(() => setLoaded(true), 500);
+>>>>>>> 0f0db02199acd11bdcb8309679f62aa88a7a39ee
 
     // Mock data for new charts
     const mockChannelChartData = [
@@ -1024,9 +1051,8 @@ const Dashboard = () => {
       setLoaded(true);
     }, 400);
 
-    // Cleanup timers
+    // Cleanup timer
     return () => {
-      clearTimeout(mockTimer);
       clearTimeout(loadedTimer);
     };
   }, [loadDashboardData]); // Include the memoized function in dependencies
@@ -2456,7 +2482,11 @@ const Dashboard = () => {
                               boxShadow: '0 4px 20px rgba(0,0,0,0.15)'
                             }}
                           />
+<<<<<<< HEAD
                           <Legend />
+=======
+                          <Legend iconType="circle" />
+>>>>>>> 0f0db02199acd11bdcb8309679f62aa88a7a39ee
                           <Bar yAxisId="left" dataKey="efficiency" fill={alpha(theme.palette.primary.main, 0.8)} name="Efficiency %" />
                           <Bar yAxisId="right" dataKey="cost" fill={alpha(theme.palette.error.main, 0.8)} name="Cost per Lead (₹)" />
                         </BarChart>
@@ -2489,7 +2519,7 @@ const Dashboard = () => {
                               boxShadow: '0 4px 20px rgba(0,0,0,0.15)'
                             }}
                           />
-                          <Legend />
+                          <Legend iconType="circle" />
                         </RadialBarChart>
                       </ResponsiveContainer>
                     </Paper>
@@ -2592,7 +2622,11 @@ const Dashboard = () => {
                         boxShadow: '0 4px 20px rgba(0,0,0,0.15)'
                       }}
                     />
+<<<<<<< HEAD
                     <Legend />
+=======
+                    <Legend iconType="circle" />
+>>>>>>> 0f0db02199acd11bdcb8309679f62aa88a7a39ee
                     <Bar
                       dataKey="newCases"
                       fill={alpha(theme.palette.primary.main, 0.8)}
@@ -2639,7 +2673,11 @@ const Dashboard = () => {
                         boxShadow: '0 4px 20px rgba(0,0,0,0.15)'
                       }}
                     />
+<<<<<<< HEAD
                     <Legend />
+=======
+                    <Legend iconType="circle" />
+>>>>>>> 0f0db02199acd11bdcb8309679f62aa88a7a39ee
                     <Area
                       type="monotone"
                       dataKey="successRate"
@@ -2709,7 +2747,11 @@ const Dashboard = () => {
                           boxShadow: '0 4px 20px rgba(0,0,0,0.15)'
                         }}
                       />
+<<<<<<< HEAD
                       <Legend />
+=======
+                      <Legend iconType="circle" />
+>>>>>>> 0f0db02199acd11bdcb8309679f62aa88a7a39ee
                       <Bar
                         dataKey="status.renewed"
                         stackId="a"
@@ -2802,7 +2844,11 @@ const Dashboard = () => {
                           boxShadow: '0 4px 20px rgba(0,0,0,0.15)'
                         }}
                       />
+<<<<<<< HEAD
                       <Legend />
+=======
+                      <Legend iconType="circle" />
+>>>>>>> 0f0db02199acd11bdcb8309679f62aa88a7a39ee
                       <Line
                         type="monotone"
                         dataKey="payment.received"
@@ -2863,7 +2909,7 @@ const Dashboard = () => {
                       ))}
                     </Pie>
                     <RechartsTooltip formatter={(value) => `${value}%`} />
-                    <Legend />
+                    <Legend iconType="circle" />
                   </PieChart>
                 </ResponsiveContainer>
               </Paper>
@@ -2904,7 +2950,7 @@ const Dashboard = () => {
                         boxShadow: '0 4px 20px rgba(0,0,0,0.15)'
                       }}
                     />
-                    <Legend />
+                    <Legend iconType="circle" />
                     <Bar dataKey="cases" fill={alpha(theme.palette.info.main, 0.8)} name="Total Cases" />
                     <Bar dataKey="renewed" fill={alpha(theme.palette.success.main, 0.8)} name="Renewed" />
                   </BarChart>
@@ -2941,7 +2987,7 @@ const Dashboard = () => {
                         boxShadow: '0 4px 20px rgba(0,0,0,0.15)'
                       }}
                     />
-                    <Legend />
+                    <Legend iconType="circle" />
                     <Bar yAxisId="left" dataKey="cases" fill={alpha(theme.palette.primary.main, 0.8)} name="Total Cases" />
                     <Bar yAxisId="left" dataKey="renewed" fill={alpha(theme.palette.success.main, 0.8)} name="Renewed" />
                     <Bar yAxisId="right" dataKey="efficiency" fill={alpha(theme.palette.warning.main, 0.8)} name="Efficiency %" />
@@ -2980,7 +3026,7 @@ const Dashboard = () => {
                         boxShadow: '0 4px 20px rgba(0,0,0,0.15)'
                       }}
                     />
-                    <Legend />
+                    <Legend iconType="circle" />
                     <Bar yAxisId="left" dataKey="count" fill={alpha(theme.palette.info.main, 0.8)} name="Contact Count" />
                     <Bar yAxisId="left" dataKey="success" fill={alpha(theme.palette.success.main, 0.8)} name="Success Rate %" />
                     <Bar yAxisId="right" dataKey="cost" fill={alpha(theme.palette.error.main, 0.8)} name="Cost per Contact (₹)" />
@@ -3023,7 +3069,7 @@ const Dashboard = () => {
                         'Share'
                       ]}
                     />
-                    <Legend />
+                    <Legend iconType="circle" />
                   </PieChart>
                 </ResponsiveContainer>
               </Paper>
@@ -3059,7 +3105,7 @@ const Dashboard = () => {
                         boxShadow: '0 4px 20px rgba(0,0,0,0.15)'
                       }}
                     />
-                    <Legend />
+                    <Legend iconType="circle" />
                     <Bar yAxisId="left" dataKey="volume" fill={alpha(theme.palette.info.main, 0.8)} name="Volume" />
                     <Bar yAxisId="left" dataKey="costPerRenewal" fill={alpha(theme.palette.warning.main, 0.8)} name="Cost per Renewal (₹)" />
                     <Bar yAxisId="right" dataKey="totalCost" fill={alpha(theme.palette.error.main, 0.8)} name="Total Cost (₹)" />
@@ -3105,7 +3151,7 @@ const Dashboard = () => {
                         boxShadow: '0 4px 20px rgba(0,0,0,0.15)'
                       }}
                     />
-                    <Legend />
+                    <Legend iconType="circle" />
                     <Bar yAxisId="left" dataKey="renewals" fill={alpha(theme.palette.primary.main, 0.8)} name="Renewals" />
                     <Bar yAxisId="left" dataKey="costPerRenewal" fill={alpha(theme.palette.warning.main, 0.8)} name="Cost per Renewal (₹)" />
                     <Bar yAxisId="right" dataKey="efficiency" fill={alpha(theme.palette.success.main, 0.8)} name="Efficiency (%)" />
@@ -3205,7 +3251,7 @@ const Dashboard = () => {
                         boxShadow: '0 4px 20px rgba(0,0,0,0.15)'
                       }}
                     />
-                    <Legend />
+                    <Legend iconType="circle" />
                   </PieChart>
                 </ResponsiveContainer>
               </Paper>
@@ -3235,7 +3281,11 @@ const Dashboard = () => {
                         boxShadow: '0 4px 20px rgba(0,0,0,0.15)'
                       }}
                     />
+<<<<<<< HEAD
                     <Legend />
+=======
+                    <Legend iconType="circle" />
+>>>>>>> 0f0db02199acd11bdcb8309679f62aa88a7a39ee
                     <Line
                       type="monotone"
                       dataKey="retained"
@@ -3340,7 +3390,7 @@ const Dashboard = () => {
                       ))}
                     </Pie>
                     <RechartsTooltip formatter={(value, name) => [`${value}%`, name]} />
-                    <Legend />
+                    <Legend iconType="circle" />
                   </PieChart>
                 </ResponsiveContainer>
               </Paper>
@@ -3369,7 +3419,11 @@ const Dashboard = () => {
                         boxShadow: '0 4px 20px rgba(0,0,0,0.15)'
                       }}
                     />
+<<<<<<< HEAD
                     <Legend />
+=======
+                    <Legend iconType="circle" />
+>>>>>>> 0f0db02199acd11bdcb8309679f62aa88a7a39ee
                     <Line
                       type="monotone"
                       dataKey="avgDays"
@@ -3407,7 +3461,11 @@ const Dashboard = () => {
                         boxShadow: '0 4px 20px rgba(0,0,0,0.15)'
                       }}
                     />
+<<<<<<< HEAD
                     <Legend />
+=======
+                    <Legend iconType="circle" />
+>>>>>>> 0f0db02199acd11bdcb8309679f62aa88a7a39ee
                     <Bar
                       dataKey="count"
                       fill={({ payload }) => payload?.color || '#8884d8'}
@@ -3446,7 +3504,11 @@ const Dashboard = () => {
                         boxShadow: '0 4px 20px rgba(0,0,0,0.15)'
                       }}
                     />
+<<<<<<< HEAD
                     <Legend />
+=======
+                    <Legend iconType="circle" />
+>>>>>>> 0f0db02199acd11bdcb8309679f62aa88a7a39ee
                     <Bar
                       dataKey="pending"
                       stackId="a"
@@ -3490,7 +3552,11 @@ const Dashboard = () => {
                         boxShadow: '0 4px 20px rgba(0,0,0,0.15)'
                       }}
                     />
+<<<<<<< HEAD
                     <Legend />
+=======
+                    <Legend iconType="circle" />
+>>>>>>> 0f0db02199acd11bdcb8309679f62aa88a7a39ee
                     <Bar
                       dataKey="target"
                       fill={alpha(theme.palette.info.main, 0.3)}
@@ -3543,7 +3609,7 @@ const Dashboard = () => {
                         boxShadow: '0 4px 20px rgba(0,0,0,0.15)'
                       }}
                     />
-                    <Legend />
+                    <Legend iconType="circle" />
                   </PieChart>
                 </ResponsiveContainer>
               </Paper>
@@ -3641,18 +3707,36 @@ const Dashboard = () => {
                               </Box>
                               <Box sx={{ display: 'flex', gap: 0.5 }}>
                                 {campaign.status === 'active' && (
-                                  <IconButton size="small" sx={{ color: theme.palette.warning.main }}>
-                                    <PauseIcon fontSize="small" />
-                                  </IconButton>
+                                  <Tooltip title="Pause Campaign">
+                                    <IconButton
+                                      size="small"
+                                      sx={{ color: theme.palette.warning.main }}
+                                      onClick={() => handleToggleCampaignStatus(campaign.id, campaign.status)}
+                                    >
+                                      <PauseIcon fontSize="small" />
+                                    </IconButton>
+                                  </Tooltip>
                                 )}
                                 {campaign.status === 'paused' && (
-                                  <IconButton size="small" sx={{ color: theme.palette.success.main }}>
-                                    <PlayIcon fontSize="small" />
-                                  </IconButton>
+                                  <Tooltip title="Resume Campaign">
+                                    <IconButton
+                                      size="small"
+                                      sx={{ color: theme.palette.success.main }}
+                                      onClick={() => handleToggleCampaignStatus(campaign.id, campaign.status)}
+                                    >
+                                      <PlayIcon fontSize="small" />
+                                    </IconButton>
+                                  </Tooltip>
                                 )}
-                                <IconButton size="small" sx={{ color: theme.palette.primary.main }}>
-                                  <ViewIcon fontSize="small" />
-                                </IconButton>
+                                <Tooltip title="View Details">
+                                  <IconButton
+                                    size="small"
+                                    sx={{ color: theme.palette.primary.main }}
+                                    onClick={() => handleViewCampaign(campaign)}
+                                  >
+                                    <ViewIcon fontSize="small" />
+                                  </IconButton>
+                                </Tooltip>
                               </Box>
                             </Box>
 
@@ -4357,6 +4441,167 @@ const Dashboard = () => {
               {distributionDialog.mode === 'create' ? 'Add Channel' : 'Save Changes'}
             </Button>
           </DialogActions>
+        </Dialog>
+
+        {/* View Campaign Details Dialog */}
+        <Dialog
+          open={viewCampaignDialog}
+          onClose={() => setViewCampaignDialog(false)}
+          maxWidth="md"
+          fullWidth
+          PaperProps={{ sx: { borderRadius: 3 } }}
+        >
+          {selectedCampaign && (
+            <>
+              <DialogTitle>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                  <Avatar sx={{ bgcolor: theme.palette.primary.main }}>
+                    <CampaignIcon />
+                  </Avatar>
+                  <Box>
+                    <Typography variant="h6" fontWeight="600">
+                      {selectedCampaign.name}
+                    </Typography>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                      <Chip
+                        label={selectedCampaign.status}
+                        color={
+                          selectedCampaign.status === 'active' ? 'success' :
+                            selectedCampaign.status === 'paused' ? 'warning' : 'info'
+                        }
+                        size="small"
+                        sx={{ textTransform: 'capitalize', height: 20, fontSize: '0.75rem' }}
+                      />
+                      <Typography variant="caption" color="text.secondary">
+                        ID: {selectedCampaign.id}
+                      </Typography>
+                    </Box>
+                  </Box>
+                </Box>
+              </DialogTitle>
+              <DialogContent dividers>
+                <Grid container spacing={3}>
+                  <Grid item xs={12} md={6}>
+                    <Card variant="outlined" sx={{ height: '100%', borderRadius: 2 }}>
+                      <CardContent>
+                        <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                          Campaign Information
+                        </Typography>
+                        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 2 }}>
+                          <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                            <Typography variant="body2" color="text.secondary">Type</Typography>
+                            <Chip
+                              icon={
+                                selectedCampaign.type === 'email' ? <EmailIcon fontSize="small" /> :
+                                  selectedCampaign.type === 'whatsapp' ? <WhatsAppIcon fontSize="small" /> :
+                                    <SmsIcon fontSize="small" />
+                              }
+                              label={selectedCampaign.type.toUpperCase()}
+                              size="small"
+                              variant="outlined"
+                            />
+                          </Box>
+                          <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                            <Typography variant="body2" color="text.secondary">Source File</Typography>
+                            <Typography variant="body2" fontWeight="500">{selectedCampaign.uploadFilename}</Typography>
+                          </Box>
+                          <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                            <Typography variant="body2" color="text.secondary">Created On</Typography>
+                            <Typography variant="body2" fontWeight="500">{new Date(selectedCampaign.createdAt).toLocaleString()}</Typography>
+                          </Box>
+                          <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                            <Typography variant="body2" color="text.secondary">Scheduled For</Typography>
+                            <Typography variant="body2" fontWeight="500">{new Date(selectedCampaign.scheduledAt).toLocaleString()}</Typography>
+                          </Box>
+                        </Box>
+                      </CardContent>
+                    </Card>
+                  </Grid>
+
+                  <Grid item xs={12} md={6}>
+                    <Card variant="outlined" sx={{ height: '100%', borderRadius: 2 }}>
+                      <CardContent>
+                        <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                          Performance Metrics
+                        </Typography>
+                        <Box sx={{ mt: 2 }}>
+                          <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
+                            <Typography variant="body2">Target Audience</Typography>
+                            <Typography variant="body2" fontWeight="600">{selectedCampaign.targetCount}</Typography>
+                          </Box>
+                          <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
+                            <Typography variant="body2">Successfully Sent</Typography>
+                            <Typography variant="body2" fontWeight="600" color="primary.main">{selectedCampaign.sent}</Typography>
+                          </Box>
+                          <LinearProgress
+                            variant="determinate"
+                            value={(selectedCampaign.sent / selectedCampaign.targetCount) * 100}
+                            sx={{ mb: 2, height: 6, borderRadius: 3 }}
+                          />
+
+                          <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
+                            <Typography variant="body2">Converted</Typography>
+                            <Typography variant="body2" fontWeight="600" color="success.main">{selectedCampaign.converted}</Typography>
+                          </Box>
+                          <LinearProgress
+                            variant="determinate"
+                            color="success"
+                            value={(selectedCampaign.converted / selectedCampaign.sent) * 100 || 0}
+                            sx={{ mb: 2, height: 6, borderRadius: 3 }}
+                          />
+
+                          <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 3 }}>
+                            <Box sx={{ textAlign: 'center' }}>
+                              <Typography variant="h6" color="primary.main">{selectedCampaign.type === 'email' ? selectedCampaign.openRate : selectedCampaign.deliveryRate}%</Typography>
+                              <Typography variant="caption" color="text.secondary">{selectedCampaign.type === 'email' ? 'Open Rate' : 'Delivery Rate'}</Typography>
+                            </Box>
+                            <Divider orientation="vertical" flexItem />
+                            <Box sx={{ textAlign: 'center' }}>
+                              <Typography variant="h6" color="warning.main">{selectedCampaign.type === 'whatsapp' ? selectedCampaign.readRate : selectedCampaign.clickRate}%</Typography>
+                              <Typography variant="caption" color="text.secondary">{selectedCampaign.type === 'whatsapp' ? 'Read Rate' : 'Click Rate'}</Typography>
+                            </Box>
+                            <Divider orientation="vertical" flexItem />
+                            <Box sx={{ textAlign: 'center' }}>
+                              <Typography variant="h6" color="error.main">{selectedCampaign.conversionRate}%</Typography>
+                              <Typography variant="caption" color="text.secondary">Conversion</Typography>
+                            </Box>
+                          </Box>
+                        </Box>
+                      </CardContent>
+                    </Card>
+                  </Grid>
+                </Grid>
+              </DialogContent>
+              <DialogActions sx={{ p: 2 }}>
+                <Button onClick={() => setViewCampaignDialog(false)}>Close</Button>
+                {selectedCampaign.status === 'active' ? (
+                  <Button
+                    variant="contained"
+                    color="warning"
+                    startIcon={<PauseIcon />}
+                    onClick={() => {
+                      handleToggleCampaignStatus(selectedCampaign.id, 'active');
+                      setViewCampaignDialog(false);
+                    }}
+                  >
+                    Pause Campaign
+                  </Button>
+                ) : selectedCampaign.status === 'paused' ? (
+                  <Button
+                    variant="contained"
+                    color="success"
+                    startIcon={<PlayIcon />}
+                    onClick={() => {
+                      handleToggleCampaignStatus(selectedCampaign.id, 'paused');
+                      setViewCampaignDialog(false);
+                    }}
+                  >
+                    Resume Campaign
+                  </Button>
+                ) : null}
+              </DialogActions>
+            </>
+          )}
         </Dialog>
       </Box>
     </Fade>

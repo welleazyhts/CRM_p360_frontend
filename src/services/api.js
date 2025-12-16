@@ -31,6 +31,7 @@ const getAuthToken = () => {
  * Create a default API client with real HTTP requests
  */
 const api = {
+<<<<<<< HEAD
   get: async (endpoint, config = {}) => {
     const url = getApiUrl(endpoint);
     const { params, ...restConfig } = config;
@@ -56,6 +57,14 @@ const api = {
         ...restConfig.headers
       },
       ...restConfig
+=======
+  get: async (url, config = {}) => {
+    // Mock implementation - throw error to trigger service fallback to mock data
+    return new Promise((resolve, reject) => {
+      setTimeout(() => {
+        reject(new Error('API not configured - using mock data'));
+      }, 100);
+>>>>>>> 0f0db02199acd11bdcb8309679f62aa88a7a39ee
     });
 
     if (!response.ok) {
@@ -67,6 +76,7 @@ const api = {
     return { data };
   },
 
+<<<<<<< HEAD
   post: async (endpoint, data, config = {}) => {
     const url = getApiUrl(endpoint);
 
@@ -79,6 +89,14 @@ const api = {
       },
       body: JSON.stringify(data),
       ...config
+=======
+  post: async (url, data, config = {}) => {
+    // Mock implementation - throw error to trigger service fallback to mock data
+    return new Promise((resolve, reject) => {
+      setTimeout(() => {
+        reject(new Error('API not configured - using mock data'));
+      }, 100);
+>>>>>>> 0f0db02199acd11bdcb8309679f62aa88a7a39ee
     });
 
     if (!response.ok) {
@@ -90,6 +108,7 @@ const api = {
     return { data: responseData };
   },
 
+<<<<<<< HEAD
   put: async (endpoint, data, config = {}) => {
     const url = getApiUrl(endpoint);
 
@@ -102,6 +121,14 @@ const api = {
       },
       body: JSON.stringify(data),
       ...config
+=======
+  put: async (url, data, config = {}) => {
+    // Mock implementation - throw error to trigger service fallback to mock data
+    return new Promise((resolve, reject) => {
+      setTimeout(() => {
+        reject(new Error('API not configured - using mock data'));
+      }, 100);
+>>>>>>> 0f0db02199acd11bdcb8309679f62aa88a7a39ee
     });
 
     if (!response.ok) {
@@ -113,6 +140,7 @@ const api = {
     return { data: responseData };
   },
 
+<<<<<<< HEAD
   patch: async (endpoint, data, config = {}) => {
     const url = getApiUrl(endpoint);
 
@@ -125,6 +153,23 @@ const api = {
       },
       body: JSON.stringify(data),
       ...config
+=======
+  patch: async (url, data, config = {}) => {
+    // Mock implementation - throw error to trigger service fallback to mock data
+    return new Promise((resolve, reject) => {
+      setTimeout(() => {
+        reject(new Error('API not configured - using mock data'));
+      }, 100);
+    });
+  },
+
+  delete: async (url, config = {}) => {
+    // Mock implementation - throw error to trigger service fallback to mock data
+    return new Promise((resolve, reject) => {
+      setTimeout(() => {
+        reject(new Error('API not configured - using mock data'));
+      }, 100);
+>>>>>>> 0f0db02199acd11bdcb8309679f62aa88a7a39ee
     });
 
     if (!response.ok) {
@@ -161,7 +206,6 @@ const api = {
   }
 };
 
-export default api;
 
 // Provider configuration endpoints
 // const PROVIDER_ENDPOINTS = {
@@ -260,6 +304,8 @@ export const fetchTrendData = async (_dateRange, _policyType, _caseStatus) => {
     }));
   }
 };
+
+
 
 // Upload API calls
 export const uploadPolicyData = async (file) => {
@@ -2102,3 +2148,5 @@ export const resendVerificationEmail = async (email) => {
     throw error;
   }
 };
+
+export default api;

@@ -1,44 +1,18 @@
 import React, { useState, useEffect } from 'react';
+import leadService from '../services/leadService';
 import {
-  Box,
-  Card,
-  CardContent,
-  Typography,
-  Button,
-  Grid,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  IconButton,
-  Chip,
-  Stack,
-  TextField,
-  MenuItem,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  Paper,
-  Tooltip,
-  useTheme,
-  alpha,
-  Divider
+  Box, Typography, Card, CardContent, Grid, TextField, MenuItem,
+  Table, TableBody, TableCell, TableContainer, TableHead, TableRow,
+  Chip, IconButton, Tooltip, Stack, Dialog, DialogTitle, DialogContent,
+  DialogActions, Button, useTheme, alpha, Divider, FormControl, InputLabel,
+  Select, Snackbar, Alert, InputAdornment
 } from '@mui/material';
 import {
-  Call as CallIcon,
-  Edit as EditIcon,
-  Visibility as ViewIcon,
-  Delete as DeleteIcon,
-  Email as EmailIcon,
-  WhatsApp as WhatsAppIcon,
-  Add as AddIcon,
-  Search as SearchIcon,
-  AttachMoney as MoneyIcon,
-  FilterList as FilterIcon,
-  Sort as SortIcon
+  Search as SearchIcon, FilterList as FilterIcon, Sort as SortIcon,
+  Call as CallIcon, Visibility as ViewIcon, Edit as EditIcon,
+  Email as EmailIcon, AttachMoney as MoneyIcon, Send as SendIcon,
+  Close as CloseIcon, Share as ShareIcon, DateRange as DateIcon,
+  Clear as ClearIcon
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 
@@ -46,50 +20,112 @@ const AssignedLeads = () => {
   const theme = useTheme();
   const navigate = useNavigate();
   const [leads, setLeads] = useState([]);
+  const [filteredLeads, setFilteredLeads] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('All');
+  const [filterPriority, setFilterPriority] = useState('All');
+  const [filterPolicyType, setFilterPolicyType] = useState('All');
+  const [filterDateRange, setFilterDateRange] = useState('All');
   const [sortField, setSortField] = useState('createdAt');
   const [sortOrder, setSortOrder] = useState('desc');
-  
-  // Dialog states
   const [quickNoteDialog, setQuickNoteDialog] = useState(false);
-  const [selectedLead, setSelectedLead] = useState(null);
-  const [noteText, setNoteText] = useState('');
   const [statusChangeDialog, setStatusChangeDialog] = useState(false);
-  const [newStatus, setNewStatus] = useState('');
   const [callDialogOpen, setCallDialogOpen] = useState(false);
+  const [emailDialogOpen, setEmailDialogOpen] = useState(false);
+  const [shareQuoteDialogOpen, setShareQuoteDialogOpen] = useState(false);
+  const [selectedLead, setSelectedLead] = useState(null);
   const [selectedCallLead, setSelectedCallLead] = useState(null);
+  const [noteText, setNoteText] = useState('');
+  const [newStatus, setNewStatus] = useState('');
+  const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
 
-  useEffect(() => {
-    // Mock data - Replace with API call
-    setLeads([
-      {
-        id: 1,
-        firstName: 'Rahul',
-        lastName: 'Sharma',
-        phone: '+91-98765-43210',
-        email: 'rahul.sharma@email.com',
-        status: 'New',
-        priority: 'High',
-        createdAt: '2025-10-08',
-        assignedTo: 'Sarah Johnson',
-        lastContact: '2025-10-09',
-        policyType: 'Motor Insurance',
-        policyNumber: 'POL123456',
-        vehicleNumber: 'MH01AB1234'
-      },
-      // Add more mock data as needed
-    ]);
-  }, []);
+  // Email form state
+  const [emailData, setEmailData] = useState({ subject: '', body: '', cc: '' });
+
+  // Quote form state
+  const [quoteData, setQuoteData] = useState({ quoteType: 'standard', premium: '', coverage: '', validTill: '', notes: '' });
 
   const statusOptions = ['New', 'Contacted', 'Qualified', 'Proposal', 'Negotiation', 'Closed Won', 'Closed Lost'];
+  const priorityOptions = ['High', 'Medium', 'Low'];
+  const policyTypeOptions = ['Health Insurance', 'Life Insurance', 'Motor Insurance', 'Home Insurance', 'Travel Insurance'];
+  const dateRangeOptions = [
+    { value: 'All', label: 'All Time' },
+    { value: '7', label: 'Last 7 Days' },
+    { value: '30', label: 'Last 30 Days' },
+    { value: '90', label: 'Last 90 Days' }
+  ];
 
-  const handleSearch = (event) => {
-    setSearchTerm(event.target.value);
-  };
+  useEffect(() => {
+    const fetchLeads = async () => {
+      try {
+        const data = await leadService.getAssignedLeads();
+        setLeads(data);
+        setFilteredLeads(data);
+      } catch (error) {
+        console.error('Error fetching assigned leads:', error);
+      }
+    };
+    fetchLeads();
+  }, []);
 
-  const handleFilterChange = (event) => {
-    setFilterStatus(event.target.value);
+  // Apply filters
+  useEffect(() => {
+    let result = [...leads];
+
+    // Search filter
+    if (searchTerm) {
+      const term = searchTerm.toLowerCase();
+      result = result.filter(lead =>
+        `${lead.firstName} ${lead.lastName}`.toLowerCase().includes(term) ||
+        lead.email?.toLowerCase().includes(term) ||
+        lead.phone?.includes(term) ||
+        lead.id?.toString().includes(term)
+      );
+    }
+
+    // Status filter
+    if (filterStatus !== 'All') {
+      result = result.filter(lead => lead.status === filterStatus);
+    }
+
+    // Priority filter
+    if (filterPriority !== 'All') {
+      result = result.filter(lead => lead.priority === filterPriority);
+    }
+
+    // Policy type filter
+    if (filterPolicyType !== 'All') {
+      result = result.filter(lead => lead.policyType === filterPolicyType);
+    }
+
+    // Date range filter
+    if (filterDateRange !== 'All') {
+      const days = parseInt(filterDateRange);
+      const cutoffDate = new Date();
+      cutoffDate.setDate(cutoffDate.getDate() - days);
+      result = result.filter(lead => {
+        const leadDate = new Date(lead.createdAt || lead.lastContact);
+        return leadDate >= cutoffDate;
+      });
+    }
+
+    // Sort
+    result.sort((a, b) => {
+      let aVal = a[sortField] || '';
+      let bVal = b[sortField] || '';
+      if (sortOrder === 'asc') return aVal > bVal ? 1 : -1;
+      return aVal < bVal ? 1 : -1;
+    });
+
+    setFilteredLeads(result);
+  }, [leads, searchTerm, filterStatus, filterPriority, filterPolicyType, filterDateRange, sortField, sortOrder]);
+
+  const clearFilters = () => {
+    setSearchTerm('');
+    setFilterStatus('All');
+    setFilterPriority('All');
+    setFilterPolicyType('All');
+    setFilterDateRange('All');
   };
 
   const handleSort = (field) => {
@@ -101,25 +137,50 @@ const AssignedLeads = () => {
     }
   };
 
-  const handleQuickNote = (lead) => {
+  // Email functionality
+  const handleOpenEmail = (lead) => {
     setSelectedLead(lead);
-    setQuickNoteDialog(true);
+    setEmailData({
+      subject: `Regarding Your ${lead.policyType} Inquiry`,
+      body: `Dear ${lead.firstName} ${lead.lastName},\n\nThank you for your interest in our ${lead.policyType} services.\n\n`,
+      cc: ''
+    });
+    setEmailDialogOpen(true);
   };
 
-  const handleStatusChange = (lead) => {
+  const handleSendEmail = () => {
+    // In production, this would call an API to send the email
+    setEmailDialogOpen(false);
+    setSnackbar({ open: true, message: `Email sent to ${selectedLead.email}!`, severity: 'success' });
+    setEmailData({ subject: '', body: '', cc: '' });
+  };
+
+  // Share Quote functionality
+  const handleOpenShareQuote = (lead) => {
     setSelectedLead(lead);
-    setNewStatus(lead.status);
-    setStatusChangeDialog(true);
+    setQuoteData({
+      quoteType: 'standard',
+      premium: '',
+      coverage: '',
+      validTill: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+      notes: ''
+    });
+    setShareQuoteDialogOpen(true);
+  };
+
+  const handleShareQuote = () => {
+    // In production, this would generate and share the quote
+    setShareQuoteDialogOpen(false);
+    setSnackbar({ open: true, message: `Quote shared with ${selectedLead.firstName} ${selectedLead.lastName}!`, severity: 'success' });
+    setQuoteData({ quoteType: 'standard', premium: '', coverage: '', validTill: '', notes: '' });
   };
 
   const saveQuickNote = () => {
-    // Implement note saving logic
     setQuickNoteDialog(false);
     setNoteText('');
   };
 
   const saveStatusChange = () => {
-    // Implement status change logic
     setStatusChangeDialog(false);
   };
 
@@ -145,58 +206,91 @@ const AssignedLeads = () => {
     return colors[priority] || theme.palette.grey[500];
   };
 
+  const activeFiltersCount = [filterStatus, filterPriority, filterPolicyType, filterDateRange].filter(f => f !== 'All').length + (searchTerm ? 1 : 0);
+
   return (
     <Box sx={{ p: 3 }}>
       {/* Header */}
       <Grid container spacing={2} alignItems="center" sx={{ mb: 3 }}>
         <Grid item xs={12} sm={6}>
-          <Typography variant="h4" fontWeight="600">
-            Assigned Leads
+          <Typography variant="h4" fontWeight="600">Assigned Leads</Typography>
+          <Typography variant="body2" color="text.secondary">
+            {filteredLeads.length} of {leads.length} leads
           </Typography>
         </Grid>
       </Grid>
 
-      {/* Filters and Search */}
+      {/* Filters */}
       <Card sx={{ mb: 3 }}>
         <CardContent>
           <Grid container spacing={2} alignItems="center">
-            <Grid item xs={12} sm={4}>
+            <Grid item xs={12} md={3}>
               <TextField
                 fullWidth
-                placeholder="Search leads..."
+                size="small"
+                placeholder="Search by name, email, phone..."
                 value={searchTerm}
-                onChange={handleSearch}
+                onChange={(e) => setSearchTerm(e.target.value)}
                 InputProps={{
-                  startAdornment: <SearchIcon sx={{ color: 'text.secondary', mr: 1 }} />
+                  startAdornment: <InputAdornment position="start"><SearchIcon color="action" /></InputAdornment>,
+                  endAdornment: searchTerm && (
+                    <InputAdornment position="end">
+                      <IconButton size="small" onClick={() => setSearchTerm('')}><ClearIcon fontSize="small" /></IconButton>
+                    </InputAdornment>
+                  )
                 }}
               />
             </Grid>
-            <Grid item xs={12} sm={4}>
-              <TextField
-                fullWidth
-                select
-                label="Filter by Status"
-                value={filterStatus}
-                onChange={handleFilterChange}
-                InputProps={{
-                  startAdornment: <FilterIcon sx={{ color: 'text.secondary', mr: 1 }} />
-                }}
-              >
-                <MenuItem value="All">All Status</MenuItem>
-                {statusOptions.map(status => (
-                  <MenuItem key={status} value={status}>{status}</MenuItem>
-                ))}
-              </TextField>
+            <Grid item xs={6} md={2}>
+              <FormControl fullWidth size="small">
+                <InputLabel>Status</InputLabel>
+                <Select value={filterStatus} label="Status" onChange={(e) => setFilterStatus(e.target.value)}>
+                  <MenuItem value="All">All Status</MenuItem>
+                  {statusOptions.map(s => <MenuItem key={s} value={s}>{s}</MenuItem>)}
+                </Select>
+              </FormControl>
             </Grid>
-            <Grid item xs={12} sm={4}>
-              <Button
-                variant="outlined"
-                startIcon={<SortIcon />}
-                onClick={() => handleSort('createdAt')}
-                fullWidth
-              >
-                Sort by {sortField === 'createdAt' ? (sortOrder === 'asc' ? '↑' : '↓') : ''}
-              </Button>
+            <Grid item xs={6} md={2}>
+              <FormControl fullWidth size="small">
+                <InputLabel>Priority</InputLabel>
+                <Select value={filterPriority} label="Priority" onChange={(e) => setFilterPriority(e.target.value)}>
+                  <MenuItem value="All">All Priority</MenuItem>
+                  {priorityOptions.map(p => <MenuItem key={p} value={p}>{p}</MenuItem>)}
+                </Select>
+              </FormControl>
+            </Grid>
+            <Grid item xs={6} md={2}>
+              <FormControl fullWidth size="small">
+                <InputLabel>Policy Type</InputLabel>
+                <Select value={filterPolicyType} label="Policy Type" onChange={(e) => setFilterPolicyType(e.target.value)}>
+                  <MenuItem value="All">All Types</MenuItem>
+                  {policyTypeOptions.map(p => <MenuItem key={p} value={p}>{p}</MenuItem>)}
+                </Select>
+              </FormControl>
+            </Grid>
+            <Grid item xs={6} md={2}>
+              <FormControl fullWidth size="small">
+                <InputLabel>Date Range</InputLabel>
+                <Select value={filterDateRange} label="Date Range" onChange={(e) => setFilterDateRange(e.target.value)}>
+                  {dateRangeOptions.map(d => <MenuItem key={d.value} value={d.value}>{d.label}</MenuItem>)}
+                </Select>
+              </FormControl>
+            </Grid>
+            <Grid item xs={12} md={1}>
+              <Tooltip title="Clear all filters">
+                <span>
+                  <Button
+                    variant="outlined"
+                    color="secondary"
+                    onClick={clearFilters}
+                    disabled={activeFiltersCount === 0}
+                    fullWidth
+                    size="small"
+                  >
+                    Clear {activeFiltersCount > 0 && `(${activeFiltersCount})`}
+                  </Button>
+                </span>
+              </Tooltip>
             </Grid>
           </Grid>
         </CardContent>
@@ -208,313 +302,142 @@ const AssignedLeads = () => {
           <Table>
             <TableHead>
               <TableRow>
-                <TableCell>Name</TableCell>
+                <TableCell onClick={() => handleSort('firstName')} sx={{ cursor: 'pointer' }}>Name {sortField === 'firstName' && (sortOrder === 'asc' ? '↑' : '↓')}</TableCell>
                 <TableCell>Contact</TableCell>
-                <TableCell>Status</TableCell>
-                <TableCell>Priority</TableCell>
+                <TableCell onClick={() => handleSort('status')} sx={{ cursor: 'pointer' }}>Status {sortField === 'status' && (sortOrder === 'asc' ? '↑' : '↓')}</TableCell>
+                <TableCell onClick={() => handleSort('priority')} sx={{ cursor: 'pointer' }}>Priority {sortField === 'priority' && (sortOrder === 'asc' ? '↑' : '↓')}</TableCell>
                 <TableCell>Policy Type</TableCell>
                 <TableCell>Assigned To</TableCell>
-                <TableCell>Last Contact</TableCell>
+                <TableCell onClick={() => handleSort('lastContact')} sx={{ cursor: 'pointer' }}>Last Contact {sortField === 'lastContact' && (sortOrder === 'asc' ? '↑' : '↓')}</TableCell>
                 <TableCell align="center">Actions</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
-              {leads.map((lead) => (
-                <TableRow key={lead.id} hover>
-                  <TableCell>
-                    <Box sx={{ display: 'flex', flexDirection: 'column' }}>
-                      <Typography variant="subtitle2" fontWeight="600">
-                        {lead.firstName} {lead.lastName}
-                      </Typography>
-                      <Typography variant="caption" color="text.secondary">
-                        ID: {lead.id}
-                      </Typography>
-                    </Box>
-                  </TableCell>
-                  <TableCell>
-                    <Box sx={{ display: 'flex', flexDirection: 'column' }}>
-                      <Typography variant="body2">{lead.phone}</Typography>
-                      <Typography variant="caption" color="text.secondary">
-                        {lead.email}
-                      </Typography>
-                    </Box>
-                  </TableCell>
-                  <TableCell>
-                    <Chip
-                      label={lead.status}
-                      size="small"
-                      sx={{
-                        backgroundColor: alpha(getStatusColor(lead.status), 0.1),
-                        color: getStatusColor(lead.status),
-                        fontWeight: 600
-                      }}
-                    />
-                  </TableCell>
-                  <TableCell>
-                    <Chip
-                      label={lead.priority}
-                      size="small"
-                      sx={{
-                        backgroundColor: alpha(getPriorityColor(lead.priority), 0.1),
-                        color: getPriorityColor(lead.priority),
-                        fontWeight: 600
-                      }}
-                    />
-                  </TableCell>
-                  <TableCell>{lead.policyType}</TableCell>
-                  <TableCell>{lead.assignedTo}</TableCell>
-                  <TableCell>{lead.lastContact}</TableCell>
-                  <TableCell>
-                    <Stack direction="row" spacing={1} justifyContent="center">
-                      <Tooltip title="Call Lead">
-                        <IconButton
-                          size="small"
-                          onClick={() => {
-                            setSelectedCallLead(lead);
-                            setCallDialogOpen(true);
-                          }}
-                          sx={{
-                            color: theme.palette.success.main,
-                            '&:hover': {
-                              bgcolor: alpha(theme.palette.success.main, 0.1)
-                            }
-                          }}
-                        >
-                          <CallIcon />
-                        </IconButton>
-                      </Tooltip>
-                      <Tooltip title="View Details">
-                        <IconButton
-                          size="small"
-                          onClick={() => navigate(`/lead-management/${lead.id}`)}
-                        >
-                          <ViewIcon />
-                        </IconButton>
-                      </Tooltip>
-                      <Tooltip title="Edit">
-                        <IconButton
-                          size="small"
-                          onClick={() => navigate(`/lead-management/${lead.id}?edit=true`)}
-                        >
-                          <EditIcon />
-                        </IconButton>
-                      </Tooltip>
-                      <Tooltip title="Email">
-                        <IconButton
-                          size="small"
-                          sx={{ color: theme.palette.primary.main }}
-                        >
-                          <EmailIcon />
-                        </IconButton>
-                      </Tooltip>
-                      <Tooltip title="Share Quote">
-                        <IconButton
-                          size="small"
-                          sx={{ color: theme.palette.warning.main }}
-                        >
-                          <MoneyIcon />
-                        </IconButton>
-                      </Tooltip>
-                    </Stack>
-                  </TableCell>
-                </TableRow>
-              ))}
+              {filteredLeads.length === 0 ? (
+                <TableRow><TableCell colSpan={8} align="center"><Typography color="text.secondary" sx={{ py: 4 }}>No leads found matching your filters</Typography></TableCell></TableRow>
+              ) : (
+                filteredLeads.map((lead) => (
+                  <TableRow key={lead.id} hover>
+                    <TableCell>
+                      <Box sx={{ display: 'flex', flexDirection: 'column' }}>
+                        <Typography variant="subtitle2" fontWeight="600">{lead.firstName} {lead.lastName}</Typography>
+                        <Typography variant="caption" color="text.secondary">ID: {lead.id}</Typography>
+                      </Box>
+                    </TableCell>
+                    <TableCell>
+                      <Box sx={{ display: 'flex', flexDirection: 'column' }}>
+                        <Typography variant="body2">{lead.phone}</Typography>
+                        <Typography variant="caption" color="text.secondary">{lead.email}</Typography>
+                      </Box>
+                    </TableCell>
+                    <TableCell>
+                      <Chip label={lead.status} size="small" sx={{ backgroundColor: alpha(getStatusColor(lead.status), 0.1), color: getStatusColor(lead.status), fontWeight: 600 }} />
+                    </TableCell>
+                    <TableCell>
+                      <Chip label={lead.priority} size="small" sx={{ backgroundColor: alpha(getPriorityColor(lead.priority), 0.1), color: getPriorityColor(lead.priority), fontWeight: 600 }} />
+                    </TableCell>
+                    <TableCell>{lead.policyType}</TableCell>
+                    <TableCell>{lead.assignedTo}</TableCell>
+                    <TableCell>{lead.lastContact}</TableCell>
+                    <TableCell>
+                      <Stack direction="row" spacing={0.5} justifyContent="center">
+                        <Tooltip title="Call Lead"><IconButton size="small" onClick={() => { setSelectedCallLead(lead); setCallDialogOpen(true); }} sx={{ color: theme.palette.success.main }}><CallIcon fontSize="small" /></IconButton></Tooltip>
+                        <Tooltip title="View Details"><IconButton size="small" onClick={() => navigate(`/lead-management/${lead.id}`)}><ViewIcon fontSize="small" /></IconButton></Tooltip>
+                        <Tooltip title="Edit"><IconButton size="small" onClick={() => navigate(`/lead-management/${lead.id}?edit=true`)}><EditIcon fontSize="small" /></IconButton></Tooltip>
+                        <Tooltip title="Send Email"><IconButton size="small" onClick={() => handleOpenEmail(lead)} sx={{ color: theme.palette.primary.main }}><EmailIcon fontSize="small" /></IconButton></Tooltip>
+                        <Tooltip title="Share Quote"><IconButton size="small" onClick={() => handleOpenShareQuote(lead)} sx={{ color: theme.palette.warning.main }}><MoneyIcon fontSize="small" /></IconButton></Tooltip>
+                      </Stack>
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
             </TableBody>
           </Table>
         </TableContainer>
       </Card>
 
-      {/* Quick Note Dialog */}
-      <Dialog open={quickNoteDialog} onClose={() => setQuickNoteDialog(false)}>
-        <DialogTitle>Add Quick Note</DialogTitle>
-        <DialogContent>
-          <TextField
-            fullWidth
-            multiline
-            rows={4}
-            value={noteText}
-            onChange={(e) => setNoteText(e.target.value)}
-            placeholder="Enter your note here..."
-            sx={{ mt: 2 }}
-          />
+      {/* Email Dialog */}
+      <Dialog open={emailDialogOpen} onClose={() => setEmailDialogOpen(false)} maxWidth="md" fullWidth>
+        <DialogTitle>
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}><EmailIcon color="primary" /><Typography variant="h6">Send Email</Typography></Box>
+            <IconButton onClick={() => setEmailDialogOpen(false)}><CloseIcon /></IconButton>
+          </Box>
+        </DialogTitle>
+        <DialogContent dividers>
+          {selectedLead && (
+            <Stack spacing={2}>
+              <Alert severity="info">Sending to: <strong>{selectedLead.firstName} {selectedLead.lastName}</strong> ({selectedLead.email})</Alert>
+              <TextField fullWidth label="Subject" value={emailData.subject} onChange={(e) => setEmailData({ ...emailData, subject: e.target.value })} />
+              <TextField fullWidth label="CC (Optional)" value={emailData.cc} onChange={(e) => setEmailData({ ...emailData, cc: e.target.value })} placeholder="Enter CC email addresses" />
+              <TextField fullWidth multiline rows={8} label="Email Body" value={emailData.body} onChange={(e) => setEmailData({ ...emailData, body: e.target.value })} />
+            </Stack>
+          )}
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setQuickNoteDialog(false)}>Cancel</Button>
-          <Button onClick={saveQuickNote} variant="contained">Save Note</Button>
+          <Button onClick={() => setEmailDialogOpen(false)}>Cancel</Button>
+          <Button variant="contained" startIcon={<SendIcon />} onClick={handleSendEmail} disabled={!emailData.subject || !emailData.body}>Send Email</Button>
         </DialogActions>
       </Dialog>
 
-      {/* Status Change Dialog */}
-      <Dialog open={statusChangeDialog} onClose={() => setStatusChangeDialog(false)}>
-        <DialogTitle>Change Lead Status</DialogTitle>
-        <DialogContent>
-          <TextField
-            select
-            fullWidth
-            value={newStatus}
-            onChange={(e) => setNewStatus(e.target.value)}
-            sx={{ mt: 2 }}
-          >
-            {statusOptions.map(status => (
-              <MenuItem key={status} value={status}>{status}</MenuItem>
-            ))}
-          </TextField>
+      {/* Share Quote Dialog */}
+      <Dialog open={shareQuoteDialogOpen} onClose={() => setShareQuoteDialogOpen(false)} maxWidth="sm" fullWidth>
+        <DialogTitle>
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}><MoneyIcon color="warning" /><Typography variant="h6">Share Quote</Typography></Box>
+            <IconButton onClick={() => setShareQuoteDialogOpen(false)}><CloseIcon /></IconButton>
+          </Box>
+        </DialogTitle>
+        <DialogContent dividers>
+          {selectedLead && (
+            <Stack spacing={2}>
+              <Alert severity="info">Creating quote for: <strong>{selectedLead.firstName} {selectedLead.lastName}</strong> - {selectedLead.policyType}</Alert>
+              <FormControl fullWidth>
+                <InputLabel>Quote Type</InputLabel>
+                <Select value={quoteData.quoteType} label="Quote Type" onChange={(e) => setQuoteData({ ...quoteData, quoteType: e.target.value })}>
+                  <MenuItem value="standard">Standard Quote</MenuItem>
+                  <MenuItem value="premium">Premium Quote</MenuItem>
+                  <MenuItem value="custom">Custom Quote</MenuItem>
+                </Select>
+              </FormControl>
+              <Grid container spacing={2}>
+                <Grid item xs={6}><TextField fullWidth label="Premium Amount (₹)" type="number" value={quoteData.premium} onChange={(e) => setQuoteData({ ...quoteData, premium: e.target.value })} /></Grid>
+                <Grid item xs={6}><TextField fullWidth label="Coverage Amount (₹)" type="number" value={quoteData.coverage} onChange={(e) => setQuoteData({ ...quoteData, coverage: e.target.value })} /></Grid>
+              </Grid>
+              <TextField fullWidth label="Valid Till" type="date" value={quoteData.validTill} onChange={(e) => setQuoteData({ ...quoteData, validTill: e.target.value })} InputLabelProps={{ shrink: true }} />
+              <TextField fullWidth multiline rows={3} label="Additional Notes" value={quoteData.notes} onChange={(e) => setQuoteData({ ...quoteData, notes: e.target.value })} placeholder="Any special terms or conditions..." />
+            </Stack>
+          )}
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setStatusChangeDialog(false)}>Cancel</Button>
-          <Button onClick={saveStatusChange} variant="contained">Update Status</Button>
+          <Button onClick={() => setShareQuoteDialogOpen(false)}>Cancel</Button>
+          <Button variant="contained" color="warning" startIcon={<ShareIcon />} onClick={handleShareQuote} disabled={!quoteData.premium || !quoteData.coverage}>Share Quote</Button>
         </DialogActions>
       </Dialog>
 
       {/* Call Dialog */}
-      <Dialog
-        open={callDialogOpen}
-        onClose={() => setCallDialogOpen(false)}
-        maxWidth="sm"
-        fullWidth
-      >
-        <DialogTitle>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            <CallIcon color="success" />
-            <Typography variant="h6" fontWeight="600">
-              Contact Lead
-            </Typography>
-          </Box>
-        </DialogTitle>
+      <Dialog open={callDialogOpen} onClose={() => setCallDialogOpen(false)} maxWidth="sm" fullWidth>
+        <DialogTitle><Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}><CallIcon color="success" /><Typography variant="h6" fontWeight="600">Contact Lead</Typography></Box></DialogTitle>
         <DialogContent>
           <Stack spacing={3} sx={{ mt: 2 }}>
-            {/* Lead ID */}
-            <Box>
-              <Typography variant="caption" color="text.secondary" fontWeight="600">
-                Lead ID
-              </Typography>
-              <Typography variant="body1" fontWeight="600" color="primary">
-                LD{new Date().getFullYear()}{String(selectedCallLead?.id || 0).padStart(6, '0')}
-              </Typography>
-            </Box>
-
-            {/* Lead Name */}
-            <Box>
-              <Typography variant="caption" color="text.secondary" fontWeight="600">
-                Lead Name
-              </Typography>
-              <Typography variant="body1" fontWeight="600">
-                {selectedCallLead?.firstName} {selectedCallLead?.lastName}
-              </Typography>
-            </Box>
-
-            {/* Policy Information */}
-            <Box>
-              <Typography variant="caption" color="text.secondary" fontWeight="600">
-                Policy Type
-              </Typography>
-              <Typography variant="body1">{selectedCallLead?.policyType}</Typography>
-              {selectedCallLead?.policyNumber && (
-                <Typography variant="body2" color="text.secondary">
-                  Policy #: {selectedCallLead?.policyNumber}
-                </Typography>
-              )}
-              {selectedCallLead?.vehicleNumber && (
-                <Typography variant="body2" color="text.secondary">
-                  Vehicle: {selectedCallLead?.vehicleNumber}
-                </Typography>
-              )}
-            </Box>
-
-            {/* Status & Priority */}
+            <Box><Typography variant="caption" color="text.secondary" fontWeight="600">Lead Name</Typography><Typography variant="body1" fontWeight="600">{selectedCallLead?.firstName} {selectedCallLead?.lastName}</Typography></Box>
+            <Box><Typography variant="caption" color="text.secondary" fontWeight="600">Policy Type</Typography><Typography variant="body1">{selectedCallLead?.policyType}</Typography></Box>
             <Box sx={{ display: 'flex', gap: 2 }}>
-              <Box sx={{ flex: 1 }}>
-                <Typography variant="caption" color="text.secondary" fontWeight="600">
-                  Status
-                </Typography>
-                <Box sx={{ mt: 0.5 }}>
-                  <Chip
-                    label={selectedCallLead?.status}
-                    size="small"
-                    sx={{
-                      backgroundColor: alpha(getStatusColor(selectedCallLead?.status), 0.1),
-                      color: getStatusColor(selectedCallLead?.status),
-                      fontWeight: 600
-                    }}
-                  />
-                </Box>
-              </Box>
-              <Box sx={{ flex: 1 }}>
-                <Typography variant="caption" color="text.secondary" fontWeight="600">
-                  Priority
-                </Typography>
-                <Box sx={{ mt: 0.5 }}>
-                  <Chip
-                    label={selectedCallLead?.priority}
-                    size="small"
-                    sx={{
-                      backgroundColor: alpha(getPriorityColor(selectedCallLead?.priority), 0.1),
-                      color: getPriorityColor(selectedCallLead?.priority),
-                      fontWeight: 600
-                    }}
-                  />
-                </Box>
-              </Box>
+              <Box sx={{ flex: 1 }}><Typography variant="caption" color="text.secondary" fontWeight="600">Status</Typography><Box sx={{ mt: 0.5 }}><Chip label={selectedCallLead?.status} size="small" sx={{ backgroundColor: alpha(getStatusColor(selectedCallLead?.status), 0.1), color: getStatusColor(selectedCallLead?.status), fontWeight: 600 }} /></Box></Box>
+              <Box sx={{ flex: 1 }}><Typography variant="caption" color="text.secondary" fontWeight="600">Priority</Typography><Box sx={{ mt: 0.5 }}><Chip label={selectedCallLead?.priority} size="small" sx={{ backgroundColor: alpha(getPriorityColor(selectedCallLead?.priority), 0.1), color: getPriorityColor(selectedCallLead?.priority), fontWeight: 600 }} /></Box></Box>
             </Box>
-
-            {/* Assigned To & Last Contact */}
-            <Box>
-              <Typography variant="caption" color="text.secondary" fontWeight="600">
-                Assigned To
-              </Typography>
-              <Typography variant="body1">{selectedCallLead?.assignedTo}</Typography>
-              <Typography variant="body2" color="text.secondary">
-                Last Contact: {selectedCallLead?.lastContact}
-              </Typography>
-            </Box>
-
             <Divider />
-
-            {/* Phone Number */}
-            <Box>
-              <Typography variant="caption" color="text.secondary" fontWeight="600" gutterBottom>
-                Phone Number
-              </Typography>
-              <Box sx={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                mt: 1
-              }}>
-                <Typography variant="h6" fontWeight="600">
-                  {selectedCallLead?.phone}
-                </Typography>
-                <Button
-                  variant="contained"
-                  size="small"
-                  component="a"
-                  href={`tel:${selectedCallLead?.phone}`}
-                  startIcon={<CallIcon />}
-                  sx={{
-                    background: `linear-gradient(135deg, ${theme.palette.success.main} 0%, ${theme.palette.success.dark} 100%)`,
-                    '&:hover': {
-                      background: `linear-gradient(135deg, ${theme.palette.success.dark} 0%, ${theme.palette.success.main} 100%)`
-                    }
-                  }}
-                >
-                  Dial
-                </Button>
-              </Box>
-            </Box>
-
-            {/* Email */}
-            <Box>
-              <Typography variant="caption" color="text.secondary" fontWeight="600">
-                Email
-              </Typography>
-              <Typography variant="body1">{selectedCallLead?.email}</Typography>
-            </Box>
+            <Box><Typography variant="caption" color="text.secondary" fontWeight="600">Phone Number</Typography><Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mt: 1 }}><Typography variant="h6" fontWeight="600">{selectedCallLead?.phone}</Typography><Button variant="contained" size="small" component="a" href={`tel:${selectedCallLead?.phone}`} startIcon={<CallIcon />} sx={{ background: `linear-gradient(135deg, ${theme.palette.success.main} 0%, ${theme.palette.success.dark} 100%)` }}>Dial</Button></Box></Box>
+            <Box><Typography variant="caption" color="text.secondary" fontWeight="600">Email</Typography><Typography variant="body1">{selectedCallLead?.email}</Typography></Box>
           </Stack>
         </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setCallDialogOpen(false)}>Close</Button>
-        </DialogActions>
+        <DialogActions><Button onClick={() => setCallDialogOpen(false)}>Close</Button></DialogActions>
       </Dialog>
+
+      {/* Snackbar */}
+      <Snackbar open={snackbar.open} autoHideDuration={4000} onClose={() => setSnackbar({ ...snackbar, open: false })} anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}>
+        <Alert onClose={() => setSnackbar({ ...snackbar, open: false })} severity={snackbar.severity}>{snackbar.message}</Alert>
+      </Snackbar>
     </Box>
   );
 };

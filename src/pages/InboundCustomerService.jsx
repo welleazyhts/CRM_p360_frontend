@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import callService from '../services/callService';
+import * as CustomerService from '../services/CustomerService';
 import {
   Box, Typography, Card, CardContent, Button, TextField, Grid,
   Table, TableBody, TableCell, TableContainer, TableHead, TableRow,
@@ -11,7 +12,7 @@ import {
   Add as AddIcon, Search as SearchIcon, Refresh as RefreshIcon,
   Assignment as TicketIcon, Person as PersonIcon, AccessTime as TimeIcon,
   CheckCircle as ResolvedIcon, Error as OpenIcon, Schedule as PendingIcon,
-  Phone as PhoneIcon, CallReceived as IncomingCallIcon, 
+  Phone as PhoneIcon, CallReceived as IncomingCallIcon,
   Schedule as FollowUpIcon, Event as EventIcon
 } from '@mui/icons-material';
 
@@ -50,73 +51,14 @@ const InboundCustomerService = () => {
     filterTickets();
   }, [tickets, searchTerm, tabValue]);
 
-  const loadTickets = () => {
-    const mockTickets = [
-      {
-        id: 'TKT-001',
-        customerName: 'Rajesh Kumar',
-        email: 'rajesh@example.com',
-        phone: '+91 98765 43210',
-        subject: 'Policy renewal inquiry',
-        description: 'Need help with policy renewal process',
-        priority: 'High',
-        category: 'Policy Related',
-        status: 'Open',
-        assignedTo: 'Priya Sharma',
-        createdDate: '2025-01-12',
-        lastUpdated: '2025-01-12',
-        callReason: 'Renewal Query',
-        followUpDate: '2025-01-15',
-        followUpTime: '10:00 AM',
-        followUpRequired: true,
-        incomingCallerNumber: '+91 98765 43210',
-        callDuration: '5 mins',
-        callNotes: 'Customer wants to renew policy, needs premium calculation'
-      },
-      {
-        id: 'TKT-002',
-        customerName: 'Anita Desai',
-        email: 'anita@example.com',
-        phone: '+91 98765 43211',
-        subject: 'Claim status update',
-        description: 'Request for claim status information',
-        priority: 'Medium',
-        category: 'Claims',
-        status: 'In Progress',
-        assignedTo: 'Amit Patel',
-        createdDate: '2025-01-11',
-        lastUpdated: '2025-01-12',
-        callReason: 'Claim Request',
-        followUpDate: '2025-01-14',
-        followUpTime: '2:00 PM',
-        followUpRequired: true,
-        incomingCallerNumber: '+91 98765 43211',
-        callDuration: '8 mins',
-        callNotes: 'Customer inquiring about claim status, provided reference number'
-      },
-      {
-        id: 'TKT-003',
-        customerName: 'Vikram Singh',
-        email: 'vikram@example.com',
-        phone: '+91 98765 43212',
-        subject: 'Change contact details',
-        description: 'Need to update phone number and email',
-        priority: 'Low',
-        category: 'Account Management',
-        status: 'Resolved',
-        assignedTo: 'Priya Sharma',
-        createdDate: '2025-01-10',
-        lastUpdated: '2025-01-11',
-        callReason: 'Policy Modification',
-        followUpDate: '',
-        followUpTime: '',
-        followUpRequired: false,
-        incomingCallerNumber: '+91 98765 43212',
-        callDuration: '3 mins',
-        callNotes: 'Updated contact details successfully'
-      }
-    ];
-    setTickets(mockTickets);
+  const loadTickets = async () => {
+    try {
+      const data = await CustomerService.fetchInboundTickets();
+      setTickets(Array.isArray(data) ? data : []);
+    } catch (err) {
+      console.error('Failed to load inbound tickets:', err);
+      setTickets([]);
+    }
   };
 
   const filterTickets = () => {
@@ -150,13 +92,13 @@ const InboundCustomerService = () => {
 
   const handleAddTicket = async () => {
     setSelectedTicket(null);
-    
+
     // Capture incoming call automatically
     const incomingCall = callService.captureIncomingCall();
-    
+
     // Look up customer by phone number
     const customerLookup = await callService.lookupCustomerByPhone(incomingCall.callerNumber);
-    
+
     setFormData({
       customerName: customerLookup.found ? customerLookup.customer.name : '',
       email: customerLookup.found ? customerLookup.customer.email : '',
@@ -175,29 +117,39 @@ const InboundCustomerService = () => {
       callNotes: '',
       customerId: customerLookup.found ? customerLookup.customer.id : null
     });
-    
+
     setTicketDialogOpen(true);
   };
 
   const handleSaveTicket = async () => {
     try {
-      // End the active call and get duration
-      const completedCall = callService.endCall();
-      
+      // End the active call and get duration (may be sync or async)
+      const completedCall = await Promise.resolve(callService.endCall());
+
       if (selectedTicket) {
-        setTickets(tickets.map(t =>
-          t.id === selectedTicket.id ? { 
-            ...formData, 
-            id: t.id, 
-            createdDate: t.createdDate, 
-            lastUpdated: new Date().toISOString().split('T')[0],
-            callDuration: completedCall?.duration || formData.callDuration
-          } : t
-        ));
+        const updated = {
+          ...formData,
+          id: selectedTicket.id,
+          createdDate: selectedTicket.createdDate,
+          lastUpdated: new Date().toISOString().split('T')[0],
+          callDuration: completedCall?.duration || formData.callDuration
+        };
+        await CustomerService.updateInboundTicket(selectedTicket.id, updated);
+        await callService.saveCallDetails({
+          ...updated,
+          customerName: formData.customerName,
+          customerId: formData.customerId,
+          callerNumber: formData.incomingCallerNumber,
+          callReason: formData.callReason,
+          callNotes: formData.callNotes,
+          followUpRequired: formData.followUpRequired,
+          followUpDate: formData.followUpDate,
+          followUpTime: formData.followUpTime
+        });
       } else {
         const newTicket = {
           ...formData,
-          id: `TKT-${String(tickets.length + 1).padStart(3, '0')}`,
+          id: `TKT-${Date.now()}`,
           assignedTo: 'Unassigned',
           createdDate: new Date().toISOString().split('T')[0],
           lastUpdated: new Date().toISOString().split('T')[0],
@@ -205,8 +157,8 @@ const InboundCustomerService = () => {
           subject: formData.callReason || formData.subject,
           description: formData.callNotes || formData.description
         };
-        
-        // Save call details using call service
+
+        // save call details in callService (keeps old behavior)
         await callService.saveCallDetails({
           ...newTicket,
           customerName: formData.customerName,
@@ -218,14 +170,14 @@ const InboundCustomerService = () => {
           followUpDate: formData.followUpDate,
           followUpTime: formData.followUpTime
         });
-        
-        setTickets([...tickets, newTicket]);
+
+        await CustomerService.addInboundTicket(newTicket);
       }
-      
+
+      await loadTickets();
       setTicketDialogOpen(false);
     } catch (error) {
       console.error('Error saving call details:', error);
-      // Still close dialog but show error message
       setTicketDialogOpen(false);
     }
   };
@@ -349,7 +301,12 @@ const InboundCustomerService = () => {
         <TableContainer component={Paper}>
           <Table>
             <TableHead>
-              <TableRow sx={{ backgroundColor: theme.palette.grey[100] }}>
+              <TableRow sx={{
+                backgroundColor: theme.palette.grey.main,
+                '&:hover': {
+                  backgroundColor: theme.palette.grey.main,
+                }
+              }}>
                 <TableCell>Ticket ID</TableCell>
                 <TableCell>Customer</TableCell>
                 <TableCell>Call Reason</TableCell>
@@ -430,7 +387,7 @@ const InboundCustomerService = () => {
                 </Paper>
               </Box>
             )}
-            
+
             <Grid container spacing={2} sx={{ mt: 1 }}>
               {/* Customer Information */}
               <Grid item xs={12} md={6}>
@@ -477,12 +434,13 @@ const InboundCustomerService = () => {
                   }}
                 />
               </Grid>
-              
+
               {/* Call Details */}
               <Grid item xs={12} md={6}>
                 <FormControl fullWidth>
                   <InputLabel>Call Reason</InputLabel>
                   <Select
+                    label="Call Reason"
                     value={formData.callReason}
                     onChange={(e) => setFormData({ ...formData, callReason: e.target.value })}
                   >
@@ -501,6 +459,7 @@ const InboundCustomerService = () => {
                 <FormControl fullWidth>
                   <InputLabel>Category</InputLabel>
                   <Select
+                    label="Category"
                     value={formData.category}
                     onChange={(e) => setFormData({ ...formData, category: e.target.value })}
                   >
@@ -512,7 +471,7 @@ const InboundCustomerService = () => {
                   </Select>
                 </FormControl>
               </Grid>
-              
+
               {/* Call Notes */}
               <Grid item xs={12}>
                 <TextField
@@ -525,7 +484,7 @@ const InboundCustomerService = () => {
                   placeholder="Notes about the conversation..."
                 />
               </Grid>
-              
+
               {/* Follow-up Section */}
               <Grid item xs={12}>
                 <Paper sx={{ p: 2, bgcolor: 'background.default', border: '1px solid', borderColor: 'divider' }}>
@@ -533,7 +492,7 @@ const InboundCustomerService = () => {
                     <FollowUpIcon color="primary" />
                     Follow-up Required
                   </Typography>
-                  
+
                   <Grid container spacing={2}>
                     <Grid item xs={12}>
                       <FormControl component="fieldset">
@@ -548,7 +507,7 @@ const InboundCustomerService = () => {
                         </Box>
                       </FormControl>
                     </Grid>
-                    
+
                     {formData.followUpRequired && (
                       <>
                         <Grid item xs={12} md={6}>
@@ -577,12 +536,13 @@ const InboundCustomerService = () => {
                   </Grid>
                 </Paper>
               </Grid>
-              
+
               {/* Status and Priority */}
               <Grid item xs={12} md={4}>
                 <FormControl fullWidth>
                   <InputLabel>Priority</InputLabel>
                   <Select
+                    label="Priority"
                     value={formData.priority}
                     onChange={(e) => setFormData({ ...formData, priority: e.target.value })}
                   >
@@ -596,6 +556,7 @@ const InboundCustomerService = () => {
                 <FormControl fullWidth>
                   <InputLabel>Status</InputLabel>
                   <Select
+                    label="Status"
                     value={formData.status}
                     onChange={(e) => setFormData({ ...formData, status: e.target.value })}
                   >

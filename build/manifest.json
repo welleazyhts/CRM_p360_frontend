@@ -1,6 +1,11 @@
 {
+<<<<<<< HEAD
   "short_name": "Py360 CRM",
   "name": "Py360 CRM",
+=======
+  "short_name": "Policy Renewal",
+  "name": "Insurance Policy Renewal System",
+>>>>>>> 0f0db02199acd11bdcb8309679f62aa88a7a39ee
   "icons": [
     {
       "src": "favicon.ico",

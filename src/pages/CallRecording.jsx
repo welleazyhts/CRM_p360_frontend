@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import CallRecordingService from '../services/CallRecordingService';
 import {
   Box, Typography, Paper, Table, TableBody, TableCell, TableContainer,
   TableHead, TableRow, IconButton, Tooltip, Chip, Button, Dialog,
@@ -19,38 +20,7 @@ import {
 
 const CallRecording = () => {
   const navigate = useNavigate();
-  const [activeCalls, setActiveCalls] = useState([
-    {
-      id: 1,
-      customerName: 'Rajesh Kumar',
-      agent: 'Priya Sharma',
-      duration: '05:23',
-      callDateTime: '2025-01-20 10:15 AM',
-      recordedAudio: 'call_recording_001.mp3',
-      status: 'Active',
-      bargedIn: false
-    },
-    {
-      id: 2,
-      customerName: 'Anita Patel',
-      agent: 'Vikram Singh',
-      duration: '12:45',
-      callDateTime: '2025-01-20 11:30 AM',
-      recordedAudio: 'call_recording_002.mp3',
-      status: 'Active',
-      bargedIn: false
-    },
-    {
-      id: 3,
-      customerName: 'Suresh Reddy',
-      agent: 'Meera Joshi',
-      duration: '03:12',
-      callDateTime: '2025-01-20 02:45 PM',
-      recordedAudio: 'call_recording_003.mp3',
-      status: 'Active',
-      bargedIn: false
-    }
-  ]);
+  const [activeCalls, setActiveCalls] = useState([]);
 
   const [bargeState, setBargeState] = useState({
     open: false,
@@ -60,6 +30,18 @@ const CallRecording = () => {
   });
 
 
+
+  useEffect(() => {
+    const fetchActiveCalls = async () => {
+      try {
+        const calls = await CallRecordingService.getActiveCalls();
+        setActiveCalls(calls);
+      } catch (error) {
+        console.error('Error fetching active calls:', error);
+      }
+    };
+    fetchActiveCalls();
+  }, []);
 
   const agents = ['Priya Sharma', 'Vikram Singh', 'Meera Joshi', 'Amit Verma', 'Neha Agarwal'];
 
@@ -81,47 +63,59 @@ const CallRecording = () => {
     }));
   };
 
-  const handleBargeIn = (callId) => {
-    setBargeState({
-      open: true,
-      callId,
-      muted: true, // Start muted by default for safety
-      speakerMuted: false
-    });
-    
-    // Update call status to indicate barge-in
-    setActiveCalls(prev => prev.map(call => 
-      call.id === callId ? { ...call, bargedIn: true } : call
-    ));
+  const handleBargeIn = async (callId) => {
+    try {
+      await CallRecordingService.bargeIntoCall(callId);
+      setBargeState({
+        open: true,
+        callId,
+        muted: true,
+        speakerMuted: false
+      });
+      setActiveCalls(prev => prev.map(call => 
+        call.id === callId ? { ...call, bargedIn: true } : call
+      ));
+    } catch (error) {
+      console.error('Error barging into call:', error);
+    }
   };
 
-  const handleBargeExit = () => {
+  const handleBargeExit = async () => {
     const callId = bargeState.callId;
-    setBargeState({
-      open: false,
-      callId: null,
-      muted: false,
-      speakerMuted: false
-    });
-    
-    // Update call status to remove barge-in indication
-    setActiveCalls(prev => prev.map(call => 
-      call.id === callId ? { ...call, bargedIn: false } : call
-    ));
+    try {
+      await CallRecordingService.exitBarge(callId);
+      setBargeState({
+        open: false,
+        callId: null,
+        muted: false,
+        speakerMuted: false
+      });
+      setActiveCalls(prev => prev.map(call => 
+        call.id === callId ? { ...call, bargedIn: false } : call
+      ));
+    } catch (error) {
+      console.error('Error exiting barge:', error);
+    }
   };
 
-  const toggleMic = () => {
-    setBargeState(prev => ({
-      ...prev,
-      muted: !prev.muted
-    }));
+  const toggleMic = async () => {
+    const newMuted = !bargeState.muted;
+    try {
+      await CallRecordingService.setSupervisorMute(bargeState.callId, newMuted);
+      setBargeState(prev => ({ ...prev, muted: newMuted }));
+    } catch (error) {
+      console.error('Error toggling mic:', error);
+    }
   };
 
-  const toggleSpeaker = () => {
-    setBargeState(prev => ({
-      ...prev,
-      speakerMuted: !prev.speakerMuted
-    }));
+  const toggleSpeaker = async () => {
+    const newSpeakerMuted = !bargeState.speakerMuted;
+    try {
+      await CallRecordingService.setSupervisorSpeakerMute(bargeState.callId, newSpeakerMuted);
+      setBargeState(prev => ({ ...prev, speakerMuted: newSpeakerMuted }));
+    } catch (error) {
+      console.error('Error toggling speaker:', error);
+    }
   };
 
   const getStatusColor = (status, bargedIn) => {
@@ -183,8 +177,8 @@ const CallRecording = () => {
                   <TableCell>
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                       <audio controls style={{ width: '200px' }}>
-                        <source src={`/recordings/${call.recordedAudio}`} type="audio/mpeg" />
-                        <source src={`/recordings/${call.recordedAudio}`} type="audio/wav" />
+                        <source src={CallRecordingService.getRecordingUrl(call.recordedAudio)} type="audio/mpeg" />
+                        <source src={CallRecordingService.getRecordingUrl(call.recordedAudio)} type="audio/wav" />
                         Your browser does not support the audio element.
                       </audio>
                     </Box>

@@ -365,7 +365,12 @@ const CustomerDatabase = () => {
         <TableContainer component={Paper}>
           <Table>
             <TableHead>
-              <TableRow sx={{ backgroundColor: theme.palette.grey[100] }}>
+              <TableRow sx={{
+                backgroundColor: theme.palette.grey.main,
+                '&:hover': {
+                  backgroundColor: theme.palette.grey.main,
+                }
+              }}>
                 <TableCell>Customer</TableCell>
                 <TableCell>Contact Info</TableCell>
                 <TableCell>Age/Gender</TableCell>
@@ -480,7 +485,7 @@ const CustomerDatabase = () => {
           onPageChange={handleChangePage}
           rowsPerPage={rowsPerPage}
           onRowsPerPageChange={handleChangeRowsPerPage}
-          rowsPerPageOptions={[5,10,25,50]}
+          rowsPerPageOptions={[5, 10, 25, 50]}
         />
 
         {/* Action Menu */}
@@ -546,6 +551,7 @@ const CustomerDatabase = () => {
                 <FormControl fullWidth>
                   <InputLabel>Gender</InputLabel>
                   <Select
+                    label="Gender"
                     value={formData.gender}
                     onChange={(e) => setFormData({ ...formData, gender: e.target.value })}
                   >
@@ -583,6 +589,7 @@ const CustomerDatabase = () => {
                 <FormControl fullWidth>
                   <InputLabel>Product Type</InputLabel>
                   <Select
+                    label="Product Type"
                     value={formData.productType}
                     onChange={(e) => setFormData({ ...formData, productType: e.target.value })}
                   >
@@ -606,6 +613,7 @@ const CustomerDatabase = () => {
                 <FormControl fullWidth>
                   <InputLabel>Policy Status</InputLabel>
                   <Select
+                    label="Policy Status"
                     value={formData.policyStatus}
                     onChange={(e) => setFormData({ ...formData, policyStatus: e.target.value })}
                   >
@@ -628,6 +636,7 @@ const CustomerDatabase = () => {
                 <FormControl fullWidth>
                   <InputLabel>Customer Status</InputLabel>
                   <Select
+                    label="Customer Status"
                     value={formData.status}
                     onChange={(e) => setFormData({ ...formData, status: e.target.value })}
                   >
@@ -655,6 +664,7 @@ const CustomerDatabase = () => {
                 <FormControl fullWidth>
                   <InputLabel>Product Type</InputLabel>
                   <Select
+                    label="Product Type"
                     value={filters.productType}
                     onChange={(e) => setFilters({ ...filters, productType: e.target.value })}
                   >
@@ -671,6 +681,7 @@ const CustomerDatabase = () => {
                 <FormControl fullWidth>
                   <InputLabel>Customer Status</InputLabel>
                   <Select
+                    label="Customer Status"
                     value={filters.status}
                     onChange={(e) => setFilters({ ...filters, status: e.target.value })}
                   >
@@ -684,6 +695,7 @@ const CustomerDatabase = () => {
                 <FormControl fullWidth>
                   <InputLabel>Policy Status</InputLabel>
                   <Select
+                    label="Policy Status"
                     value={filters.policyStatus}
                     onChange={(e) => setFilters({ ...filters, policyStatus: e.target.value })}
                   >
@@ -698,6 +710,7 @@ const CustomerDatabase = () => {
                 <FormControl fullWidth>
                   <InputLabel>Gender</InputLabel>
                   <Select
+                    label="Gender"
                     value={filters.gender}
                     onChange={(e) => setFilters({ ...filters, gender: e.target.value })}
                   >

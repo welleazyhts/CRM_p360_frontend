@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import {
   Box,
   Card,
@@ -39,6 +39,7 @@ import TaskListView from '../components/tasks/TaskListView';
 import TaskKanbanView from '../components/tasks/TaskKanbanView';
 import TaskCalendarView from '../components/tasks/TaskCalendarView';
 import TaskDialog from '../components/tasks/TaskDialog';
+import taskService from '../services/taskManagementService';
 
 const TaskManagement = () => {
   const {
@@ -96,6 +97,20 @@ const TaskManagement = () => {
     return getFilteredTasks(taskFilters, sortBy, sortOrder);
   }, [tasks, filters, currentTab, sortBy, sortOrder]);
 
+  // Quick verification: call service list once (no UI change) — safe fallback
+  useEffect(() => {
+    let mounted = true;
+    (async () => {
+      try {
+        const list = await taskService.listTasks();
+        if (mounted) console.debug('taskService.listTasks sample:', Array.isArray(list) ? list.length : list);
+      } catch (e) {
+        // ignore — fallback/mock may not require action
+      }
+    })();
+    return () => { mounted = false; };
+  }, []);
+
   // Handle view change
   const handleViewChange = (event, newView) => {
     if (newView !== null) {
@@ -136,7 +151,6 @@ const TaskManagement = () => {
       setSortBy(field);
       setSortOrder('asc');
     }
-    setSortMenuAnchor(null);
   };
 
   // Handle export
@@ -380,20 +394,21 @@ const TaskManagement = () => {
         anchorEl={sortMenuAnchor}
         open={Boolean(sortMenuAnchor)}
         onClose={() => setSortMenuAnchor(null)}
+        disablePortal
       >
-        <MenuItem onClick={() => handleSortChange('dueDate')}>
+        <MenuItem onClick={() => { handleSortChange('dueDate'); setSortMenuAnchor(null); }}>
           Due Date {sortBy === 'dueDate' && `(${sortOrder})`}
         </MenuItem>
-        <MenuItem onClick={() => handleSortChange('priority')}>
+        <MenuItem onClick={() => { handleSortChange('priority'); setSortMenuAnchor(null); }}>
           Priority {sortBy === 'priority' && `(${sortOrder})`}
         </MenuItem>
-        <MenuItem onClick={() => handleSortChange('status')}>
+        <MenuItem onClick={() => { handleSortChange('status'); setSortMenuAnchor(null); }}>
           Status {sortBy === 'status' && `(${sortOrder})`}
         </MenuItem>
-        <MenuItem onClick={() => handleSortChange('createdAt')}>
+        <MenuItem onClick={() => { handleSortChange('createdAt'); setSortMenuAnchor(null); }}>
           Created Date {sortBy === 'createdAt' && `(${sortOrder})`}
         </MenuItem>
-        <MenuItem onClick={() => handleSortChange('title')}>
+        <MenuItem onClick={() => { handleSortChange('title'); setSortMenuAnchor(null); }}>
           Title {sortBy === 'title' && `(${sortOrder})`}
         </MenuItem>
       </Menu>

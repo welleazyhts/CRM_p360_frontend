@@ -133,13 +133,16 @@ export const WorkflowProvider = ({ children }) => {
     // Execute
     const result = await executeWorkflow(workflow, data, context);
 
-    // Save execution
+    // Save execution and include the provided input as `details` for easy access
     const execution = {
       id: `exec_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
       workflowId,
       workflowName: workflow.name,
       data,
-      result,
+      // store original input payload under `details` for UI / auditing
+      details: data,
+      // include details also on the result object for quick lookup in the UI
+      result: { ...result, details: data },
       startedAt: new Date().toISOString(),
       completedAt: result.status === WORKFLOW_STATUS.COMPLETED ? new Date().toISOString() : null,
       status: result.status

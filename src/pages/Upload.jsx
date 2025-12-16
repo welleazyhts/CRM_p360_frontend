@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { useProviders } from '../context/ProvidersContext';
-import { 
-  Box, Typography, Paper, Button, Grid, 
-  LinearProgress, Alert, AlertTitle, List, 
+import {
+  Box, Typography, Paper, Button, Grid,
+  LinearProgress, Alert, AlertTitle, List,
   ListItem, ListItemText, Divider, Chip,
   Card, CardContent, alpha, useTheme,
   Fade, Grow, Zoom, IconButton, Tooltip,
@@ -12,8 +12,8 @@ import {
   Stepper, Step, StepLabel, StepContent, Accordion,
   AccordionSummary, AccordionDetails, FormGroup, Checkbox
 } from '@mui/material';
-import { 
-  CloudUpload as UploadIcon, 
+import {
+  CloudUpload as UploadIcon,
   Download as DownloadIcon,
   CheckCircleOutline as CheckIcon,
   ErrorOutline as ErrorIcon,
@@ -44,7 +44,7 @@ const Upload = () => {
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [uploadStatus, setUploadStatus] = useState(null);
-  
+
   // Campaign state
   const [campaignDialog, setCampaignDialog] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
@@ -65,10 +65,10 @@ const Upload = () => {
       intervals: []
     }
   });
-  
+
   // File upload state for edit mode
   const [editModeFile, setEditModeFile] = useState(null);
-  
+
   // Predefined templates
   const [templates] = useState({
     email: [
@@ -93,7 +93,7 @@ const Upload = () => {
       { id: 'bot-call-2', name: 'Payment Due Bot Call', script: 'Hi {name}, this is an automated call regarding your payment of ₹{amount} for policy {policy_number}. Press 1 to make payment or press 2 for assistance.' }
     ]
   });
-  
+
   // Active campaigns
   const [activeCampaigns, setActiveCampaigns] = useState([
     {
@@ -127,6 +127,10 @@ const Upload = () => {
       scheduledAt: '2025-05-01T09:00:00'
     }
   ]);
+
+  // Campaign Details Dialog state
+  const [campaignDetailsDialog, setCampaignDetailsDialog] = useState(false);
+  const [selectedCampaign, setSelectedCampaign] = useState(null);
 
   const [uploadHistory, setUploadHistory] = useState([
     {
@@ -251,11 +255,11 @@ const Upload = () => {
 
   const handleUpload = async () => {
     if (!file) return;
-    
+
     setUploading(true);
     setUploadProgress(0);
     setUploadStatus(null);
-    
+
     // Simulate progress
     const progressInterval = setInterval(() => {
       setUploadProgress((prevProgress) => {
@@ -267,17 +271,17 @@ const Upload = () => {
         return newProgress;
       });
     }, 500);
-    
+
     try {
       // In a real app, this would call your API
       // const result = await uploadPolicyData(file);
-      
+
       // Simulate API call
       await new Promise(resolve => setTimeout(resolve, 5000));
-      
+
       clearInterval(progressInterval);
       setUploadProgress(100);
-      
+
       // Mock successful upload
       const newUpload = {
         id: `upload-${Date.now()}`,
@@ -290,14 +294,14 @@ const Upload = () => {
         fileSize: `${(file.size / 1024 / 1024).toFixed(2)} MB`,
         downloadUrl: '/api/downloads/' + file.name
       };
-      
+
       setUploadHistory([newUpload, ...uploadHistory]);
-      
+
       setUploadStatus({
         type: 'success',
         message: 'File uploaded successfully. Processing has begun.'
       });
-      
+
       // Simulate status change after processing
       setTimeout(() => {
         setUploadHistory(prev => {
@@ -311,7 +315,7 @@ const Upload = () => {
           return updated;
         });
       }, 8000);
-      
+
     } catch (error) {
       clearInterval(progressInterval);
       setUploadStatus({
@@ -336,7 +340,7 @@ const Upload = () => {
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
-    
+
     // Show success message
     // console.log(`Downloading ${upload.filename}...`);
   };
@@ -368,7 +372,7 @@ const Upload = () => {
   const handleChangeCampaign = (campaign = null) => {
     // If no campaign is provided, use the most recent active campaign
     const targetCampaign = campaign || activeCampaigns.find(c => c.status === 'active') || activeCampaigns[0];
-    
+
     if (!targetCampaign) {
       setUploadStatus({
         type: 'error',
@@ -377,15 +381,15 @@ const Upload = () => {
       setTimeout(() => setUploadStatus(null), 3000);
       return;
     }
-    
+
     setEditingCampaign(targetCampaign);
     setIsEditMode(true);
     setEditModeFile(null);
-    
+
     // Find the associated upload
     const associatedUpload = uploadHistory.find(upload => upload.id === targetCampaign.uploadId);
     setSelectedUpload(associatedUpload);
-    
+
     // Pre-fill campaign data
     setCampaignData({
       name: targetCampaign.name,
@@ -412,7 +416,7 @@ const Upload = () => {
         // In a real implementation, you would upload the new file here
         // For now, we'll simulate the upload process
         // Uploading new file for campaign: editModeFile.name
-        
+
         // Update the selected upload to reflect the new file
         const newUploadEntry = {
           ...selectedUpload,
@@ -421,15 +425,15 @@ const Upload = () => {
           fileSize: `${(editModeFile.size / 1024 / 1024).toFixed(2)} MB`,
           // Keep the same records count for simulation
         };
-        
+
         // Update upload history with the new file
-        setUploadHistory(prev => prev.map(upload => 
+        setUploadHistory(prev => prev.map(upload =>
           upload.id === selectedUpload.id ? newUploadEntry : upload
         ));
-        
+
         setSelectedUpload(newUploadEntry);
       }
-      
+
       // Mock contacts from selected upload
       const mockContacts = [
         { phone: '9876543210', email: 'arjun.sharma@gmail.com', name: 'Arjun Sharma' },
@@ -437,14 +441,14 @@ const Upload = () => {
         { phone: '9876543212', email: 'vikram.singh@gmail.com', name: 'Vikram Singh' },
         { phone: '9876543213', email: 'priyanka.gupta@gmail.com', name: 'Priyanka Gupta' }
       ];
-      
+
       // Perform deduplication and DNC filtering
       const filteredData = await deduplicateContacts(mockContacts, 'CLIENT-001');
-      
+
       if (isEditMode) {
         // Update existing campaign
         const selectedProvider = getProviders(campaignData.type[0]).find(p => p.id === campaignData.providers[campaignData.type[0]]) || getActiveProvider(campaignData.type[0]);
-        
+
         const updatedCampaign = {
           ...editingCampaign,
           name: campaignData.name,
@@ -461,7 +465,7 @@ const Upload = () => {
           originalCount: mockContacts.length,
           dncBlocked: filteredData.dncBlocked,
           duplicatesRemoved: filteredData.duplicatesRemoved,
-          scheduledAt: campaignData.scheduleType === 'scheduled' 
+          scheduledAt: campaignData.scheduleType === 'scheduled'
             ? `${campaignData.scheduleDate}T${campaignData.scheduleTime}:00`
             : editingCampaign.scheduledAt,
           advancedScheduling: campaignData.advancedScheduling.enabled ? {
@@ -473,8 +477,8 @@ const Upload = () => {
           },
           updatedAt: new Date().toISOString()
         };
-        
-        setActiveCampaigns(prev => prev.map(campaign => 
+
+        setActiveCampaigns(prev => prev.map(campaign =>
           campaign.id === editingCampaign.id ? updatedCampaign : campaign
         ));
         setCampaignDialog(false);
@@ -482,32 +486,32 @@ const Upload = () => {
         // Create separate campaigns for each selected type
         const newCampaigns = campaignData.type.map((type, index) => {
           const selectedProvider = getProviders(type).find(p => p.id === campaignData.providers[type]) || getActiveProvider(type);
-          
+
           return {
-          id: `camp-${Date.now()}-${index}`,
-          name: campaignData.type.length > 1 
-            ? `${campaignData.name} (${type.charAt(0).toUpperCase() + type.slice(1)})`
-            : campaignData.name,
-          type: type,
+            id: `camp-${Date.now()}-${index}`,
+            name: campaignData.type.length > 1
+              ? `${campaignData.name} (${type.charAt(0).toUpperCase() + type.slice(1)})`
+              : campaignData.name,
+            type: type,
             provider: selectedProvider ? {
               id: selectedProvider.id,
               name: selectedProvider.name,
               type: selectedProvider.type
             } : null,
-          status: campaignData.scheduleType === 'immediate' ? 'active' : 'scheduled',
-          uploadId: selectedUpload.id,
-          uploadFilename: selectedUpload.filename,
-          targetCount: filteredData.allowed.length,
-          originalCount: mockContacts.length,
-          dncBlocked: filteredData.dncBlocked,
-          duplicatesRemoved: filteredData.duplicatesRemoved,
-          sent: 0,
-          opened: 0,
-          clicked: 0,
-          converted: 0,
-          createdAt: new Date().toISOString(),
-          scheduledAt: campaignData.scheduleType === 'scheduled' 
-            ? `${campaignData.scheduleDate}T${campaignData.scheduleTime}:00`
+            status: campaignData.scheduleType === 'immediate' ? 'active' : 'scheduled',
+            uploadId: selectedUpload.id,
+            uploadFilename: selectedUpload.filename,
+            targetCount: filteredData.allowed.length,
+            originalCount: mockContacts.length,
+            dncBlocked: filteredData.dncBlocked,
+            duplicatesRemoved: filteredData.duplicatesRemoved,
+            sent: 0,
+            opened: 0,
+            clicked: 0,
+            converted: 0,
+            createdAt: new Date().toISOString(),
+            scheduledAt: campaignData.scheduleType === 'scheduled'
+              ? `${campaignData.scheduleDate}T${campaignData.scheduleTime}:00`
               : new Date().toISOString(),
             advancedScheduling: campaignData.advancedScheduling.enabled ? {
               enabled: true,
@@ -518,17 +522,17 @@ const Upload = () => {
             }
           };
         });
-        
+
         setActiveCampaigns([...newCampaigns, ...activeCampaigns]);
         setCampaignDialog(false);
       }
-      
+
       // Show success message with filtering details
       if (isEditMode) {
-        const scheduleText = campaignData.advancedScheduling.enabled 
+        const scheduleText = campaignData.advancedScheduling.enabled
           ? ` with ${campaignData.advancedScheduling.intervals.filter(i => i.enabled).length} scheduled intervals`
           : '';
-        
+
         let filteringSummary = '';
         if (filteredData.dncBlocked > 0 || filteredData.duplicatesRemoved > 0) {
           const filterDetails = [];
@@ -540,9 +544,9 @@ const Upload = () => {
           }
           filteringSummary = ` (${filterDetails.join(', ')})`;
         }
-        
+
         const fileUpdateText = editModeFile ? ` with new file (${editModeFile.name})` : '';
-        
+
         setUploadStatus({
           type: 'success',
           message: `Campaign updated successfully! (${campaignData.type.join(', ').toUpperCase()})${scheduleText}${filteringSummary}${fileUpdateText}`
@@ -550,10 +554,10 @@ const Upload = () => {
       } else {
         const campaignCount = campaignData.type.length;
         const campaignText = campaignCount > 1 ? `${campaignCount} campaigns` : 'campaign';
-        const scheduleText = campaignData.advancedScheduling.enabled 
+        const scheduleText = campaignData.advancedScheduling.enabled
           ? ` with ${campaignData.advancedScheduling.intervals.filter(i => i.enabled).length} scheduled intervals`
           : '';
-        
+
         let filteringSummary = '';
         if (filteredData.dncBlocked > 0 || filteredData.duplicatesRemoved > 0) {
           const filterDetails = [];
@@ -565,13 +569,13 @@ const Upload = () => {
           }
           filteringSummary = ` (${filterDetails.join(', ')})`;
         }
-        
+
         setUploadStatus({
           type: 'success',
           message: `${campaignText} created successfully! (${campaignData.type.join(', ').toUpperCase()})${scheduleText}${filteringSummary}`
         });
       }
-      
+
       // Clear the success message after 5 seconds
       setTimeout(() => {
         setUploadStatus(null);
@@ -588,13 +592,19 @@ const Upload = () => {
   };
 
   const handleCampaignAction = (campaignId, action) => {
-    setActiveCampaigns(prev => 
-      prev.map(campaign => 
-        campaign.id === campaignId 
+    setActiveCampaigns(prev =>
+      prev.map(campaign =>
+        campaign.id === campaignId
           ? { ...campaign, status: action === 'pause' ? 'paused' : 'active' }
           : campaign
       )
     );
+  };
+
+  // Handle View Campaign Details
+  const handleViewCampaignDetails = (campaign) => {
+    setSelectedCampaign(campaign);
+    setCampaignDetailsDialog(true);
   };
 
   const getCampaignIcon = (type) => {
@@ -667,14 +677,14 @@ const Upload = () => {
             Change Campaign
           </Button>
         </Box>
-        
-                <Grid container spacing={3}>
+
+        <Grid container spacing={3}>
           <Grid item xs={12} md={6}>
             <Grow in={true} timeout={800}>
-              <Card 
-                elevation={0} 
-                sx={{ 
-                  mb: 3, 
+              <Card
+                elevation={0}
+                sx={{
+                  mb: 3,
                   borderRadius: 3,
                   boxShadow: '0 8px 32px rgba(0,0,0,0.1)',
                   overflow: 'visible',
@@ -685,18 +695,18 @@ const Upload = () => {
                   <Typography variant="h6" gutterBottom sx={{ fontWeight: 600, mb: 2 }}>
                     Upload New File
                   </Typography>
-                  
+
                   <Box sx={{ mb: 4 }}>
                     <Typography variant="body1" color="text.secondary" gutterBottom>
                       Upload cases using our template format. Only Excel (.xlsx) or CSV files are supported.
                     </Typography>
-                    
-                    <Button 
-                      variant="outlined" 
+
+                    <Button
+                      variant="outlined"
                       startIcon={<DownloadIcon />}
                       onClick={handleDownloadTemplate}
-                      sx={{ 
-                        mt: 2, 
+                      sx={{
+                        mt: 2,
                         borderRadius: 2,
                         transition: 'all 0.2s',
                         '&:hover': {
@@ -708,12 +718,12 @@ const Upload = () => {
                       Download Template
                     </Button>
                   </Box>
-                  
-                  <Box 
-                    sx={{ 
+
+                  <Box
+                    sx={{
                       border: `2px dashed ${theme.palette.mode === 'dark' ? alpha(theme.palette.primary.main, 0.3) : alpha(theme.palette.primary.main, 0.2)}`,
-                      borderRadius: 3, 
-                      p: 4, 
+                      borderRadius: 3,
+                      p: 4,
                       textAlign: 'center',
                       mb: 3,
                       backgroundColor: theme.palette.mode === 'dark' ? alpha(theme.palette.primary.main, 0.05) : alpha(theme.palette.primary.main, 0.03),
@@ -739,13 +749,13 @@ const Upload = () => {
                     />
                     <label htmlFor="upload-file-button">
                       <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                        <UploadIcon 
-                          sx={{ 
-                            fontSize: 60, 
+                        <UploadIcon
+                          sx={{
+                            fontSize: 60,
                             color: theme.palette.primary.main,
                             opacity: 0.7,
                             mb: 2
-                          }} 
+                          }}
                         />
                         <Button
                           variant="contained"
@@ -765,19 +775,19 @@ const Upload = () => {
                         >
                           {file ? 'Change File' : 'Select File'}
                         </Button>
-                        
+
                         <Typography variant="body2" sx={{ mt: 2, color: theme.palette.text.secondary }}>
                           Drag and drop or click to select
                         </Typography>
                       </Box>
                     </label>
-                    
+
                     {file && (
                       <Zoom in={Boolean(file)}>
-                        <Box sx={{ 
-                          mt: 3, 
-                          p: 2, 
-                          borderRadius: 2, 
+                        <Box sx={{
+                          mt: 3,
+                          p: 2,
+                          borderRadius: 2,
                           backgroundColor: theme.palette.mode === 'dark' ? alpha(theme.palette.background.paper, 0.6) : alpha(theme.palette.background.paper, 0.8),
                           border: `1px solid ${theme.palette.divider}`
                         }}>
@@ -791,12 +801,12 @@ const Upload = () => {
                       </Zoom>
                     )}
                   </Box>
-                  
+
                   {file && !uploading && (
                     <Fade in={Boolean(file && !uploading)}>
-                      <Button 
-                        variant="contained" 
-                        color="primary" 
+                      <Button
+                        variant="contained"
+                        color="primary"
                         onClick={handleUpload}
                         fullWidth
                         size="large"
@@ -815,12 +825,12 @@ const Upload = () => {
                       </Button>
                     </Fade>
                   )}
-                  
+
                   {uploading && (
                     <Box sx={{ width: '100%', mt: 2 }}>
-                      <LinearProgress 
-                        variant="determinate" 
-                        value={uploadProgress} 
+                      <LinearProgress
+                        variant="determinate"
+                        value={uploadProgress}
                         sx={{
                           height: 8,
                           borderRadius: 4,
@@ -835,12 +845,12 @@ const Upload = () => {
                       </Typography>
                     </Box>
                   )}
-                  
+
                   {uploadStatus && (
                     <Grow in={Boolean(uploadStatus)}>
-                      <Alert 
-                        severity={uploadStatus.type} 
-                        sx={{ 
+                      <Alert
+                        severity={uploadStatus.type}
+                        sx={{
                           mt: 3,
                           borderRadius: 2,
                           boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
@@ -856,12 +866,12 @@ const Upload = () => {
               </Card>
             </Grow>
           </Grid>
-          
+
           <Grid item xs={12} md={6}>
             <Grow in={true} timeout={1000}>
-              <Card 
+              <Card
                 elevation={0}
-                sx={{ 
+                sx={{
                   borderRadius: 3,
                   boxShadow: '0 8px 32px rgba(0,0,0,0.1)'
                 }}
@@ -870,9 +880,9 @@ const Upload = () => {
                   <Typography variant="h6" gutterBottom sx={{ fontWeight: 600, mb: 3 }}>
                     Recent Uploads ({uploadHistory.length})
                   </Typography>
-                  
-                  <Box sx={{ 
-                    flex: 1, 
+
+                  <Box sx={{
+                    flex: 1,
                     overflow: 'auto',
                     pr: 1,
                     '&::-webkit-scrollbar': {
@@ -895,8 +905,8 @@ const Upload = () => {
                         <Grow key={upload.id} in={true} timeout={(index + 1) * 200}>
                           <Box>
                             {index > 0 && <Divider sx={{ my: 2 }} />}
-                            <ListItem 
-                              alignItems="flex-start" 
+                            <ListItem
+                              alignItems="flex-start"
                               disableGutters
                               sx={{ px: 1 }}
                             >
@@ -946,12 +956,12 @@ const Upload = () => {
                                           <FileDownloadIcon fontSize="small" />
                                         </IconButton>
                                       </Tooltip>
-                                      <Chip 
-                                        label={upload.status} 
+                                      <Chip
+                                        label={upload.status}
                                         color={getStatusColor(upload.status)}
                                         size="small"
                                         icon={getStatusIcon(upload.status)}
-                                        sx={{ 
+                                        sx={{
                                           fontWeight: 500,
                                           '& .MuiChip-icon': { fontSize: '0.8rem' }
                                         }}
@@ -964,10 +974,10 @@ const Upload = () => {
                                     <Typography component="span" variant="body2" color="text.secondary" sx={{ display: 'block', mb: 1 }}>
                                       {new Date(upload.timestamp).toLocaleString()}
                                     </Typography>
-                                    <Box sx={{ 
-                                      mt: 1, 
-                                      p: 1.5, 
-                                      borderRadius: 2, 
+                                    <Box sx={{
+                                      mt: 1,
+                                      p: 1.5,
+                                      borderRadius: 2,
                                       backgroundColor: theme.palette.mode === 'dark' ? alpha(theme.palette.background.paper, 0.4) : alpha(theme.palette.background.default, 0.8),
                                       border: `1px solid ${theme.palette.divider}`
                                     }}>
@@ -1011,12 +1021,12 @@ const Upload = () => {
               </Card>
             </Grow>
           </Grid>
-          
+
           <Grid item xs={12}>
             <Grow in={true} timeout={1200}>
-              <Card 
+              <Card
                 elevation={0}
-                sx={{ 
+                sx={{
                   borderRadius: 3,
                   boxShadow: '0 8px 32px rgba(0,0,0,0.1)'
                 }}
@@ -1025,9 +1035,9 @@ const Upload = () => {
                   <Typography variant="h6" gutterBottom sx={{ fontWeight: 600, mb: 3 }}>
                     Active Campaigns ({activeCampaigns.length})
                   </Typography>
-                  
-                  <Box sx={{ 
-                    flex: 1, 
+
+                  <Box sx={{
+                    flex: 1,
                     overflow: 'auto',
                     pr: 1,
                     '&::-webkit-scrollbar': {
@@ -1046,10 +1056,10 @@ const Upload = () => {
                     }
                   }}>
                     {activeCampaigns.length === 0 ? (
-                      <Box sx={{ 
-                        display: 'flex', 
-                        flexDirection: 'column', 
-                        alignItems: 'center', 
+                      <Box sx={{
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center',
                         justifyContent: 'center',
                         height: '100%',
                         textAlign: 'center'
@@ -1068,8 +1078,8 @@ const Upload = () => {
                           <Grow key={campaign.id} in={true} timeout={(index + 1) * 200}>
                             <Box>
                               {index > 0 && <Divider sx={{ my: 2 }} />}
-                              <ListItem 
-                                alignItems="flex-start" 
+                              <ListItem
+                                alignItems="flex-start"
                                 disableGutters
                                 sx={{ px: 1 }}
                               >
@@ -1078,11 +1088,11 @@ const Upload = () => {
                                     <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
                                       <Box sx={{ flex: 1, mr: 2 }}>
                                         <Box sx={{ display: 'flex', alignItems: 'center', mb: 0.5 }}>
-                                          <Avatar sx={{ 
-                                            width: 24, 
-                                            height: 24, 
-                                            mr: 1, 
-                                            bgcolor: theme.palette.primary.main 
+                                          <Avatar sx={{
+                                            width: 24,
+                                            height: 24,
+                                            mr: 1,
+                                            bgcolor: theme.palette.primary.main
                                           }}>
                                             {getCampaignIcon(campaign.type)}
                                           </Avatar>
@@ -1119,16 +1129,17 @@ const Upload = () => {
                                         <Tooltip title="View Details">
                                           <IconButton
                                             size="small"
+                                            onClick={() => handleViewCampaignDetails(campaign)}
                                             sx={{ color: theme.palette.primary.main }}
                                           >
                                             <ViewIcon fontSize="small" />
                                           </IconButton>
                                         </Tooltip>
-                                        <Chip 
-                                          label={campaign.status} 
+                                        <Chip
+                                          label={campaign.status}
                                           color={getCampaignStatusColor(campaign.status)}
                                           size="small"
-                                          sx={{ 
+                                          sx={{
                                             fontWeight: 500,
                                             textTransform: 'capitalize'
                                           }}
@@ -1141,10 +1152,10 @@ const Upload = () => {
                                       <Typography component="span" variant="body2" color="text.secondary" sx={{ display: 'block', mb: 1 }}>
                                         Created: {new Date(campaign.createdAt).toLocaleDateString()}
                                       </Typography>
-                                      <Box sx={{ 
-                                        mt: 1, 
-                                        p: 1.5, 
-                                        borderRadius: 2, 
+                                      <Box sx={{
+                                        mt: 1,
+                                        p: 1.5,
+                                        borderRadius: 2,
                                         backgroundColor: theme.palette.mode === 'dark' ? alpha(theme.palette.background.paper, 0.4) : alpha(theme.palette.background.default, 0.8),
                                         border: `1px solid ${theme.palette.divider}`
                                       }}>
@@ -1257,7 +1268,7 @@ const Upload = () => {
               </IconButton>
             </Box>
           </DialogTitle>
-          
+
           <DialogContent sx={{ pt: 2 }}>
             <Stepper activeStep={activeStep} orientation="vertical">
               <Step>
@@ -1272,12 +1283,12 @@ const Upload = () => {
                       <Typography variant="body2" color="text.secondary" gutterBottom>
                         Upload a new file to replace the current campaign data, or keep the existing file
                       </Typography>
-                      
-                      <Box 
-                        sx={{ 
+
+                      <Box
+                        sx={{
                           border: `2px dashed ${theme.palette.mode === 'dark' ? alpha(theme.palette.primary.main, 0.3) : alpha(theme.palette.primary.main, 0.2)}`,
-                          borderRadius: 2, 
-                          p: 3, 
+                          borderRadius: 2,
+                          p: 3,
                           textAlign: 'center',
                           mt: 2,
                           backgroundColor: theme.palette.mode === 'dark' ? alpha(theme.palette.primary.main, 0.05) : alpha(theme.palette.primary.main, 0.03),
@@ -1302,13 +1313,13 @@ const Upload = () => {
                         />
                         <label htmlFor="campaign-upload-file-button">
                           <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                            <UploadIcon 
-                              sx={{ 
-                                fontSize: 40, 
+                            <UploadIcon
+                              sx={{
+                                fontSize: 40,
                                 color: theme.palette.primary.main,
                                 opacity: 0.7,
                                 mb: 1
-                              }} 
+                              }}
                             />
                             <Button
                               variant="outlined"
@@ -1323,19 +1334,19 @@ const Upload = () => {
                             >
                               {editModeFile ? 'Change File' : 'Select New File'}
                             </Button>
-                            
+
                             <Typography variant="body2" sx={{ mt: 1, color: theme.palette.text.secondary }}>
                               Upload new data file
                             </Typography>
                           </Box>
                         </label>
-                        
+
                         {editModeFile && (
                           <Zoom in={Boolean(editModeFile)}>
-                            <Box sx={{ 
-                              mt: 2, 
-                              p: 1.5, 
-                              borderRadius: 2, 
+                            <Box sx={{
+                              mt: 2,
+                              p: 1.5,
+                              borderRadius: 2,
                               backgroundColor: theme.palette.mode === 'dark' ? alpha(theme.palette.background.paper, 0.6) : alpha(theme.palette.background.paper, 0.8),
                               border: `1px solid ${theme.palette.divider}`
                             }}>
@@ -1362,71 +1373,71 @@ const Upload = () => {
                         required
                       />
                     </Grid>
-                                         <Grid item xs={12} sm={6}>
-                       <FormControl fullWidth>
-                         <InputLabel>Campaign Channel</InputLabel>
-                         <Select
-                           multiple
-                           value={campaignData.type}
-                           label="Campaign Channel"
-                           onChange={(e) => setCampaignData(prev => ({ ...prev, type: e.target.value, template: {} }))}
-                           renderValue={(selected) => (
-                             <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-                               {selected.map((value) => (
-                                 <Chip 
-                                   key={value} 
-                                   label={value === 'bot-calling' ? 'Bot Calling' : value.charAt(0).toUpperCase() + value.slice(1)}
-                                   size="small"
-                                   icon={
-                                     value === 'email' ? <EmailIcon fontSize="small" /> :
-                                     value === 'whatsapp' ? <WhatsAppIcon fontSize="small" /> :
-                                     value === 'sms' ? <SmsIcon fontSize="small" /> :
-                                     value === 'call' ? <PhoneIcon fontSize="small" /> :
-                                     value === 'bot-calling' ? <PhoneIcon fontSize="small" /> :
-                                     <PhoneIcon fontSize="small" />
-                                   }
-                                   sx={{ 
-                                     height: 24,
-                                     '& .MuiChip-icon': { fontSize: '0.8rem' }
-                                   }}
-                                 />
-                               ))}
-                             </Box>
-                           )}
-                         >
-                           <MenuItem value="email">
-                             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                               <EmailIcon fontSize="small" />
-                               Email Campaign
-                             </Box>
-                           </MenuItem>
-                           <MenuItem value="whatsapp">
-                             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                               <WhatsAppIcon fontSize="small" />
-                               WhatsApp Campaign
-                             </Box>
-                           </MenuItem>
-                           <MenuItem value="sms">
-                             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                               <SmsIcon fontSize="small" />
-                               SMS Campaign
-                             </Box>
-                           </MenuItem>
-                           <MenuItem value="call">
-                             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                               <PhoneIcon fontSize="small" />
-                               Call Campaign
-                             </Box>
-                           </MenuItem>
-                           <MenuItem value="bot-calling">
-                             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                               <PhoneIcon fontSize="small" />
-                               Bot Calling
-                             </Box>
-                           </MenuItem>
-                         </Select>
-                       </FormControl>
-                     </Grid>
+                    <Grid item xs={12} sm={6}>
+                      <FormControl fullWidth>
+                        <InputLabel>Campaign Channel</InputLabel>
+                        <Select
+                          multiple
+                          value={campaignData.type}
+                          label="Campaign Channel"
+                          onChange={(e) => setCampaignData(prev => ({ ...prev, type: e.target.value, template: {} }))}
+                          renderValue={(selected) => (
+                            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                              {selected.map((value) => (
+                                <Chip
+                                  key={value}
+                                  label={value === 'bot-calling' ? 'Bot Calling' : value.charAt(0).toUpperCase() + value.slice(1)}
+                                  size="small"
+                                  icon={
+                                    value === 'email' ? <EmailIcon fontSize="small" /> :
+                                      value === 'whatsapp' ? <WhatsAppIcon fontSize="small" /> :
+                                        value === 'sms' ? <SmsIcon fontSize="small" /> :
+                                          value === 'call' ? <PhoneIcon fontSize="small" /> :
+                                            value === 'bot-calling' ? <PhoneIcon fontSize="small" /> :
+                                              <PhoneIcon fontSize="small" />
+                                  }
+                                  sx={{
+                                    height: 24,
+                                    '& .MuiChip-icon': { fontSize: '0.8rem' }
+                                  }}
+                                />
+                              ))}
+                            </Box>
+                          )}
+                        >
+                          <MenuItem value="email">
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                              <EmailIcon fontSize="small" />
+                              Email Campaign
+                            </Box>
+                          </MenuItem>
+                          <MenuItem value="whatsapp">
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                              <WhatsAppIcon fontSize="small" />
+                              WhatsApp Campaign
+                            </Box>
+                          </MenuItem>
+                          <MenuItem value="sms">
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                              <SmsIcon fontSize="small" />
+                              SMS Campaign
+                            </Box>
+                          </MenuItem>
+                          <MenuItem value="call">
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                              <PhoneIcon fontSize="small" />
+                              Call Campaign
+                            </Box>
+                          </MenuItem>
+                          <MenuItem value="bot-calling">
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                              <PhoneIcon fontSize="small" />
+                              Bot Calling
+                            </Box>
+                          </MenuItem>
+                        </Select>
+                      </FormControl>
+                    </Grid>
                     <Grid item xs={12} sm={6}>
                       <FormControl fullWidth>
                         <InputLabel>Target Audience</InputLabel>
@@ -1452,12 +1463,12 @@ const Upload = () => {
                       <Typography variant="body2" color="text.secondary" gutterBottom>
                         Choose specific providers for each communication channel
                       </Typography>
-                      
+
                       <Grid container spacing={2} sx={{ mt: 1 }}>
                         {campaignData.type.map((channel) => {
                           const availableProviders = getProviders(channel).filter(p => p.isActive);
                           const defaultProvider = getActiveProvider(channel);
-                          
+
                           return (
                             <Grid item xs={12} md={6} key={channel}>
                               <FormControl fullWidth>
@@ -1476,11 +1487,11 @@ const Upload = () => {
                                   {availableProviders.map((provider) => (
                                     <MenuItem key={provider.id} value={provider.id}>
                                       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                        <Box sx={{ 
-                                          width: 8, 
-                                          height: 8, 
-                                          borderRadius: '50%', 
-                                          bgcolor: provider.status === 'connected' ? 'success.main' : 'error.main' 
+                                        <Box sx={{
+                                          width: 8,
+                                          height: 8,
+                                          borderRadius: '50%',
+                                          bgcolor: provider.status === 'connected' ? 'success.main' : 'error.main'
                                         }} />
                                         {provider.name}
                                         {provider.isDefault && (
@@ -1521,97 +1532,97 @@ const Upload = () => {
                   </Box>
                 </StepContent>
               </Step>
-              
+
               <Step>
                 <StepLabel>Template Selection</StepLabel>
                 <StepContent>
-                                     <Typography variant="body2" color="text.secondary" gutterBottom>
-                     {campaignData.type.length > 1 
-                       ? 'Choose templates for each selected campaign type'
-                       : 'Choose from predefined templates or create a custom one'
-                     }
-                   </Typography>
-                   
-                   {campaignData.type.map((type) => (
-                     <Box key={type} sx={{ mt: 3 }}>
-                       <Typography variant="subtitle1" sx={{ fontWeight: 600, mb: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
-                         {type === 'email' && <EmailIcon fontSize="small" />}
-                         {type === 'whatsapp' && <WhatsAppIcon fontSize="small" />}
-                         {type === 'sms' && <SmsIcon fontSize="small" />}
-                         {type === 'call' && <PhoneIcon fontSize="small" />}
-                         {type === 'bot-calling' && <PhoneIcon fontSize="small" />}
-                         {type === 'bot-calling' ? 'Bot Calling' : type.charAt(0).toUpperCase() + type.slice(1)} Template
-                       </Typography>
-                       
-                       <FormControl fullWidth>
-                         <InputLabel>Select {type === 'bot-calling' ? 'Bot Calling' : type.charAt(0).toUpperCase() + type.slice(1)} Template</InputLabel>
-                         <Select
-                           value={campaignData.template[type] || ''}
-                           label={`Select ${type === 'bot-calling' ? 'Bot Calling' : type.charAt(0).toUpperCase() + type.slice(1)} Template`}
-                           onChange={(e) => setCampaignData(prev => ({ 
-                             ...prev, 
-                             template: { ...prev.template, [type]: e.target.value }
-                           }))}
-                         >
-                           {templates[type]?.map((template) => (
-                             <MenuItem key={template.id} value={template.id}>
-                               <Box>
-                                 <Typography variant="body1">{template.name}</Typography>
-                                 <Typography variant="caption" color="text.secondary">
-                                   {template.subject || template.script || template.content.substring(0, 50) + '...'}
-                                 </Typography>
-                               </Box>
-                             </MenuItem>
-                           ))}
-                         </Select>
-                       </FormControl>
-                       
-                       {campaignData.template[type] && (
-                         <Box sx={{ 
-                           mt: 2, 
-                           p: 2, 
-                           borderRadius: 2, 
-                           backgroundColor: theme.palette.mode === 'dark' ? alpha(theme.palette.background.paper, 0.4) : alpha(theme.palette.background.default, 0.8),
-                           border: `1px solid ${theme.palette.divider}`
-                         }}>
-                           <Typography variant="subtitle2" gutterBottom sx={{ fontWeight: 600 }}>
-                             Template Preview:
-                           </Typography>
-                           {(() => {
-                             const template = templates[type]?.find(t => t.id === campaignData.template[type]);
-                             return (
-                               <Box>
-                                 {template?.subject && (
-                                   <Typography variant="body2" sx={{ fontWeight: 500, mb: 1 }}>
-                                     Subject: {template.subject}
-                                   </Typography>
-                                 )}
-                                 <Typography variant="body2" color="text.secondary">
-                                   {template?.content}
-                                 </Typography>
-                               </Box>
-                             );
-                           })()}
-                         </Box>
-                       )}
-                     </Box>
-                   ))}
-                  
+                  <Typography variant="body2" color="text.secondary" gutterBottom>
+                    {campaignData.type.length > 1
+                      ? 'Choose templates for each selected campaign type'
+                      : 'Choose from predefined templates or create a custom one'
+                    }
+                  </Typography>
+
+                  {campaignData.type.map((type) => (
+                    <Box key={type} sx={{ mt: 3 }}>
+                      <Typography variant="subtitle1" sx={{ fontWeight: 600, mb: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
+                        {type === 'email' && <EmailIcon fontSize="small" />}
+                        {type === 'whatsapp' && <WhatsAppIcon fontSize="small" />}
+                        {type === 'sms' && <SmsIcon fontSize="small" />}
+                        {type === 'call' && <PhoneIcon fontSize="small" />}
+                        {type === 'bot-calling' && <PhoneIcon fontSize="small" />}
+                        {type === 'bot-calling' ? 'Bot Calling' : type.charAt(0).toUpperCase() + type.slice(1)} Template
+                      </Typography>
+
+                      <FormControl fullWidth>
+                        <InputLabel>Select {type === 'bot-calling' ? 'Bot Calling' : type.charAt(0).toUpperCase() + type.slice(1)} Template</InputLabel>
+                        <Select
+                          value={campaignData.template[type] || ''}
+                          label={`Select ${type === 'bot-calling' ? 'Bot Calling' : type.charAt(0).toUpperCase() + type.slice(1)} Template`}
+                          onChange={(e) => setCampaignData(prev => ({
+                            ...prev,
+                            template: { ...prev.template, [type]: e.target.value }
+                          }))}
+                        >
+                          {templates[type]?.map((template) => (
+                            <MenuItem key={template.id} value={template.id}>
+                              <Box>
+                                <Typography variant="body1">{template.name}</Typography>
+                                <Typography variant="caption" color="text.secondary">
+                                  {template.subject || template.script || template.content.substring(0, 50) + '...'}
+                                </Typography>
+                              </Box>
+                            </MenuItem>
+                          ))}
+                        </Select>
+                      </FormControl>
+
+                      {campaignData.template[type] && (
+                        <Box sx={{
+                          mt: 2,
+                          p: 2,
+                          borderRadius: 2,
+                          backgroundColor: theme.palette.mode === 'dark' ? alpha(theme.palette.background.paper, 0.4) : alpha(theme.palette.background.default, 0.8),
+                          border: `1px solid ${theme.palette.divider}`
+                        }}>
+                          <Typography variant="subtitle2" gutterBottom sx={{ fontWeight: 600 }}>
+                            Template Preview:
+                          </Typography>
+                          {(() => {
+                            const template = templates[type]?.find(t => t.id === campaignData.template[type]);
+                            return (
+                              <Box>
+                                {template?.subject && (
+                                  <Typography variant="body2" sx={{ fontWeight: 500, mb: 1 }}>
+                                    Subject: {template.subject}
+                                  </Typography>
+                                )}
+                                <Typography variant="body2" color="text.secondary">
+                                  {template?.content}
+                                </Typography>
+                              </Box>
+                            );
+                          })()}
+                        </Box>
+                      )}
+                    </Box>
+                  ))}
+
                   <Box sx={{ mt: 2, display: 'flex', gap: 1 }}>
                     <Button onClick={() => setActiveStep(0)}>
                       Back
                     </Button>
-                                         <Button
-                       variant="contained"
-                       onClick={() => setActiveStep(2)}
-                       disabled={!campaignData.type.every(type => campaignData.template[type])}
-                     >
-                       Next: Basic Schedule
-                     </Button>
+                    <Button
+                      variant="contained"
+                      onClick={() => setActiveStep(2)}
+                      disabled={!campaignData.type.every(type => campaignData.template[type])}
+                    >
+                      Next: Basic Schedule
+                    </Button>
                   </Box>
                 </StepContent>
               </Step>
-              
+
               <Step>
                 <StepLabel>Basic Schedule</StepLabel>
                 <StepContent>
@@ -1636,7 +1647,7 @@ const Upload = () => {
                       </MenuItem>
                     </Select>
                   </FormControl>
-                  
+
                   {campaignData.scheduleType === 'scheduled' && (
                     <Grid container spacing={2} sx={{ mb: 2 }}>
                       <Grid item xs={6}>
@@ -1667,8 +1678,8 @@ const Upload = () => {
                     control={
                       <Switch
                         checked={campaignData.advancedScheduling.enabled}
-                        onChange={(e) => setCampaignData(prev => ({ 
-                          ...prev, 
+                        onChange={(e) => setCampaignData(prev => ({
+                          ...prev,
                           advancedScheduling: { ...prev.advancedScheduling, enabled: e.target.checked }
                         }))}
                       />
@@ -1692,7 +1703,7 @@ const Upload = () => {
                       </Typography>
                     </Alert>
                   )}
-                  
+
                   <Box sx={{ mt: 2, display: 'flex', gap: 1 }}>
                     <Button onClick={() => setActiveStep(1)}>
                       Back
@@ -1706,13 +1717,13 @@ const Upload = () => {
                         Next: Advanced Schedule
                       </Button>
                     ) : (
-                    <Button
-                      variant="contained"
-                      onClick={handleCampaignSubmit}
-                      disabled={campaignData.scheduleType === 'scheduled' && (!campaignData.scheduleDate || !campaignData.scheduleTime)}
-                    >
-                      {isEditMode ? 'Update Campaign' : 'Create Campaign'}
-                    </Button>
+                      <Button
+                        variant="contained"
+                        onClick={handleCampaignSubmit}
+                        disabled={campaignData.scheduleType === 'scheduled' && (!campaignData.scheduleDate || !campaignData.scheduleTime)}
+                      >
+                        {isEditMode ? 'Update Campaign' : 'Create Campaign'}
+                      </Button>
                     )}
                   </Box>
                 </StepContent>
@@ -1759,7 +1770,7 @@ const Upload = () => {
                         }}
                       >
                         Add Interval
-            </Button>
+                      </Button>
                     </Box>
 
                     {campaignData.advancedScheduling.intervals.length === 0 ? (
@@ -1775,14 +1786,14 @@ const Upload = () => {
                           <Accordion key={interval.id} defaultExpanded={index === 0}>
                             <AccordionSummary expandIcon={<ExpandMoreIcon />}>
                               <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, width: '100%' }}>
-                                <Avatar sx={{ 
-                                  width: 32, 
-                                  height: 32, 
-                                  bgcolor: interval.channel === 'email' ? '#1976d2' : 
-                                           interval.channel === 'whatsapp' ? '#25d366' : 
-                                           interval.channel === 'sms' ? '#ff9800' : 
-                                           interval.channel === 'call' ? '#9c27b0' : 
-                                           interval.channel === 'bot-calling' ? '#673ab7' : '#9c27b0'
+                                <Avatar sx={{
+                                  width: 32,
+                                  height: 32,
+                                  bgcolor: interval.channel === 'email' ? '#1976d2' :
+                                    interval.channel === 'whatsapp' ? '#25d366' :
+                                      interval.channel === 'sms' ? '#ff9800' :
+                                        interval.channel === 'call' ? '#9c27b0' :
+                                          interval.channel === 'bot-calling' ? '#673ab7' : '#9c27b0'
                                 }}>
                                   {interval.channel === 'email' && <EmailIcon fontSize="small" />}
                                   {interval.channel === 'whatsapp' && <WhatsAppIcon fontSize="small" />}
@@ -1792,7 +1803,7 @@ const Upload = () => {
                                 </Avatar>
                                 <Box sx={{ flex: 1 }}>
                                   <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
-                                    {interval.channel === 'bot-calling' ? 'Bot Calling' : interval.channel.charAt(0).toUpperCase() + interval.channel.slice(1)} - 
+                                    {interval.channel === 'bot-calling' ? 'Bot Calling' : interval.channel.charAt(0).toUpperCase() + interval.channel.slice(1)} -
                                     After {interval.delay} {interval.delayUnit}
                                   </Typography>
                                   <Typography variant="caption" color="text.secondary">
@@ -1804,7 +1815,7 @@ const Upload = () => {
                                     <Switch
                                       checked={interval.enabled}
                                       onChange={(e) => {
-                                        const updatedIntervals = campaignData.advancedScheduling.intervals.map(int => 
+                                        const updatedIntervals = campaignData.advancedScheduling.intervals.map(int =>
                                           int.id === interval.id ? { ...int, enabled: e.target.checked } : int
                                         );
                                         setCampaignData(prev => ({
@@ -1832,7 +1843,7 @@ const Upload = () => {
                                       value={interval.channel}
                                       label="Channel"
                                       onChange={(e) => {
-                                        const updatedIntervals = campaignData.advancedScheduling.intervals.map(int => 
+                                        const updatedIntervals = campaignData.advancedScheduling.intervals.map(int =>
                                           int.id === interval.id ? { ...int, channel: e.target.value, template: '' } : int
                                         );
                                         setCampaignData(prev => ({
@@ -1884,7 +1895,7 @@ const Upload = () => {
                                       type="number"
                                       value={interval.delay}
                                       onChange={(e) => {
-                                        const updatedIntervals = campaignData.advancedScheduling.intervals.map(int => 
+                                        const updatedIntervals = campaignData.advancedScheduling.intervals.map(int =>
                                           int.id === interval.id ? { ...int, delay: parseInt(e.target.value) || 1 } : int
                                         );
                                         setCampaignData(prev => ({
@@ -1904,7 +1915,7 @@ const Upload = () => {
                                         value={interval.delayUnit}
                                         label="Unit"
                                         onChange={(e) => {
-                                          const updatedIntervals = campaignData.advancedScheduling.intervals.map(int => 
+                                          const updatedIntervals = campaignData.advancedScheduling.intervals.map(int =>
                                             int.id === interval.id ? { ...int, delayUnit: e.target.value } : int
                                           );
                                           setCampaignData(prev => ({
@@ -1931,7 +1942,7 @@ const Upload = () => {
                                       value={interval.template}
                                       label="Template"
                                       onChange={(e) => {
-                                        const updatedIntervals = campaignData.advancedScheduling.intervals.map(int => 
+                                        const updatedIntervals = campaignData.advancedScheduling.intervals.map(int =>
                                           int.id === interval.id ? { ...int, template: e.target.value } : int
                                         );
                                         setCampaignData(prev => ({
@@ -1961,9 +1972,9 @@ const Upload = () => {
                                         <Checkbox
                                           checked={interval.conditions.sendIfNoResponse}
                                           onChange={(e) => {
-                                            const updatedIntervals = campaignData.advancedScheduling.intervals.map(int => 
-                                              int.id === interval.id ? { 
-                                                ...int, 
+                                            const updatedIntervals = campaignData.advancedScheduling.intervals.map(int =>
+                                              int.id === interval.id ? {
+                                                ...int,
                                                 conditions: { ...int.conditions, sendIfNoResponse: e.target.checked }
                                               } : int
                                             );
@@ -1984,9 +1995,9 @@ const Upload = () => {
                                         <Checkbox
                                           checked={interval.conditions.sendIfNoAction}
                                           onChange={(e) => {
-                                            const updatedIntervals = campaignData.advancedScheduling.intervals.map(int => 
-                                              int.id === interval.id ? { 
-                                                ...int, 
+                                            const updatedIntervals = campaignData.advancedScheduling.intervals.map(int =>
+                                              int.id === interval.id ? {
+                                                ...int,
                                                 conditions: { ...int.conditions, sendIfNoAction: e.target.checked }
                                               } : int
                                             );
@@ -2038,8 +2049,8 @@ const Upload = () => {
                     <Button
                       variant="contained"
                       onClick={handleCampaignSubmit}
-                      disabled={campaignData.advancedScheduling.intervals.length === 0 || 
-                               campaignData.advancedScheduling.intervals.some(int => int.enabled && !int.template)}
+                      disabled={campaignData.advancedScheduling.intervals.length === 0 ||
+                        campaignData.advancedScheduling.intervals.some(int => int.enabled && !int.template)}
                     >
                       {isEditMode ? 'Update Advanced Campaign' : 'Create Advanced Campaign'}
                     </Button>
@@ -2048,6 +2059,266 @@ const Upload = () => {
               </Step>
             </Stepper>
           </DialogContent>
+        </Dialog>
+
+        {/* Campaign Details Dialog */}
+        <Dialog
+          open={campaignDetailsDialog}
+          onClose={() => setCampaignDetailsDialog(false)}
+          maxWidth="md"
+          fullWidth
+          PaperProps={{ sx: { borderRadius: 3 } }}
+        >
+          {selectedCampaign && (
+            <>
+              <DialogTitle sx={{ pb: 1 }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                  <Avatar sx={{ bgcolor: theme.palette.primary.main }}>
+                    {getCampaignIcon(selectedCampaign.type)}
+                  </Avatar>
+                  <Box sx={{ flex: 1 }}>
+                    <Typography variant="h6" sx={{ fontWeight: 600 }}>
+                      {selectedCampaign.name}
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary">
+                      Campaign Details
+                    </Typography>
+                  </Box>
+                  <Chip
+                    label={selectedCampaign.status}
+                    color={getCampaignStatusColor(selectedCampaign.status)}
+                    sx={{ textTransform: 'capitalize' }}
+                  />
+                  <IconButton onClick={() => setCampaignDetailsDialog(false)}>
+                    <CloseIcon />
+                  </IconButton>
+                </Box>
+              </DialogTitle>
+              <DialogContent dividers>
+                <Grid container spacing={3}>
+                  {/* Campaign Overview */}
+                  <Grid item xs={12}>
+                    <Typography variant="subtitle1" fontWeight="600" gutterBottom>
+                      Campaign Overview
+                    </Typography>
+                    <Paper variant="outlined" sx={{ p: 2, borderRadius: 2 }}>
+                      <Grid container spacing={2}>
+                        <Grid item xs={6} sm={3}>
+                          <Typography variant="caption" color="text.secondary">Campaign Type</Typography>
+                          <Typography variant="body1" fontWeight="500" sx={{ textTransform: 'capitalize' }}>
+                            {selectedCampaign.type}
+                          </Typography>
+                        </Grid>
+                        <Grid item xs={6} sm={3}>
+                          <Typography variant="caption" color="text.secondary">Source File</Typography>
+                          <Typography variant="body1" fontWeight="500">
+                            {selectedCampaign.uploadFilename}
+                          </Typography>
+                        </Grid>
+                        <Grid item xs={6} sm={3}>
+                          <Typography variant="caption" color="text.secondary">Created At</Typography>
+                          <Typography variant="body1" fontWeight="500">
+                            {new Date(selectedCampaign.createdAt).toLocaleDateString()}
+                          </Typography>
+                        </Grid>
+                        <Grid item xs={6} sm={3}>
+                          <Typography variant="caption" color="text.secondary">Scheduled At</Typography>
+                          <Typography variant="body1" fontWeight="500">
+                            {selectedCampaign.scheduledAt ? new Date(selectedCampaign.scheduledAt).toLocaleString() : 'Immediate'}
+                          </Typography>
+                        </Grid>
+                      </Grid>
+                    </Paper>
+                  </Grid>
+
+                  {/* Key Metrics */}
+                  <Grid item xs={12}>
+                    <Typography variant="subtitle1" fontWeight="600" gutterBottom>
+                      Performance Metrics
+                    </Typography>
+                    <Grid container spacing={2}>
+                      <Grid item xs={6} sm={3}>
+                        <Card sx={{ textAlign: 'center', p: 2, bgcolor: alpha(theme.palette.info.main, 0.1), borderRadius: 2 }}>
+                          <Typography variant="h4" color="info.main" fontWeight="600">
+                            {selectedCampaign.targetCount || 0}
+                          </Typography>
+                          <Typography variant="caption" color="text.secondary">Target Audience</Typography>
+                        </Card>
+                      </Grid>
+                      <Grid item xs={6} sm={3}>
+                        <Card sx={{ textAlign: 'center', p: 2, bgcolor: alpha(theme.palette.primary.main, 0.1), borderRadius: 2 }}>
+                          <Typography variant="h4" color="primary.main" fontWeight="600">
+                            {selectedCampaign.sent || 0}
+                          </Typography>
+                          <Typography variant="caption" color="text.secondary">Messages Sent</Typography>
+                        </Card>
+                      </Grid>
+                      {selectedCampaign.type === 'email' && (
+                        <>
+                          <Grid item xs={6} sm={3}>
+                            <Card sx={{ textAlign: 'center', p: 2, bgcolor: alpha(theme.palette.success.main, 0.1), borderRadius: 2 }}>
+                              <Typography variant="h4" color="success.main" fontWeight="600">
+                                {selectedCampaign.opened || 0}
+                              </Typography>
+                              <Typography variant="caption" color="text.secondary">Opened</Typography>
+                            </Card>
+                          </Grid>
+                          <Grid item xs={6} sm={3}>
+                            <Card sx={{ textAlign: 'center', p: 2, bgcolor: alpha(theme.palette.warning.main, 0.1), borderRadius: 2 }}>
+                              <Typography variant="h4" color="warning.main" fontWeight="600">
+                                {selectedCampaign.clicked || 0}
+                              </Typography>
+                              <Typography variant="caption" color="text.secondary">Clicked</Typography>
+                            </Card>
+                          </Grid>
+                        </>
+                      )}
+                      {selectedCampaign.type === 'whatsapp' && (
+                        <>
+                          <Grid item xs={6} sm={3}>
+                            <Card sx={{ textAlign: 'center', p: 2, bgcolor: alpha(theme.palette.success.main, 0.1), borderRadius: 2 }}>
+                              <Typography variant="h4" color="success.main" fontWeight="600">
+                                {selectedCampaign.delivered || 0}
+                              </Typography>
+                              <Typography variant="caption" color="text.secondary">Delivered</Typography>
+                            </Card>
+                          </Grid>
+                          <Grid item xs={6} sm={3}>
+                            <Card sx={{ textAlign: 'center', p: 2, bgcolor: alpha(theme.palette.info.main, 0.1), borderRadius: 2 }}>
+                              <Typography variant="h4" color="info.main" fontWeight="600">
+                                {selectedCampaign.read || 0}
+                              </Typography>
+                              <Typography variant="caption" color="text.secondary">Read</Typography>
+                            </Card>
+                          </Grid>
+                        </>
+                      )}
+                    </Grid>
+                  </Grid>
+
+                  {/* Engagement Rates */}
+                  <Grid item xs={12}>
+                    <Typography variant="subtitle1" fontWeight="600" gutterBottom>
+                      Engagement Rates
+                    </Typography>
+                    <Paper variant="outlined" sx={{ p: 2, borderRadius: 2 }}>
+                      <Grid container spacing={2}>
+                        {selectedCampaign.type === 'email' && (
+                          <>
+                            <Grid item xs={4}>
+                              <Box sx={{ textAlign: 'center' }}>
+                                <Typography variant="h5" color="success.main" fontWeight="600">
+                                  {selectedCampaign.sent > 0 ? ((selectedCampaign.opened / selectedCampaign.sent) * 100).toFixed(1) : 0}%
+                                </Typography>
+                                <Typography variant="caption" color="text.secondary">Open Rate</Typography>
+                              </Box>
+                            </Grid>
+                            <Grid item xs={4}>
+                              <Box sx={{ textAlign: 'center' }}>
+                                <Typography variant="h5" color="warning.main" fontWeight="600">
+                                  {selectedCampaign.opened > 0 ? ((selectedCampaign.clicked / selectedCampaign.opened) * 100).toFixed(1) : 0}%
+                                </Typography>
+                                <Typography variant="caption" color="text.secondary">Click-Through Rate</Typography>
+                              </Box>
+                            </Grid>
+                            <Grid item xs={4}>
+                              <Box sx={{ textAlign: 'center' }}>
+                                <Typography variant="h5" color="primary.main" fontWeight="600">
+                                  {selectedCampaign.sent > 0 ? ((selectedCampaign.converted || 0) / selectedCampaign.sent * 100).toFixed(1) : 0}%
+                                </Typography>
+                                <Typography variant="caption" color="text.secondary">Conversion Rate</Typography>
+                              </Box>
+                            </Grid>
+                          </>
+                        )}
+                        {selectedCampaign.type === 'whatsapp' && (
+                          <>
+                            <Grid item xs={4}>
+                              <Box sx={{ textAlign: 'center' }}>
+                                <Typography variant="h5" color="success.main" fontWeight="600">
+                                  {selectedCampaign.sent > 0 ? ((selectedCampaign.delivered / selectedCampaign.sent) * 100).toFixed(1) : 0}%
+                                </Typography>
+                                <Typography variant="caption" color="text.secondary">Delivery Rate</Typography>
+                              </Box>
+                            </Grid>
+                            <Grid item xs={4}>
+                              <Box sx={{ textAlign: 'center' }}>
+                                <Typography variant="h5" color="info.main" fontWeight="600">
+                                  {selectedCampaign.delivered > 0 ? ((selectedCampaign.read / selectedCampaign.delivered) * 100).toFixed(1) : 0}%
+                                </Typography>
+                                <Typography variant="caption" color="text.secondary">Read Rate</Typography>
+                              </Box>
+                            </Grid>
+                            <Grid item xs={4}>
+                              <Box sx={{ textAlign: 'center' }}>
+                                <Typography variant="h5" color="primary.main" fontWeight="600">
+                                  {selectedCampaign.read > 0 ? ((selectedCampaign.replied || 0) / selectedCampaign.read * 100).toFixed(1) : 0}%
+                                </Typography>
+                                <Typography variant="caption" color="text.secondary">Response Rate</Typography>
+                              </Box>
+                            </Grid>
+                          </>
+                        )}
+                      </Grid>
+                    </Paper>
+                  </Grid>
+
+                  {/* Progress */}
+                  <Grid item xs={12}>
+                    <Typography variant="subtitle1" fontWeight="600" gutterBottom>
+                      Campaign Progress
+                    </Typography>
+                    <Box sx={{ mb: 1, display: 'flex', justifyContent: 'space-between' }}>
+                      <Typography variant="body2" color="text.secondary">
+                        {selectedCampaign.sent} of {selectedCampaign.targetCount} messages sent
+                      </Typography>
+                      <Typography variant="body2" color="primary">
+                        {selectedCampaign.targetCount > 0 ? ((selectedCampaign.sent / selectedCampaign.targetCount) * 100).toFixed(1) : 0}%
+                      </Typography>
+                    </Box>
+                    <LinearProgress
+                      variant="determinate"
+                      value={selectedCampaign.targetCount > 0 ? (selectedCampaign.sent / selectedCampaign.targetCount) * 100 : 0}
+                      sx={{ height: 10, borderRadius: 5 }}
+                    />
+                  </Grid>
+                </Grid>
+              </DialogContent>
+              <Box sx={{ p: 2, display: 'flex', justifyContent: 'space-between', borderTop: `1px solid ${theme.palette.divider}` }}>
+                <Box sx={{ display: 'flex', gap: 1 }}>
+                  {selectedCampaign.status === 'active' ? (
+                    <Button
+                      startIcon={<PauseIcon />}
+                      color="warning"
+                      onClick={() => {
+                        handleCampaignAction(selectedCampaign.id, 'pause');
+                        setSelectedCampaign(prev => ({ ...prev, status: 'paused' }));
+                      }}
+                    >
+                      Pause Campaign
+                    </Button>
+                  ) : (
+                    <Button
+                      startIcon={<PlayIcon />}
+                      color="success"
+                      onClick={() => {
+                        handleCampaignAction(selectedCampaign.id, 'resume');
+                        setSelectedCampaign(prev => ({ ...prev, status: 'active' }));
+                      }}
+                    >
+                      Resume Campaign
+                    </Button>
+                  )}
+                </Box>
+                <Button
+                  variant="contained"
+                  onClick={() => setCampaignDetailsDialog(false)}
+                >
+                  Close
+                </Button>
+              </Box>
+            </>
+          )}
         </Dialog>
       </Box>
     </Fade>

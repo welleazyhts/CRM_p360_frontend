@@ -1,6 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Box,
+  CircularProgress,
+  Alert,
   Card,
   CardContent,
   Typography,
@@ -53,9 +55,13 @@ import {
   Policy as PolicyIcon,
   Cancel as CancelIcon,
   Analytics as AnalyticsIcon,
-  TableView as TableViewIcon
+  TableView as TableViewIcon,
+  Refresh as RefreshIcon
 } from '@mui/icons-material';
 import { BarChart, Bar, PieChart, Pie, LineChart, Line, Cell, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, Legend, ResponsiveContainer } from 'recharts';
+import * as misServices from '../services/misServices';
+import * as XLSX from 'xlsx';
+import { jsPDF } from 'jspdf';
 
 const LeadMIS = () => {
   const theme = useTheme();
@@ -65,32 +71,54 @@ const LeadMIS = () => {
   const [selectedSources, setSelectedSources] = useState([]);
   const [selectedStatuses, setSelectedStatuses] = useState([]);
 
+  // CSC Load Tracking Filters
+  const [cscSelectedMonth, setCscSelectedMonth] = useState(new Date().toISOString().slice(0, 7));
+  const [cscSelectedRegion, setCscSelectedRegion] = useState('all');
+  const [cscPerformanceFilter, setCscPerformanceFilter] = useState('all');
+
+  // Daily Insurer MIS Filters
+  const [dailyMISSelectedInsurer, setDailyMISSelectedInsurer] = useState('all');
+  const [dailyMISSelectedDate, setDailyMISSelectedDate] = useState('all');
+  const [dailyMISConversionFilter, setDailyMISConversionFilter] = useState('all');
+
+  // Premium Registers Filters
+  const [premiumSelectedInsurer, setPremiumSelectedInsurer] = useState('all');
+  const [premiumSelectedPolicyType, setPremiumSelectedPolicyType] = useState('all');
+  const [premiumSelectedTenure, setPremiumSelectedTenure] = useState('all');
+
+  // Capacity Planning CSC Filters
+  const [capacitySelectedMonth, setCapacitySelectedMonth] = useState(new Date().toISOString().slice(0, 7));
+  const [capacitySelectedRegion, setCapacitySelectedRegion] = useState('all');
+  const [capacityStatusFilter, setCapacityStatusFilter] = useState('all');
+
+  // Workload Distribution Filters
+  const [workloadSelectedDateRange, setWorkloadSelectedDateRange] = useState('thisMonth');
+  const [workloadSelectedRegion, setWorkloadSelectedRegion] = useState('all');
+  const [workloadSelectedTeam, setWorkloadSelectedTeam] = useState('all');
+
+  // Performance Analysis Filters
+  const [performanceAgentFilter, setPerformanceAgentFilter] = useState('all');
+  const [performanceConversionFilter, setPerformanceConversionFilter] = useState('all');
+  const [performancePolicyTypeFilter, setPerformancePolicyTypeFilter] = useState('all');
+
+  // API Data States
+  const [leadsByStatusData, setLeadsByStatusData] = useState([]);
+  const [leadsBySourceData, setLeadsBySourceData] = useState([]);
+  const [leadsTrendData, setLeadsTrendData] = useState([]);
+  const [agentPerformanceData, setAgentPerformanceData] = useState([]);
+  const [duplicateLeads, setDuplicateLeads] = useState([]);
+  const [preExpiryRenewals, setPreExpiryRenewals] = useState([]);
+
+  // Loading States
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+
   // Sample data for charts
-  const leadsByStatusData = [
-    { name: 'New Leads', value: 45, color: theme.palette.info.main },
-    { name: 'Contacted', value: 32, color: theme.palette.primary.main },
-    { name: 'Qualified', value: 28, color: theme.palette.success.main },
-    { name: 'Proposal Sent', value: 15, color: theme.palette.warning.main },
-    { name: 'Closed Won', value: 12, color: theme.palette.success.dark },
-    { name: 'Closed Lost', value: 18, color: theme.palette.error.main }
-  ];
+  // leadsByStatusData replaced by state
 
-  const leadsBySourceData = [
-    { name: 'Website', value: 65 },
-    { name: 'Referral', value: 45 },
-    { name: 'Direct', value: 30 },
-    { name: 'Social Media', value: 25 },
-    { name: 'Others', value: 15 }
-  ];
+  // leadsBySourceData replaced by state
 
-  const leadsTrendData = [
-    { month: 'Jan', leads: 45, converted: 12 },
-    { month: 'Feb', leads: 52, converted: 15 },
-    { month: 'Mar', leads: 48, converted: 14 },
-    { month: 'Apr', leads: 61, converted: 18 },
-    { month: 'May', leads: 55, converted: 16 },
-    { month: 'Jun', leads: 67, converted: 22 }
-  ];
+  // leadsTrendData replaced by state
 
   const conversionByPolicyType = [
     { type: 'Health', total: 85, converted: 28, rate: 32.9 },
@@ -100,97 +128,41 @@ const LeadMIS = () => {
     { type: 'Home', total: 20, converted: 6, rate: 30.0 }
   ];
 
-  const agentPerformanceData = [
-    { name: 'Priya Patel', leads: 45, converted: 15, revenue: 850000, conversionRate: 33.3 },
-    { name: 'Rahul Kumar', leads: 38, converted: 12, revenue: 720000, conversionRate: 31.6 },
-    { name: 'Sarah Johnson', leads: 42, converted: 18, revenue: 980000, conversionRate: 42.9 },
-    { name: 'Amit Sharma', leads: 35, converted: 10, revenue: 650000, conversionRate: 28.6 },
-    { name: 'Kavita Reddy', leads: 30, converted: 11, revenue: 720000, conversionRate: 36.7 }
-  ];
+  // agentPerformanceData replaced by state
 
   const agents = ['Priya Patel', 'Rahul Kumar', 'Sarah Johnson', 'Amit Sharma', 'Kavita Reddy'];
   const sources = ['Website', 'Referral', 'Direct', 'Social Media', 'Phone', 'Email'];
   const statuses = ['New Lead', 'Contacted', 'Qualified', 'Proposal Sent', 'Negotiation', 'Closed Won', 'Closed Lost'];
 
-  // Duplicate leads data
-  const duplicateLeads = [
-    {
-      groupId: 'DUP001',
-      leads: [
-        { id: 'L001', name: 'Rajesh Kumar', email: 'rajesh.kumar@email.com', phone: '+91-9876543210', source: 'Website', status: 'New Lead', createdDate: '2024-01-15' },
-        { id: 'L045', name: 'Rajesh Kumar', email: 'rajesh.k@gmail.com', phone: '+91-9876543210', source: 'Referral', status: 'Contacted', createdDate: '2024-01-18' }
-      ],
-      duplicateType: 'Phone',
-      confidence: 95
-    },
-    {
-      groupId: 'DUP002',
-      leads: [
-        { id: 'L023', name: 'Priya Sharma', email: 'priya.sharma@company.com', phone: '+91-9123456789', source: 'Direct', status: 'Qualified', createdDate: '2024-01-10' },
-        { id: 'L067', name: 'Priya S', email: 'priya.sharma@company.com', phone: '+91-9123456780', source: 'Email', status: 'New Lead', createdDate: '2024-01-20' }
-      ],
-      duplicateType: 'Email',
-      confidence: 98
-    },
-    {
-      groupId: 'DUP003',
-      leads: [
-        { id: 'L089', name: 'Amit Patel', email: 'amit.patel@email.com', phone: '+91-9988776655', source: 'Social Media', status: 'Proposal Sent', createdDate: '2024-01-12' },
-        { id: 'L134', name: 'Amit K Patel', email: 'amit.k.patel@email.com', phone: '+91-9988776655', source: 'Website', status: 'New Lead', createdDate: '2024-01-22' },
-        { id: 'L156', name: 'A Patel', email: 'a.patel@gmail.com', phone: '+91-9988776655', source: 'Phone', status: 'Contacted', createdDate: '2024-01-25' }
-      ],
-      duplicateType: 'Phone + Name',
-      confidence: 92
-    },
-    {
-      groupId: 'DUP004',
-      leads: [
-        { id: 'L078', name: 'Sunita Reddy', email: 'sunita.reddy@gmail.com', phone: '+91-8765432109', source: 'Referral', status: 'Negotiation', createdDate: '2024-01-08' },
-        { id: 'L145', name: 'Sunita R', email: 'sunita.reddy@gmail.com', phone: '+91-8765432100', source: 'Website', status: 'New Lead', createdDate: '2024-01-28' }
-      ],
-      duplicateType: 'Email',
-      confidence: 96
-    }
-  ];
+  // duplicateLeads replaced by state
 
   const [selectedDuplicates, setSelectedDuplicates] = useState([]);
   const [duplicateFilter, setDuplicateFilter] = useState('all');
+  const [duplicateSourceFilter, setDuplicateSourceFilter] = useState('all');
+  const [duplicateStatusFilter, setDuplicateStatusFilter] = useState('all');
 
-  // Pre-expiry renewal data
-  const preExpiryRenewals = [
-    { id: 'POL001', customerName: 'Rajesh Kumar', policyType: 'Health', expiryDate: '2024-02-15', premium: 25000, status: 'Pending', daysToExpiry: 15, agent: 'Priya Patel', phone: '+91-9876543210', lastContact: '2024-01-28' },
-    { id: 'POL002', customerName: 'Sunita Sharma', policyType: 'Motor', expiryDate: '2024-02-20', premium: 18000, status: 'Contacted', daysToExpiry: 20, agent: 'Rahul Kumar', phone: '+91-9123456789', lastContact: '2024-01-30' },
-    { id: 'POL003', customerName: 'Amit Patel', policyType: 'Life', expiryDate: '2024-02-25', premium: 45000, status: 'Proposal Sent', daysToExpiry: 25, agent: 'Sarah Johnson', phone: '+91-9988776655', lastContact: '2024-02-01' },
-    { id: 'POL004', customerName: 'Kavita Reddy', policyType: 'Health', expiryDate: '2024-03-01', premium: 32000, status: 'Pending', daysToExpiry: 30, agent: 'Amit Sharma', phone: '+91-8765432109', lastContact: '2024-01-25' },
-    { id: 'POL005', customerName: 'Deepak Singh', policyType: 'Motor', expiryDate: '2024-03-05', premium: 22000, status: 'Renewed', daysToExpiry: 34, agent: 'Kavita Reddy', phone: '+91-7654321098', lastContact: '2024-02-02' },
-    { id: 'POL006', customerName: 'Meera Gupta', policyType: 'Travel', expiryDate: '2024-02-12', premium: 8500, status: 'Pending', daysToExpiry: 12, agent: 'Priya Patel', phone: '+91-9876501234', lastContact: '2024-01-20' },
-    { id: 'POL007', customerName: 'Vikram Joshi', policyType: 'Home', expiryDate: '2024-02-18', premium: 35000, status: 'Contacted', daysToExpiry: 18, agent: 'Rahul Kumar', phone: '+91-9123450987', lastContact: '2024-01-31' },
-    { id: 'POL008', customerName: 'Anita Desai', policyType: 'Health', expiryDate: '2024-02-28', premium: 28000, status: 'Negotiation', daysToExpiry: 28, agent: 'Sarah Johnson', phone: '+91-9988770123', lastContact: '2024-02-03' },
-    { id: 'POL009', customerName: 'Ravi Nair', policyType: 'Motor', expiryDate: '2024-03-08', premium: 19500, status: 'Proposal Sent', daysToExpiry: 37, agent: 'Amit Sharma', phone: '+91-8765430987', lastContact: '2024-02-04' },
-    { id: 'POL010', customerName: 'Pooja Agarwal', policyType: 'Life', expiryDate: '2024-03-12', premium: 52000, status: 'Renewed', daysToExpiry: 41, agent: 'Kavita Reddy', phone: '+91-7654320123', lastContact: '2024-02-05' },
-    { id: 'POL011', customerName: 'Suresh Yadav', policyType: 'Health', expiryDate: '2024-02-10', premium: 31000, status: 'Pending', daysToExpiry: 10, agent: 'Priya Patel', phone: '+91-9876540987', lastContact: '2024-01-15' },
-    { id: 'POL012', customerName: 'Lakshmi Iyer', policyType: 'Motor', expiryDate: '2024-02-22', premium: 21000, status: 'Contacted', daysToExpiry: 22, agent: 'Rahul Kumar', phone: '+91-9123457890', lastContact: '2024-02-01' },
-    { id: 'POL013', customerName: 'Arjun Malhotra', policyType: 'Travel', expiryDate: '2024-03-15', premium: 12000, status: 'Proposal Sent', daysToExpiry: 44, agent: 'Sarah Johnson', phone: '+91-9988771234', lastContact: '2024-02-06' },
-    { id: 'POL014', customerName: 'Divya Kapoor', policyType: 'Home', expiryDate: '2024-02-14', premium: 42000, status: 'Pending', daysToExpiry: 14, agent: 'Amit Sharma', phone: '+91-8765431098', lastContact: '2024-01-22' },
-    { id: 'POL015', customerName: 'Manoj Tiwari', policyType: 'Life', expiryDate: '2024-03-20', premium: 38000, status: 'Negotiation', daysToExpiry: 49, agent: 'Kavita Reddy', phone: '+91-7654321234', lastContact: '2024-02-07' }
-  ];
+  // preExpiryRenewals replaced by state
 
   const [renewalFilter, setRenewalFilter] = useState('all');
+  const [renewalAgentFilter, setRenewalAgentFilter] = useState('all');
+  const [renewalPolicyTypeFilter, setRenewalPolicyTypeFilter] = useState('all');
 
   // CSC Productivity data
   const cscProductivityData = [
-    { cscName: 'Priya Patel', calls: 145, policies: 28, conversionRate: 19.3, score: 92, performance: 'Excellent', region: 'Mumbai' },
-    { cscName: 'Rahul Kumar', calls: 132, policies: 24, conversionRate: 18.2, score: 88, performance: 'Good', region: 'Delhi' },
-    { cscName: 'Sarah Johnson', calls: 158, policies: 35, conversionRate: 22.2, score: 96, performance: 'Excellent', region: 'Bangalore' },
-    { cscName: 'Amit Sharma', calls: 118, policies: 18, conversionRate: 15.3, score: 78, performance: 'Average', region: 'Chennai' },
-    { cscName: 'Kavita Reddy', calls: 125, policies: 22, conversionRate: 17.6, score: 85, performance: 'Good', region: 'Hyderabad' },
-    { cscName: 'Deepak Singh', calls: 98, policies: 12, conversionRate: 12.2, score: 65, performance: 'Needs Improvement', region: 'Pune' },
-    { cscName: 'Meera Gupta', calls: 142, policies: 31, conversionRate: 21.8, score: 94, performance: 'Excellent', region: 'Kolkata' },
-    { cscName: 'Vikram Joshi', calls: 108, policies: 15, conversionRate: 13.9, score: 72, performance: 'Average', region: 'Ahmedabad' }
+    { cscName: 'Priya Patel', calls: 145, policies: 28, conversionRate: 19.3, score: 92, performance: 'Excellent', region: 'Mumbai', source: 'Website', status: 'Closed Won' },
+    { cscName: 'Rahul Kumar', calls: 132, policies: 24, conversionRate: 18.2, score: 88, performance: 'Good', region: 'Delhi', source: 'Referral', status: 'Closed Won' },
+    { cscName: 'Sarah Johnson', calls: 158, policies: 35, conversionRate: 22.2, score: 96, performance: 'Excellent', region: 'Bangalore', source: 'Direct', status: 'Closed Won' },
+    { cscName: 'Amit Sharma', calls: 118, policies: 18, conversionRate: 15.3, score: 78, performance: 'Average', region: 'Chennai', source: 'Phone', status: 'Qualified' },
+    { cscName: 'Kavita Reddy', calls: 125, policies: 22, conversionRate: 17.6, score: 85, performance: 'Good', region: 'Hyderabad', source: 'Social Media', status: 'Closed Won' },
+    { cscName: 'Deepak Singh', calls: 98, policies: 12, conversionRate: 12.2, score: 65, performance: 'Needs Improvement', region: 'Pune', source: 'Email', status: 'Contacted' },
+    { cscName: 'Meera Gupta', calls: 142, policies: 31, conversionRate: 21.8, score: 94, performance: 'Excellent', region: 'Kolkata', source: 'Website', status: 'Closed Won' },
+    { cscName: 'Vikram Joshi', calls: 108, policies: 15, conversionRate: 13.9, score: 72, performance: 'Average', region: 'Ahmedabad', source: 'Referral', status: 'Proposal Sent' }
   ];
 
+  // CSC Productivity Filters
   const [cscFilter, setCscFilter] = useState('all');
   const [regionFilter, setRegionFilter] = useState('all');
+  const [scoreFilter, setScoreFilter] = useState('all');
 
   const regions = ['Mumbai', 'Delhi', 'Bangalore', 'Chennai', 'Hyderabad', 'Pune', 'Kolkata', 'Ahmedabad'];
 
@@ -213,14 +185,14 @@ const LeadMIS = () => {
   ];
 
   const lostLeadsDetails = [
-    { id: 'L001', customerName: 'Rajesh Kumar', policyType: 'Health', agent: 'Priya Patel', lostDate: '2024-01-15', reason: 'High Premium', premium: 25000, competitor: 'Star Health', notes: 'Customer found 20% cheaper option' },
-    { id: 'L002', customerName: 'Sunita Sharma', policyType: 'Motor', agent: 'Rahul Kumar', lostDate: '2024-01-18', reason: 'Better Competitor Offer', premium: 18000, competitor: 'HDFC ERGO', notes: 'Competitor offered additional benefits' },
-    { id: 'L003', customerName: 'Amit Patel', policyType: 'Life', agent: 'Sarah Johnson', lostDate: '2024-01-20', reason: 'Poor Service Experience', premium: 45000, competitor: 'LIC', notes: 'Unhappy with claim settlement process' },
-    { id: 'L004', customerName: 'Kavita Reddy', policyType: 'Health', agent: 'Amit Sharma', lostDate: '2024-01-22', reason: 'Coverage Issues', premium: 32000, competitor: 'Max Bupa', notes: 'Required specific coverage not available' },
-    { id: 'L005', customerName: 'Deepak Singh', policyType: 'Motor', agent: 'Kavita Reddy', lostDate: '2024-01-25', reason: 'Financial Constraints', premium: 22000, competitor: 'None', notes: 'Customer postponed purchase due to budget' },
-    { id: 'L006', customerName: 'Meera Gupta', policyType: 'Travel', agent: 'Priya Patel', lostDate: '2024-01-28', reason: 'High Premium', premium: 8500, competitor: 'Bajaj Allianz', notes: 'Found 30% cheaper alternative' },
-    { id: 'L007', customerName: 'Vikram Joshi', policyType: 'Home', agent: 'Rahul Kumar', lostDate: '2024-02-01', reason: 'Better Competitor Offer', premium: 35000, competitor: 'ICICI Lombard', notes: 'Competitor offered better terms' },
-    { id: 'L008', customerName: 'Anita Desai', policyType: 'Health', agent: 'Sarah Johnson', lostDate: '2024-02-03', reason: 'Poor Service Experience', premium: 28000, competitor: 'Care Health', notes: 'Dissatisfied with response time' }
+    { id: 'L001', customerName: 'Rajesh Kumar', policyType: 'Health', agent: 'Priya Patel', lostDate: '2024-01-15', reason: 'High Premium', premium: 25000, notes: 'Customer found 20% cheaper option', source: 'Website', status: 'Closed Lost' },
+    { id: 'L002', customerName: 'Sunita Sharma', policyType: 'Motor', agent: 'Rahul Kumar', lostDate: '2024-01-18', reason: 'Better Competitor Offer', premium: 18000, notes: 'Competitor offered additional benefits', source: 'Referral', status: 'Closed Lost' },
+    { id: 'L003', customerName: 'Amit Patel', policyType: 'Life', agent: 'Sarah Johnson', lostDate: '2024-01-20', reason: 'Poor Service Experience', premium: 45000, notes: 'Unhappy with claim settlement process', source: 'Direct', status: 'Closed Lost' },
+    { id: 'L004', customerName: 'Kavita Reddy', policyType: 'Health', agent: 'Amit Sharma', lostDate: '2024-01-22', reason: 'Coverage Issues', premium: 32000, notes: 'Required specific coverage not available', source: 'Phone', status: 'Closed Lost' },
+    { id: 'L005', customerName: 'Deepak Singh', policyType: 'Motor', agent: 'Kavita Reddy', lostDate: '2024-01-25', reason: 'Financial Constraints', premium: 22000, notes: 'Customer postponed purchase due to budget', source: 'Social Media', status: 'Closed Lost' },
+    { id: 'L006', customerName: 'Meera Gupta', policyType: 'Travel', agent: 'Priya Patel', lostDate: '2024-01-28', reason: 'High Premium', premium: 8500, notes: 'Found 30% cheaper alternative', source: 'Email', status: 'Closed Lost' },
+    { id: 'L007', customerName: 'Vikram Joshi', policyType: 'Home', agent: 'Rahul Kumar', lostDate: '2024-02-01', reason: 'Better Competitor Offer', premium: 35000, notes: 'Competitor offered better terms', source: 'Website', status: 'Closed Lost' },
+    { id: 'L008', customerName: 'Anita Desai', policyType: 'Health', agent: 'Sarah Johnson', lostDate: '2024-02-03', reason: 'Poor Service Experience', premium: 28000, notes: 'Dissatisfied with response time', source: 'Referral', status: 'Closed Lost' }
   ];
 
   const [lostReasonFilter, setLostReasonFilter] = useState('all');
@@ -231,14 +203,14 @@ const LeadMIS = () => {
 
   // Conversion % Reports data
   const conversionReportsData = [
-    { agent: 'Priya Patel', totalLeads: 145, convertedLeads: 48, conversionRate: 33.1, revenue: 2400000, productType: 'Health' },
-    { agent: 'Rahul Kumar', totalLeads: 132, convertedLeads: 42, conversionRate: 31.8, revenue: 2100000, productType: 'Motor' },
-    { agent: 'Sarah Johnson', totalLeads: 158, convertedLeads: 56, conversionRate: 35.4, revenue: 2800000, productType: 'Life' },
-    { agent: 'Amit Sharma', totalLeads: 118, convertedLeads: 32, conversionRate: 27.1, revenue: 1600000, productType: 'Health' },
-    { agent: 'Kavita Reddy', totalLeads: 125, convertedLeads: 38, conversionRate: 30.4, revenue: 1900000, productType: 'Motor' },
-    { agent: 'Deepak Singh', totalLeads: 98, convertedLeads: 22, conversionRate: 22.4, revenue: 1100000, productType: 'Travel' },
-    { agent: 'Meera Gupta', totalLeads: 142, convertedLeads: 51, conversionRate: 35.9, revenue: 2550000, productType: 'Life' },
-    { agent: 'Vikram Joshi', totalLeads: 108, convertedLeads: 28, conversionRate: 25.9, revenue: 1400000, productType: 'Home' }
+    { agent: 'Priya Patel', totalLeads: 145, convertedLeads: 48, conversionRate: 33.1, revenue: 2400000, productType: 'Health', source: 'Website', status: 'Closed Won' },
+    { agent: 'Rahul Kumar', totalLeads: 132, convertedLeads: 42, conversionRate: 31.8, revenue: 2100000, productType: 'Motor', source: 'Referral', status: 'Closed Won' },
+    { agent: 'Sarah Johnson', totalLeads: 158, convertedLeads: 56, conversionRate: 35.4, revenue: 2800000, productType: 'Life', source: 'Direct', status: 'Closed Won' },
+    { agent: 'Amit Sharma', totalLeads: 118, convertedLeads: 32, conversionRate: 27.1, revenue: 1600000, productType: 'Health', source: 'Phone', status: 'Qualified' },
+    { agent: 'Kavita Reddy', totalLeads: 125, convertedLeads: 38, conversionRate: 30.4, revenue: 1900000, productType: 'Motor', source: 'Social Media', status: 'Closed Won' },
+    { agent: 'Deepak Singh', totalLeads: 98, convertedLeads: 22, conversionRate: 22.4, revenue: 1100000, productType: 'Travel', source: 'Email', status: 'Proposal Sent' },
+    { agent: 'Meera Gupta', totalLeads: 142, convertedLeads: 51, conversionRate: 35.9, revenue: 2550000, productType: 'Life', source: 'Website', status: 'Closed Won' },
+    { agent: 'Vikram Joshi', totalLeads: 108, convertedLeads: 28, conversionRate: 25.9, revenue: 1400000, productType: 'Home', source: 'Referral', status: 'Negotiation' }
   ];
 
   const monthlyConversionTrend = [
@@ -264,26 +236,32 @@ const LeadMIS = () => {
 
   // Pivot Reports data
   const pivotByInsurer = [
-    { insurer: 'HDFC ERGO', policies: 145, premium: 6500000, claims: 12, claimRatio: 8.3, marketShare: 28.5 },
-    { insurer: 'ICICI Lombard', policies: 132, premium: 5800000, claims: 8, claimRatio: 6.1, marketShare: 25.9 },
-    { insurer: 'Bajaj Allianz', policies: 98, premium: 4200000, claims: 15, claimRatio: 15.3, marketShare: 19.2 },
-    { insurer: 'Star Health', policies: 87, premium: 3900000, claims: 6, claimRatio: 6.9, marketShare: 17.1 },
-    { insurer: 'Max Bupa', policies: 48, premium: 2100000, claims: 4, claimRatio: 8.3, marketShare: 9.4 }
+    { insurer: 'HDFC ERGO', policies: 145, premium: 6500000, claims: 12, claimRatio: 8.3, marketShare: 28.5, product: 'Health', date: '2025-12-01' },
+    { insurer: 'ICICI Lombard', policies: 132, premium: 5800000, claims: 8, claimRatio: 6.1, marketShare: 25.9, product: 'Motor', date: '2025-12-03' },
+    { insurer: 'Bajaj Allianz', policies: 98, premium: 4200000, claims: 15, claimRatio: 15.3, marketShare: 19.2, product: 'Life', date: '2025-12-02' },
+    { insurer: 'Star Health', policies: 87, premium: 3900000, claims: 6, claimRatio: 6.9, marketShare: 17.1, product: 'Health', date: '2025-12-04' },
+    { insurer: 'Max Bupa', policies: 48, premium: 2100000, claims: 4, claimRatio: 8.3, marketShare: 9.4, product: 'Travel', date: '2025-12-05' },
+    { insurer: 'Tata AIG', policies: 110, premium: 4800000, claims: 9, claimRatio: 8.2, marketShare: 21.6, product: 'Motor', date: '2025-11-15' },
+    { insurer: 'New India Assurance', policies: 75, premium: 3200000, claims: 5, claimRatio: 6.7, marketShare: 14.7, product: 'Health', date: '2025-11-20' }
   ];
 
   const pivotByCSC = [
-    { csc: 'Mumbai Central', policies: 185, premium: 8200000, agents: 12, avgPerAgent: 15.4, efficiency: 92.3 },
-    { csc: 'Delhi North', policies: 165, premium: 7400000, agents: 10, avgPerAgent: 16.5, efficiency: 88.7 },
-    { csc: 'Bangalore Tech', policies: 142, premium: 6800000, agents: 9, avgPerAgent: 15.8, efficiency: 94.1 },
-    { csc: 'Chennai Express', policies: 128, premium: 5900000, agents: 8, avgPerAgent: 16.0, efficiency: 85.2 },
-    { csc: 'Hyderabad Hub', policies: 95, premium: 4300000, agents: 6, avgPerAgent: 15.8, efficiency: 89.6 }
+    { csc: 'Mumbai Central', policies: 185, premium: 8200000, agents: 12, avgPerAgent: 15.4, efficiency: 92.3, product: 'Health', date: '2025-12-01' },
+    { csc: 'Delhi North', policies: 165, premium: 7400000, agents: 10, avgPerAgent: 16.5, efficiency: 88.7, product: 'Motor', date: '2025-12-03' },
+    { csc: 'Bangalore Tech', policies: 142, premium: 6800000, agents: 9, avgPerAgent: 15.8, efficiency: 94.1, product: 'Life', date: '2025-12-02' },
+    { csc: 'Chennai Express', policies: 128, premium: 5900000, agents: 8, avgPerAgent: 16.0, efficiency: 85.2, product: 'Health', date: '2025-12-04' },
+    { csc: 'Hyderabad Hub', policies: 95, premium: 4300000, agents: 6, avgPerAgent: 15.8, efficiency: 89.6, product: 'Motor', date: '2025-12-05' },
+    { csc: 'Kolkata East', policies: 88, premium: 3800000, agents: 7, avgPerAgent: 12.6, efficiency: 81.5, product: 'Travel', date: '2025-11-18' },
+    { csc: 'Pune West', policies: 102, premium: 4500000, agents: 8, avgPerAgent: 12.8, efficiency: 86.3, product: 'Health', date: '2025-11-22' }
   ];
 
   const pivotByTenure = [
-    { tenure: '1 Year', policies: 285, premium: 8500000, renewalRate: 78.2, avgPremium: 29825, satisfaction: 4.2 },
-    { tenure: '2 Years', policies: 198, premium: 7200000, renewalRate: 85.4, avgPremium: 36364, satisfaction: 4.5 },
-    { tenure: '3 Years', policies: 142, premium: 6800000, renewalRate: 91.5, avgPremium: 47887, satisfaction: 4.7 },
-    { tenure: '5 Years', policies: 85, premium: 5100000, renewalRate: 94.1, avgPremium: 60000, satisfaction: 4.8 }
+    { tenure: '1 Year', policies: 285, premium: 8500000, renewalRate: 78.2, avgPremium: 29825, satisfaction: 4.2, product: 'Health', date: '2025-12-01' },
+    { tenure: '2 Years', policies: 198, premium: 7200000, renewalRate: 85.4, avgPremium: 36364, satisfaction: 4.5, product: 'Motor', date: '2025-12-03' },
+    { tenure: '3 Years', policies: 142, premium: 6800000, renewalRate: 91.5, avgPremium: 47887, satisfaction: 4.7, product: 'Life', date: '2025-12-02' },
+    { tenure: '5 Years', policies: 85, premium: 5100000, renewalRate: 94.1, avgPremium: 60000, satisfaction: 4.8, product: 'Health', date: '2025-12-04' },
+    { tenure: '1 Year', policies: 150, premium: 4500000, renewalRate: 75.5, avgPremium: 30000, satisfaction: 4.0, product: 'Motor', date: '2025-11-15' },
+    { tenure: '2 Years', policies: 120, premium: 5200000, renewalRate: 82.3, avgPremium: 43333, satisfaction: 4.3, product: 'Life', date: '2025-11-20' }
   ];
 
   const [pivotGroupBy, setPivotGroupBy] = useState('insurer');
@@ -291,12 +269,198 @@ const LeadMIS = () => {
   const [pivotProductFilter, setPivotProductFilter] = useState('all');
 
   const getPivotData = () => {
+    let data;
     switch (pivotGroupBy) {
-      case 'insurer': return pivotByInsurer;
-      case 'csc': return pivotByCSC;
-      case 'tenure': return pivotByTenure;
-      default: return pivotByInsurer;
+      case 'insurer': data = pivotByInsurer; break;
+      case 'csc': data = pivotByCSC; break;
+      case 'tenure': data = pivotByTenure; break;
+      default: data = pivotByInsurer;
     }
+
+    // Apply date range filtering
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+    const getStartDate = () => {
+      switch (pivotDateFilter) {
+        case 'today':
+          return today;
+        case 'thisWeek':
+          const weekStart = new Date(today);
+          weekStart.setDate(today.getDate() - today.getDay());
+          return weekStart;
+        case 'thisMonth':
+          return new Date(now.getFullYear(), now.getMonth(), 1);
+        case 'lastMonth':
+          return new Date(now.getFullYear(), now.getMonth() - 1, 1);
+        case 'thisQuarter':
+          const quarter = Math.floor(now.getMonth() / 3);
+          return new Date(now.getFullYear(), quarter * 3, 1);
+        case 'thisYear':
+          return new Date(now.getFullYear(), 0, 1);
+        default:
+          return new Date(now.getFullYear(), now.getMonth(), 1);
+      }
+    };
+
+    const getEndDate = () => {
+      switch (pivotDateFilter) {
+        case 'today':
+          const endOfToday = new Date(today);
+          endOfToday.setHours(23, 59, 59, 999);
+          return endOfToday;
+        case 'thisWeek':
+          const weekEnd = new Date(today);
+          weekEnd.setDate(today.getDate() + (6 - today.getDay()));
+          weekEnd.setHours(23, 59, 59, 999);
+          return weekEnd;
+        case 'thisMonth':
+          return new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999);
+        case 'lastMonth':
+          return new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59, 999);
+        case 'thisQuarter':
+          const quarter = Math.floor(now.getMonth() / 3);
+          return new Date(now.getFullYear(), (quarter + 1) * 3, 0, 23, 59, 59, 999);
+        case 'thisYear':
+          return new Date(now.getFullYear(), 11, 31, 23, 59, 59, 999);
+        default:
+          return new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999);
+      }
+    };
+
+    const startDate = getStartDate();
+    const endDate = getEndDate();
+
+    // Filter by date range
+    let filteredData = data.filter(item => {
+      const itemDate = new Date(item.date);
+      return itemDate >= startDate && itemDate <= endDate;
+    });
+
+    // Apply product filtering
+    if (pivotProductFilter !== 'all') {
+      filteredData = filteredData.filter(item => item.product === pivotProductFilter);
+    }
+
+    return filteredData;
+  };
+
+  // Fetch all MIS data
+  const fetchMISData = async () => {
+    setLoading(true);
+    setError(null);
+
+    try {
+      // Build filter parameters
+      const params = {
+        dateRange,
+        agents: selectedAgents.join(','),
+        sources: selectedSources.join(','),
+        statuses: selectedStatuses.join(',')
+      };
+
+      // Fetch data from all endpoints in parallel
+      const [
+        statusData,
+        sourceData,
+        trendData,
+        performanceData,
+        duplicatesData,
+        renewalsData
+      ] = await Promise.all([
+        misServices.fetchLeadsByStatus(params),
+        misServices.fetchLeadsBySource(params),
+        misServices.fetchLeadsTrend(params),
+        misServices.fetchAgentPerformance(params),
+        misServices.fetchDuplicateGroups(params),
+        misServices.fetchPreExpiryRenewals(params)
+      ]);
+
+      // Add colors to status data for charts
+      const coloredStatusData = statusData.map((item, index) => {
+        const colors = [
+          theme.palette.info.main,
+          theme.palette.primary.main,
+          theme.palette.success.main,
+          theme.palette.warning.main,
+          theme.palette.success.dark,
+          theme.palette.error.main
+        ];
+        return { ...item, color: colors[index] || theme.palette.grey[500] };
+      });
+
+      // Update state with fetched data
+      setLeadsByStatusData(coloredStatusData);
+      setLeadsBySourceData(sourceData);
+      setLeadsTrendData(trendData);
+      setAgentPerformanceData(performanceData);
+      setDuplicateLeads(duplicatesData);
+      setPreExpiryRenewals(renewalsData);
+
+    } catch (err) {
+      console.error('Error fetching MIS data:', err);
+      setError('Failed to load MIS data. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Fetch data on component mount and when filters change
+  useEffect(() => {
+    fetchMISData();
+  }, [dateRange, selectedAgents, selectedSources, selectedStatuses]);
+
+  const handleRefresh = () => {
+    fetchMISData();
+  };
+
+  const handleResetFilters = () => {
+    setDateRange('thisMonth');
+    setSelectedAgents([]);
+    setSelectedSources([]);
+    setSelectedStatuses([]);
+  };
+
+  const handleResetPerformanceFilters = () => {
+    setPerformanceAgentFilter('all');
+    setPerformanceConversionFilter('all');
+    setPerformancePolicyTypeFilter('all');
+  };
+
+  const handleResetDuplicateFilters = () => {
+    setDuplicateFilter('all');
+    setDuplicateSourceFilter('all');
+    setDuplicateStatusFilter('all');
+  };
+
+  const handleResetRenewalFilters = () => {
+    setRenewalFilter('all');
+    setRenewalAgentFilter('all');
+    setRenewalPolicyTypeFilter('all');
+  };
+
+  const handleResetCSCFilters = () => {
+    setCscFilter('all');
+    setRegionFilter('all');
+    setScoreFilter('all');
+  };
+
+  const handleResetLostReasonFilters = () => {
+    setLostReasonFilter('all');
+    setProductTypeFilter('all');
+    setAgentFilter('all');
+  };
+
+  const handleResetConversionFilters = () => {
+    setConversionDateFilter('thisMonth');
+    setConversionAgentFilter('all');
+    setConversionProductFilter('all');
+  };
+
+  const handleResetPivotFilters = () => {
+    setPivotGroupBy('insurer');
+    setPivotDateFilter('thisMonth');
+    setPivotProductFilter('all');
   };
 
   const getPivotChartData = () => {
@@ -309,11 +473,438 @@ const LeadMIS = () => {
   };
 
   const handleExportExcel = () => {
-    alert('Exporting MIS report to Excel...');
+    const workbook = XLSX.utils.book_new();
+
+    // Tab names for reference
+    const tabNames = [
+      'Status Distribution', 'Performance Analysis', 'Trends & Patterns',
+      'Duplicate Analysis', 'Pre-Expiry Renewals', 'CSC Productivity',
+      'Lost Reasons Analysis', 'Conversion Reports', 'Pivot Reports'
+    ];
+
+    // 1. Leads by Status
+    if (leadsByStatusData.length > 0) {
+      const statusSheet = XLSX.utils.json_to_sheet(leadsByStatusData.map(item => ({
+        'Status': item.name,
+        'Count': item.value
+      })));
+      XLSX.utils.book_append_sheet(workbook, statusSheet, 'Leads by Status');
+    }
+
+    // 2. Leads by Source
+    if (leadsBySourceData.length > 0) {
+      const sourceSheet = XLSX.utils.json_to_sheet(leadsBySourceData.map(item => ({
+        'Source': item.name,
+        'Count': item.value
+      })));
+      XLSX.utils.book_append_sheet(workbook, sourceSheet, 'Leads by Source');
+    }
+
+    // 3. Leads Trend
+    if (leadsTrendData.length > 0) {
+      const trendSheet = XLSX.utils.json_to_sheet(leadsTrendData.map(item => ({
+        'Month': item.month,
+        'New Leads': item.newLeads,
+        'Converted': item.converted,
+        'Lost': item.lost
+      })));
+      XLSX.utils.book_append_sheet(workbook, trendSheet, 'Leads Trend');
+    }
+
+    // 4. Agent Performance
+    if (agentPerformanceData.length > 0) {
+      const performanceSheet = XLSX.utils.json_to_sheet(agentPerformanceData.map(item => ({
+        'Agent Name': item.name,
+        'Total Leads': item.totalLeads,
+        'Converted': item.converted,
+        'Conversion Rate': `${item.conversionRate}%`,
+        'Revenue': `₹${item.revenue?.toLocaleString() || 0}`
+      })));
+      XLSX.utils.book_append_sheet(workbook, performanceSheet, 'Agent Performance');
+    }
+
+    // 5. Duplicate Leads
+    if (duplicateLeads.length > 0) {
+      const duplicateData = [];
+      duplicateLeads.forEach(group => {
+        group.leads.forEach(lead => {
+          duplicateData.push({
+            'Group ID': group.groupId,
+            'Confidence': `${group.confidence}%`,
+            'Match Type': group.matchType,
+            'Lead Name': lead.name,
+            'Phone': lead.phone,
+            'Email': lead.email,
+            'Source': lead.source,
+            'Status': lead.status,
+            'Created Date': lead.createdAt
+          });
+        });
+      });
+      const duplicateSheet = XLSX.utils.json_to_sheet(duplicateData);
+      XLSX.utils.book_append_sheet(workbook, duplicateSheet, 'Duplicate Leads');
+    }
+
+    // 6. Pre-Expiry Renewals
+    if (preExpiryRenewals.length > 0) {
+      const renewalSheet = XLSX.utils.json_to_sheet(preExpiryRenewals.map(item => ({
+        'Policy Number': item.policyNumber,
+        'Customer Name': item.customerName,
+        'Policy Type': item.policyType,
+        'Expiry Date': item.expiryDate,
+        'Days to Expiry': item.daysToExpiry,
+        'Premium': `₹${item.premium?.toLocaleString() || 0}`,
+        'Agent': item.agent,
+        'Status': item.status
+      })));
+      XLSX.utils.book_append_sheet(workbook, renewalSheet, 'Pre-Expiry Renewals');
+    }
+
+    // 7. CSC Productivity
+    const cscData = getFilteredCSCProductivityData();
+    if (cscData.length > 0) {
+      const cscSheet = XLSX.utils.json_to_sheet(cscData.map(item => ({
+        'CSC Name': item.cscName,
+        'Region': item.region,
+        'Total Calls': item.calls,
+        'Policies Issued': item.policies,
+        'Conversion Rate': `${item.conversionRate}%`,
+        'Performance Score': item.score,
+        'Performance': item.performance
+      })));
+      XLSX.utils.book_append_sheet(workbook, cscSheet, 'CSC Productivity');
+    }
+
+    // 8. Lost Reasons
+    const lostData = getFilteredLostLeadsDetails();
+    if (lostData.length > 0) {
+      const lostSheet = XLSX.utils.json_to_sheet(lostData.map(item => ({
+        'Lead ID': item.id,
+        'Customer Name': item.customerName,
+        'Policy Type': item.policyType,
+        'Agent': item.agent,
+        'Lost Date': item.lostDate,
+        'Reason': item.reason,
+        'Premium': `₹${item.premium?.toLocaleString() || 0}`,
+        'Notes': item.notes
+      })));
+      XLSX.utils.book_append_sheet(workbook, lostSheet, 'Lost Leads');
+    }
+
+    // 9. Conversion Reports
+    const conversionData = getFilteredConversionReportsData();
+    if (conversionData.length > 0) {
+      const conversionSheet = XLSX.utils.json_to_sheet(conversionData.map(item => ({
+        'Agent': item.agent,
+        'Product Type': item.productType,
+        'Total Leads': item.totalLeads,
+        'Converted Leads': item.convertedLeads,
+        'Conversion Rate': `${item.conversionRate}%`,
+        'Revenue': `₹${item.revenue?.toLocaleString() || 0}`
+      })));
+      XLSX.utils.book_append_sheet(workbook, conversionSheet, 'Conversion Reports');
+    }
+
+    // 10. Pivot Reports
+    const pivotData = getPivotData();
+    if (pivotData.length > 0) {
+      const pivotSheet = XLSX.utils.json_to_sheet(pivotData.map(item => {
+        if (pivotGroupBy === 'insurer') {
+          return {
+            'Insurer': item.insurer,
+            'Product': item.product,
+            'Date': item.date,
+            'Policies': item.policies,
+            'Premium': `₹${item.premium?.toLocaleString() || 0}`,
+            'Claims': item.claims,
+            'Claim Ratio': `${item.claimRatio}%`,
+            'Market Share': `${item.marketShare}%`
+          };
+        } else if (pivotGroupBy === 'csc') {
+          return {
+            'CSC': item.csc,
+            'Product': item.product,
+            'Date': item.date,
+            'Policies': item.policies,
+            'Premium': `₹${item.premium?.toLocaleString() || 0}`,
+            'Agents': item.agents,
+            'Avg Per Agent': item.avgPerAgent,
+            'Efficiency': `${item.efficiency}%`
+          };
+        } else {
+          return {
+            'Tenure': item.tenure,
+            'Product': item.product,
+            'Date': item.date,
+            'Policies': item.policies,
+            'Premium': `₹${item.premium?.toLocaleString() || 0}`,
+            'Renewal Rate': `${item.renewalRate}%`,
+            'Avg Premium': `₹${item.avgPremium?.toLocaleString() || 0}`,
+            'Satisfaction': item.satisfaction
+          };
+        }
+      }));
+      XLSX.utils.book_append_sheet(workbook, pivotSheet, 'Pivot Reports');
+    }
+
+    // Generate filename with timestamp
+    const timestamp = new Date().toISOString().slice(0, 10);
+    const filename = `Lead_MIS_Report_${timestamp}.xlsx`;
+
+    // Write and download file
+    XLSX.writeFile(workbook, filename);
   };
 
   const handleExportPDF = () => {
-    alert('Generating PDF report...');
+    const doc = new jsPDF();
+    const pageWidth = doc.internal.pageSize.getWidth();
+    let yPosition = 20;
+    const lineHeight = 7;
+    const marginLeft = 14;
+    const marginRight = pageWidth - 14;
+
+    // Helper function to add a new page if needed
+    const checkPageBreak = (requiredSpace = 30) => {
+      if (yPosition + requiredSpace > doc.internal.pageSize.getHeight() - 20) {
+        doc.addPage();
+        yPosition = 20;
+      }
+    };
+
+    // Helper function to draw a table
+    const drawTable = (headers, data, columnWidths) => {
+      const startX = marginLeft;
+      let startY = yPosition;
+      const cellPadding = 2;
+      const rowHeight = 8;
+
+      // Draw header row
+      doc.setFillColor(41, 128, 185);
+      doc.setTextColor(255, 255, 255);
+      doc.setFontSize(9);
+      doc.setFont('helvetica', 'bold');
+
+      let xPos = startX;
+      headers.forEach((header, i) => {
+        doc.rect(xPos, startY, columnWidths[i], rowHeight, 'F');
+        doc.text(header, xPos + cellPadding, startY + rowHeight - 2);
+        xPos += columnWidths[i];
+      });
+
+      startY += rowHeight;
+      yPosition = startY;
+
+      // Draw data rows
+      doc.setTextColor(0, 0, 0);
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(8);
+
+      data.forEach((row, rowIndex) => {
+        checkPageBreak(rowHeight + 10);
+        startY = yPosition;
+        xPos = startX;
+
+        // Alternate row background
+        if (rowIndex % 2 === 0) {
+          doc.setFillColor(245, 245, 245);
+          doc.rect(startX, startY, columnWidths.reduce((a, b) => a + b, 0), rowHeight, 'F');
+        }
+
+        row.forEach((cell, i) => {
+          const cellText = String(cell || '').substring(0, 20); // Truncate long text
+          doc.text(cellText, xPos + cellPadding, startY + rowHeight - 2);
+          xPos += columnWidths[i];
+        });
+
+        yPosition += rowHeight;
+      });
+
+      yPosition += 10;
+    };
+
+    // Title
+    doc.setFontSize(20);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(41, 128, 185);
+    doc.text('Lead MIS Report', pageWidth / 2, yPosition, { align: 'center' });
+    yPosition += 10;
+
+    // Generated date
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(100, 100, 100);
+    const generatedDate = new Date().toLocaleString('en-IN', {
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+    doc.text(`Generated: ${generatedDate}`, pageWidth / 2, yPosition, { align: 'center' });
+    yPosition += 15;
+
+    // Summary Section
+    doc.setFontSize(14);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(0, 0, 0);
+    doc.text('Executive Summary', marginLeft, yPosition);
+    yPosition += 10;
+
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'normal');
+
+    const summaryItems = [
+      ['Total Leads:', '180', 'Conversion Rate:', '34.2%'],
+      ['Total Revenue:', '₹3.9 Cr', 'Lost Leads:', '18']
+    ];
+
+    summaryItems.forEach(row => {
+      doc.setFont('helvetica', 'bold');
+      doc.text(row[0], marginLeft, yPosition);
+      doc.setFont('helvetica', 'normal');
+      doc.text(row[1], marginLeft + 35, yPosition);
+      doc.setFont('helvetica', 'bold');
+      doc.text(row[2], marginLeft + 70, yPosition);
+      doc.setFont('helvetica', 'normal');
+      doc.text(row[3], marginLeft + 110, yPosition);
+      yPosition += lineHeight;
+    });
+
+    yPosition += 10;
+
+    // Leads by Status
+    if (leadsByStatusData.length > 0) {
+      checkPageBreak(50);
+      doc.setFontSize(12);
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(41, 128, 185);
+      doc.text('Leads by Status', marginLeft, yPosition);
+      yPosition += 8;
+
+      const statusHeaders = ['Status', 'Count'];
+      const statusData = leadsByStatusData.map(item => [item.name, String(item.value)]);
+      drawTable(statusHeaders, statusData, [90, 40]);
+    }
+
+    // Agent Performance
+    if (agentPerformanceData.length > 0) {
+      checkPageBreak(50);
+      doc.setFontSize(12);
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(41, 128, 185);
+      doc.text('Agent Performance', marginLeft, yPosition);
+      yPosition += 8;
+
+      const perfHeaders = ['Agent', 'Leads', 'Converted', 'Rate'];
+      const perfData = agentPerformanceData.slice(0, 8).map(item => [
+        item.name,
+        String(item.totalLeads || 0),
+        String(item.converted || 0),
+        `${item.conversionRate || 0}%`
+      ]);
+      drawTable(perfHeaders, perfData, [50, 30, 35, 30]);
+    }
+
+    // CSC Productivity
+    const cscData = getFilteredCSCProductivityData();
+    if (cscData.length > 0) {
+      checkPageBreak(50);
+      doc.setFontSize(12);
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(41, 128, 185);
+      doc.text('CSC Productivity', marginLeft, yPosition);
+      yPosition += 8;
+
+      const cscHeaders = ['CSC Name', 'Calls', 'Policies', 'Conv %', 'Score'];
+      const cscTableData = cscData.slice(0, 8).map(item => [
+        item.cscName,
+        String(item.calls),
+        String(item.policies),
+        `${item.conversionRate}%`,
+        String(item.score)
+      ]);
+      drawTable(cscHeaders, cscTableData, [45, 25, 28, 28, 25]);
+    }
+
+    // Pivot Reports
+    const pivotData = getPivotData();
+    if (pivotData.length > 0) {
+      checkPageBreak(50);
+      doc.setFontSize(12);
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(41, 128, 185);
+      const pivotTitle = pivotGroupBy === 'insurer' ? 'Pivot by Insurer' :
+        pivotGroupBy === 'csc' ? 'Pivot by CSC' : 'Pivot by Tenure';
+      doc.text(pivotTitle, marginLeft, yPosition);
+      yPosition += 8;
+
+      let pivotHeaders, pivotTableData;
+      if (pivotGroupBy === 'insurer') {
+        pivotHeaders = ['Insurer', 'Policies', 'Premium', 'Claims'];
+        pivotTableData = pivotData.slice(0, 8).map(item => [
+          item.insurer,
+          String(item.policies),
+          `₹${(item.premium / 100000).toFixed(1)}L`,
+          String(item.claims)
+        ]);
+      } else if (pivotGroupBy === 'csc') {
+        pivotHeaders = ['CSC', 'Policies', 'Premium', 'Efficiency'];
+        pivotTableData = pivotData.slice(0, 8).map(item => [
+          item.csc,
+          String(item.policies),
+          `₹${(item.premium / 100000).toFixed(1)}L`,
+          `${item.efficiency}%`
+        ]);
+      } else {
+        pivotHeaders = ['Tenure', 'Policies', 'Premium', 'Renewal %'];
+        pivotTableData = pivotData.slice(0, 8).map(item => [
+          item.tenure,
+          String(item.policies),
+          `₹${(item.premium / 100000).toFixed(1)}L`,
+          `${item.renewalRate}%`
+        ]);
+      }
+      drawTable(pivotHeaders, pivotTableData, [50, 30, 40, 35]);
+    }
+
+    // Conversion Reports
+    const conversionData = getFilteredConversionReportsData();
+    if (conversionData.length > 0) {
+      checkPageBreak(50);
+      doc.setFontSize(12);
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(41, 128, 185);
+      doc.text('Conversion Reports', marginLeft, yPosition);
+      yPosition += 8;
+
+      const convHeaders = ['Agent', 'Leads', 'Converted', 'Rate', 'Revenue'];
+      const convTableData = conversionData.slice(0, 8).map(item => [
+        item.agent,
+        String(item.totalLeads),
+        String(item.convertedLeads),
+        `${item.conversionRate}%`,
+        `₹${(item.revenue / 100000).toFixed(1)}L`
+      ]);
+      drawTable(convHeaders, convTableData, [40, 25, 30, 25, 35]);
+    }
+
+    // Footer on last page
+    const totalPages = doc.internal.getNumberOfPages();
+    for (let i = 1; i <= totalPages; i++) {
+      doc.setPage(i);
+      doc.setFontSize(8);
+      doc.setTextColor(150, 150, 150);
+      doc.text(
+        `Page ${i} of ${totalPages}`,
+        pageWidth / 2,
+        doc.internal.pageSize.getHeight() - 10,
+        { align: 'center' }
+      );
+    }
+
+    // Save PDF
+    const timestamp = new Date().toISOString().slice(0, 10);
+    doc.save(`Lead_MIS_Report_${timestamp}.pdf`);
   };
 
   const handleMergeDuplicates = (groupId) => {
@@ -344,12 +935,85 @@ const LeadMIS = () => {
   };
 
   const filteredDuplicates = duplicateLeads.filter(group => {
+    // Filter by confidence
     if (duplicateFilter === 'all') return true;
     if (duplicateFilter === 'high') return group.confidence >= 95;
     if (duplicateFilter === 'medium') return group.confidence >= 90 && group.confidence < 95;
     if (duplicateFilter === 'low') return group.confidence < 90;
     return true;
+  }).filter(group => {
+    // Filter by source - check if any lead in the group matches the selected source
+    if (duplicateSourceFilter === 'all') return true;
+    return group.leads.some(lead => lead.source === duplicateSourceFilter);
+  }).filter(group => {
+    // Filter by status - check if any lead in the group matches the selected status
+    if (duplicateStatusFilter === 'all') return true;
+    return group.leads.some(lead => lead.status === duplicateStatusFilter);
   });
+
+  // Helper functions to filter static data based on global filters
+  const getFilteredCSCProductivityData = () => {
+    let filtered = cscProductivityData;
+
+    // Filter by selected agents
+    if (selectedAgents.length > 0) {
+      filtered = filtered.filter(csc => selectedAgents.includes(csc.cscName));
+    }
+
+    // Filter by selected sources
+    if (selectedSources.length > 0) {
+      filtered = filtered.filter(csc => selectedSources.includes(csc.source));
+    }
+
+    // Filter by selected statuses
+    if (selectedStatuses.length > 0) {
+      filtered = filtered.filter(csc => selectedStatuses.includes(csc.status));
+    }
+
+    return filtered;
+  };
+
+  const getFilteredLostLeadsDetails = () => {
+    let filtered = lostLeadsDetails;
+
+    // Filter by selected agents
+    if (selectedAgents.length > 0) {
+      filtered = filtered.filter(lead => selectedAgents.includes(lead.agent));
+    }
+
+    // Filter by selected sources
+    if (selectedSources.length > 0) {
+      filtered = filtered.filter(lead => selectedSources.includes(lead.source));
+    }
+
+    // Filter by selected statuses
+    if (selectedStatuses.length > 0) {
+      filtered = filtered.filter(lead => selectedStatuses.includes(lead.status));
+    }
+
+    return filtered;
+  };
+
+  const getFilteredConversionReportsData = () => {
+    let filtered = conversionReportsData;
+
+    // Filter by selected agents
+    if (selectedAgents.length > 0) {
+      filtered = filtered.filter(report => selectedAgents.includes(report.agent));
+    }
+
+    // Filter by selected sources
+    if (selectedSources.length > 0) {
+      filtered = filtered.filter(report => selectedSources.includes(report.source));
+    }
+
+    // Filter by selected statuses
+    if (selectedStatuses.length > 0) {
+      filtered = filtered.filter(report => selectedStatuses.includes(report.status));
+    }
+
+    return filtered;
+  };
 
   const handleTabChange = (event, newValue) => {
     setCurrentTab(newValue);
@@ -365,6 +1029,20 @@ const LeadMIS = () => {
 
   return (
     <Box sx={{ p: 3 }}>
+      {/* Loading State */}
+      {loading && (
+        <Box sx={{ display: 'flex', justifyContent: 'center', p: 4 }}>
+          <CircularProgress />
+        </Box>
+      )}
+
+      {/* Error State */}
+      {error && (
+        <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError(null)}>
+          {error}
+        </Alert>
+      )}
+
       {/* Header */}
       <Grid container spacing={2} alignItems="center" sx={{ mb: 3 }}>
         <Grid item xs={12} sm={6}>
@@ -376,6 +1054,15 @@ const LeadMIS = () => {
           </Typography>
         </Grid>
         <Grid item xs={12} sm={6} sx={{ textAlign: 'right' }}>
+          <Button
+            variant="outlined"
+            startIcon={<RefreshIcon />}
+            onClick={handleRefresh}
+            disabled={loading}
+            sx={{ mr: 1 }}
+          >
+            Refresh
+          </Button>
           <Button
             variant="outlined"
             startIcon={<DownloadIcon />}
@@ -390,99 +1077,14 @@ const LeadMIS = () => {
             onClick={handleExportPDF}
           >
             Generate PDF
-          </Button>
-        </Grid>
-      </Grid>
+          </Button >
+        </Grid >
+      </Grid >
 
-      {/* Filters */}
-      <Card sx={{ mb: 3 }}>
-        <CardContent>
-          <Grid container spacing={2} alignItems="center">
-            <Grid item xs={12} sm={6} md={3}>
-              <TextField
-                fullWidth
-                select
-                label="Date Range"
-                value={dateRange}
-                onChange={(e) => setDateRange(e.target.value)}
-                InputProps={{
-                  startAdornment: <DateRangeIcon sx={{ color: 'text.secondary', mr: 1 }} />
-                }}
-              >
-                <MenuItem value="today">Today</MenuItem>
-                <MenuItem value="yesterday">Yesterday</MenuItem>
-                <MenuItem value="thisWeek">This Week</MenuItem>
-                <MenuItem value="lastWeek">Last Week</MenuItem>
-                <MenuItem value="thisMonth">This Month</MenuItem>
-                <MenuItem value="lastMonth">Last Month</MenuItem>
-                <MenuItem value="thisQuarter">This Quarter</MenuItem>
-                <MenuItem value="thisYear">This Year</MenuItem>
-                <MenuItem value="custom">Custom Range</MenuItem>
-              </TextField>
-            </Grid>
-            <Grid item xs={12} sm={6} md={3}>
-              <FormControl fullWidth>
-                <InputLabel>Filter by Agent</InputLabel>
-                <Select
-                  multiple
-                  value={selectedAgents}
-                  onChange={(e) => setSelectedAgents(e.target.value)}
-                  input={<OutlinedInput label="Filter by Agent" />}
-                  renderValue={(selected) => selected.join(', ')}
-                >
-                  {agents.map((agent) => (
-                    <MenuItem key={agent} value={agent}>
-                      <Checkbox checked={selectedAgents.indexOf(agent) > -1} />
-                      <ListItemText primary={agent} />
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-            </Grid>
-            <Grid item xs={12} sm={6} md={3}>
-              <FormControl fullWidth>
-                <InputLabel>Filter by Source</InputLabel>
-                <Select
-                  multiple
-                  value={selectedSources}
-                  onChange={(e) => setSelectedSources(e.target.value)}
-                  input={<OutlinedInput label="Filter by Source" />}
-                  renderValue={(selected) => selected.join(', ')}
-                >
-                  {sources.map((source) => (
-                    <MenuItem key={source} value={source}>
-                      <Checkbox checked={selectedSources.indexOf(source) > -1} />
-                      <ListItemText primary={source} />
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-            </Grid>
-            <Grid item xs={12} sm={6} md={3}>
-              <FormControl fullWidth>
-                <InputLabel>Filter by Status</InputLabel>
-                <Select
-                  multiple
-                  value={selectedStatuses}
-                  onChange={(e) => setSelectedStatuses(e.target.value)}
-                  input={<OutlinedInput label="Filter by Status" />}
-                  renderValue={(selected) => selected.join(', ')}
-                >
-                  {statuses.map((status) => (
-                    <MenuItem key={status} value={status}>
-                      <Checkbox checked={selectedStatuses.indexOf(status) > -1} />
-                      <ListItemText primary={status} />
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-            </Grid>
-          </Grid>
-        </CardContent>
-      </Card>
+
 
       {/* Key Metrics */}
-      <Grid container spacing={2} sx={{ mb: 3 }}>
+      < Grid container spacing={2} sx={{ mb: 3 }}>
         <Grid item xs={12} sm={6} md={3}>
           <Card sx={{ background: `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.primary.dark} 100%)`, color: 'white' }}>
             <CardContent>
@@ -554,13 +1156,13 @@ const LeadMIS = () => {
             </CardContent>
           </Card>
         </Grid>
-      </Grid>
+      </Grid >
 
       {/* Tabs */}
-      <Paper sx={{ mb: 2 }}>
-        <Tabs 
-          value={currentTab} 
-          onChange={handleTabChange} 
+      < Paper sx={{ mb: 2 }}>
+        <Tabs
+          value={currentTab}
+          onChange={handleTabChange}
           variant="scrollable"
           scrollButtons="auto"
           sx={{
@@ -586,3098 +1188,3431 @@ const LeadMIS = () => {
           <Tab icon={<PeopleIcon />} label="Workload Distribution" iconPosition="start" />
           <Tab icon={<AssessmentIcon />} label="Detailed Reports" iconPosition="start" />
         </Tabs>
-      </Paper>
+      </Paper >
 
       {/* Tab Content */}
-      {currentTab === 0 && (
-        <Grid container spacing={3}>
-          <Grid item xs={12} md={6}>
-            <Card>
-              <CardContent>
-                <Typography variant="h6" fontWeight="600" gutterBottom>
-                  Leads by Status
-                </Typography>
-                <ResponsiveContainer width="100%" height={300}>
-                  <PieChart>
-                    <Pie
-                      data={leadsByStatusData}
-                      dataKey="value"
-                      nameKey="name"
-                      cx="50%"
-                      cy="50%"
-                      outerRadius={100}
-                      label
-                    >
-                      {leadsByStatusData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={entry.color} />
-                      ))}
-                    </Pie>
-                    <RechartsTooltip />
-                    <Legend />
-                  </PieChart>
-                </ResponsiveContainer>
-              </CardContent>
-            </Card>
-          </Grid>
+      {
+        currentTab === 0 && (
+          <Grid container spacing={3}>
+            <Grid item xs={12} md={6}>
+              <Card>
+                <CardContent>
+                  <Typography variant="h6" fontWeight="600" gutterBottom>
+                    Leads by Status
+                  </Typography>
+                  <ResponsiveContainer width="100%" height={300}>
+                    <PieChart>
+                      <Pie
+                        data={leadsByStatusData}
+                        dataKey="value"
+                        nameKey="name"
+                        cx="50%"
+                        cy="50%"
+                        outerRadius={100}
+                        label
+                      >
+                        {leadsByStatusData.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={entry.color} />
+                        ))}
+                      </Pie>
+                      <RechartsTooltip />
+                      <Legend />
+                    </PieChart>
+                  </ResponsiveContainer>
+                </CardContent>
+              </Card>
+            </Grid>
 
-          <Grid item xs={12} md={6}>
-            <Card>
-              <CardContent>
-                <Typography variant="h6" fontWeight="600" gutterBottom>
-                  Leads by Source
-                </Typography>
-                <ResponsiveContainer width="100%" height={300}>
-                  <BarChart data={leadsBySourceData}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="name" />
-                    <YAxis />
-                    <RechartsTooltip />
-                    <Legend />
-                    <Bar dataKey="value" fill={theme.palette.primary.main} />
-                  </BarChart>
-                </ResponsiveContainer>
-              </CardContent>
-            </Card>
-          </Grid>
-        </Grid>
-      )}
-
-      {currentTab === 1 && (
-        <Grid container spacing={3}>
-          <Grid item xs={12}>
-            <Card>
-              <CardContent>
-                <Typography variant="h6" fontWeight="600" gutterBottom>
-                  Agent Performance Summary
-                </Typography>
-                <TableContainer>
-                  <Table>
-                    <TableHead>
-                      <TableRow>
-                        <TableCell>Agent Name</TableCell>
-                        <TableCell align="center">Total Leads</TableCell>
-                        <TableCell align="center">Converted</TableCell>
-                        <TableCell align="center">Conversion Rate</TableCell>
-                        <TableCell align="right">Revenue Generated</TableCell>
-                        <TableCell align="center">Performance</TableCell>
-                      </TableRow>
-                    </TableHead>
-                    <TableBody>
-                      {agentPerformanceData.map((agent) => (
-                        <TableRow key={agent.name} hover>
-                          <TableCell>
-                            <Typography variant="subtitle2" fontWeight="600">
-                              {agent.name}
-                            </Typography>
-                          </TableCell>
-                          <TableCell align="center">{agent.leads}</TableCell>
-                          <TableCell align="center">{agent.converted}</TableCell>
-                          <TableCell align="center">
-                            <Chip
-                              label={`${agent.conversionRate}%`}
-                              size="small"
-                              color={agent.conversionRate >= 35 ? 'success' : agent.conversionRate >= 30 ? 'warning' : 'error'}
-                            />
-                          </TableCell>
-                          <TableCell align="right">
-                            <Typography variant="body2" fontWeight="600" color="success.main">
-                              ₹{(agent.revenue / 100000).toFixed(1)}L
-                            </Typography>
-                          </TableCell>
-                          <TableCell align="center">
-                            <Chip
-                              label={agent.conversionRate >= 35 ? 'Excellent' : agent.conversionRate >= 30 ? 'Good' : 'Needs Improvement'}
-                              size="small"
-                              color={agent.conversionRate >= 35 ? 'success' : agent.conversionRate >= 30 ? 'primary' : 'warning'}
-                            />
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </TableContainer>
-              </CardContent>
-            </Card>
-          </Grid>
-
-          <Grid item xs={12}>
-            <Card>
-              <CardContent>
-                <Typography variant="h6" fontWeight="600" gutterBottom>
-                  Conversion by Policy Type
-                </Typography>
-                <TableContainer>
-                  <Table>
-                    <TableHead>
-                      <TableRow>
-                        <TableCell>Policy Type</TableCell>
-                        <TableCell align="center">Total Leads</TableCell>
-                        <TableCell align="center">Converted</TableCell>
-                        <TableCell align="center">Conversion Rate</TableCell>
-                        <TableCell>Progress</TableCell>
-                      </TableRow>
-                    </TableHead>
-                    <TableBody>
-                      {conversionByPolicyType.map((policy) => (
-                        <TableRow key={policy.type} hover>
-                          <TableCell>
-                            <Typography variant="subtitle2" fontWeight="600">
-                              {policy.type} Insurance
-                            </Typography>
-                          </TableCell>
-                          <TableCell align="center">{policy.total}</TableCell>
-                          <TableCell align="center">{policy.converted}</TableCell>
-                          <TableCell align="center">
-                            <Chip
-                              label={`${policy.rate}%`}
-                              size="small"
-                              color={policy.rate >= 35 ? 'success' : policy.rate >= 30 ? 'warning' : 'error'}
-                            />
-                          </TableCell>
-                          <TableCell>
-                            <Box sx={{ width: '100%', display: 'flex', alignItems: 'center', gap: 1 }}>
-                              <Box
-                                sx={{
-                                  flex: 1,
-                                  height: 8,
-                                  bgcolor: alpha(theme.palette.grey[500], 0.1),
-                                  borderRadius: 1,
-                                  overflow: 'hidden'
-                                }}
-                              >
-                                <Box
-                                  sx={{
-                                    width: `${policy.rate}%`,
-                                    height: '100%',
-                                    bgcolor: policy.rate >= 35 ? theme.palette.success.main : policy.rate >= 30 ? theme.palette.warning.main : theme.palette.error.main,
-                                    borderRadius: 1
-                                  }}
-                                />
-                              </Box>
-                              <Typography variant="caption" fontWeight="600">
-                                {policy.rate}%
-                              </Typography>
-                            </Box>
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </TableContainer>
-              </CardContent>
-            </Card>
-          </Grid>
-        </Grid>
-      )}
-
-      {currentTab === 2 && (
-        <Grid container spacing={3}>
-          <Grid item xs={12}>
-            <Card>
-              <CardContent>
-                <Typography variant="h6" fontWeight="600" gutterBottom>
-                  Lead Generation & Conversion Trends
-                </Typography>
-                <ResponsiveContainer width="100%" height={400}>
-                  <LineChart data={leadsTrendData}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="month" />
-                    <YAxis />
-                    <RechartsTooltip />
-                    <Legend />
-                    <Line type="monotone" dataKey="leads" stroke={theme.palette.primary.main} strokeWidth={2} name="Total Leads" />
-                    <Line type="monotone" dataKey="converted" stroke={theme.palette.success.main} strokeWidth={2} name="Converted" />
-                  </LineChart>
-                </ResponsiveContainer>
-              </CardContent>
-            </Card>
-          </Grid>
-        </Grid>
-      )}
-
-      {currentTab === 3 && (
-        <Grid container spacing={3}>
-          {/* Duplicate Analysis Summary */}
-          <Grid item xs={12}>
-            <Grid container spacing={2} sx={{ mb: 3 }}>
-              <Grid item xs={12} sm={6} md={3}>
-                <Card sx={{ background: `linear-gradient(135deg, ${theme.palette.error.main} 0%, ${theme.palette.error.dark} 100%)`, color: 'white' }}>
-                  <CardContent>
-                    <Stack direction="row" alignItems="center" justifyContent="space-between">
-                      <Box>
-                        <Typography variant="body2" sx={{ opacity: 0.9 }}>Total Duplicate Groups</Typography>
-                        <Typography variant="h3" fontWeight="700">{duplicateLeads.length}</Typography>
-                      </Box>
-                      <DuplicateIcon sx={{ fontSize: 40, opacity: 0.3 }} />
-                    </Stack>
-                  </CardContent>
-                </Card>
-              </Grid>
-              <Grid item xs={12} sm={6} md={3}>
-                <Card sx={{ background: `linear-gradient(135deg, ${theme.palette.warning.main} 0%, ${theme.palette.warning.dark} 100%)`, color: 'white' }}>
-                  <CardContent>
-                    <Stack direction="row" alignItems="center" justifyContent="space-between">
-                      <Box>
-                        <Typography variant="body2" sx={{ opacity: 0.9 }}>Affected Leads</Typography>
-                        <Typography variant="h3" fontWeight="700">{duplicateLeads.reduce((sum, group) => sum + group.leads.length, 0)}</Typography>
-                      </Box>
-                      <WarningIcon sx={{ fontSize: 40, opacity: 0.3 }} />
-                    </Stack>
-                  </CardContent>
-                </Card>
-              </Grid>
-              <Grid item xs={12} sm={6} md={3}>
-                <Card sx={{ background: `linear-gradient(135deg, ${theme.palette.info.main} 0%, ${theme.palette.info.dark} 100%)`, color: 'white' }}>
-                  <CardContent>
-                    <Stack direction="row" alignItems="center" justifyContent="space-between">
-                      <Box>
-                        <Typography variant="body2" sx={{ opacity: 0.9 }}>High Confidence</Typography>
-                        <Typography variant="h3" fontWeight="700">{duplicateLeads.filter(g => g.confidence >= 95).length}</Typography>
-                      </Box>
-                      <AssessmentIcon sx={{ fontSize: 40, opacity: 0.3 }} />
-                    </Stack>
-                  </CardContent>
-                </Card>
-              </Grid>
-              <Grid item xs={12} sm={6} md={3}>
-                <Card sx={{ background: `linear-gradient(135deg, ${theme.palette.success.main} 0%, ${theme.palette.success.dark} 100%)`, color: 'white' }}>
-                  <CardContent>
-                    <Stack direction="row" alignItems="center" justifyContent="space-between">
-                      <Box>
-                        <Typography variant="body2" sx={{ opacity: 0.9 }}>Potential Savings</Typography>
-                        <Typography variant="h3" fontWeight="700">Rs 2.4L</Typography>
-                      </Box>
-                      <AttachMoneyIcon sx={{ fontSize: 40, opacity: 0.3 }} />
-                    </Stack>
-                  </CardContent>
-                </Card>
-              </Grid>
+            <Grid item xs={12} md={6}>
+              <Card>
+                <CardContent>
+                  <Typography variant="h6" fontWeight="600" gutterBottom>
+                    Leads by Source
+                  </Typography>
+                  <ResponsiveContainer width="100%" height={300}>
+                    <BarChart data={leadsBySourceData}>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="name" />
+                      <YAxis />
+                      <RechartsTooltip />
+                      <Legend />
+                      <Bar dataKey="value" fill={theme.palette.primary.main} />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </CardContent>
+              </Card>
             </Grid>
           </Grid>
+        )
+      }
 
-          {/* Duplicate Analysis Filters */}
-          <Grid item xs={12}>
-            <Card sx={{ mb: 2 }}>
-              <CardContent>
-                <Grid container spacing={2} alignItems="center">
-                  <Grid item xs={12} sm={6} md={3}>
-                    <TextField
-                      fullWidth
-                      select
-                      label="Filter by Confidence"
-                      value={duplicateFilter}
-                      onChange={(e) => setDuplicateFilter(e.target.value)}
-                    >
-                      <MenuItem value="all">All Duplicates</MenuItem>
-                      <MenuItem value="high">High Confidence (95%+)</MenuItem>
-                      <MenuItem value="medium">Medium Confidence (90-94%)</MenuItem>
-                      <MenuItem value="low">Low Confidence (&lt;90%)</MenuItem>
-                    </TextField>
+      {
+        currentTab === 1 && (
+          <Grid container spacing={3}>
+            {/* Filter Section */}
+            <Grid item xs={12}>
+              <Card sx={{ mb: 2 }}>
+                <CardContent>
+                  <Grid container spacing={2} alignItems="center">
+                    <Grid item xs={12} sm={6} md={4}>
+                      <TextField
+                        fullWidth
+                        select
+                        label="Filter by Agent"
+                        value={performanceAgentFilter}
+                        onChange={(e) => setPerformanceAgentFilter(e.target.value)}
+                      >
+                        <MenuItem value="all">All Agents</MenuItem>
+                        {agents.map((agent) => (
+                          <MenuItem key={agent} value={agent}>{agent}</MenuItem>
+                        ))}
+                      </TextField>
+                    </Grid>
+                    <Grid item xs={12} sm={6} md={4}>
+                      <TextField
+                        fullWidth
+                        select
+                        label="Filter by Conversion Rate"
+                        value={performanceConversionFilter}
+                        onChange={(e) => setPerformanceConversionFilter(e.target.value)}
+                      >
+                        <MenuItem value="all">All Conversion Rates</MenuItem>
+                        <MenuItem value="excellent">Excellent (≥35%)</MenuItem>
+                        <MenuItem value="good">Good (30-34%)</MenuItem>
+                        <MenuItem value="needsImprovement">Needs Improvement (&lt;30%)</MenuItem>
+                      </TextField>
+                    </Grid>
+                    <Grid item xs={12} sm={6} md={3}>
+                      <TextField
+                        fullWidth
+                        select
+                        label="Filter by Policy Type"
+                        value={performancePolicyTypeFilter}
+                        onChange={(e) => setPerformancePolicyTypeFilter(e.target.value)}
+                      >
+                        <MenuItem value="all">All Policy Types</MenuItem>
+                        <MenuItem value="Health">Health</MenuItem>
+                        <MenuItem value="Motor">Motor</MenuItem>
+                        <MenuItem value="Life">Life</MenuItem>
+                        <MenuItem value="Travel">Travel</MenuItem>
+                        <MenuItem value="Home">Home</MenuItem>
+                      </TextField>
+                    </Grid>
+                    <Grid item xs={12} sm={6} md={3}>
+                      <Button
+                        variant="outlined"
+                        fullWidth
+                        onClick={handleResetPerformanceFilters}
+                        sx={{ height: '56px' }}
+                      >
+                        Reset Filters
+                      </Button>
+                    </Grid>
                   </Grid>
-                  <Grid item xs={12} sm={6} md={3}>
-                    <Button
-                      variant="contained"
-                      startIcon={<DownloadIcon />}
-                      onClick={handleExportDuplicates}
-                      fullWidth
-                    >
-                      Export Report
-                    </Button>
-                  </Grid>
-                </Grid>
-              </CardContent>
-            </Card>
+                </CardContent>
+              </Card>
+            </Grid>
+
+            <Grid item xs={12}>
+              <Card>
+                <CardContent>
+                  <Typography variant="h6" fontWeight="600" gutterBottom>
+                    Agent Performance Summary
+                  </Typography>
+                  <TableContainer>
+                    <Table>
+                      <TableHead>
+                        <TableRow>
+                          <TableCell>Agent Name</TableCell>
+                          <TableCell align="center">Total Leads</TableCell>
+                          <TableCell align="center">Converted</TableCell>
+                          <TableCell align="center">Conversion Rate</TableCell>
+                          <TableCell align="right">Revenue Generated</TableCell>
+                          <TableCell align="center">Performance</TableCell>
+                        </TableRow>
+                      </TableHead>
+                      <TableBody>
+                        {agentPerformanceData
+                          .filter((agent) => {
+                            // Filter by agent
+                            if (performanceAgentFilter !== 'all' && agent.name !== performanceAgentFilter) {
+                              return false;
+                            }
+                            // Filter by conversion rate
+                            if (performanceConversionFilter === 'excellent' && agent.conversionRate < 35) {
+                              return false;
+                            }
+                            if (performanceConversionFilter === 'good' && (agent.conversionRate < 30 || agent.conversionRate >= 35)) {
+                              return false;
+                            }
+                            if (performanceConversionFilter === 'needsImprovement' && agent.conversionRate >= 30) {
+                              return false;
+                            }
+                            return true;
+                          })
+                          .map((agent) => (
+                            <TableRow key={agent.name} hover>
+                              <TableCell>
+                                <Typography variant="subtitle2" fontWeight="600">
+                                  {agent.name}
+                                </Typography>
+                              </TableCell>
+                              <TableCell align="center">{agent.leads}</TableCell>
+                              <TableCell align="center">{agent.converted}</TableCell>
+                              <TableCell align="center">
+                                <Chip
+                                  label={`${agent.conversionRate}%`}
+                                  size="small"
+                                  color={agent.conversionRate >= 35 ? 'success' : agent.conversionRate >= 30 ? 'warning' : 'error'}
+                                />
+                              </TableCell>
+                              <TableCell align="right">
+                                <Typography variant="body2" fontWeight="600" color="success.main">
+                                  ₹{(agent.revenue / 100000).toFixed(1)}L
+                                </Typography>
+                              </TableCell>
+                              <TableCell align="center">
+                                <Chip
+                                  label={agent.conversionRate >= 35 ? 'Excellent' : agent.conversionRate >= 30 ? 'Good' : 'Needs Improvement'}
+                                  size="small"
+                                  color={agent.conversionRate >= 35 ? 'success' : agent.conversionRate >= 30 ? 'primary' : 'warning'}
+                                />
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                      </TableBody>
+                    </Table>
+                  </TableContainer>
+                </CardContent>
+              </Card>
+            </Grid>
+
+            <Grid item xs={12}>
+              <Card>
+                <CardContent>
+                  <Typography variant="h6" fontWeight="600" gutterBottom>
+                    Conversion by Policy Type
+                  </Typography>
+                  <TableContainer>
+                    <Table>
+                      <TableHead>
+                        <TableRow>
+                          <TableCell>Policy Type</TableCell>
+                          <TableCell align="center">Total Leads</TableCell>
+                          <TableCell align="center">Converted</TableCell>
+                          <TableCell align="center">Conversion Rate</TableCell>
+                          <TableCell>Progress</TableCell>
+                        </TableRow>
+                      </TableHead>
+                      <TableBody>
+                        {conversionByPolicyType
+                          .filter((policy) => {
+                            // Filter by policy type
+                            if (performancePolicyTypeFilter !== 'all' && policy.type !== performancePolicyTypeFilter) {
+                              return false;
+                            }
+                            return true;
+                          })
+                          .map((policy) => (
+                            <TableRow key={policy.type} hover>
+                              <TableCell>
+                                <Typography variant="subtitle2" fontWeight="600">
+                                  {policy.type} Insurance
+                                </Typography>
+                              </TableCell>
+                              <TableCell align="center">{policy.total}</TableCell>
+                              <TableCell align="center">{policy.converted}</TableCell>
+                              <TableCell align="center">
+                                <Chip
+                                  label={`${policy.rate}%`}
+                                  size="small"
+                                  color={policy.rate >= 35 ? 'success' : policy.rate >= 30 ? 'warning' : 'error'}
+                                />
+                              </TableCell>
+                              <TableCell>
+                                <Box sx={{ width: '100%', display: 'flex', alignItems: 'center', gap: 1 }}>
+                                  <Box
+                                    sx={{
+                                      flex: 1,
+                                      height: 8,
+                                      bgcolor: alpha(theme.palette.grey[500], 0.1),
+                                      borderRadius: 1,
+                                      overflow: 'hidden'
+                                    }}
+                                  >
+                                    <Box
+                                      sx={{
+                                        width: `${policy.rate}%`,
+                                        height: '100%',
+                                        bgcolor: policy.rate >= 35 ? theme.palette.success.main : policy.rate >= 30 ? theme.palette.warning.main : theme.palette.error.main,
+                                        borderRadius: 1
+                                      }}
+                                    />
+                                  </Box>
+                                  <Typography variant="caption" fontWeight="600">
+                                    {policy.rate}%
+                                  </Typography>
+                                </Box>
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                      </TableBody>
+                    </Table>
+                  </TableContainer>
+                </CardContent>
+              </Card>
+            </Grid>
           </Grid>
+        )
+      }
 
-          {/* Duplicate Leads Table */}
-          <Grid item xs={12}>
-            <Card>
-              <CardContent>
-                <Typography variant="h6" fontWeight="600" gutterBottom>
-                  Duplicate Lead Analysis
-                </Typography>
-                <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-                  Leads are grouped by matching criteria. Use actions to merge, mark as valid, or delete duplicates.
-                </Typography>
-                
-                <TableContainer>
-                  <Table>
-                    <TableHead>
-                      <TableRow>
-                        <TableCell>Lead ID</TableCell>
-                        <TableCell>Name</TableCell>
-                        <TableCell>Email</TableCell>
-                        <TableCell>Phone</TableCell>
-                        <TableCell align="center">Source</TableCell>
-                        <TableCell align="center">Status</TableCell>
-                        <TableCell align="center">Group ID</TableCell>
-                        <TableCell align="center">Confidence</TableCell>
-                        <TableCell align="center">Actions</TableCell>
-                      </TableRow>
-                    </TableHead>
-                    <TableBody>
-                      {filteredDuplicates.map((group) => (
-                        group.leads.map((lead, index) => (
-                          <TableRow 
-                            key={lead.id} 
-                            hover
-                            sx={{
-                              borderLeft: `4px solid ${alpha(getGroupColor(group.groupId), 0.8)}`,
-                              backgroundColor: index === 0 ? alpha(getGroupColor(group.groupId), 0.05) : 'transparent'
-                            }}
-                          >
-                            <TableCell>
-                              <Typography variant="body2" fontWeight="600" color="primary.main">
-                                {lead.id}
-                              </Typography>
-                            </TableCell>
-                            <TableCell>
-                              <Typography variant="body2" fontWeight="500">
-                                {lead.name}
-                              </Typography>
-                              <Typography variant="caption" color="text.secondary">
-                                Created: {new Date(lead.createdDate).toLocaleDateString()}
-                              </Typography>
-                            </TableCell>
-                            <TableCell>{lead.email}</TableCell>
-                            <TableCell>{lead.phone}</TableCell>
-                            <TableCell align="center">
-                              <Chip label={lead.source} size="small" variant="outlined" />
-                            </TableCell>
-                            <TableCell align="center">
-                              <Chip 
-                                label={lead.status} 
-                                size="small" 
-                                color={lead.status === 'New Lead' ? 'info' : lead.status === 'Contacted' ? 'primary' : 'success'}
-                              />
-                            </TableCell>
-                            <TableCell align="center">
-                              {index === 0 && (
-                                <Chip 
-                                  label={group.groupId}
+      {
+        currentTab === 2 && (
+          <Grid container spacing={3}>
+            <Grid item xs={12}>
+              <Card>
+                <CardContent>
+                  <Typography variant="h6" fontWeight="600" gutterBottom>
+                    Lead Generation & Conversion Trends
+                  </Typography>
+                  <ResponsiveContainer width="100%" height={400}>
+                    <LineChart data={leadsTrendData}>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="month" />
+                      <YAxis />
+                      <RechartsTooltip />
+                      <Legend />
+                      <Line type="monotone" dataKey="leads" stroke={theme.palette.primary.main} strokeWidth={2} name="Total Leads" />
+                      <Line type="monotone" dataKey="converted" stroke={theme.palette.success.main} strokeWidth={2} name="Converted" />
+                    </LineChart>
+                  </ResponsiveContainer>
+                </CardContent>
+              </Card>
+            </Grid>
+          </Grid>
+        )
+      }
+
+      {
+        currentTab === 3 && (
+          <Grid container spacing={3}>
+            {/* Duplicate Analysis Summary */}
+            <Grid item xs={12}>
+              <Grid container spacing={2} sx={{ mb: 3 }}>
+                <Grid item xs={12} sm={6} md={3}>
+                  <Card sx={{ background: `linear-gradient(135deg, ${theme.palette.error.main} 0%, ${theme.palette.error.dark} 100%)`, color: 'white' }}>
+                    <CardContent>
+                      <Stack direction="row" alignItems="center" justifyContent="space-between">
+                        <Box>
+                          <Typography variant="body2" sx={{ opacity: 0.9 }}>Total Duplicate Groups</Typography>
+                          <Typography variant="h3" fontWeight="700">{duplicateLeads.length}</Typography>
+                        </Box>
+                        <DuplicateIcon sx={{ fontSize: 40, opacity: 0.3 }} />
+                      </Stack>
+                    </CardContent>
+                  </Card>
+                </Grid>
+                <Grid item xs={12} sm={6} md={3}>
+                  <Card sx={{ background: `linear-gradient(135deg, ${theme.palette.warning.main} 0%, ${theme.palette.warning.dark} 100%)`, color: 'white' }}>
+                    <CardContent>
+                      <Stack direction="row" alignItems="center" justifyContent="space-between">
+                        <Box>
+                          <Typography variant="body2" sx={{ opacity: 0.9 }}>Affected Leads</Typography>
+                          <Typography variant="h3" fontWeight="700">{duplicateLeads.reduce((sum, group) => sum + group.leads.length, 0)}</Typography>
+                        </Box>
+                        <WarningIcon sx={{ fontSize: 40, opacity: 0.3 }} />
+                      </Stack>
+                    </CardContent>
+                  </Card>
+                </Grid>
+                <Grid item xs={12} sm={6} md={3}>
+                  <Card sx={{ background: `linear-gradient(135deg, ${theme.palette.info.main} 0%, ${theme.palette.info.dark} 100%)`, color: 'white' }}>
+                    <CardContent>
+                      <Stack direction="row" alignItems="center" justifyContent="space-between">
+                        <Box>
+                          <Typography variant="body2" sx={{ opacity: 0.9 }}>High Confidence</Typography>
+                          <Typography variant="h3" fontWeight="700">{duplicateLeads.filter(g => g.confidence >= 95).length}</Typography>
+                        </Box>
+                        <AssessmentIcon sx={{ fontSize: 40, opacity: 0.3 }} />
+                      </Stack>
+                    </CardContent>
+                  </Card>
+                </Grid>
+                <Grid item xs={12} sm={6} md={3}>
+                  <Card sx={{ background: `linear-gradient(135deg, ${theme.palette.success.main} 0%, ${theme.palette.success.dark} 100%)`, color: 'white' }}>
+                    <CardContent>
+                      <Stack direction="row" alignItems="center" justifyContent="space-between">
+                        <Box>
+                          <Typography variant="body2" sx={{ opacity: 0.9 }}>Potential Savings</Typography>
+                          <Typography variant="h3" fontWeight="700">Rs 2.4L</Typography>
+                        </Box>
+                        <AttachMoneyIcon sx={{ fontSize: 40, opacity: 0.3 }} />
+                      </Stack>
+                    </CardContent>
+                  </Card>
+                </Grid>
+              </Grid>
+            </Grid>
+
+            {/* Duplicate Analysis Filters */}
+            <Grid item xs={12}>
+              <Card>
+                <CardContent>
+                  <Grid container spacing={2} alignItems="center">
+                    <Grid item xs={12} sm={6} md={3}>
+                      <TextField
+                        fullWidth
+                        select
+                        label="Filter by Confidence"
+                        value={duplicateFilter}
+                        onChange={(e) => setDuplicateFilter(e.target.value)}
+                      >
+                        <MenuItem value="all">All Confidence Levels</MenuItem>
+                        <MenuItem value="high">High (≥95%)</MenuItem>
+                        <MenuItem value="medium">Medium (90-94%)</MenuItem>
+                        <MenuItem value="low">Low (&lt;90%)</MenuItem>
+                      </TextField>
+                    </Grid>
+                    <Grid item xs={12} sm={6} md={3}>
+                      <TextField
+                        fullWidth
+                        select
+                        label="Filter by Source"
+                        value={duplicateSourceFilter}
+                        onChange={(e) => setDuplicateSourceFilter(e.target.value)}
+                      >
+                        <MenuItem value="all">All Sources</MenuItem>
+                        {sources.map((source) => (
+                          <MenuItem key={source} value={source}>{source}</MenuItem>
+                        ))}
+                      </TextField>
+                    </Grid>
+                    <Grid item xs={12} sm={6} md={3}>
+                      <TextField
+                        fullWidth
+                        select
+                        label="Filter by Status"
+                        value={duplicateStatusFilter}
+                        onChange={(e) => setDuplicateStatusFilter(e.target.value)}
+                      >
+                        <MenuItem value="all">All Status</MenuItem>
+                        {statuses.map((status) => (
+                          <MenuItem key={status} value={status}>{status}</MenuItem>
+                        ))}
+                      </TextField>
+                    </Grid>
+                    <Grid item xs={12} sm={6} md={3}>
+                      <Button
+                        variant="outlined"
+                        fullWidth
+                        onClick={handleResetDuplicateFilters}
+                        sx={{ height: '56px' }}
+                      >
+                        Reset Filters
+                      </Button>
+                    </Grid>
+                  </Grid>
+                </CardContent>
+              </Card>
+            </Grid>
+
+            {/* Duplicate Leads Table */}
+            <Grid item xs={12}>
+              <Card>
+                <CardContent>
+                  <Typography variant="h6" fontWeight="600" gutterBottom>
+                    Duplicate Lead Analysis
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+                    Leads are grouped by matching criteria. Use actions to merge, mark as valid, or delete duplicates.
+                  </Typography>
+
+                  <TableContainer>
+                    <Table>
+                      <TableHead>
+                        <TableRow>
+                          <TableCell>Lead ID</TableCell>
+                          <TableCell>Name</TableCell>
+                          <TableCell>Email</TableCell>
+                          <TableCell>Phone</TableCell>
+                          <TableCell align="center">Source</TableCell>
+                          <TableCell align="center">Status</TableCell>
+                          <TableCell align="center">Group ID</TableCell>
+                          <TableCell align="center">Confidence</TableCell>
+                          <TableCell align="center">Actions</TableCell>
+                        </TableRow>
+                      </TableHead>
+                      <TableBody>
+                        {filteredDuplicates.map((group) => (
+                          group.leads.map((lead, index) => (
+                            <TableRow
+                              key={lead.id}
+                              hover
+                              sx={{
+                                borderLeft: `4px solid ${alpha(getGroupColor(group.groupId), 0.8)}`,
+                                backgroundColor: index === 0 ? alpha(getGroupColor(group.groupId), 0.05) : 'transparent'
+                              }}
+                            >
+                              <TableCell>
+                                <Typography variant="body2" fontWeight="600" color="primary.main">
+                                  {lead.id}
+                                </Typography>
+                              </TableCell>
+                              <TableCell>
+                                <Typography variant="body2" fontWeight="500">
+                                  {lead.name}
+                                </Typography>
+                                <Typography variant="caption" color="text.secondary">
+                                  Created: {new Date(lead.createdDate).toLocaleDateString()}
+                                </Typography>
+                              </TableCell>
+                              <TableCell>{lead.email}</TableCell>
+                              <TableCell>{lead.phone}</TableCell>
+                              <TableCell align="center">
+                                <Chip label={lead.source} size="small" variant="outlined" />
+                              </TableCell>
+                              <TableCell align="center">
+                                <Chip
+                                  label={lead.status}
                                   size="small"
-                                  sx={{ 
-                                    bgcolor: alpha(getGroupColor(group.groupId), 0.2),
-                                    color: getGroupColor(group.groupId),
-                                    fontWeight: 600
-                                  }}
+                                  color={lead.status === 'New Lead' ? 'info' : lead.status === 'Contacted' ? 'primary' : 'success'}
                                 />
-                              )}
-                            </TableCell>
-                            <TableCell align="center">
-                              {index === 0 && (
-                                <Chip 
-                                  label={`${group.confidence}%`}
-                                  size="small"
-                                  color={getConfidenceColor(group.confidence)}
-                                />
-                              )}
-                            </TableCell>
-                            <TableCell align="center">
-                              <Stack direction="row" spacing={0.5} justifyContent="center">
+                              </TableCell>
+                              <TableCell align="center">
                                 {index === 0 && (
-                                  <>
-                                    <Button
-                                      size="small"
-                                      variant="outlined"
-                                      color="primary"
-                                      startIcon={<MergeIcon />}
-                                      onClick={() => handleMergeDuplicates(group.groupId)}
-                                      sx={{ fontSize: '0.7rem' }}
-                                    >
-                                      Merge
-                                    </Button>
-                                    <Button
-                                      size="small"
-                                      variant="outlined"
-                                      color="success"
-                                      startIcon={<ValidIcon />}
-                                      onClick={() => handleMarkAsValid(group.groupId)}
-                                      sx={{ fontSize: '0.7rem' }}
-                                    >
-                                      Valid
-                                    </Button>
-                                  </>
+                                  <Chip
+                                    label={group.groupId}
+                                    size="small"
+                                    sx={{
+                                      bgcolor: alpha(getGroupColor(group.groupId), 0.2),
+                                      color: getGroupColor(group.groupId),
+                                      fontWeight: 600
+                                    }}
+                                  />
                                 )}
-                                <Button
+                              </TableCell>
+                              <TableCell align="center">
+                                {index === 0 && (
+                                  <Chip
+                                    label={`${group.confidence}%`}
+                                    size="small"
+                                    color={getConfidenceColor(group.confidence)}
+                                  />
+                                )}
+                              </TableCell>
+                              <TableCell align="center">
+                                <Stack direction="row" spacing={0.5} justifyContent="center">
+                                  {index === 0 && (
+                                    <>
+                                      <Button
+                                        size="small"
+                                        variant="outlined"
+                                        color="primary"
+                                        startIcon={<MergeIcon />}
+                                        onClick={() => handleMergeDuplicates(group.groupId)}
+                                        sx={{ fontSize: '0.7rem' }}
+                                      >
+                                        Merge
+                                      </Button>
+                                      <Button
+                                        size="small"
+                                        variant="outlined"
+                                        color="success"
+                                        startIcon={<ValidIcon />}
+                                        onClick={() => handleMarkAsValid(group.groupId)}
+                                        sx={{ fontSize: '0.7rem' }}
+                                      >
+                                        Valid
+                                      </Button>
+                                    </>
+                                  )}
+                                  <Button
+                                    size="small"
+                                    variant="outlined"
+                                    color="error"
+                                    startIcon={<DeleteIcon />}
+                                    onClick={() => handleDeleteDuplicate(lead.id)}
+                                    sx={{ fontSize: '0.7rem' }}
+                                  >
+                                    Delete
+                                  </Button>
+                                </Stack>
+                              </TableCell>
+                            </TableRow>
+                          ))
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </TableContainer>
+
+                  {filteredDuplicates.length === 0 && (
+                    <Box sx={{ textAlign: 'center', py: 4 }}>
+                      <Typography variant="h6" color="text.secondary">
+                        No duplicate leads found
+                      </Typography>
+                      <Typography variant="body2" color="text.secondary">
+                        All leads appear to be unique based on current criteria
+                      </Typography>
+                    </Box>
+                  )}
+                </CardContent>
+              </Card>
+            </Grid>
+          </Grid>
+        )
+      }
+
+      {
+        currentTab === 4 && (
+          <Grid container spacing={3}>
+            {/* Pre-Expiry Renewal Summary */}
+            <Grid item xs={12}>
+              <Grid container spacing={2} sx={{ mb: 3 }}>
+                <Grid item xs={12} sm={6} md={3}>
+                  <Card sx={{ background: `linear-gradient(135deg, ${theme.palette.warning.main} 0%, ${theme.palette.warning.dark} 100%)`, color: 'white' }}>
+                    <CardContent>
+                      <Stack direction="row" alignItems="center" justifyContent="space-between">
+                        <Box>
+                          <Typography variant="body2" sx={{ opacity: 0.9 }}>Expiring Soon</Typography>
+                          <Typography variant="h3" fontWeight="700">{preExpiryRenewals.filter(p => p.daysToExpiry <= 30).length}</Typography>
+                        </Box>
+                        <DateRangeIcon sx={{ fontSize: 40, opacity: 0.3 }} />
+                      </Stack>
+                    </CardContent>
+                  </Card>
+                </Grid>
+                <Grid item xs={12} sm={6} md={3}>
+                  <Card sx={{ background: `linear-gradient(135deg, ${theme.palette.success.main} 0%, ${theme.palette.success.dark} 100%)`, color: 'white' }}>
+                    <CardContent>
+                      <Stack direction="row" alignItems="center" justifyContent="space-between">
+                        <Box>
+                          <Typography variant="body2" sx={{ opacity: 0.9 }}>Renewed</Typography>
+                          <Typography variant="h3" fontWeight="700">{preExpiryRenewals.filter(p => p.status === 'Renewed').length}</Typography>
+                        </Box>
+                        <AssessmentIcon sx={{ fontSize: 40, opacity: 0.3 }} />
+                      </Stack>
+                    </CardContent>
+                  </Card>
+                </Grid>
+                <Grid item xs={12} sm={6} md={3}>
+                  <Card sx={{ background: `linear-gradient(135deg, ${theme.palette.info.main} 0%, ${theme.palette.info.dark} 100%)`, color: 'white' }}>
+                    <CardContent>
+                      <Stack direction="row" alignItems="center" justifyContent="space-between">
+                        <Box>
+                          <Typography variant="body2" sx={{ opacity: 0.9 }}>Total Premium</Typography>
+                          <Typography variant="h3" fontWeight="700">₹{(preExpiryRenewals.reduce((sum, p) => sum + p.premium, 0) / 100000).toFixed(1)}L</Typography>
+                        </Box>
+                        <AttachMoneyIcon sx={{ fontSize: 40, opacity: 0.3 }} />
+                      </Stack>
+                    </CardContent>
+                  </Card>
+                </Grid>
+                <Grid item xs={12} sm={6} md={3}>
+                  <Card sx={{ background: `linear-gradient(135deg, ${theme.palette.error.main} 0%, ${theme.palette.error.dark} 100%)`, color: 'white' }}>
+                    <CardContent>
+                      <Stack direction="row" alignItems="center" justifyContent="space-between">
+                        <Box>
+                          <Typography variant="body2" sx={{ opacity: 0.9 }}>Pending</Typography>
+                          <Typography variant="h3" fontWeight="700">{preExpiryRenewals.filter(p => p.status === 'Pending').length}</Typography>
+                        </Box>
+                        <WarningIcon sx={{ fontSize: 40, opacity: 0.3 }} />
+                      </Stack>
+                    </CardContent>
+                  </Card>
+                </Grid>
+              </Grid>
+            </Grid>
+
+            {/* Filters */}
+            <Grid item xs={12}>
+              <Card sx={{ mb: 2 }}>
+                <CardContent>
+                  <Grid container spacing={2} alignItems="center">
+                    <Grid item xs={12} sm={6} md={3}>
+                      <TextField
+                        fullWidth
+                        select
+                        label="Filter by Status"
+                        value={renewalFilter}
+                        onChange={(e) => setRenewalFilter(e.target.value)}
+                      >
+                        <MenuItem value="all">All Policies</MenuItem>
+                        <MenuItem value="pending">Pending</MenuItem>
+                        <MenuItem value="contacted">Contacted</MenuItem>
+                        <MenuItem value="proposal">Proposal Sent</MenuItem>
+                        <MenuItem value="renewed">Renewed</MenuItem>
+                        <MenuItem value="negotiation">Negotiation</MenuItem>
+                      </TextField>
+                    </Grid>
+                    <Grid item xs={12} sm={6} md={3}>
+                      <TextField
+                        fullWidth
+                        select
+                        label="Filter by Agent"
+                        value={renewalAgentFilter}
+                        onChange={(e) => setRenewalAgentFilter(e.target.value)}
+                      >
+                        <MenuItem value="all">All Agents</MenuItem>
+                        {agents.map((agent) => (
+                          <MenuItem key={agent} value={agent}>{agent}</MenuItem>
+                        ))}
+                      </TextField>
+                    </Grid>
+                    <Grid item xs={12} sm={6} md={3}>
+                      <TextField
+                        fullWidth
+                        select
+                        label="Filter by Policy Type"
+                        value={renewalPolicyTypeFilter}
+                        onChange={(e) => setRenewalPolicyTypeFilter(e.target.value)}
+                      >
+                        <MenuItem value="all">All Policy Types</MenuItem>
+                        <MenuItem value="Health">Health</MenuItem>
+                        <MenuItem value="Motor">Motor</MenuItem>
+                        <MenuItem value="Life">Life</MenuItem>
+                        <MenuItem value="Travel">Travel</MenuItem>
+                        <MenuItem value="Home">Home</MenuItem>
+                      </TextField>
+                    </Grid>
+                    <Grid item xs={12} sm={6} md={3}>
+                      <Button
+                        variant="outlined"
+                        fullWidth
+                        onClick={handleResetRenewalFilters}
+                        sx={{ height: '56px' }}
+                      >
+                        Reset Filters
+                      </Button>
+                    </Grid>
+                  </Grid>
+                </CardContent>
+              </Card>
+            </Grid>
+
+            {/* Pre-Expiry Renewals Table */}
+            <Grid item xs={12}>
+              <Card>
+                <CardContent>
+                  <Typography variant="h6" fontWeight="600" gutterBottom>
+                    Pre-Expiry Renewal Report
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+                    Policies expiring within the next 60 days requiring renewal action.
+                  </Typography>
+
+                  <TableContainer>
+                    <Table>
+                      <TableHead>
+                        <TableRow>
+                          <TableCell>Policy ID</TableCell>
+                          <TableCell>Customer Name</TableCell>
+                          <TableCell>Policy Type</TableCell>
+                          <TableCell align="center">Expiry Date</TableCell>
+                          <TableCell align="center">Days to Expiry</TableCell>
+                          <TableCell align="right">Premium</TableCell>
+                          <TableCell align="center">Status</TableCell>
+                          <TableCell>Assigned Agent</TableCell>
+                          <TableCell align="center">Last Contact</TableCell>
+                        </TableRow>
+                      </TableHead>
+                      <TableBody>
+                        {preExpiryRenewals
+                          .filter(policy => {
+                            // Filter by status
+                            if (renewalFilter !== 'all') {
+                              const statusMap = {
+                                'pending': 'Pending',
+                                'contacted': 'Contacted',
+                                'proposal': 'Proposal Sent',
+                                'renewed': 'Renewed',
+                                'negotiation': 'Negotiation'
+                              };
+                              if (policy.status !== statusMap[renewalFilter]) {
+                                return false;
+                              }
+                            }
+                            // Filter by agent
+                            if (renewalAgentFilter !== 'all' && policy.agent !== renewalAgentFilter) {
+                              return false;
+                            }
+                            // Filter by policy type
+                            if (renewalPolicyTypeFilter !== 'all' && policy.policyType !== renewalPolicyTypeFilter) {
+                              return false;
+                            }
+                            return true;
+                          })
+                          .map((policy) => (
+                            <TableRow key={policy.id} hover>
+                              <TableCell>
+                                <Typography variant="body2" fontWeight="600" color="primary.main">
+                                  {policy.id}
+                                </Typography>
+                              </TableCell>
+                              <TableCell>
+                                <Typography variant="body2" fontWeight="500">
+                                  {policy.customerName}
+                                </Typography>
+                              </TableCell>
+                              <TableCell>{policy.policyType} Insurance</TableCell>
+                              <TableCell align="center">
+                                <Typography variant="body2">
+                                  {new Date(policy.expiryDate).toLocaleDateString()}
+                                </Typography>
+                              </TableCell>
+                              <TableCell align="center">
+                                <Chip
+                                  label={`${policy.daysToExpiry} days`}
                                   size="small"
-                                  variant="outlined"
-                                  color="error"
-                                  startIcon={<DeleteIcon />}
-                                  onClick={() => handleDeleteDuplicate(lead.id)}
-                                  sx={{ fontSize: '0.7rem' }}
+                                  color={policy.daysToExpiry <= 15 ? 'error' : policy.daysToExpiry <= 30 ? 'warning' : 'info'}
+                                />
+                              </TableCell>
+                              <TableCell align="right">
+                                <Typography variant="body2" fontWeight="600">
+                                  ₹{policy.premium.toLocaleString()}
+                                </Typography>
+                              </TableCell>
+                              <TableCell align="center">
+                                <Chip
+                                  label={policy.status}
+                                  size="small"
+                                  color={
+                                    policy.status === 'Renewed' ? 'success' :
+                                      policy.status === 'Proposal Sent' ? 'info' :
+                                        policy.status === 'Contacted' ? 'primary' : 'warning'
+                                  }
+                                />
+                              </TableCell>
+                              <TableCell>{policy.agent}</TableCell>
+                              <TableCell align="center">
+                                <Typography variant="caption" color="text.secondary">
+                                  {new Date(policy.lastContact).toLocaleDateString()}
+                                </Typography>
+                                <br />
+                                <Typography variant="caption" color="text.secondary">
+                                  {policy.phone}
+                                </Typography>
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                      </TableBody>
+                    </Table>
+                  </TableContainer>
+                </CardContent>
+              </Card>
+            </Grid >
+          </Grid >
+        )
+      }
+
+      {
+        currentTab === 5 && (
+          <Grid container spacing={3}>
+            {/* CSC Productivity Summary */}
+            <Grid item xs={12}>
+              <Grid container spacing={2} sx={{ mb: 3 }}>
+                <Grid item xs={12} sm={6} md={3}>
+                  <Card sx={{ background: `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.primary.dark} 100%)`, color: 'white' }}>
+                    <CardContent>
+                      <Stack direction="row" alignItems="center" justifyContent="space-between">
+                        <Box>
+                          <Typography variant="body2" sx={{ opacity: 0.9 }}>Total CSCs</Typography>
+                          <Typography variant="h3" fontWeight="700">{cscProductivityData.length}</Typography>
+                        </Box>
+                        <PeopleIcon sx={{ fontSize: 40, opacity: 0.3 }} />
+                      </Stack>
+                    </CardContent>
+                  </Card>
+                </Grid>
+                <Grid item xs={12} sm={6} md={3}>
+                  <Card sx={{ background: `linear-gradient(135deg, ${theme.palette.success.main} 0%, ${theme.palette.success.dark} 100%)`, color: 'white' }}>
+                    <CardContent>
+                      <Stack direction="row" alignItems="center" justifyContent="space-between">
+                        <Box>
+                          <Typography variant="body2" sx={{ opacity: 0.9 }}>Total Calls</Typography>
+                          <Typography variant="h3" fontWeight="700">{cscProductivityData.reduce((sum, csc) => sum + csc.calls, 0)}</Typography>
+                        </Box>
+                        <PhoneIcon sx={{ fontSize: 40, opacity: 0.3 }} />
+                      </Stack>
+                    </CardContent>
+                  </Card>
+                </Grid>
+                <Grid item xs={12} sm={6} md={3}>
+                  <Card sx={{ background: `linear-gradient(135deg, ${theme.palette.warning.main} 0%, ${theme.palette.warning.dark} 100%)`, color: 'white' }}>
+                    <CardContent>
+                      <Stack direction="row" alignItems="center" justifyContent="space-between">
+                        <Box>
+                          <Typography variant="body2" sx={{ opacity: 0.9 }}>Total Policies</Typography>
+                          <Typography variant="h3" fontWeight="700">{cscProductivityData.reduce((sum, csc) => sum + csc.policies, 0)}</Typography>
+                        </Box>
+                        <PolicyIcon sx={{ fontSize: 40, opacity: 0.3 }} />
+                      </Stack>
+                    </CardContent>
+                  </Card>
+                </Grid>
+                <Grid item xs={12} sm={6} md={3}>
+                  <Card sx={{ background: `linear-gradient(135deg, ${theme.palette.info.main} 0%, ${theme.palette.info.dark} 100%)`, color: 'white' }}>
+                    <CardContent>
+                      <Stack direction="row" alignItems="center" justifyContent="space-between">
+                        <Box>
+                          <Typography variant="body2" sx={{ opacity: 0.9 }}>Avg Conversion</Typography>
+                          <Typography variant="h3" fontWeight="700">{(cscProductivityData.reduce((sum, csc) => sum + csc.conversionRate, 0) / cscProductivityData.length).toFixed(1)}%</Typography>
+                        </Box>
+                        <AssessmentIcon sx={{ fontSize: 40, opacity: 0.3 }} />
+                      </Stack>
+                    </CardContent>
+                  </Card>
+                </Grid>
+              </Grid>
+            </Grid>
+
+            {/* CSC Filters */}
+            <Grid item xs={12}>
+              <Card sx={{ mb: 2 }}>
+                <CardContent>
+                  <Grid container spacing={2} alignItems="center">
+                    <Grid item xs={12} sm={6} md={3}>
+                      <TextField
+                        fullWidth
+                        select
+                        label="Filter by Performance"
+                        value={cscFilter}
+                        onChange={(e) => setCscFilter(e.target.value)}
+                      >
+                        <MenuItem value="all">All CSCs</MenuItem>
+                        <MenuItem value="excellent">Excellent</MenuItem>
+                        <MenuItem value="good">Good</MenuItem>
+                        <MenuItem value="average">Average</MenuItem>
+                        <MenuItem value="needs-improvement">Needs Improvement</MenuItem>
+                      </TextField>
+                    </Grid>
+                    <Grid item xs={12} sm={6} md={3}>
+                      <TextField
+                        fullWidth
+                        select
+                        label="Filter by Region"
+                        value={regionFilter}
+                        onChange={(e) => setRegionFilter(e.target.value)}
+                      >
+                        <MenuItem value="all">All Regions</MenuItem>
+                        {regions.map((region) => (
+                          <MenuItem key={region} value={region}>{region}</MenuItem>
+                        ))}
+                      </TextField>
+                    </Grid>
+                    <Grid item xs={12} sm={6} md={2}>
+                      <TextField
+                        fullWidth
+                        select
+                        label="Filter by Score"
+                        value={scoreFilter}
+                        onChange={(e) => setScoreFilter(e.target.value)}
+                      >
+                        <MenuItem value="all">All Scores</MenuItem>
+                        <MenuItem value="excellent">Excellent (≥90)</MenuItem>
+                        <MenuItem value="good">Good (80-89)</MenuItem>
+                        <MenuItem value="average">Average (70-79)</MenuItem>
+                        <MenuItem value="poor">Poor (&lt;70)</MenuItem>
+                      </TextField>
+                    </Grid>
+                    <Grid item xs={12} sm={6} md={2}>
+                      <Button
+                        variant="outlined"
+                        fullWidth
+                        onClick={handleResetCSCFilters}
+                        sx={{ height: '56px' }}
+                      >
+                        Reset Filters
+                      </Button>
+                    </Grid>
+
+                  </Grid>
+                </CardContent>
+              </Card>
+            </Grid>
+
+            {/* CSC Performance Chart */}
+            <Grid item xs={12} md={6}>
+              <Card>
+                <CardContent>
+                  <Typography variant="h6" fontWeight="600" gutterBottom>
+                    CSC Performance Distribution
+                  </Typography>
+                  <ResponsiveContainer width="100%" height={300}>
+                    <PieChart>
+                      <Pie
+                        data={[
+                          { name: 'Excellent', value: cscProductivityData.filter(c => c.performance === 'Excellent').length, color: theme.palette.success.main },
+                          { name: 'Good', value: cscProductivityData.filter(c => c.performance === 'Good').length, color: theme.palette.primary.main },
+                          { name: 'Average', value: cscProductivityData.filter(c => c.performance === 'Average').length, color: theme.palette.warning.main },
+                          { name: 'Needs Improvement', value: cscProductivityData.filter(c => c.performance === 'Needs Improvement').length, color: theme.palette.error.main }
+                        ]}
+                        dataKey="value"
+                        nameKey="name"
+                        cx="50%"
+                        cy="50%"
+                        outerRadius={100}
+                        label
+                      >
+                        {[
+                          { name: 'Excellent', value: cscProductivityData.filter(c => c.performance === 'Excellent').length, color: theme.palette.success.main },
+                          { name: 'Good', value: cscProductivityData.filter(c => c.performance === 'Good').length, color: theme.palette.primary.main },
+                          { name: 'Average', value: cscProductivityData.filter(c => c.performance === 'Average').length, color: theme.palette.warning.main },
+                          { name: 'Needs Improvement', value: cscProductivityData.filter(c => c.performance === 'Needs Improvement').length, color: theme.palette.error.main }
+                        ].map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={entry.color} />
+                        ))}
+                      </Pie>
+                      <RechartsTooltip />
+                      <Legend />
+                    </PieChart>
+                  </ResponsiveContainer>
+                </CardContent>
+              </Card>
+            </Grid>
+
+            {/* Conversion Rate Chart */}
+            <Grid item xs={12} md={6}>
+              <Card>
+                <CardContent>
+                  <Typography variant="h6" fontWeight="600" gutterBottom>
+                    CSC Conversion Rates
+                  </Typography>
+                  <ResponsiveContainer width="100%" height={300}>
+                    <BarChart data={getFilteredCSCProductivityData().slice(0, 5)}>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="cscName" angle={-45} textAnchor="end" height={80} />
+                      <YAxis />
+                      <RechartsTooltip />
+                      <Bar dataKey="conversionRate" fill={theme.palette.primary.main} name="Conversion Rate (%)" />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </CardContent>
+              </Card>
+            </Grid>
+
+            {/* CSC Productivity Table */}
+            <Grid item xs={12}>
+              <Card>
+                <CardContent>
+                  <Typography variant="h6" fontWeight="600" gutterBottom>
+                    CSC Productivity Report
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+                    Comprehensive performance analysis of Customer Service Center representatives.
+                  </Typography>
+
+                  <TableContainer>
+                    <Table>
+                      <TableHead>
+                        <TableRow>
+                          <TableCell>CSC Name</TableCell>
+                          <TableCell align="center">Region</TableCell>
+                          <TableCell align="center">Calls</TableCell>
+                          <TableCell align="center">Policies</TableCell>
+                          <TableCell align="center">Conversion %</TableCell>
+                          <TableCell align="center">Score</TableCell>
+                          <TableCell align="center">Performance</TableCell>
+                          <TableCell>Progress</TableCell>
+                        </TableRow>
+                      </TableHead>
+                      <TableBody>
+                        {getFilteredCSCProductivityData()
+                          .filter(csc => {
+                            if (cscFilter === 'all') return true;
+                            if (cscFilter === 'excellent') return csc.performance === 'Excellent';
+                            if (cscFilter === 'good') return csc.performance === 'Good';
+                            if (cscFilter === 'average') return csc.performance === 'Average';
+                            if (cscFilter === 'needs-improvement') return csc.performance === 'Needs Improvement';
+                            return true;
+                          })
+                          .filter(csc => regionFilter === 'all' || csc.region === regionFilter)
+                          .filter(csc => {
+                            if (scoreFilter === 'all') return true;
+                            if (scoreFilter === 'excellent') return csc.score >= 90;
+                            if (scoreFilter === 'good') return csc.score >= 80 && csc.score < 90;
+                            if (scoreFilter === 'average') return csc.score >= 70 && csc.score < 80;
+                            if (scoreFilter === 'poor') return csc.score < 70;
+                            return true;
+                          })
+                          .map((csc) => (
+                            <TableRow key={csc.cscName} hover>
+                              <TableCell>
+                                <Typography variant="body2" fontWeight="600">
+                                  {csc.cscName}
+                                </Typography>
+                              </TableCell>
+                              <TableCell align="center">
+                                <Chip label={csc.region} size="small" variant="outlined" />
+                              </TableCell>
+                              <TableCell align="center">
+                                <Typography variant="body2" fontWeight="600">
+                                  {csc.calls}
+                                </Typography>
+                              </TableCell>
+                              <TableCell align="center">
+                                <Typography variant="body2" fontWeight="600" color="primary.main">
+                                  {csc.policies}
+                                </Typography>
+                              </TableCell>
+                              <TableCell align="center">
+                                <Chip
+                                  label={`${csc.conversionRate}%`}
+                                  size="small"
+                                  color={csc.conversionRate >= 20 ? 'success' : csc.conversionRate >= 15 ? 'warning' : 'error'}
+                                />
+                              </TableCell>
+                              <TableCell align="center">
+                                <Stack direction="row" alignItems="center" justifyContent="center" spacing={0.5}>
+                                  <Typography variant="body2" fontWeight="600">
+                                    {csc.score}
+                                  </Typography>
+                                  <StarIcon
+                                    fontSize="small"
+                                    sx={{
+                                      color: csc.score >= 90 ? theme.palette.success.main :
+                                        csc.score >= 80 ? theme.palette.warning.main :
+                                          theme.palette.error.main
+                                    }}
+                                  />
+                                </Stack>
+                              </TableCell>
+                              <TableCell align="center">
+                                <Chip
+                                  label={csc.performance}
+                                  size="small"
+                                  color={
+                                    csc.performance === 'Excellent' ? 'success' :
+                                      csc.performance === 'Good' ? 'primary' :
+                                        csc.performance === 'Average' ? 'warning' : 'error'
+                                  }
+                                />
+                              </TableCell>
+                              <TableCell>
+                                <Box sx={{ width: '100%', display: 'flex', alignItems: 'center', gap: 1 }}>
+                                  <Box
+                                    sx={{
+                                      flex: 1,
+                                      height: 8,
+                                      bgcolor: alpha(theme.palette.grey[500], 0.1),
+                                      borderRadius: 1,
+                                      overflow: 'hidden'
+                                    }}
+                                  >
+                                    <Box
+                                      sx={{
+                                        width: `${csc.score}%`,
+                                        height: '100%',
+                                        bgcolor: csc.score >= 90 ? theme.palette.success.main :
+                                          csc.score >= 80 ? theme.palette.warning.main :
+                                            theme.palette.error.main,
+                                        borderRadius: 1
+                                      }}
+                                    />
+                                  </Box>
+                                  <Typography variant="caption" fontWeight="600">
+                                    {csc.score}%
+                                  </Typography>
+                                </Box>
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                      </TableBody>
+                    </Table>
+                  </TableContainer>
+                </CardContent>
+              </Card>
+            </Grid>
+          </Grid >
+        )
+      }
+
+      {
+        currentTab === 6 && (
+          <Grid container spacing={3}>
+            {/* Lost Reasons Summary */}
+            <Grid item xs={12}>
+              <Grid container spacing={2} sx={{ mb: 3 }}>
+                <Grid item xs={12} sm={6} md={3}>
+                  <Card sx={{ background: `linear-gradient(135deg, ${theme.palette.error.main} 0%, ${theme.palette.error.dark} 100%)`, color: 'white' }}>
+                    <CardContent>
+                      <Stack direction="row" alignItems="center" justifyContent="space-between">
+                        <Box>
+                          <Typography variant="body2" sx={{ opacity: 0.9 }}>Total Lost Leads</Typography>
+                          <Typography variant="h3" fontWeight="700">{lostLeadsDetails.length}</Typography>
+                        </Box>
+                        <CancelIcon sx={{ fontSize: 40, opacity: 0.3 }} />
+                      </Stack>
+                    </CardContent>
+                  </Card>
+                </Grid>
+                <Grid item xs={12} sm={6} md={3}>
+                  <Card sx={{ background: `linear-gradient(135deg, ${theme.palette.warning.main} 0%, ${theme.palette.warning.dark} 100%)`, color: 'white' }}>
+                    <CardContent>
+                      <Stack direction="row" alignItems="center" justifyContent="space-between">
+                        <Box>
+                          <Typography variant="body2" sx={{ opacity: 0.9 }}>Top Reason</Typography>
+                          <Typography variant="h6" fontWeight="700">High Premium</Typography>
+                          <Typography variant="caption">35.7% of losses</Typography>
+                        </Box>
+                        <AttachMoneyIcon sx={{ fontSize: 40, opacity: 0.3 }} />
+                      </Stack>
+                    </CardContent>
+                  </Card>
+                </Grid>
+                <Grid item xs={12} sm={6} md={3}>
+                  <Card sx={{ background: `linear-gradient(135deg, ${theme.palette.info.main} 0%, ${theme.palette.info.dark} 100%)`, color: 'white' }}>
+                    <CardContent>
+                      <Stack direction="row" alignItems="center" justifyContent="space-between">
+                        <Box>
+                          <Typography variant="body2" sx={{ opacity: 0.9 }}>Lost Revenue</Typography>
+                          <Typography variant="h3" fontWeight="700">₹2.1Cr</Typography>
+                        </Box>
+                        <TrendingDownIcon sx={{ fontSize: 40, opacity: 0.3 }} />
+                      </Stack>
+                    </CardContent>
+                  </Card>
+                </Grid>
+                <Grid item xs={12} sm={6} md={3}>
+                  <Card sx={{ background: `linear-gradient(135deg, ${theme.palette.success.main} 0%, ${theme.palette.success.dark} 100%)`, color: 'white' }}>
+                    <CardContent>
+                      <Stack direction="row" alignItems="center" justifyContent="space-between">
+                        <Box>
+                          <Typography variant="body2" sx={{ opacity: 0.9 }}>Recovery Rate</Typography>
+                          <Typography variant="h3" fontWeight="700">12%</Typography>
+                        </Box>
+                        <AssessmentIcon sx={{ fontSize: 40, opacity: 0.3 }} />
+                      </Stack>
+                    </CardContent>
+                  </Card>
+                </Grid>
+              </Grid>
+            </Grid>
+
+            {/* Filters */}
+            <Grid item xs={12}>
+              <Card sx={{ mb: 2 }}>
+                <CardContent>
+                  <Grid container spacing={2} alignItems="center">
+                    <Grid item xs={12} sm={6} md={3}>
+                      <TextField
+                        fullWidth
+                        select
+                        label="Filter by Reason"
+                        value={lostReasonFilter}
+                        onChange={(e) => setLostReasonFilter(e.target.value)}
+                      >
+                        <MenuItem value="all">All Reasons</MenuItem>
+                        <MenuItem value="High Premium">High Premium</MenuItem>
+                        <MenuItem value="Better Competitor Offer">Better Competitor Offer</MenuItem>
+                        <MenuItem value="Poor Service Experience">Poor Service Experience</MenuItem>
+                        <MenuItem value="Coverage Issues">Coverage Issues</MenuItem>
+                        <MenuItem value="Financial Constraints">Financial Constraints</MenuItem>
+                      </TextField>
+                    </Grid>
+                    <Grid item xs={12} sm={6} md={3}>
+                      <TextField
+                        fullWidth
+                        select
+                        label="Filter by Product Type"
+                        value={productTypeFilter}
+                        onChange={(e) => setProductTypeFilter(e.target.value)}
+                      >
+                        <MenuItem value="all">All Products</MenuItem>
+                        {productTypes.map((type) => (
+                          <MenuItem key={type} value={type}>{type} Insurance</MenuItem>
+                        ))}
+                      </TextField>
+                    </Grid>
+                    <Grid item xs={12} sm={6} md={3}>
+                      <TextField
+                        fullWidth
+                        select
+                        label="Filter by Agent"
+                        value={agentFilter}
+                        onChange={(e) => setAgentFilter(e.target.value)}
+                      >
+                        <MenuItem value="all">All Agents</MenuItem>
+                        {agents.map((agent) => (
+                          <MenuItem key={agent} value={agent}>{agent}</MenuItem>
+                        ))}
+                      </TextField>
+                    </Grid>
+                    <Grid item xs={12} sm={6} md={3}>
+                      <Button
+                        variant="outlined"
+                        fullWidth
+                        onClick={handleResetLostReasonFilters}
+                        sx={{ height: '56px' }}
+                      >
+                        Reset Filters
+                      </Button>
+                    </Grid>
+                  </Grid>
+                </CardContent>
+              </Card>
+            </Grid>
+
+            {/* Charts */}
+            <Grid item xs={12} md={6}>
+              <Card>
+                <CardContent>
+                  <Typography variant="h6" fontWeight="600" gutterBottom>
+                    Lost Reasons Distribution
+                  </Typography>
+                  <ResponsiveContainer width="100%" height={300}>
+                    <PieChart>
+                      <Pie
+                        data={lostReasonsData}
+                        dataKey="count"
+                        nameKey="reason"
+                        cx="50%"
+                        cy="50%"
+                        outerRadius={100}
+                        label={({ reason, percentage }) => `${reason}: ${percentage}%`}
+                      >
+                        {lostReasonsData.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                        ))}
+                      </Pie>
+                      <RechartsTooltip />
+                      <Legend />
+                    </PieChart>
+                  </ResponsiveContainer>
+                </CardContent>
+              </Card>
+            </Grid>
+
+            <Grid item xs={12} md={6}>
+              <Card>
+                <CardContent>
+                  <Typography variant="h6" fontWeight="600" gutterBottom>
+                    Monthly Lost Reasons Trend
+                  </Typography>
+                  <ResponsiveContainer width="100%" height={300}>
+                    <BarChart data={monthlyLostReasons}>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="month" />
+                      <YAxis />
+                      <RechartsTooltip />
+                      <Legend />
+                      <Bar dataKey="highPremium" stackId="a" fill={theme.palette.error.main} name="High Premium" />
+                      <Bar dataKey="competitor" stackId="a" fill={theme.palette.warning.main} name="Competitor" />
+                      <Bar dataKey="service" stackId="a" fill={theme.palette.info.main} name="Service" />
+                      <Bar dataKey="coverage" stackId="a" fill={theme.palette.primary.main} name="Coverage" />
+                      <Bar dataKey="financial" stackId="a" fill={theme.palette.success.main} name="Financial" />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </CardContent>
+              </Card>
+            </Grid>
+
+            {/* Lost Leads Table */}
+            <Grid item xs={12}>
+              <Card>
+                <CardContent>
+                  <Typography variant="h6" fontWeight="600" gutterBottom>
+                    Lost Leads Details
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+                    Detailed analysis of lost leads with reasons and competitor information.
+                  </Typography>
+
+                  <TableContainer>
+                    <Table>
+                      <TableHead>
+                        <TableRow>
+                          <TableCell>Lead ID</TableCell>
+                          <TableCell>Customer Name</TableCell>
+                          <TableCell>Policy Type</TableCell>
+                          <TableCell>Agent</TableCell>
+                          <TableCell align="center">Lost Date</TableCell>
+                          <TableCell>Lost Reason</TableCell>
+                          <TableCell align="right">Premium</TableCell>
+
+                          <TableCell>Notes</TableCell>
+                        </TableRow>
+                      </TableHead>
+                      <TableBody>
+                        {getFilteredLostLeadsDetails()
+                          .filter(lead => {
+                            if (lostReasonFilter !== 'all' && lead.reason !== lostReasonFilter) return false;
+                            if (productTypeFilter !== 'all' && lead.policyType !== productTypeFilter) return false;
+                            if (agentFilter !== 'all' && lead.agent !== agentFilter) return false;
+                            return true;
+                          })
+                          .map((lead) => (
+                            <TableRow key={lead.id} hover>
+                              <TableCell>
+                                <Typography variant="body2" fontWeight="600" color="primary.main">
+                                  {lead.id}
+                                </Typography>
+                              </TableCell>
+                              <TableCell>
+                                <Typography variant="body2" fontWeight="500">
+                                  {lead.customerName}
+                                </Typography>
+                              </TableCell>
+                              <TableCell>{lead.policyType} Insurance</TableCell>
+                              <TableCell>{lead.agent}</TableCell>
+                              <TableCell align="center">
+                                <Typography variant="body2">
+                                  {new Date(lead.lostDate).toLocaleDateString()}
+                                </Typography>
+                              </TableCell>
+                              <TableCell>
+                                <Chip
+                                  label={lead.reason}
+                                  size="small"
+                                  color={
+                                    lead.reason === 'High Premium' ? 'error' :
+                                      lead.reason === 'Better Competitor Offer' ? 'warning' :
+                                        lead.reason === 'Poor Service Experience' ? 'info' :
+                                          lead.reason === 'Coverage Issues' ? 'primary' : 'success'
+                                  }
+                                />
+                              </TableCell>
+                              <TableCell align="right">
+                                <Typography variant="body2" fontWeight="600">
+                                  ₹{lead.premium.toLocaleString()}
+                                </Typography>
+                              </TableCell>
+                              <TableCell>
+                                <Typography variant="caption" color="text.secondary">
+                                  {lead.notes}
+                                </Typography>
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                      </TableBody>
+                    </Table>
+                  </TableContainer>
+                </CardContent>
+              </Card>
+            </Grid>
+          </Grid>
+        )
+      }
+
+      {
+        currentTab === 7 && (
+          <Grid container spacing={3}>
+            {/* Conversion Summary */}
+            <Grid item xs={12}>
+              <Grid container spacing={2} sx={{ mb: 3 }}>
+                <Grid item xs={12} sm={6} md={3}>
+                  <Card sx={{ background: `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.primary.dark} 100%)`, color: 'white' }}>
+                    <CardContent>
+                      <Stack direction="row" alignItems="center" justifyContent="space-between">
+                        <Box>
+                          <Typography variant="body2" sx={{ opacity: 0.9 }}>Overall Conversion</Typography>
+                          <Typography variant="h3" fontWeight="700">32.1%</Typography>
+                        </Box>
+                        <AnalyticsIcon sx={{ fontSize: 40, opacity: 0.3 }} />
+                      </Stack>
+                    </CardContent>
+                  </Card>
+                </Grid>
+                <Grid item xs={12} sm={6} md={3}>
+                  <Card sx={{ background: `linear-gradient(135deg, ${theme.palette.success.main} 0%, ${theme.palette.success.dark} 100%)`, color: 'white' }}>
+                    <CardContent>
+                      <Stack direction="row" alignItems="center" justifyContent="space-between">
+                        <Box>
+                          <Typography variant="body2" sx={{ opacity: 0.9 }}>Best Performer</Typography>
+                          <Typography variant="h6" fontWeight="700">Sarah Johnson</Typography>
+                          <Typography variant="caption">35.4% conversion</Typography>
+                        </Box>
+                        <StarIcon sx={{ fontSize: 40, opacity: 0.3 }} />
+                      </Stack>
+                    </CardContent>
+                  </Card>
+                </Grid>
+                <Grid item xs={12} sm={6} md={3}>
+                  <Card sx={{ background: `linear-gradient(135deg, ${theme.palette.warning.main} 0%, ${theme.palette.warning.dark} 100%)`, color: 'white' }}>
+                    <CardContent>
+                      <Stack direction="row" alignItems="center" justifyContent="space-between">
+                        <Box>
+                          <Typography variant="body2" sx={{ opacity: 0.9 }}>Total Converted</Typography>
+                          <Typography variant="h3" fontWeight="700">367</Typography>
+                        </Box>
+                        <CheckCircleIcon sx={{ fontSize: 40, opacity: 0.3 }} />
+                      </Stack>
+                    </CardContent>
+                  </Card>
+                </Grid>
+                <Grid item xs={12} sm={6} md={3}>
+                  <Card sx={{ background: `linear-gradient(135deg, ${theme.palette.info.main} 0%, ${theme.palette.info.dark} 100%)`, color: 'white' }}>
+                    <CardContent>
+                      <Stack direction="row" alignItems="center" justifyContent="space-between">
+                        <Box>
+                          <Typography variant="body2" sx={{ opacity: 0.9 }}>Conversion Revenue</Typography>
+                          <Typography variant="h3" fontWeight="700">₹15.8Cr</Typography>
+                        </Box>
+                        <AttachMoneyIcon sx={{ fontSize: 40, opacity: 0.3 }} />
+                      </Stack>
+                    </CardContent>
+                  </Card>
+                </Grid>
+              </Grid>
+            </Grid>
+
+            {/* Filters */}
+            <Grid item xs={12}>
+              <Card sx={{ mb: 2 }}>
+                <CardContent>
+                  <Grid container spacing={2} alignItems="center">
+                    <Grid item xs={12} sm={6} md={3}>
+                      <TextField
+                        fullWidth
+                        select
+                        label="Date Range"
+                        value={conversionDateFilter}
+                        onChange={(e) => setConversionDateFilter(e.target.value)}
+                      >
+                        <MenuItem value="today">Today</MenuItem>
+                        <MenuItem value="thisWeek">This Week</MenuItem>
+                        <MenuItem value="thisMonth">This Month</MenuItem>
+                        <MenuItem value="lastMonth">Last Month</MenuItem>
+                        <MenuItem value="thisQuarter">This Quarter</MenuItem>
+                        <MenuItem value="thisYear">This Year</MenuItem>
+                      </TextField>
+                    </Grid>
+                    <Grid item xs={12} sm={6} md={3}>
+                      <TextField
+                        fullWidth
+                        select
+                        label="Filter by Agent"
+                        value={conversionAgentFilter}
+                        onChange={(e) => setConversionAgentFilter(e.target.value)}
+                      >
+                        <MenuItem value="all">All Agents</MenuItem>
+                        {agents.map((agent) => (
+                          <MenuItem key={agent} value={agent}>{agent}</MenuItem>
+                        ))}
+                      </TextField>
+                    </Grid>
+                    <Grid item xs={12} sm={6} md={3}>
+                      <TextField
+                        fullWidth
+                        select
+                        label="Filter by Product Type"
+                        value={conversionProductFilter}
+                        onChange={(e) => setConversionProductFilter(e.target.value)}
+                      >
+                        <MenuItem value="all">All Products</MenuItem>
+                        {productTypes.map((type) => (
+                          <MenuItem key={type} value={type}>{type} Insurance</MenuItem>
+                        ))}
+                      </TextField>
+                    </Grid>
+                    <Grid item xs={12} sm={6} md={3}>
+                      <Button
+                        variant="outlined"
+                        fullWidth
+                        onClick={handleResetConversionFilters}
+                        sx={{ height: '56px' }}
+                      >
+                        Reset Filters
+                      </Button>
+                    </Grid>
+                  </Grid>
+                </CardContent>
+              </Card>
+            </Grid>
+
+            {/* Charts */}
+            <Grid item xs={12} md={6}>
+              <Card>
+                <CardContent>
+                  <Typography variant="h6" fontWeight="600" gutterBottom>
+                    Agent vs Conversion Rate
+                  </Typography>
+                  <ResponsiveContainer width="100%" height={300}>
+                    <BarChart data={getFilteredConversionReportsData().slice(0, 6)}>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="agent" angle={-45} textAnchor="end" height={80} />
+                      <YAxis />
+                      <RechartsTooltip />
+                      <Bar dataKey="conversionRate" fill={theme.palette.primary.main} name="Conversion Rate (%)" />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </CardContent>
+              </Card>
+            </Grid>
+
+            <Grid item xs={12} md={6}>
+              <Card>
+                <CardContent>
+                  <Typography variant="h6" fontWeight="600" gutterBottom>
+                    Monthly Conversion Trend
+                  </Typography>
+                  <ResponsiveContainer width="100%" height={300}>
+                    <LineChart data={monthlyConversionTrend}>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="month" />
+                      <YAxis />
+                      <RechartsTooltip />
+                      <Legend />
+                      <Line type="monotone" dataKey="conversionRate" stroke={theme.palette.success.main} strokeWidth={3} name="Conversion Rate (%)" />
+                      <Line type="monotone" dataKey="totalLeads" stroke={theme.palette.primary.main} strokeWidth={2} name="Total Leads" />
+                    </LineChart>
+                  </ResponsiveContainer>
+                </CardContent>
+              </Card>
+            </Grid>
+
+            {/* Detailed Conversion Table */}
+            <Grid item xs={12}>
+              <Card>
+                <CardContent>
+                  <Typography variant="h6" fontWeight="600" gutterBottom>
+                    Agent-wise Conversion Details
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+                    Comprehensive conversion tracking with agent performance metrics.
+                  </Typography>
+
+                  <TableContainer>
+                    <Table>
+                      <TableHead>
+                        <TableRow>
+                          <TableCell>Agent Name</TableCell>
+                          <TableCell align="center">Total Leads</TableCell>
+                          <TableCell align="center">Converted Leads</TableCell>
+                          <TableCell align="center">Conversion Rate</TableCell>
+                          <TableCell align="right">Revenue Generated</TableCell>
+                          <TableCell align="center">Primary Product</TableCell>
+                          <TableCell>Performance</TableCell>
+                        </TableRow>
+                      </TableHead>
+                      <TableBody>
+                        {getFilteredConversionReportsData()
+                          .filter(agent => {
+                            if (conversionAgentFilter !== 'all' && agent.agent !== conversionAgentFilter) return false;
+                            if (conversionProductFilter !== 'all' && agent.productType !== conversionProductFilter) return false;
+                            return true;
+                          })
+                          .map((agent) => (
+                            <TableRow key={agent.agent} hover>
+                              <TableCell>
+                                <Typography variant="body2" fontWeight="600">
+                                  {agent.agent}
+                                </Typography>
+                              </TableCell>
+                              <TableCell align="center">
+                                <Typography variant="body2" fontWeight="600">
+                                  {agent.totalLeads}
+                                </Typography>
+                              </TableCell>
+                              <TableCell align="center">
+                                <Typography variant="body2" fontWeight="600" color="primary.main">
+                                  {agent.convertedLeads}
+                                </Typography>
+                              </TableCell>
+                              <TableCell align="center">
+                                <Chip
+                                  label={`${agent.conversionRate}%`}
+                                  size="small"
+                                  color={agent.conversionRate >= 35 ? 'success' : agent.conversionRate >= 30 ? 'primary' : agent.conversionRate >= 25 ? 'warning' : 'error'}
+                                />
+                              </TableCell>
+                              <TableCell align="right">
+                                <Typography variant="body2" fontWeight="600" color="success.main">
+                                  ₹{(agent.revenue / 100000).toFixed(1)}L
+                                </Typography>
+                              </TableCell>
+                              <TableCell align="center">
+                                <Chip label={agent.productType} size="small" variant="outlined" />
+                              </TableCell>
+                              <TableCell>
+                                <Box sx={{ width: '100%', display: 'flex', alignItems: 'center', gap: 1 }}>
+                                  <Box
+                                    sx={{
+                                      flex: 1,
+                                      height: 8,
+                                      bgcolor: alpha(theme.palette.grey[500], 0.1),
+                                      borderRadius: 1,
+                                      overflow: 'hidden'
+                                    }}
+                                  >
+                                    <Box
+                                      sx={{
+                                        width: `${agent.conversionRate}%`,
+                                        height: '100%',
+                                        bgcolor: agent.conversionRate >= 35 ? theme.palette.success.main :
+                                          agent.conversionRate >= 30 ? theme.palette.primary.main :
+                                            agent.conversionRate >= 25 ? theme.palette.warning.main :
+                                              theme.palette.error.main,
+                                        borderRadius: 1
+                                      }}
+                                    />
+                                  </Box>
+                                  <Typography variant="caption" fontWeight="600">
+                                    {agent.conversionRate}%
+                                  </Typography>
+                                </Box>
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                      </TableBody>
+                    </Table>
+                  </TableContainer>
+                </CardContent>
+              </Card>
+            </Grid>
+
+            {/* Product-wise Conversion Table */}
+            <Grid item xs={12}>
+              <Card>
+                <CardContent>
+                  <Typography variant="h6" fontWeight="600" gutterBottom>
+                    Product-wise Conversion Analysis
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+                    Conversion performance breakdown by insurance product categories.
+                  </Typography>
+
+                  <TableContainer>
+                    <Table>
+                      <TableHead>
+                        <TableRow>
+                          <TableCell>Product Type</TableCell>
+                          <TableCell align="center">Total Leads</TableCell>
+                          <TableCell align="center">Converted Leads</TableCell>
+                          <TableCell align="center">Conversion Rate</TableCell>
+                          <TableCell align="right">Avg Deal Value</TableCell>
+                          <TableCell>Performance Indicator</TableCell>
+                        </TableRow>
+                      </TableHead>
+                      <TableBody>
+                        {productWiseConversion
+                          .filter(product => conversionProductFilter === 'all' || product.product === conversionProductFilter)
+                          .map((product) => (
+                            <TableRow key={product.product} hover>
+                              <TableCell>
+                                <Typography variant="body2" fontWeight="600">
+                                  {product.product} Insurance
+                                </Typography>
+                              </TableCell>
+                              <TableCell align="center">{product.totalLeads}</TableCell>
+                              <TableCell align="center">
+                                <Typography variant="body2" fontWeight="600" color="primary.main">
+                                  {product.convertedLeads}
+                                </Typography>
+                              </TableCell>
+                              <TableCell align="center">
+                                <Chip
+                                  label={`${product.conversionRate}%`}
+                                  size="small"
+                                  color={product.conversionRate >= 35 ? 'success' : product.conversionRate >= 30 ? 'primary' : 'warning'}
+                                />
+                              </TableCell>
+                              <TableCell align="right">
+                                <Typography variant="body2" fontWeight="600">
+                                  ₹{product.avgDealValue.toLocaleString()}
+                                </Typography>
+                              </TableCell>
+                              <TableCell>
+                                <Box sx={{ width: '100%', display: 'flex', alignItems: 'center', gap: 1 }}>
+                                  <Box
+                                    sx={{
+                                      flex: 1,
+                                      height: 8,
+                                      bgcolor: alpha(theme.palette.grey[500], 0.1),
+                                      borderRadius: 1,
+                                      overflow: 'hidden'
+                                    }}
+                                  >
+                                    <Box
+                                      sx={{
+                                        width: `${product.conversionRate}%`,
+                                        height: '100%',
+                                        bgcolor: product.conversionRate >= 35 ? theme.palette.success.main :
+                                          product.conversionRate >= 30 ? theme.palette.primary.main :
+                                            theme.palette.warning.main,
+                                        borderRadius: 1
+                                      }}
+                                    />
+                                  </Box>
+                                  <Typography variant="caption" fontWeight="600">
+                                    {product.conversionRate}%
+                                  </Typography>
+                                </Box>
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                      </TableBody>
+                    </Table>
+                  </TableContainer>
+                </CardContent>
+              </Card>
+            </Grid>
+          </Grid>
+        )
+      }
+
+      {
+        currentTab === 8 && (
+          <Grid container spacing={3}>
+            {/* Pivot Summary */}
+            <Grid item xs={12}>
+              <Grid container spacing={2} sx={{ mb: 3 }}>
+                <Grid item xs={12} sm={6} md={3}>
+                  <Card sx={{ background: `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.primary.dark} 100%)`, color: 'white' }}>
+                    <CardContent>
+                      <Stack direction="row" alignItems="center" justifyContent="space-between">
+                        <Box>
+                          <Typography variant="body2" sx={{ opacity: 0.9 }}>Total Records</Typography>
+                          <Typography variant="h3" fontWeight="700">{getPivotData().reduce((sum, item) => sum + item.policies, 0)}</Typography>
+                        </Box>
+                        <TableViewIcon sx={{ fontSize: 40, opacity: 0.3 }} />
+                      </Stack>
+                    </CardContent>
+                  </Card>
+                </Grid>
+                <Grid item xs={12} sm={6} md={3}>
+                  <Card sx={{ background: `linear-gradient(135deg, ${theme.palette.success.main} 0%, ${theme.palette.success.dark} 100%)`, color: 'white' }}>
+                    <CardContent>
+                      <Stack direction="row" alignItems="center" justifyContent="space-between">
+                        <Box>
+                          <Typography variant="body2" sx={{ opacity: 0.9 }}>Top Performer</Typography>
+                          <Typography variant="h6" fontWeight="700">{getPivotData()[0]?.insurer || getPivotData()[0]?.csc || getPivotData()[0]?.tenure}</Typography>
+                          <Typography variant="caption">{getPivotData()[0]?.policies} policies</Typography>
+                        </Box>
+                        <StarIcon sx={{ fontSize: 40, opacity: 0.3 }} />
+                      </Stack>
+                    </CardContent>
+                  </Card>
+                </Grid>
+                <Grid item xs={12} sm={6} md={3}>
+                  <Card sx={{ background: `linear-gradient(135deg, ${theme.palette.warning.main} 0%, ${theme.palette.warning.dark} 100%)`, color: 'white' }}>
+                    <CardContent>
+                      <Stack direction="row" alignItems="center" justifyContent="space-between">
+                        <Box>
+                          <Typography variant="body2" sx={{ opacity: 0.9 }}>Total Premium</Typography>
+                          <Typography variant="h3" fontWeight="700">₹{(getPivotData().reduce((sum, item) => sum + item.premium, 0) / 10000000).toFixed(1)}Cr</Typography>
+                        </Box>
+                        <AttachMoneyIcon sx={{ fontSize: 40, opacity: 0.3 }} />
+                      </Stack>
+                    </CardContent>
+                  </Card>
+                </Grid>
+                <Grid item xs={12} sm={6} md={3}>
+                  <Card sx={{ background: `linear-gradient(135deg, ${theme.palette.info.main} 0%, ${theme.palette.info.dark} 100%)`, color: 'white' }}>
+                    <CardContent>
+                      <Stack direction="row" alignItems="center" justifyContent="space-between">
+                        <Box>
+                          <Typography variant="body2" sx={{ opacity: 0.9 }}>Avg Performance</Typography>
+                          <Typography variant="h3" fontWeight="700">{pivotGroupBy === 'insurer' ? '11.4%' : pivotGroupBy === 'csc' ? '89.9%' : '87.3%'}</Typography>
+                        </Box>
+                        <AssessmentIcon sx={{ fontSize: 40, opacity: 0.3 }} />
+                      </Stack>
+                    </CardContent>
+                  </Card>
+                </Grid>
+              </Grid>
+            </Grid>
+
+            {/* Pivot Filters */}
+            <Grid item xs={12}>
+              <Card sx={{ mb: 2 }}>
+                <CardContent>
+                  <Grid container spacing={2} alignItems="center">
+                    <Grid item xs={12} sm={6} md={3}>
+                      <TextField
+                        fullWidth
+                        select
+                        label="Group By"
+                        value={pivotGroupBy}
+                        onChange={(e) => setPivotGroupBy(e.target.value)}
+                      >
+                        <MenuItem value="insurer">Insurer</MenuItem>
+                        <MenuItem value="csc">CSC</MenuItem>
+                        <MenuItem value="tenure">Tenure</MenuItem>
+                      </TextField>
+                    </Grid>
+                    <Grid item xs={12} sm={6} md={3}>
+                      <TextField
+                        fullWidth
+                        select
+                        label="Date Range"
+                        value={pivotDateFilter}
+                        onChange={(e) => setPivotDateFilter(e.target.value)}
+                      >
+                        <MenuItem value="today">Today</MenuItem>
+                        <MenuItem value="thisWeek">This Week</MenuItem>
+                        <MenuItem value="thisMonth">This Month</MenuItem>
+                        <MenuItem value="lastMonth">Last Month</MenuItem>
+                        <MenuItem value="thisQuarter">This Quarter</MenuItem>
+                        <MenuItem value="thisYear">This Year</MenuItem>
+                      </TextField>
+                    </Grid>
+                    <Grid item xs={12} sm={6} md={3}>
+                      <TextField
+                        fullWidth
+                        select
+                        label="Product Filter"
+                        value={pivotProductFilter}
+                        onChange={(e) => setPivotProductFilter(e.target.value)}
+                      >
+                        <MenuItem value="all">All Products</MenuItem>
+                        {productTypes.map((type) => (
+                          <MenuItem key={type} value={type}>{type} Insurance</MenuItem>
+                        ))}
+                      </TextField>
+                    </Grid>
+                    <Grid item xs={12} sm={6} md={3}>
+                      <Button
+                        variant="outlined"
+                        fullWidth
+                        onClick={handleResetPivotFilters}
+                        sx={{ height: '56px' }}
+                      >
+                        Reset Filters
+                      </Button>
+                    </Grid>
+                  </Grid>
+                </CardContent>
+              </Card>
+            </Grid>
+
+            {/* Pivot Charts */}
+            <Grid item xs={12} md={6}>
+              <Card>
+                <CardContent>
+                  <Typography variant="h6" fontWeight="600" gutterBottom>
+                    {pivotGroupBy === 'insurer' ? 'Insurer-wise' : pivotGroupBy === 'csc' ? 'CSC-wise' : 'Tenure-wise'} Distribution
+                  </Typography>
+                  <ResponsiveContainer width="100%" height={300}>
+                    <PieChart>
+                      <Pie
+                        data={getPivotChartData()}
+                        dataKey="value"
+                        nameKey="name"
+                        cx="50%"
+                        cy="50%"
+                        outerRadius={100}
+                        label={({ name, value }) => `${name}: ${value}`}
+                      >
+                        {getPivotChartData().map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                        ))}
+                      </Pie>
+                      <RechartsTooltip />
+                      <Legend />
+                    </PieChart>
+                  </ResponsiveContainer>
+                </CardContent>
+              </Card>
+            </Grid>
+
+            <Grid item xs={12} md={6}>
+              <Card>
+                <CardContent>
+                  <Typography variant="h6" fontWeight="600" gutterBottom>
+                    Policy Count Comparison
+                  </Typography>
+                  <ResponsiveContainer width="100%" height={300}>
+                    <BarChart data={getPivotChartData()}>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="name" angle={-45} textAnchor="end" height={80} />
+                      <YAxis />
+                      <RechartsTooltip />
+                      <Bar dataKey="value" fill={theme.palette.primary.main} name="Policies" />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </CardContent>
+              </Card>
+            </Grid>
+
+            {/* Dynamic Pivot Table */}
+            <Grid item xs={12}>
+              <Card>
+                <CardContent>
+                  <Typography variant="h6" fontWeight="600" gutterBottom>
+                    {pivotGroupBy === 'insurer' ? 'Insurer-wise' : pivotGroupBy === 'csc' ? 'CSC-wise' : 'Tenure-wise'} Pivot Analysis
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+                    Dynamic pivot report grouped by {pivotGroupBy} with comprehensive metrics and performance indicators.
+                  </Typography>
+
+                  <TableContainer>
+                    <Table>
+                      <TableHead>
+                        <TableRow>
+                          <TableCell>{pivotGroupBy === 'insurer' ? 'Insurer Name' : pivotGroupBy === 'csc' ? 'CSC Location' : 'Policy Tenure'}</TableCell>
+                          <TableCell>Product</TableCell>
+                          <TableCell>Date</TableCell>
+                          <TableCell align="center">Policies</TableCell>
+                          <TableCell align="right">Premium Amount</TableCell>
+                          <TableCell align="center">
+                            {pivotGroupBy === 'insurer' ? 'Claims' : pivotGroupBy === 'csc' ? 'Agents' : 'Renewal Rate'}
+                          </TableCell>
+                          <TableCell align="center">
+                            {pivotGroupBy === 'insurer' ? 'Claim Ratio' : pivotGroupBy === 'csc' ? 'Avg Per Agent' : 'Avg Premium'}
+                          </TableCell>
+                          <TableCell align="center">
+                            {pivotGroupBy === 'insurer' ? 'Market Share' : pivotGroupBy === 'csc' ? 'Efficiency' : 'Satisfaction'}
+                          </TableCell>
+                          <TableCell>Performance</TableCell>
+                        </TableRow>
+                      </TableHead>
+                      <TableBody>
+                        {getPivotData().map((item, index) => (
+                          <TableRow key={index} hover>
+                            <TableCell>
+                              <Typography variant="body2" fontWeight="600">
+                                {item.insurer || item.csc || item.tenure}
+                              </Typography>
+                            </TableCell>
+                            <TableCell>
+                              <Chip label={item.product} size="small" variant="outlined" />
+                            </TableCell>
+                            <TableCell>
+                              <Typography variant="body2">
+                                {new Date(item.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                              </Typography>
+                            </TableCell>
+                            <TableCell align="center">
+                              <Typography variant="body2" fontWeight="600" color="primary.main">
+                                {item.policies}
+                              </Typography>
+                            </TableCell>
+                            <TableCell align="right">
+                              <Typography variant="body2" fontWeight="600" color="success.main">
+                                ₹{(item.premium / 100000).toFixed(1)}L
+                              </Typography>
+                            </TableCell>
+                            <TableCell align="center">
+                              {pivotGroupBy === 'insurer' && (
+                                <Typography variant="body2">{item.claims}</Typography>
+                              )}
+                              {pivotGroupBy === 'csc' && (
+                                <Typography variant="body2">{item.agents}</Typography>
+                              )}
+                              {pivotGroupBy === 'tenure' && (
+                                <Chip label={`${item.renewalRate}%`} size="small" color="success" />
+                              )}
+                            </TableCell>
+                            <TableCell align="center">
+                              {pivotGroupBy === 'insurer' && (
+                                <Chip
+                                  label={`${item.claimRatio}%`}
+                                  size="small"
+                                  color={item.claimRatio <= 8 ? 'success' : item.claimRatio <= 12 ? 'warning' : 'error'}
+                                />
+                              )}
+                              {pivotGroupBy === 'csc' && (
+                                <Typography variant="body2" fontWeight="600">{item.avgPerAgent}</Typography>
+                              )}
+                              {pivotGroupBy === 'tenure' && (
+                                <Typography variant="body2" fontWeight="600">₹{item.avgPremium.toLocaleString()}</Typography>
+                              )}
+                            </TableCell>
+                            <TableCell align="center">
+                              {pivotGroupBy === 'insurer' && (
+                                <Chip
+                                  label={`${item.marketShare}%`}
+                                  size="small"
+                                  color={item.marketShare >= 25 ? 'success' : item.marketShare >= 15 ? 'primary' : 'warning'}
+                                />
+                              )}
+                              {pivotGroupBy === 'csc' && (
+                                <Chip
+                                  label={`${item.efficiency}%`}
+                                  size="small"
+                                  color={item.efficiency >= 90 ? 'success' : item.efficiency >= 85 ? 'primary' : 'warning'}
+                                />
+                              )}
+                              {pivotGroupBy === 'tenure' && (
+                                <Stack direction="row" alignItems="center" justifyContent="center" spacing={0.5}>
+                                  <Typography variant="body2" fontWeight="600">{item.satisfaction}</Typography>
+                                  <StarIcon fontSize="small" sx={{ color: theme.palette.warning.main }} />
+                                </Stack>
+                              )}
+                            </TableCell>
+                            <TableCell>
+                              <Box sx={{ width: '100%', display: 'flex', alignItems: 'center', gap: 1 }}>
+                                <Box
+                                  sx={{
+                                    flex: 1,
+                                    height: 8,
+                                    bgcolor: alpha(theme.palette.grey[500], 0.1),
+                                    borderRadius: 1,
+                                    overflow: 'hidden'
+                                  }}
                                 >
-                                  Delete
-                                </Button>
-                              </Stack>
+                                  <Box
+                                    sx={{
+                                      width: `${pivotGroupBy === 'insurer' ? item.marketShare * 2 : pivotGroupBy === 'csc' ? item.efficiency : item.renewalRate}%`,
+                                      height: '100%',
+                                      bgcolor: theme.palette.primary.main,
+                                      borderRadius: 1
+                                    }}
+                                  />
+                                </Box>
+                                <Typography variant="caption" fontWeight="600">
+                                  {pivotGroupBy === 'insurer' ? `${item.marketShare}%` : pivotGroupBy === 'csc' ? `${item.efficiency}%` : `${item.renewalRate}%`}
+                                </Typography>
+                              </Box>
                             </TableCell>
                           </TableRow>
-                        ))
-                      ))}
-                    </TableBody>
-                  </Table>
-                </TableContainer>
-
-                {filteredDuplicates.length === 0 && (
-                  <Box sx={{ textAlign: 'center', py: 4 }}>
-                    <Typography variant="h6" color="text.secondary">
-                      No duplicate leads found
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary">
-                      All leads appear to be unique based on current criteria
-                    </Typography>
-                  </Box>
-                )}
-              </CardContent>
-            </Card>
-          </Grid>
-        </Grid>
-      )}
-
-      {currentTab === 4 && (
-        <Grid container spacing={3}>
-          {/* Pre-Expiry Renewal Summary */}
-          <Grid item xs={12}>
-            <Grid container spacing={2} sx={{ mb: 3 }}>
-              <Grid item xs={12} sm={6} md={3}>
-                <Card sx={{ background: `linear-gradient(135deg, ${theme.palette.warning.main} 0%, ${theme.palette.warning.dark} 100%)`, color: 'white' }}>
-                  <CardContent>
-                    <Stack direction="row" alignItems="center" justifyContent="space-between">
-                      <Box>
-                        <Typography variant="body2" sx={{ opacity: 0.9 }}>Expiring Soon</Typography>
-                        <Typography variant="h3" fontWeight="700">{preExpiryRenewals.filter(p => p.daysToExpiry <= 30).length}</Typography>
-                      </Box>
-                      <DateRangeIcon sx={{ fontSize: 40, opacity: 0.3 }} />
-                    </Stack>
-                  </CardContent>
-                </Card>
-              </Grid>
-              <Grid item xs={12} sm={6} md={3}>
-                <Card sx={{ background: `linear-gradient(135deg, ${theme.palette.success.main} 0%, ${theme.palette.success.dark} 100%)`, color: 'white' }}>
-                  <CardContent>
-                    <Stack direction="row" alignItems="center" justifyContent="space-between">
-                      <Box>
-                        <Typography variant="body2" sx={{ opacity: 0.9 }}>Renewed</Typography>
-                        <Typography variant="h3" fontWeight="700">{preExpiryRenewals.filter(p => p.status === 'Renewed').length}</Typography>
-                      </Box>
-                      <AssessmentIcon sx={{ fontSize: 40, opacity: 0.3 }} />
-                    </Stack>
-                  </CardContent>
-                </Card>
-              </Grid>
-              <Grid item xs={12} sm={6} md={3}>
-                <Card sx={{ background: `linear-gradient(135deg, ${theme.palette.info.main} 0%, ${theme.palette.info.dark} 100%)`, color: 'white' }}>
-                  <CardContent>
-                    <Stack direction="row" alignItems="center" justifyContent="space-between">
-                      <Box>
-                        <Typography variant="body2" sx={{ opacity: 0.9 }}>Total Premium</Typography>
-                        <Typography variant="h3" fontWeight="700">₹{(preExpiryRenewals.reduce((sum, p) => sum + p.premium, 0) / 100000).toFixed(1)}L</Typography>
-                      </Box>
-                      <AttachMoneyIcon sx={{ fontSize: 40, opacity: 0.3 }} />
-                    </Stack>
-                  </CardContent>
-                </Card>
-              </Grid>
-              <Grid item xs={12} sm={6} md={3}>
-                <Card sx={{ background: `linear-gradient(135deg, ${theme.palette.error.main} 0%, ${theme.palette.error.dark} 100%)`, color: 'white' }}>
-                  <CardContent>
-                    <Stack direction="row" alignItems="center" justifyContent="space-between">
-                      <Box>
-                        <Typography variant="body2" sx={{ opacity: 0.9 }}>Pending</Typography>
-                        <Typography variant="h3" fontWeight="700">{preExpiryRenewals.filter(p => p.status === 'Pending').length}</Typography>
-                      </Box>
-                      <WarningIcon sx={{ fontSize: 40, opacity: 0.3 }} />
-                    </Stack>
-                  </CardContent>
-                </Card>
-              </Grid>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </TableContainer>
+                </CardContent>
+              </Card>
             </Grid>
           </Grid>
+        )
+      }
 
-          {/* Filters */}
-          <Grid item xs={12}>
-            <Card sx={{ mb: 2 }}>
-              <CardContent>
-                <Grid container spacing={2} alignItems="center">
-                  <Grid item xs={12} sm={6} md={3}>
-                    <TextField
-                      fullWidth
-                      select
-                      label="Filter by Status"
-                      value={renewalFilter}
-                      onChange={(e) => setRenewalFilter(e.target.value)}
-                    >
-                      <MenuItem value="all">All Policies</MenuItem>
-                      <MenuItem value="pending">Pending</MenuItem>
-                      <MenuItem value="contacted">Contacted</MenuItem>
-                      <MenuItem value="proposal">Proposal Sent</MenuItem>
-                      <MenuItem value="renewed">Renewed</MenuItem>
-                      <MenuItem value="negotiation">Negotiation</MenuItem>
-                    </TextField>
+      {
+        currentTab === 9 && (
+          <Grid container spacing={3}>
+            {/* Premium Registers Filters */}
+            <Grid item xs={12}>
+              <Card sx={{ mb: 2 }}>
+                <CardContent>
+                  <Grid container spacing={2} alignItems="center">
+                    <Grid item xs={12} sm={6} md={2.5}>
+                      <TextField
+                        fullWidth
+                        select
+                        label="Insurer"
+                        value={premiumSelectedInsurer}
+                        onChange={(e) => setPremiumSelectedInsurer(e.target.value)}
+                      >
+                        <MenuItem value="all">All Insurers</MenuItem>
+                        <MenuItem value="HDFC ERGO">HDFC ERGO</MenuItem>
+                        <MenuItem value="ICICI Lombard">ICICI Lombard</MenuItem>
+                        <MenuItem value="Bajaj Allianz">Bajaj Allianz</MenuItem>
+                        <MenuItem value="TATA AIG">TATA AIG</MenuItem>
+                        <MenuItem value="Reliance General">Reliance General</MenuItem>
+                      </TextField>
+                    </Grid>
+                    <Grid item xs={12} sm={6} md={2.5}>
+                      <TextField
+                        fullWidth
+                        select
+                        label="Policy Type"
+                        value={premiumSelectedPolicyType}
+                        onChange={(e) => setPremiumSelectedPolicyType(e.target.value)}
+                      >
+                        <MenuItem value="all">All Types</MenuItem>
+                        <MenuItem value="Health">Health</MenuItem>
+                        <MenuItem value="Motor">Motor</MenuItem>
+                        <MenuItem value="Life">Life</MenuItem>
+                      </TextField>
+                    </Grid>
+                    <Grid item xs={12} sm={6} md={2.5}>
+                      <TextField
+                        fullWidth
+                        select
+                        label="Tenure"
+                        value={premiumSelectedTenure}
+                        onChange={(e) => setPremiumSelectedTenure(e.target.value)}
+                      >
+                        <MenuItem value="all">All Tenures</MenuItem>
+                        <MenuItem value="3 Months">3 Months</MenuItem>
+                        <MenuItem value="6 Months">6 Months</MenuItem>
+                        <MenuItem value="12 Months">12 Months</MenuItem>
+                      </TextField>
+                    </Grid>
+                    <Grid item xs={12} sm={6} md={2.5}>
+                      <Button
+                        variant="outlined"
+                        fullWidth
+                        sx={{ height: '56px' }}
+                        onClick={() => {
+                          setPremiumSelectedInsurer('all');
+                          setPremiumSelectedPolicyType('all');
+                          setPremiumSelectedTenure('all');
+                        }}
+                      >
+                        Reset Filters
+                      </Button>
+                    </Grid>
                   </Grid>
-                  <Grid item xs={12} sm={6} md={3}>
-                    <Button
-                      variant="contained"
-                      startIcon={<DownloadIcon />}
-                      onClick={handleExportExcel}
-                      fullWidth
-                    >
-                      Export Report
-                    </Button>
-                  </Grid>
-                </Grid>
-              </CardContent>
-            </Card>
-          </Grid>
-
-          {/* Pre-Expiry Renewals Table */}
-          <Grid item xs={12}>
-            <Card>
-              <CardContent>
-                <Typography variant="h6" fontWeight="600" gutterBottom>
-                  Pre-Expiry Renewal Report
-                </Typography>
-                <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-                  Policies expiring within the next 60 days requiring renewal action.
-                </Typography>
-                
-                <TableContainer>
-                  <Table>
-                    <TableHead>
-                      <TableRow>
-                        <TableCell>Policy ID</TableCell>
-                        <TableCell>Customer Name</TableCell>
-                        <TableCell>Policy Type</TableCell>
-                        <TableCell align="center">Expiry Date</TableCell>
-                        <TableCell align="center">Days to Expiry</TableCell>
-                        <TableCell align="right">Premium</TableCell>
-                        <TableCell align="center">Status</TableCell>
-                        <TableCell>Assigned Agent</TableCell>
-                        <TableCell align="center">Last Contact</TableCell>
-                      </TableRow>
-                    </TableHead>
-                    <TableBody>
-                      {preExpiryRenewals
-                        .filter(policy => {
-                          if (renewalFilter === 'all') return true;
-                          if (renewalFilter === 'pending') return policy.status === 'Pending';
-                          if (renewalFilter === 'contacted') return policy.status === 'Contacted';
-                          if (renewalFilter === 'proposal') return policy.status === 'Proposal Sent';
-                          if (renewalFilter === 'renewed') return policy.status === 'Renewed';
-                          if (renewalFilter === 'negotiation') return policy.status === 'Negotiation';
-                          return true;
-                        })
-                        .map((policy) => (
-                        <TableRow key={policy.id} hover>
-                          <TableCell>
-                            <Typography variant="body2" fontWeight="600" color="primary.main">
-                              {policy.id}
-                            </Typography>
-                          </TableCell>
-                          <TableCell>
-                            <Typography variant="body2" fontWeight="500">
-                              {policy.customerName}
-                            </Typography>
-                          </TableCell>
-                          <TableCell>{policy.policyType} Insurance</TableCell>
-                          <TableCell align="center">
-                            <Typography variant="body2">
-                              {new Date(policy.expiryDate).toLocaleDateString()}
-                            </Typography>
-                          </TableCell>
-                          <TableCell align="center">
-                            <Chip 
-                              label={`${policy.daysToExpiry} days`}
-                              size="small"
-                              color={policy.daysToExpiry <= 15 ? 'error' : policy.daysToExpiry <= 30 ? 'warning' : 'info'}
-                            />
-                          </TableCell>
-                          <TableCell align="right">
-                            <Typography variant="body2" fontWeight="600">
-                              ₹{policy.premium.toLocaleString()}
-                            </Typography>
-                          </TableCell>
-                          <TableCell align="center">
-                            <Chip 
-                              label={policy.status}
-                              size="small"
-                              color={
-                                policy.status === 'Renewed' ? 'success' :
-                                policy.status === 'Proposal Sent' ? 'info' :
-                                policy.status === 'Contacted' ? 'primary' : 'warning'
-                              }
-                            />
-                          </TableCell>
-                          <TableCell>{policy.agent}</TableCell>
-                          <TableCell align="center">
-                            <Typography variant="caption" color="text.secondary">
-                              {new Date(policy.lastContact).toLocaleDateString()}
-                            </Typography>
-                            <br />
-                            <Typography variant="caption" color="text.secondary">
-                              {policy.phone}
-                            </Typography>
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </TableContainer>
-              </CardContent>
-            </Card>
-          </Grid>
-        </Grid>
-      )}
-
-      {currentTab === 5 && (
-        <Grid container spacing={3}>
-          {/* CSC Productivity Summary */}
-          <Grid item xs={12}>
-            <Grid container spacing={2} sx={{ mb: 3 }}>
-              <Grid item xs={12} sm={6} md={3}>
-                <Card sx={{ background: `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.primary.dark} 100%)`, color: 'white' }}>
-                  <CardContent>
-                    <Stack direction="row" alignItems="center" justifyContent="space-between">
-                      <Box>
-                        <Typography variant="body2" sx={{ opacity: 0.9 }}>Total CSCs</Typography>
-                        <Typography variant="h3" fontWeight="700">{cscProductivityData.length}</Typography>
-                      </Box>
-                      <PeopleIcon sx={{ fontSize: 40, opacity: 0.3 }} />
-                    </Stack>
-                  </CardContent>
-                </Card>
-              </Grid>
-              <Grid item xs={12} sm={6} md={3}>
-                <Card sx={{ background: `linear-gradient(135deg, ${theme.palette.success.main} 0%, ${theme.palette.success.dark} 100%)`, color: 'white' }}>
-                  <CardContent>
-                    <Stack direction="row" alignItems="center" justifyContent="space-between">
-                      <Box>
-                        <Typography variant="body2" sx={{ opacity: 0.9 }}>Total Calls</Typography>
-                        <Typography variant="h3" fontWeight="700">{cscProductivityData.reduce((sum, csc) => sum + csc.calls, 0)}</Typography>
-                      </Box>
-                      <PhoneIcon sx={{ fontSize: 40, opacity: 0.3 }} />
-                    </Stack>
-                  </CardContent>
-                </Card>
-              </Grid>
-              <Grid item xs={12} sm={6} md={3}>
-                <Card sx={{ background: `linear-gradient(135deg, ${theme.palette.warning.main} 0%, ${theme.palette.warning.dark} 100%)`, color: 'white' }}>
-                  <CardContent>
-                    <Stack direction="row" alignItems="center" justifyContent="space-between">
-                      <Box>
-                        <Typography variant="body2" sx={{ opacity: 0.9 }}>Total Policies</Typography>
-                        <Typography variant="h3" fontWeight="700">{cscProductivityData.reduce((sum, csc) => sum + csc.policies, 0)}</Typography>
-                      </Box>
-                      <PolicyIcon sx={{ fontSize: 40, opacity: 0.3 }} />
-                    </Stack>
-                  </CardContent>
-                </Card>
-              </Grid>
-              <Grid item xs={12} sm={6} md={3}>
-                <Card sx={{ background: `linear-gradient(135deg, ${theme.palette.info.main} 0%, ${theme.palette.info.dark} 100%)`, color: 'white' }}>
-                  <CardContent>
-                    <Stack direction="row" alignItems="center" justifyContent="space-between">
-                      <Box>
-                        <Typography variant="body2" sx={{ opacity: 0.9 }}>Avg Conversion</Typography>
-                        <Typography variant="h3" fontWeight="700">{(cscProductivityData.reduce((sum, csc) => sum + csc.conversionRate, 0) / cscProductivityData.length).toFixed(1)}%</Typography>
-                      </Box>
-                      <AssessmentIcon sx={{ fontSize: 40, opacity: 0.3 }} />
-                    </Stack>
-                  </CardContent>
-                </Card>
-              </Grid>
+                </CardContent>
+              </Card>
             </Grid>
-          </Grid>
 
-          {/* CSC Filters */}
-          <Grid item xs={12}>
-            <Card sx={{ mb: 2 }}>
-              <CardContent>
-                <Grid container spacing={2} alignItems="center">
-                  <Grid item xs={12} sm={6} md={3}>
-                    <TextField
-                      fullWidth
-                      select
-                      label="Filter by Performance"
-                      value={cscFilter}
-                      onChange={(e) => setCscFilter(e.target.value)}
-                    >
-                      <MenuItem value="all">All CSCs</MenuItem>
-                      <MenuItem value="excellent">Excellent</MenuItem>
-                      <MenuItem value="good">Good</MenuItem>
-                      <MenuItem value="average">Average</MenuItem>
-                      <MenuItem value="needs-improvement">Needs Improvement</MenuItem>
-                    </TextField>
-                  </Grid>
-                  <Grid item xs={12} sm={6} md={3}>
-                    <TextField
-                      fullWidth
-                      select
-                      label="Filter by Region"
-                      value={regionFilter}
-                      onChange={(e) => setRegionFilter(e.target.value)}
-                    >
-                      <MenuItem value="all">All Regions</MenuItem>
-                      {regions.map((region) => (
-                        <MenuItem key={region} value={region}>{region}</MenuItem>
-                      ))}
-                    </TextField>
-                  </Grid>
-                  <Grid item xs={12} sm={6} md={3}>
-                    <Button
-                      variant="contained"
-                      startIcon={<DownloadIcon />}
-                      onClick={handleExportExcel}
-                      fullWidth
-                    >
-                      Export Report
-                    </Button>
-                  </Grid>
-                </Grid>
-              </CardContent>
-            </Card>
-          </Grid>
-
-          {/* CSC Performance Chart */}
-          <Grid item xs={12} md={6}>
-            <Card>
-              <CardContent>
-                <Typography variant="h6" fontWeight="600" gutterBottom>
-                  CSC Performance Distribution
-                </Typography>
-                <ResponsiveContainer width="100%" height={300}>
-                  <PieChart>
-                    <Pie
-                      data={[
-                        { name: 'Excellent', value: cscProductivityData.filter(c => c.performance === 'Excellent').length, color: theme.palette.success.main },
-                        { name: 'Good', value: cscProductivityData.filter(c => c.performance === 'Good').length, color: theme.palette.primary.main },
-                        { name: 'Average', value: cscProductivityData.filter(c => c.performance === 'Average').length, color: theme.palette.warning.main },
-                        { name: 'Needs Improvement', value: cscProductivityData.filter(c => c.performance === 'Needs Improvement').length, color: theme.palette.error.main }
-                      ]}
-                      dataKey="value"
-                      nameKey="name"
-                      cx="50%"
-                      cy="50%"
-                      outerRadius={100}
-                      label
-                    >
-                      {[
-                        { name: 'Excellent', value: cscProductivityData.filter(c => c.performance === 'Excellent').length, color: theme.palette.success.main },
-                        { name: 'Good', value: cscProductivityData.filter(c => c.performance === 'Good').length, color: theme.palette.primary.main },
-                        { name: 'Average', value: cscProductivityData.filter(c => c.performance === 'Average').length, color: theme.palette.warning.main },
-                        { name: 'Needs Improvement', value: cscProductivityData.filter(c => c.performance === 'Needs Improvement').length, color: theme.palette.error.main }
-                      ].map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={entry.color} />
-                      ))}
-                    </Pie>
-                    <RechartsTooltip />
-                    <Legend />
-                  </PieChart>
-                </ResponsiveContainer>
-              </CardContent>
-            </Card>
-          </Grid>
-
-          {/* Conversion Rate Chart */}
-          <Grid item xs={12} md={6}>
-            <Card>
-              <CardContent>
-                <Typography variant="h6" fontWeight="600" gutterBottom>
-                  CSC Conversion Rates
-                </Typography>
-                <ResponsiveContainer width="100%" height={300}>
-                  <BarChart data={cscProductivityData.slice(0, 5)}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="cscName" angle={-45} textAnchor="end" height={80} />
-                    <YAxis />
-                    <RechartsTooltip />
-                    <Bar dataKey="conversionRate" fill={theme.palette.primary.main} name="Conversion Rate (%)" />
-                  </BarChart>
-                </ResponsiveContainer>
-              </CardContent>
-            </Card>
-          </Grid>
-
-          {/* CSC Productivity Table */}
-          <Grid item xs={12}>
-            <Card>
-              <CardContent>
-                <Typography variant="h6" fontWeight="600" gutterBottom>
-                  CSC Productivity Report
-                </Typography>
-                <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-                  Comprehensive performance analysis of Customer Service Center representatives.
-                </Typography>
-                
-                <TableContainer>
-                  <Table>
-                    <TableHead>
-                      <TableRow>
-                        <TableCell>CSC Name</TableCell>
-                        <TableCell align="center">Region</TableCell>
-                        <TableCell align="center">Calls</TableCell>
-                        <TableCell align="center">Policies</TableCell>
-                        <TableCell align="center">Conversion %</TableCell>
-                        <TableCell align="center">Score</TableCell>
-                        <TableCell align="center">Performance</TableCell>
-                        <TableCell>Progress</TableCell>
-                      </TableRow>
-                    </TableHead>
-                    <TableBody>
-                      {cscProductivityData
-                        .filter(csc => {
-                          if (cscFilter === 'all') return true;
-                          if (cscFilter === 'excellent') return csc.performance === 'Excellent';
-                          if (cscFilter === 'good') return csc.performance === 'Good';
-                          if (cscFilter === 'average') return csc.performance === 'Average';
-                          if (cscFilter === 'needs-improvement') return csc.performance === 'Needs Improvement';
-                          return true;
-                        })
-                        .filter(csc => regionFilter === 'all' || csc.region === regionFilter)
-                        .map((csc) => (
-                        <TableRow key={csc.cscName} hover>
-                          <TableCell>
-                            <Typography variant="body2" fontWeight="600">
-                              {csc.cscName}
-                            </Typography>
-                          </TableCell>
-                          <TableCell align="center">
-                            <Chip label={csc.region} size="small" variant="outlined" />
-                          </TableCell>
-                          <TableCell align="center">
-                            <Typography variant="body2" fontWeight="600">
-                              {csc.calls}
-                            </Typography>
-                          </TableCell>
-                          <TableCell align="center">
-                            <Typography variant="body2" fontWeight="600" color="primary.main">
-                              {csc.policies}
-                            </Typography>
-                          </TableCell>
-                          <TableCell align="center">
-                            <Chip
-                              label={`${csc.conversionRate}%`}
-                              size="small"
-                              color={csc.conversionRate >= 20 ? 'success' : csc.conversionRate >= 15 ? 'warning' : 'error'}
-                            />
-                          </TableCell>
-                          <TableCell align="center">
-                            <Stack direction="row" alignItems="center" justifyContent="center" spacing={0.5}>
-                              <Typography variant="body2" fontWeight="600">
-                                {csc.score}
-                              </Typography>
-                              <StarIcon 
-                                fontSize="small" 
-                                sx={{ 
-                                  color: csc.score >= 90 ? theme.palette.success.main : 
-                                         csc.score >= 80 ? theme.palette.warning.main : 
-                                         theme.palette.error.main 
-                                }} 
-                              />
-                            </Stack>
-                          </TableCell>
-                          <TableCell align="center">
-                            <Chip
-                              label={csc.performance}
-                              size="small"
-                              color={
-                                csc.performance === 'Excellent' ? 'success' :
-                                csc.performance === 'Good' ? 'primary' :
-                                csc.performance === 'Average' ? 'warning' : 'error'
-                              }
-                            />
-                          </TableCell>
-                          <TableCell>
-                            <Box sx={{ width: '100%', display: 'flex', alignItems: 'center', gap: 1 }}>
-                              <Box
-                                sx={{
-                                  flex: 1,
-                                  height: 8,
-                                  bgcolor: alpha(theme.palette.grey[500], 0.1),
-                                  borderRadius: 1,
-                                  overflow: 'hidden'
-                                }}
-                              >
-                                <Box
-                                  sx={{
-                                    width: `${csc.score}%`,
-                                    height: '100%',
-                                    bgcolor: csc.score >= 90 ? theme.palette.success.main : 
-                                             csc.score >= 80 ? theme.palette.warning.main : 
-                                             theme.palette.error.main,
-                                    borderRadius: 1
-                                  }}
-                                />
-                              </Box>
-                              <Typography variant="caption" fontWeight="600">
-                                {csc.score}%
-                              </Typography>
-                            </Box>
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </TableContainer>
-              </CardContent>
-            </Card>
-          </Grid>
-        </Grid>
-      )}
-
-      {currentTab === 6 && (
-        <Grid container spacing={3}>
-          {/* Lost Reasons Summary */}
-          <Grid item xs={12}>
-            <Grid container spacing={2} sx={{ mb: 3 }}>
-              <Grid item xs={12} sm={6} md={3}>
-                <Card sx={{ background: `linear-gradient(135deg, ${theme.palette.error.main} 0%, ${theme.palette.error.dark} 100%)`, color: 'white' }}>
-                  <CardContent>
-                    <Stack direction="row" alignItems="center" justifyContent="space-between">
-                      <Box>
-                        <Typography variant="body2" sx={{ opacity: 0.9 }}>Total Lost Leads</Typography>
-                        <Typography variant="h3" fontWeight="700">{lostLeadsDetails.length}</Typography>
-                      </Box>
-                      <CancelIcon sx={{ fontSize: 40, opacity: 0.3 }} />
-                    </Stack>
-                  </CardContent>
-                </Card>
-              </Grid>
-              <Grid item xs={12} sm={6} md={3}>
-                <Card sx={{ background: `linear-gradient(135deg, ${theme.palette.warning.main} 0%, ${theme.palette.warning.dark} 100%)`, color: 'white' }}>
-                  <CardContent>
-                    <Stack direction="row" alignItems="center" justifyContent="space-between">
-                      <Box>
-                        <Typography variant="body2" sx={{ opacity: 0.9 }}>Top Reason</Typography>
-                        <Typography variant="h6" fontWeight="700">High Premium</Typography>
-                        <Typography variant="caption">35.7% of losses</Typography>
-                      </Box>
-                      <AttachMoneyIcon sx={{ fontSize: 40, opacity: 0.3 }} />
-                    </Stack>
-                  </CardContent>
-                </Card>
-              </Grid>
-              <Grid item xs={12} sm={6} md={3}>
-                <Card sx={{ background: `linear-gradient(135deg, ${theme.palette.info.main} 0%, ${theme.palette.info.dark} 100%)`, color: 'white' }}>
-                  <CardContent>
-                    <Stack direction="row" alignItems="center" justifyContent="space-between">
-                      <Box>
-                        <Typography variant="body2" sx={{ opacity: 0.9 }}>Lost Revenue</Typography>
-                        <Typography variant="h3" fontWeight="700">₹2.1Cr</Typography>
-                      </Box>
-                      <TrendingDownIcon sx={{ fontSize: 40, opacity: 0.3 }} />
-                    </Stack>
-                  </CardContent>
-                </Card>
-              </Grid>
-              <Grid item xs={12} sm={6} md={3}>
-                <Card sx={{ background: `linear-gradient(135deg, ${theme.palette.success.main} 0%, ${theme.palette.success.dark} 100%)`, color: 'white' }}>
-                  <CardContent>
-                    <Stack direction="row" alignItems="center" justifyContent="space-between">
-                      <Box>
-                        <Typography variant="body2" sx={{ opacity: 0.9 }}>Recovery Rate</Typography>
-                        <Typography variant="h3" fontWeight="700">12%</Typography>
-                      </Box>
-                      <AssessmentIcon sx={{ fontSize: 40, opacity: 0.3 }} />
-                    </Stack>
-                  </CardContent>
-                </Card>
-              </Grid>
-            </Grid>
-          </Grid>
-
-          {/* Filters */}
-          <Grid item xs={12}>
-            <Card sx={{ mb: 2 }}>
-              <CardContent>
-                <Grid container spacing={2} alignItems="center">
-                  <Grid item xs={12} sm={6} md={3}>
-                    <TextField
-                      fullWidth
-                      select
-                      label="Filter by Reason"
-                      value={lostReasonFilter}
-                      onChange={(e) => setLostReasonFilter(e.target.value)}
-                    >
-                      <MenuItem value="all">All Reasons</MenuItem>
-                      <MenuItem value="High Premium">High Premium</MenuItem>
-                      <MenuItem value="Better Competitor Offer">Better Competitor Offer</MenuItem>
-                      <MenuItem value="Poor Service Experience">Poor Service Experience</MenuItem>
-                      <MenuItem value="Coverage Issues">Coverage Issues</MenuItem>
-                      <MenuItem value="Financial Constraints">Financial Constraints</MenuItem>
-                    </TextField>
-                  </Grid>
-                  <Grid item xs={12} sm={6} md={3}>
-                    <TextField
-                      fullWidth
-                      select
-                      label="Filter by Product Type"
-                      value={productTypeFilter}
-                      onChange={(e) => setProductTypeFilter(e.target.value)}
-                    >
-                      <MenuItem value="all">All Products</MenuItem>
-                      {productTypes.map((type) => (
-                        <MenuItem key={type} value={type}>{type} Insurance</MenuItem>
-                      ))}
-                    </TextField>
-                  </Grid>
-                  <Grid item xs={12} sm={6} md={3}>
-                    <TextField
-                      fullWidth
-                      select
-                      label="Filter by Agent"
-                      value={agentFilter}
-                      onChange={(e) => setAgentFilter(e.target.value)}
-                    >
-                      <MenuItem value="all">All Agents</MenuItem>
-                      {agents.map((agent) => (
-                        <MenuItem key={agent} value={agent}>{agent}</MenuItem>
-                      ))}
-                    </TextField>
-                  </Grid>
-                  <Grid item xs={12} sm={6} md={3}>
-                    <Button
-                      variant="contained"
-                      startIcon={<DownloadIcon />}
-                      onClick={handleExportExcel}
-                      fullWidth
-                    >
-                      Export Report
-                    </Button>
-                  </Grid>
-                </Grid>
-              </CardContent>
-            </Card>
-          </Grid>
-
-          {/* Charts */}
-          <Grid item xs={12} md={6}>
-            <Card>
-              <CardContent>
-                <Typography variant="h6" fontWeight="600" gutterBottom>
-                  Lost Reasons Distribution
-                </Typography>
-                <ResponsiveContainer width="100%" height={300}>
-                  <PieChart>
-                    <Pie
-                      data={lostReasonsData}
-                      dataKey="count"
-                      nameKey="reason"
-                      cx="50%"
-                      cy="50%"
-                      outerRadius={100}
-                      label={({reason, percentage}) => `${reason}: ${percentage}%`}
-                    >
-                      {lostReasonsData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                      ))}
-                    </Pie>
-                    <RechartsTooltip />
-                    <Legend />
-                  </PieChart>
-                </ResponsiveContainer>
-              </CardContent>
-            </Card>
-          </Grid>
-
-          <Grid item xs={12} md={6}>
-            <Card>
-              <CardContent>
-                <Typography variant="h6" fontWeight="600" gutterBottom>
-                  Monthly Lost Reasons Trend
-                </Typography>
-                <ResponsiveContainer width="100%" height={300}>
-                  <BarChart data={monthlyLostReasons}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="month" />
-                    <YAxis />
-                    <RechartsTooltip />
-                    <Legend />
-                    <Bar dataKey="highPremium" stackId="a" fill={theme.palette.error.main} name="High Premium" />
-                    <Bar dataKey="competitor" stackId="a" fill={theme.palette.warning.main} name="Competitor" />
-                    <Bar dataKey="service" stackId="a" fill={theme.palette.info.main} name="Service" />
-                    <Bar dataKey="coverage" stackId="a" fill={theme.palette.primary.main} name="Coverage" />
-                    <Bar dataKey="financial" stackId="a" fill={theme.palette.success.main} name="Financial" />
-                  </BarChart>
-                </ResponsiveContainer>
-              </CardContent>
-            </Card>
-          </Grid>
-
-          {/* Lost Leads Table */}
-          <Grid item xs={12}>
-            <Card>
-              <CardContent>
-                <Typography variant="h6" fontWeight="600" gutterBottom>
-                  Lost Leads Details
-                </Typography>
-                <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-                  Detailed analysis of lost leads with reasons and competitor information.
-                </Typography>
-                
-                <TableContainer>
-                  <Table>
-                    <TableHead>
-                      <TableRow>
-                        <TableCell>Lead ID</TableCell>
-                        <TableCell>Customer Name</TableCell>
-                        <TableCell>Policy Type</TableCell>
-                        <TableCell>Agent</TableCell>
-                        <TableCell align="center">Lost Date</TableCell>
-                        <TableCell>Lost Reason</TableCell>
-                        <TableCell align="right">Premium</TableCell>
-                        <TableCell>Competitor</TableCell>
-                        <TableCell>Notes</TableCell>
-                      </TableRow>
-                    </TableHead>
-                    <TableBody>
-                      {lostLeadsDetails
-                        .filter(lead => {
-                          if (lostReasonFilter !== 'all' && lead.reason !== lostReasonFilter) return false;
-                          if (productTypeFilter !== 'all' && lead.policyType !== productTypeFilter) return false;
-                          if (agentFilter !== 'all' && lead.agent !== agentFilter) return false;
-                          return true;
-                        })
-                        .map((lead) => (
-                        <TableRow key={lead.id} hover>
-                          <TableCell>
-                            <Typography variant="body2" fontWeight="600" color="primary.main">
-                              {lead.id}
-                            </Typography>
-                          </TableCell>
-                          <TableCell>
-                            <Typography variant="body2" fontWeight="500">
-                              {lead.customerName}
-                            </Typography>
-                          </TableCell>
-                          <TableCell>{lead.policyType} Insurance</TableCell>
-                          <TableCell>{lead.agent}</TableCell>
-                          <TableCell align="center">
-                            <Typography variant="body2">
-                              {new Date(lead.lostDate).toLocaleDateString()}
-                            </Typography>
-                          </TableCell>
-                          <TableCell>
-                            <Chip 
-                              label={lead.reason}
-                              size="small"
-                              color={
-                                lead.reason === 'High Premium' ? 'error' :
-                                lead.reason === 'Better Competitor Offer' ? 'warning' :
-                                lead.reason === 'Poor Service Experience' ? 'info' :
-                                lead.reason === 'Coverage Issues' ? 'primary' : 'success'
-                              }
-                            />
-                          </TableCell>
-                          <TableCell align="right">
-                            <Typography variant="body2" fontWeight="600">
-                              ₹{lead.premium.toLocaleString()}
-                            </Typography>
-                          </TableCell>
-                          <TableCell>
-                            <Typography variant="body2" color={lead.competitor === 'None' ? 'text.secondary' : 'text.primary'}>
-                              {lead.competitor}
-                            </Typography>
-                          </TableCell>
-                          <TableCell>
-                            <Typography variant="caption" color="text.secondary">
-                              {lead.notes}
-                            </Typography>
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </TableContainer>
-              </CardContent>
-            </Card>
-          </Grid>
-        </Grid>
-      )}
-
-      {currentTab === 7 && (
-        <Grid container spacing={3}>
-          {/* Conversion Summary */}
-          <Grid item xs={12}>
-            <Grid container spacing={2} sx={{ mb: 3 }}>
-              <Grid item xs={12} sm={6} md={3}>
-                <Card sx={{ background: `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.primary.dark} 100%)`, color: 'white' }}>
-                  <CardContent>
-                    <Stack direction="row" alignItems="center" justifyContent="space-between">
-                      <Box>
-                        <Typography variant="body2" sx={{ opacity: 0.9 }}>Overall Conversion</Typography>
-                        <Typography variant="h3" fontWeight="700">32.1%</Typography>
-                      </Box>
-                      <AnalyticsIcon sx={{ fontSize: 40, opacity: 0.3 }} />
-                    </Stack>
-                  </CardContent>
-                </Card>
-              </Grid>
-              <Grid item xs={12} sm={6} md={3}>
-                <Card sx={{ background: `linear-gradient(135deg, ${theme.palette.success.main} 0%, ${theme.palette.success.dark} 100%)`, color: 'white' }}>
-                  <CardContent>
-                    <Stack direction="row" alignItems="center" justifyContent="space-between">
-                      <Box>
-                        <Typography variant="body2" sx={{ opacity: 0.9 }}>Best Performer</Typography>
-                        <Typography variant="h6" fontWeight="700">Sarah Johnson</Typography>
-                        <Typography variant="caption">35.4% conversion</Typography>
-                      </Box>
-                      <StarIcon sx={{ fontSize: 40, opacity: 0.3 }} />
-                    </Stack>
-                  </CardContent>
-                </Card>
-              </Grid>
-              <Grid item xs={12} sm={6} md={3}>
-                <Card sx={{ background: `linear-gradient(135deg, ${theme.palette.warning.main} 0%, ${theme.palette.warning.dark} 100%)`, color: 'white' }}>
-                  <CardContent>
-                    <Stack direction="row" alignItems="center" justifyContent="space-between">
-                      <Box>
-                        <Typography variant="body2" sx={{ opacity: 0.9 }}>Total Converted</Typography>
-                        <Typography variant="h3" fontWeight="700">367</Typography>
-                      </Box>
-                      <CheckCircleIcon sx={{ fontSize: 40, opacity: 0.3 }} />
-                    </Stack>
-                  </CardContent>
-                </Card>
-              </Grid>
-              <Grid item xs={12} sm={6} md={3}>
-                <Card sx={{ background: `linear-gradient(135deg, ${theme.palette.info.main} 0%, ${theme.palette.info.dark} 100%)`, color: 'white' }}>
-                  <CardContent>
-                    <Stack direction="row" alignItems="center" justifyContent="space-between">
-                      <Box>
-                        <Typography variant="body2" sx={{ opacity: 0.9 }}>Conversion Revenue</Typography>
-                        <Typography variant="h3" fontWeight="700">₹15.8Cr</Typography>
-                      </Box>
-                      <AttachMoneyIcon sx={{ fontSize: 40, opacity: 0.3 }} />
-                    </Stack>
-                  </CardContent>
-                </Card>
-              </Grid>
-            </Grid>
-          </Grid>
-
-          {/* Filters */}
-          <Grid item xs={12}>
-            <Card sx={{ mb: 2 }}>
-              <CardContent>
-                <Grid container spacing={2} alignItems="center">
-                  <Grid item xs={12} sm={6} md={3}>
-                    <TextField
-                      fullWidth
-                      select
-                      label="Date Range"
-                      value={conversionDateFilter}
-                      onChange={(e) => setConversionDateFilter(e.target.value)}
-                    >
-                      <MenuItem value="today">Today</MenuItem>
-                      <MenuItem value="thisWeek">This Week</MenuItem>
-                      <MenuItem value="thisMonth">This Month</MenuItem>
-                      <MenuItem value="lastMonth">Last Month</MenuItem>
-                      <MenuItem value="thisQuarter">This Quarter</MenuItem>
-                      <MenuItem value="thisYear">This Year</MenuItem>
-                    </TextField>
-                  </Grid>
-                  <Grid item xs={12} sm={6} md={3}>
-                    <TextField
-                      fullWidth
-                      select
-                      label="Filter by Agent"
-                      value={conversionAgentFilter}
-                      onChange={(e) => setConversionAgentFilter(e.target.value)}
-                    >
-                      <MenuItem value="all">All Agents</MenuItem>
-                      {agents.map((agent) => (
-                        <MenuItem key={agent} value={agent}>{agent}</MenuItem>
-                      ))}
-                    </TextField>
-                  </Grid>
-                  <Grid item xs={12} sm={6} md={3}>
-                    <TextField
-                      fullWidth
-                      select
-                      label="Filter by Product Type"
-                      value={conversionProductFilter}
-                      onChange={(e) => setConversionProductFilter(e.target.value)}
-                    >
-                      <MenuItem value="all">All Products</MenuItem>
-                      {productTypes.map((type) => (
-                        <MenuItem key={type} value={type}>{type} Insurance</MenuItem>
-                      ))}
-                    </TextField>
-                  </Grid>
-                  <Grid item xs={12} sm={6} md={3}>
-                    <Button
-                      variant="contained"
-                      startIcon={<DownloadIcon />}
-                      onClick={handleExportExcel}
-                      fullWidth
-                    >
-                      Export Report
-                    </Button>
-                  </Grid>
-                </Grid>
-              </CardContent>
-            </Card>
-          </Grid>
-
-          {/* Charts */}
-          <Grid item xs={12} md={6}>
-            <Card>
-              <CardContent>
-                <Typography variant="h6" fontWeight="600" gutterBottom>
-                  Agent vs Conversion Rate
-                </Typography>
-                <ResponsiveContainer width="100%" height={300}>
-                  <BarChart data={conversionReportsData.slice(0, 6)}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="agent" angle={-45} textAnchor="end" height={80} />
-                    <YAxis />
-                    <RechartsTooltip />
-                    <Bar dataKey="conversionRate" fill={theme.palette.primary.main} name="Conversion Rate (%)" />
-                  </BarChart>
-                </ResponsiveContainer>
-              </CardContent>
-            </Card>
-          </Grid>
-
-          <Grid item xs={12} md={6}>
-            <Card>
-              <CardContent>
-                <Typography variant="h6" fontWeight="600" gutterBottom>
-                  Monthly Conversion Trend
-                </Typography>
-                <ResponsiveContainer width="100%" height={300}>
-                  <LineChart data={monthlyConversionTrend}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="month" />
-                    <YAxis />
-                    <RechartsTooltip />
-                    <Legend />
-                    <Line type="monotone" dataKey="conversionRate" stroke={theme.palette.success.main} strokeWidth={3} name="Conversion Rate (%)" />
-                    <Line type="monotone" dataKey="totalLeads" stroke={theme.palette.primary.main} strokeWidth={2} name="Total Leads" />
-                  </LineChart>
-                </ResponsiveContainer>
-              </CardContent>
-            </Card>
-          </Grid>
-
-          {/* Detailed Conversion Table */}
-          <Grid item xs={12}>
-            <Card>
-              <CardContent>
-                <Typography variant="h6" fontWeight="600" gutterBottom>
-                  Agent-wise Conversion Details
-                </Typography>
-                <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-                  Comprehensive conversion tracking with agent performance metrics.
-                </Typography>
-                
-                <TableContainer>
-                  <Table>
-                    <TableHead>
-                      <TableRow>
-                        <TableCell>Agent Name</TableCell>
-                        <TableCell align="center">Total Leads</TableCell>
-                        <TableCell align="center">Converted Leads</TableCell>
-                        <TableCell align="center">Conversion Rate</TableCell>
-                        <TableCell align="right">Revenue Generated</TableCell>
-                        <TableCell align="center">Primary Product</TableCell>
-                        <TableCell>Performance</TableCell>
-                      </TableRow>
-                    </TableHead>
-                    <TableBody>
-                      {conversionReportsData
-                        .filter(agent => {
-                          if (conversionAgentFilter !== 'all' && agent.agent !== conversionAgentFilter) return false;
-                          if (conversionProductFilter !== 'all' && agent.productType !== conversionProductFilter) return false;
-                          return true;
-                        })
-                        .map((agent) => (
-                        <TableRow key={agent.agent} hover>
-                          <TableCell>
-                            <Typography variant="body2" fontWeight="600">
-                              {agent.agent}
-                            </Typography>
-                          </TableCell>
-                          <TableCell align="center">
-                            <Typography variant="body2" fontWeight="600">
-                              {agent.totalLeads}
-                            </Typography>
-                          </TableCell>
-                          <TableCell align="center">
-                            <Typography variant="body2" fontWeight="600" color="primary.main">
-                              {agent.convertedLeads}
-                            </Typography>
-                          </TableCell>
-                          <TableCell align="center">
-                            <Chip
-                              label={`${agent.conversionRate}%`}
-                              size="small"
-                              color={agent.conversionRate >= 35 ? 'success' : agent.conversionRate >= 30 ? 'primary' : agent.conversionRate >= 25 ? 'warning' : 'error'}
-                            />
-                          </TableCell>
-                          <TableCell align="right">
-                            <Typography variant="body2" fontWeight="600" color="success.main">
-                              ₹{(agent.revenue / 100000).toFixed(1)}L
-                            </Typography>
-                          </TableCell>
-                          <TableCell align="center">
-                            <Chip label={agent.productType} size="small" variant="outlined" />
-                          </TableCell>
-                          <TableCell>
-                            <Box sx={{ width: '100%', display: 'flex', alignItems: 'center', gap: 1 }}>
-                              <Box
-                                sx={{
-                                  flex: 1,
-                                  height: 8,
-                                  bgcolor: alpha(theme.palette.grey[500], 0.1),
-                                  borderRadius: 1,
-                                  overflow: 'hidden'
-                                }}
-                              >
-                                <Box
-                                  sx={{
-                                    width: `${agent.conversionRate}%`,
-                                    height: '100%',
-                                    bgcolor: agent.conversionRate >= 35 ? theme.palette.success.main : 
-                                             agent.conversionRate >= 30 ? theme.palette.primary.main : 
-                                             agent.conversionRate >= 25 ? theme.palette.warning.main : 
-                                             theme.palette.error.main,
-                                    borderRadius: 1
-                                  }}
-                                />
-                              </Box>
-                              <Typography variant="caption" fontWeight="600">
-                                {agent.conversionRate}%
-                              </Typography>
-                            </Box>
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </TableContainer>
-              </CardContent>
-            </Card>
-          </Grid>
-
-          {/* Product-wise Conversion Table */}
-          <Grid item xs={12}>
-            <Card>
-              <CardContent>
-                <Typography variant="h6" fontWeight="600" gutterBottom>
-                  Product-wise Conversion Analysis
-                </Typography>
-                <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-                  Conversion performance breakdown by insurance product categories.
-                </Typography>
-                
-                <TableContainer>
-                  <Table>
-                    <TableHead>
-                      <TableRow>
-                        <TableCell>Product Type</TableCell>
-                        <TableCell align="center">Total Leads</TableCell>
-                        <TableCell align="center">Converted Leads</TableCell>
-                        <TableCell align="center">Conversion Rate</TableCell>
-                        <TableCell align="right">Avg Deal Value</TableCell>
-                        <TableCell>Performance Indicator</TableCell>
-                      </TableRow>
-                    </TableHead>
-                    <TableBody>
-                      {productWiseConversion.map((product) => (
-                        <TableRow key={product.product} hover>
-                          <TableCell>
-                            <Typography variant="body2" fontWeight="600">
-                              {product.product} Insurance
-                            </Typography>
-                          </TableCell>
-                          <TableCell align="center">{product.totalLeads}</TableCell>
-                          <TableCell align="center">
-                            <Typography variant="body2" fontWeight="600" color="primary.main">
-                              {product.convertedLeads}
-                            </Typography>
-                          </TableCell>
-                          <TableCell align="center">
-                            <Chip
-                              label={`${product.conversionRate}%`}
-                              size="small"
-                              color={product.conversionRate >= 35 ? 'success' : product.conversionRate >= 30 ? 'primary' : 'warning'}
-                            />
-                          </TableCell>
-                          <TableCell align="right">
-                            <Typography variant="body2" fontWeight="600">
-                              ₹{product.avgDealValue.toLocaleString()}
-                            </Typography>
-                          </TableCell>
-                          <TableCell>
-                            <Box sx={{ width: '100%', display: 'flex', alignItems: 'center', gap: 1 }}>
-                              <Box
-                                sx={{
-                                  flex: 1,
-                                  height: 8,
-                                  bgcolor: alpha(theme.palette.grey[500], 0.1),
-                                  borderRadius: 1,
-                                  overflow: 'hidden'
-                                }}
-                              >
-                                <Box
-                                  sx={{
-                                    width: `${product.conversionRate}%`,
-                                    height: '100%',
-                                    bgcolor: product.conversionRate >= 35 ? theme.palette.success.main : 
-                                             product.conversionRate >= 30 ? theme.palette.primary.main : 
-                                             theme.palette.warning.main,
-                                    borderRadius: 1
-                                  }}
-                                />
-                              </Box>
-                              <Typography variant="caption" fontWeight="600">
-                                {product.conversionRate}%
-                              </Typography>
-                            </Box>
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </TableContainer>
-              </CardContent>
-            </Card>
-          </Grid>
-        </Grid>
-      )}
-
-      {currentTab === 8 && (
-        <Grid container spacing={3}>
-          {/* Pivot Summary */}
-          <Grid item xs={12}>
-            <Grid container spacing={2} sx={{ mb: 3 }}>
-              <Grid item xs={12} sm={6} md={3}>
-                <Card sx={{ background: `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.primary.dark} 100%)`, color: 'white' }}>
-                  <CardContent>
-                    <Stack direction="row" alignItems="center" justifyContent="space-between">
-                      <Box>
-                        <Typography variant="body2" sx={{ opacity: 0.9 }}>Total Records</Typography>
-                        <Typography variant="h3" fontWeight="700">{getPivotData().reduce((sum, item) => sum + item.policies, 0)}</Typography>
-                      </Box>
-                      <TableViewIcon sx={{ fontSize: 40, opacity: 0.3 }} />
-                    </Stack>
-                  </CardContent>
-                </Card>
-              </Grid>
-              <Grid item xs={12} sm={6} md={3}>
-                <Card sx={{ background: `linear-gradient(135deg, ${theme.palette.success.main} 0%, ${theme.palette.success.dark} 100%)`, color: 'white' }}>
-                  <CardContent>
-                    <Stack direction="row" alignItems="center" justifyContent="space-between">
-                      <Box>
-                        <Typography variant="body2" sx={{ opacity: 0.9 }}>Top Performer</Typography>
-                        <Typography variant="h6" fontWeight="700">{getPivotData()[0]?.insurer || getPivotData()[0]?.csc || getPivotData()[0]?.tenure}</Typography>
-                        <Typography variant="caption">{getPivotData()[0]?.policies} policies</Typography>
-                      </Box>
-                      <StarIcon sx={{ fontSize: 40, opacity: 0.3 }} />
-                    </Stack>
-                  </CardContent>
-                </Card>
-              </Grid>
-              <Grid item xs={12} sm={6} md={3}>
-                <Card sx={{ background: `linear-gradient(135deg, ${theme.palette.warning.main} 0%, ${theme.palette.warning.dark} 100%)`, color: 'white' }}>
-                  <CardContent>
-                    <Stack direction="row" alignItems="center" justifyContent="space-between">
-                      <Box>
-                        <Typography variant="body2" sx={{ opacity: 0.9 }}>Total Premium</Typography>
-                        <Typography variant="h3" fontWeight="700">₹{(getPivotData().reduce((sum, item) => sum + item.premium, 0) / 10000000).toFixed(1)}Cr</Typography>
-                      </Box>
-                      <AttachMoneyIcon sx={{ fontSize: 40, opacity: 0.3 }} />
-                    </Stack>
-                  </CardContent>
-                </Card>
-              </Grid>
-              <Grid item xs={12} sm={6} md={3}>
-                <Card sx={{ background: `linear-gradient(135deg, ${theme.palette.info.main} 0%, ${theme.palette.info.dark} 100%)`, color: 'white' }}>
-                  <CardContent>
-                    <Stack direction="row" alignItems="center" justifyContent="space-between">
-                      <Box>
-                        <Typography variant="body2" sx={{ opacity: 0.9 }}>Avg Performance</Typography>
-                        <Typography variant="h3" fontWeight="700">{pivotGroupBy === 'insurer' ? '11.4%' : pivotGroupBy === 'csc' ? '89.9%' : '87.3%'}</Typography>
-                      </Box>
-                      <AssessmentIcon sx={{ fontSize: 40, opacity: 0.3 }} />
-                    </Stack>
-                  </CardContent>
-                </Card>
-              </Grid>
-            </Grid>
-          </Grid>
-
-          {/* Pivot Filters */}
-          <Grid item xs={12}>
-            <Card sx={{ mb: 2 }}>
-              <CardContent>
-                <Grid container spacing={2} alignItems="center">
-                  <Grid item xs={12} sm={6} md={3}>
-                    <TextField
-                      fullWidth
-                      select
-                      label="Group By"
-                      value={pivotGroupBy}
-                      onChange={(e) => setPivotGroupBy(e.target.value)}
-                    >
-                      <MenuItem value="insurer">Insurer</MenuItem>
-                      <MenuItem value="csc">CSC</MenuItem>
-                      <MenuItem value="tenure">Tenure</MenuItem>
-                    </TextField>
-                  </Grid>
-                  <Grid item xs={12} sm={6} md={3}>
-                    <TextField
-                      fullWidth
-                      select
-                      label="Date Range"
-                      value={pivotDateFilter}
-                      onChange={(e) => setPivotDateFilter(e.target.value)}
-                    >
-                      <MenuItem value="today">Today</MenuItem>
-                      <MenuItem value="thisWeek">This Week</MenuItem>
-                      <MenuItem value="thisMonth">This Month</MenuItem>
-                      <MenuItem value="lastMonth">Last Month</MenuItem>
-                      <MenuItem value="thisQuarter">This Quarter</MenuItem>
-                      <MenuItem value="thisYear">This Year</MenuItem>
-                    </TextField>
-                  </Grid>
-                  <Grid item xs={12} sm={6} md={3}>
-                    <TextField
-                      fullWidth
-                      select
-                      label="Product Filter"
-                      value={pivotProductFilter}
-                      onChange={(e) => setPivotProductFilter(e.target.value)}
-                    >
-                      <MenuItem value="all">All Products</MenuItem>
-                      {productTypes.map((type) => (
-                        <MenuItem key={type} value={type}>{type} Insurance</MenuItem>
-                      ))}
-                    </TextField>
-                  </Grid>
-                  <Grid item xs={12} sm={6} md={3}>
-                    <Button
-                      variant="contained"
-                      startIcon={<DownloadIcon />}
-                      onClick={handleExportExcel}
-                      fullWidth
-                    >
-                      Export Report
-                    </Button>
-                  </Grid>
-                </Grid>
-              </CardContent>
-            </Card>
-          </Grid>
-
-          {/* Pivot Charts */}
-          <Grid item xs={12} md={6}>
-            <Card>
-              <CardContent>
-                <Typography variant="h6" fontWeight="600" gutterBottom>
-                  {pivotGroupBy === 'insurer' ? 'Insurer-wise' : pivotGroupBy === 'csc' ? 'CSC-wise' : 'Tenure-wise'} Distribution
-                </Typography>
-                <ResponsiveContainer width="100%" height={300}>
-                  <PieChart>
-                    <Pie
-                      data={getPivotChartData()}
-                      dataKey="value"
-                      nameKey="name"
-                      cx="50%"
-                      cy="50%"
-                      outerRadius={100}
-                      label={({name, value}) => `${name}: ${value}`}
-                    >
-                      {getPivotChartData().map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                      ))}
-                    </Pie>
-                    <RechartsTooltip />
-                    <Legend />
-                  </PieChart>
-                </ResponsiveContainer>
-              </CardContent>
-            </Card>
-          </Grid>
-
-          <Grid item xs={12} md={6}>
-            <Card>
-              <CardContent>
-                <Typography variant="h6" fontWeight="600" gutterBottom>
-                  Policy Count Comparison
-                </Typography>
-                <ResponsiveContainer width="100%" height={300}>
-                  <BarChart data={getPivotChartData()}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="name" angle={-45} textAnchor="end" height={80} />
-                    <YAxis />
-                    <RechartsTooltip />
-                    <Bar dataKey="value" fill={theme.palette.primary.main} name="Policies" />
-                  </BarChart>
-                </ResponsiveContainer>
-              </CardContent>
-            </Card>
-          </Grid>
-
-          {/* Dynamic Pivot Table */}
-          <Grid item xs={12}>
-            <Card>
-              <CardContent>
-                <Typography variant="h6" fontWeight="600" gutterBottom>
-                  {pivotGroupBy === 'insurer' ? 'Insurer-wise' : pivotGroupBy === 'csc' ? 'CSC-wise' : 'Tenure-wise'} Pivot Analysis
-                </Typography>
-                <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-                  Dynamic pivot report grouped by {pivotGroupBy} with comprehensive metrics and performance indicators.
-                </Typography>
-                
-                <TableContainer>
-                  <Table>
-                    <TableHead>
-                      <TableRow>
-                        <TableCell>{pivotGroupBy === 'insurer' ? 'Insurer Name' : pivotGroupBy === 'csc' ? 'CSC Location' : 'Policy Tenure'}</TableCell>
-                        <TableCell align="center">Policies</TableCell>
-                        <TableCell align="right">Premium Amount</TableCell>
-                        <TableCell align="center">
-                          {pivotGroupBy === 'insurer' ? 'Claims' : pivotGroupBy === 'csc' ? 'Agents' : 'Renewal Rate'}
-                        </TableCell>
-                        <TableCell align="center">
-                          {pivotGroupBy === 'insurer' ? 'Claim Ratio' : pivotGroupBy === 'csc' ? 'Avg Per Agent' : 'Avg Premium'}
-                        </TableCell>
-                        <TableCell align="center">
-                          {pivotGroupBy === 'insurer' ? 'Market Share' : pivotGroupBy === 'csc' ? 'Efficiency' : 'Satisfaction'}
-                        </TableCell>
-                        <TableCell>Performance</TableCell>
-                      </TableRow>
-                    </TableHead>
-                    <TableBody>
-                      {getPivotData().map((item, index) => (
-                        <TableRow key={index} hover>
-                          <TableCell>
-                            <Typography variant="body2" fontWeight="600">
-                              {item.insurer || item.csc || item.tenure}
-                            </Typography>
-                          </TableCell>
-                          <TableCell align="center">
-                            <Typography variant="body2" fontWeight="600" color="primary.main">
-                              {item.policies}
-                            </Typography>
-                          </TableCell>
-                          <TableCell align="right">
-                            <Typography variant="body2" fontWeight="600" color="success.main">
-                              ₹{(item.premium / 100000).toFixed(1)}L
-                            </Typography>
-                          </TableCell>
-                          <TableCell align="center">
-                            {pivotGroupBy === 'insurer' && (
-                              <Typography variant="body2">{item.claims}</Typography>
-                            )}
-                            {pivotGroupBy === 'csc' && (
-                              <Typography variant="body2">{item.agents}</Typography>
-                            )}
-                            {pivotGroupBy === 'tenure' && (
-                              <Chip label={`${item.renewalRate}%`} size="small" color="success" />
-                            )}
-                          </TableCell>
-                          <TableCell align="center">
-                            {pivotGroupBy === 'insurer' && (
-                              <Chip
-                                label={`${item.claimRatio}%`}
-                                size="small"
-                                color={item.claimRatio <= 8 ? 'success' : item.claimRatio <= 12 ? 'warning' : 'error'}
-                              />
-                            )}
-                            {pivotGroupBy === 'csc' && (
-                              <Typography variant="body2" fontWeight="600">{item.avgPerAgent}</Typography>
-                            )}
-                            {pivotGroupBy === 'tenure' && (
-                              <Typography variant="body2" fontWeight="600">₹{item.avgPremium.toLocaleString()}</Typography>
-                            )}
-                          </TableCell>
-                          <TableCell align="center">
-                            {pivotGroupBy === 'insurer' && (
-                              <Chip
-                                label={`${item.marketShare}%`}
-                                size="small"
-                                color={item.marketShare >= 25 ? 'success' : item.marketShare >= 15 ? 'primary' : 'warning'}
-                              />
-                            )}
-                            {pivotGroupBy === 'csc' && (
-                              <Chip
-                                label={`${item.efficiency}%`}
-                                size="small"
-                                color={item.efficiency >= 90 ? 'success' : item.efficiency >= 85 ? 'primary' : 'warning'}
-                              />
-                            )}
-                            {pivotGroupBy === 'tenure' && (
-                              <Stack direction="row" alignItems="center" justifyContent="center" spacing={0.5}>
-                                <Typography variant="body2" fontWeight="600">{item.satisfaction}</Typography>
-                                <StarIcon fontSize="small" sx={{ color: theme.palette.warning.main }} />
-                              </Stack>
-                            )}
-                          </TableCell>
-                          <TableCell>
-                            <Box sx={{ width: '100%', display: 'flex', alignItems: 'center', gap: 1 }}>
-                              <Box
-                                sx={{
-                                  flex: 1,
-                                  height: 8,
-                                  bgcolor: alpha(theme.palette.grey[500], 0.1),
-                                  borderRadius: 1,
-                                  overflow: 'hidden'
-                                }}
-                              >
-                                <Box
-                                  sx={{
-                                    width: `${pivotGroupBy === 'insurer' ? item.marketShare * 2 : pivotGroupBy === 'csc' ? item.efficiency : item.renewalRate}%`,
-                                    height: '100%',
-                                    bgcolor: theme.palette.primary.main,
-                                    borderRadius: 1
-                                  }}
-                                />
-                              </Box>
-                              <Typography variant="caption" fontWeight="600">
-                                {pivotGroupBy === 'insurer' ? `${item.marketShare}%` : pivotGroupBy === 'csc' ? `${item.efficiency}%` : `${item.renewalRate}%`}
-                              </Typography>
-                            </Box>
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </TableContainer>
-              </CardContent>
-            </Card>
-          </Grid>
-        </Grid>
-      )}
-
-      {currentTab === 9 && (
-        <Grid container spacing={3}>
-          {/* Premium Registers Filters */}
-          <Grid item xs={12}>
-            <Card sx={{ mb: 2 }}>
-              <CardContent>
-                <Grid container spacing={2} alignItems="center">
-                  <Grid item xs={12} sm={6} md={3}>
-                    <TextField
-                      fullWidth
-                      select
-                      label="Insurer"
-                      defaultValue="all"
-                    >
-                      <MenuItem value="all">All Insurers</MenuItem>
-                      <MenuItem value="hdfc">HDFC ERGO</MenuItem>
-                      <MenuItem value="icici">ICICI Lombard</MenuItem>
-                      <MenuItem value="bajaj">Bajaj Allianz</MenuItem>
-                    </TextField>
-                  </Grid>
-                  <Grid item xs={12} sm={6} md={3}>
-                    <TextField
-                      fullWidth
-                      select
-                      label="Policy Type"
-                      defaultValue="all"
-                    >
-                      <MenuItem value="all">All Types</MenuItem>
-                      <MenuItem value="health">Health</MenuItem>
-                      <MenuItem value="motor">Motor</MenuItem>
-                      <MenuItem value="life">Life</MenuItem>
-                    </TextField>
-                  </Grid>
-                  <Grid item xs={12} sm={6} md={3}>
-                    <TextField
-                      fullWidth
-                      select
-                      label="Tenure"
-                      defaultValue="all"
-                    >
-                      <MenuItem value="all">All Tenures</MenuItem>
-                      <MenuItem value="3m">3 Months</MenuItem>
-                      <MenuItem value="6m">6 Months</MenuItem>
-                      <MenuItem value="12m">12 Months</MenuItem>
-                    </TextField>
-                  </Grid>
-                  <Grid item xs={12} sm={6} md={3}>
-                    <Button
-                      variant="contained"
-                      fullWidth
-                      sx={{ height: '56px' }}
-                    >
-                      Generate Report
-                    </Button>
-                  </Grid>
-                </Grid>
-              </CardContent>
-            </Card>
-          </Grid>
-
-          {/* Premium Summary Table */}
-          <Grid item xs={12}>
-            <Card>
-              <CardContent>
-                <Typography variant="h6" fontWeight="600" gutterBottom>
-                  Premium Registers - Tenure Breakdown
-                </Typography>
-                <TableContainer>
-                  <Table>
-                    <TableHead>
-                      <TableRow>
-                        <TableCell>Tenure</TableCell>
-                        <TableCell align="center">Total Policies</TableCell>
-                        <TableCell align="right">Total Premium</TableCell>
-                        <TableCell align="right">Average Premium</TableCell>
-                      </TableRow>
-                    </TableHead>
-                    <TableBody>
-                      <TableRow hover>
-                        <TableCell><Typography fontWeight="600">3 Months</Typography></TableCell>
-                        <TableCell align="center">145</TableCell>
-                        <TableCell align="right">₹12,50,000</TableCell>
-                        <TableCell align="right">₹8,621</TableCell>
-                      </TableRow>
-                      <TableRow hover>
-                        <TableCell><Typography fontWeight="600">6 Months</Typography></TableCell>
-                        <TableCell align="center">298</TableCell>
-                        <TableCell align="right">₹35,80,000</TableCell>
-                        <TableCell align="right">₹12,013</TableCell>
-                      </TableRow>
-                      <TableRow hover>
-                        <TableCell><Typography fontWeight="600">12 Months</Typography></TableCell>
-                        <TableCell align="center">567</TableCell>
-                        <TableCell align="right">₹89,40,000</TableCell>
-                        <TableCell align="right">₹15,767</TableCell>
-                      </TableRow>
-                    </TableBody>
-                  </Table>
-                </TableContainer>
-              </CardContent>
-            </Card>
-          </Grid>
-
-          {/* Premium Distribution Chart */}
-          <Grid item xs={12} md={6}>
-            <Card>
-              <CardContent>
-                <Typography variant="h6" fontWeight="600" gutterBottom>
-                  Premium Distribution by Tenure
-                </Typography>
-                <ResponsiveContainer width="100%" height={300}>
-                  <PieChart>
-                    <Pie
-                      data={[
-                        { name: '3M', value: 12.5, color: theme.palette.primary.main },
-                        { name: '6M', value: 35.8, color: theme.palette.success.main },
-                        { name: '12M', value: 89.4, color: theme.palette.warning.main }
-                      ]}
-                      dataKey="value"
-                      nameKey="name"
-                      cx="50%"
-                      cy="50%"
-                      outerRadius={100}
-                      label={({name, value}) => `${name}: ₹${value}L`}
-                    >
-                      {[
-                        { name: '3M', value: 12.5, color: theme.palette.primary.main },
-                        { name: '6M', value: 35.8, color: theme.palette.success.main },
-                        { name: '12M', value: 89.4, color: theme.palette.warning.main }
-                      ].map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={entry.color} />
-                      ))}
-                    </Pie>
-                    <RechartsTooltip />
-                    <Legend />
-                  </PieChart>
-                </ResponsiveContainer>
-              </CardContent>
-            </Card>
-          </Grid>
-
-          {/* Export Options */}
-          <Grid item xs={12} md={6}>
-            <Card>
-              <CardContent>
-                <Typography variant="h6" fontWeight="600" gutterBottom>
-                  Export Options
-                </Typography>
-                <Stack spacing={2}>
-                  <Button
-                    variant="outlined"
-                    startIcon={<DownloadIcon />}
-                    fullWidth
-                  >
-                    Export as Excel (.xlsx)
-                  </Button>
-                  <Button
-                    variant="outlined"
-                    startIcon={<PdfIcon />}
-                    fullWidth
-                  >
-                    Export as PDF
-                  </Button>
-                </Stack>
-              </CardContent>
-            </Card>
-          </Grid>
-        </Grid>
-      )}
-
-      {currentTab === 10 && (
-        <Grid container spacing={3}>
-          {/* Daily Insurer MIS Filters */}
-          <Grid item xs={12}>
-            <Card sx={{ mb: 2 }}>
-              <CardContent>
-                <Grid container spacing={2} alignItems="center">
-                  <Grid item xs={12} sm={6} md={3}>
-                    <TextField
-                      fullWidth
-                      select
-                      label="Select Insurer"
-                      defaultValue="tata"
-                    >
-                      <MenuItem value="tata">TATA AIG</MenuItem>
-                      <MenuItem value="reliance">Reliance General</MenuItem>
-                    </TextField>
-                  </Grid>
-                  <Grid item xs={12} sm={6} md={3}>
-                    <TextField
-                      fullWidth
-                      type="date"
-                      label="Select Date"
-                      defaultValue={new Date().toISOString().split('T')[0]}
-                      InputLabelProps={{ shrink: true }}
-                    />
-                  </Grid>
-                  <Grid item xs={12} sm={6} md={3}>
-                    <Button
-                      variant="contained"
-                      fullWidth
-                      sx={{ height: '56px' }}
-                    >
-                      Generate Report
-                    </Button>
-                  </Grid>
-                </Grid>
-              </CardContent>
-            </Card>
-          </Grid>
-
-          {/* Daily MIS Summary Cards */}
-          <Grid item xs={12}>
-            <Grid container spacing={2} sx={{ mb: 3 }}>
-              <Grid item xs={12} sm={6} md={3}>
-                <Card sx={{ background: `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.primary.dark} 100%)`, color: 'white' }}>
-                  <CardContent>
-                    <Stack direction="row" alignItems="center" justifyContent="space-between">
-                      <Box>
-                        <Typography variant="body2" sx={{ opacity: 0.9 }}>Total Premium</Typography>
-                        <Typography variant="h3" fontWeight="700">₹8.5L</Typography>
-                      </Box>
-                      <AttachMoneyIcon sx={{ fontSize: 40, opacity: 0.3 }} />
-                    </Stack>
-                  </CardContent>
-                </Card>
-              </Grid>
-              <Grid item xs={12} sm={6} md={3}>
-                <Card sx={{ background: `linear-gradient(135deg, ${theme.palette.success.main} 0%, ${theme.palette.success.dark} 100%)`, color: 'white' }}>
-                  <CardContent>
-                    <Stack direction="row" alignItems="center" justifyContent="space-between">
-                      <Box>
-                        <Typography variant="body2" sx={{ opacity: 0.9 }}>Policies Sold</Typography>
-                        <Typography variant="h3" fontWeight="700">42</Typography>
-                      </Box>
-                      <PolicyIcon sx={{ fontSize: 40, opacity: 0.3 }} />
-                    </Stack>
-                  </CardContent>
-                </Card>
-              </Grid>
-              <Grid item xs={12} sm={6} md={3}>
-                <Card sx={{ background: `linear-gradient(135deg, ${theme.palette.warning.main} 0%, ${theme.palette.warning.dark} 100%)`, color: 'white' }}>
-                  <CardContent>
-                    <Stack direction="row" alignItems="center" justifyContent="space-between">
-                      <Box>
-                        <Typography variant="body2" sx={{ opacity: 0.9 }}>Leads Generated</Typography>
-                        <Typography variant="h3" fontWeight="700">128</Typography>
-                      </Box>
-                      <PeopleIcon sx={{ fontSize: 40, opacity: 0.3 }} />
-                    </Stack>
-                  </CardContent>
-                </Card>
-              </Grid>
-              <Grid item xs={12} sm={6} md={3}>
-                <Card sx={{ background: `linear-gradient(135deg, ${theme.palette.info.main} 0%, ${theme.palette.info.dark} 100%)`, color: 'white' }}>
-                  <CardContent>
-                    <Stack direction="row" alignItems="center" justifyContent="space-between">
-                      <Box>
-                        <Typography variant="body2" sx={{ opacity: 0.9 }}>Conversion Rate</Typography>
-                        <Typography variant="h3" fontWeight="700">32.8%</Typography>
-                      </Box>
-                      <TrendingUpIcon sx={{ fontSize: 40, opacity: 0.3 }} />
-                    </Stack>
-                  </CardContent>
-                </Card>
-              </Grid>
-            </Grid>
-          </Grid>
-
-          {/* Daily MIS Table */}
-          <Grid item xs={12} md={8}>
-            <Card>
-              <CardContent>
-                <Typography variant="h6" fontWeight="600" gutterBottom>
-                  Daily Insurer MIS Data
-                </Typography>
-                <TableContainer>
-                  <Table>
-                    <TableHead>
-                      <TableRow>
-                        <TableCell>Date</TableCell>
-                        <TableCell align="center">Leads</TableCell>
-                        <TableCell align="center">Policies</TableCell>
-                        <TableCell align="right">Premium</TableCell>
-                        <TableCell align="center">Conversion %</TableCell>
-                      </TableRow>
-                    </TableHead>
-                    <TableBody>
-                      <TableRow hover>
-                        <TableCell>Jan 31, 2025</TableCell>
-                        <TableCell align="center">128</TableCell>
-                        <TableCell align="center">42</TableCell>
-                        <TableCell align="right">₹8,50,000</TableCell>
-                        <TableCell align="center">
-                          <Chip label="32.8%" size="small" color="success" />
-                        </TableCell>
-                      </TableRow>
-                      <TableRow hover>
-                        <TableCell>Jan 30, 2025</TableCell>
-                        <TableCell align="center">115</TableCell>
-                        <TableCell align="center">38</TableCell>
-                        <TableCell align="right">₹7,20,000</TableCell>
-                        <TableCell align="center">
-                          <Chip label="33.0%" size="small" color="success" />
-                        </TableCell>
-                      </TableRow>
-                      <TableRow hover>
-                        <TableCell>Jan 29, 2025</TableCell>
-                        <TableCell align="center">142</TableCell>
-                        <TableCell align="center">45</TableCell>
-                        <TableCell align="right">₹9,80,000</TableCell>
-                        <TableCell align="center">
-                          <Chip label="31.7%" size="small" color="success" />
-                        </TableCell>
-                      </TableRow>
-                      <TableRow hover>
-                        <TableCell>Jan 28, 2025</TableCell>
-                        <TableCell align="center">98</TableCell>
-                        <TableCell align="center">28</TableCell>
-                        <TableCell align="right">₹6,40,000</TableCell>
-                        <TableCell align="center">
-                          <Chip label="28.6%" size="small" color="warning" />
-                        </TableCell>
-                      </TableRow>
-                      <TableRow hover>
-                        <TableCell>Jan 27, 2025</TableCell>
-                        <TableCell align="center">156</TableCell>
-                        <TableCell align="center">52</TableCell>
-                        <TableCell align="right">₹11,20,000</TableCell>
-                        <TableCell align="center">
-                          <Chip label="33.3%" size="small" color="success" />
-                        </TableCell>
-                      </TableRow>
-                    </TableBody>
-                  </Table>
-                </TableContainer>
-              </CardContent>
-            </Card>
-          </Grid>
-
-          {/* Daily Trend Chart */}
-          <Grid item xs={12} md={4}>
-            <Card>
-              <CardContent>
-                <Typography variant="h6" fontWeight="600" gutterBottom>
-                  Daily Premium Trend
-                </Typography>
-                <ResponsiveContainer width="100%" height={300}>
-                  <BarChart data={[
-                    { date: 'Jan 27', premium: 11.2 },
-                    { date: 'Jan 28', premium: 6.4 },
-                    { date: 'Jan 29', premium: 9.8 },
-                    { date: 'Jan 30', premium: 7.2 },
-                    { date: 'Jan 31', premium: 8.5 }
-                  ]}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="date" />
-                    <YAxis />
-                    <RechartsTooltip formatter={(value) => [`₹${value}L`, 'Premium']} />
-                    <Bar dataKey="premium" fill={theme.palette.primary.main} />
-                  </BarChart>
-                </ResponsiveContainer>
-              </CardContent>
-            </Card>
-          </Grid>
-
-          {/* Download Options */}
-          <Grid item xs={12}>
-            <Card>
-              <CardContent>
-                <Typography variant="h6" fontWeight="600" gutterBottom>
-                  Download Options
-                </Typography>
-                <Stack direction="row" spacing={2}>
-                  <Button
-                    variant="outlined"
-                    startIcon={<DownloadIcon />}
-                    onClick={handleExportExcel}
-                  >
-                    Export as Excel
-                  </Button>
-                  <Button
-                    variant="outlined"
-                    startIcon={<PdfIcon />}
-                    onClick={handleExportPDF}
-                  >
-                    Export as PDF
-                  </Button>
-                </Stack>
-              </CardContent>
-            </Card>
-          </Grid>
-        </Grid>
-      )}
-
-      {currentTab === 11 && (
-        <Grid container spacing={3}>
-          {/* CSC Load Tracking Filters */}
-          <Grid item xs={12}>
-            <Card sx={{ mb: 2 }}>
-              <CardContent>
-                <Grid container spacing={2} alignItems="center">
-                  <Grid item xs={12} sm={6} md={3}>
-                    <TextField
-                      fullWidth
-                      type="month"
-                      label="Select Month"
-                      defaultValue={new Date().toISOString().slice(0, 7)}
-                      InputLabelProps={{ shrink: true }}
-                    />
-                  </Grid>
-                  <Grid item xs={12} sm={6} md={3}>
-                    <TextField
-                      fullWidth
-                      select
-                      label="CSC/Region Filter"
-                      defaultValue="all"
-                    >
-                      <MenuItem value="all">All CSCs</MenuItem>
-                      <MenuItem value="mumbai">Mumbai Region</MenuItem>
-                      <MenuItem value="delhi">Delhi Region</MenuItem>
-                      <MenuItem value="bangalore">Bangalore Region</MenuItem>
-                    </TextField>
-                  </Grid>
-                  <Grid item xs={12} sm={6} md={3}>
-                    <Button
-                      variant="contained"
-                      fullWidth
-                      sx={{ height: '56px' }}
-                    >
-                      Generate Report
-                    </Button>
-                  </Grid>
-                </Grid>
-              </CardContent>
-            </Card>
-          </Grid>
-
-          {/* Summary Cards */}
-          <Grid item xs={12}>
-            <Grid container spacing={2} sx={{ mb: 3 }}>
-              <Grid item xs={12} sm={6} md={4}>
-                <Card sx={{ background: `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.primary.dark} 100%)`, color: 'white' }}>
-                  <CardContent>
-                    <Stack direction="row" alignItems="center" justifyContent="space-between">
-                      <Box>
-                        <Typography variant="body2" sx={{ opacity: 0.9 }}>Total CSCs</Typography>
-                        <Typography variant="h3" fontWeight="700">8</Typography>
-                      </Box>
-                      <PeopleIcon sx={{ fontSize: 40, opacity: 0.3 }} />
-                    </Stack>
-                  </CardContent>
-                </Card>
-              </Grid>
-              <Grid item xs={12} sm={6} md={4}>
-                <Card sx={{ background: `linear-gradient(135deg, ${theme.palette.info.main} 0%, ${theme.palette.info.dark} 100%)`, color: 'white' }}>
-                  <CardContent>
-                    <Stack direction="row" alignItems="center" justifyContent="space-between">
-                      <Box>
-                        <Typography variant="body2" sx={{ opacity: 0.9 }}>Average Calls per CSC</Typography>
-                        <Typography variant="h3" fontWeight="700">578</Typography>
-                      </Box>
-                      <PhoneIcon sx={{ fontSize: 40, opacity: 0.3 }} />
-                    </Stack>
-                  </CardContent>
-                </Card>
-              </Grid>
-              <Grid item xs={12} sm={6} md={4}>
-                <Card sx={{ background: `linear-gradient(135deg, ${theme.palette.success.main} 0%, ${theme.palette.success.dark} 100%)`, color: 'white' }}>
-                  <CardContent>
-                    <Stack direction="row" alignItems="center" justifyContent="space-between">
-                      <Box>
-                        <Typography variant="body2" sx={{ opacity: 0.9 }}>% Meeting Target</Typography>
-                        <Typography variant="h3" fontWeight="700">62.5%</Typography>
-                      </Box>
-                      <CheckCircleIcon sx={{ fontSize: 40, opacity: 0.3 }} />
-                    </Stack>
-                  </CardContent>
-                </Card>
-              </Grid>
-            </Grid>
-          </Grid>
-
-          {/* CSC Load Tracking Table */}
-          <Grid item xs={12} md={8}>
-            <Card>
-              <CardContent>
-                <Typography variant="h6" fontWeight="600" gutterBottom>
-                  CSC Outbound Call Tracking
-                </Typography>
-                <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-                  Monthly target: 600 outbound calls per CSC
-                </Typography>
-                <TableContainer>
-                  <Table>
-                    <TableHead>
-                      <TableRow>
-                        <TableCell>CSC Name</TableCell>
-                        <TableCell align="center">Outbound Calls</TableCell>
-                        <TableCell align="center">Achievement %</TableCell>
-                        <TableCell align="center">Status</TableCell>
-                      </TableRow>
-                    </TableHead>
-                    <TableBody>
-                      {[
-                        { name: 'Priya Patel', calls: 645, achievement: 107.5, status: 'achieved' },
-                        { name: 'Rahul Kumar', calls: 598, achievement: 99.7, status: 'below' },
-                        { name: 'Sarah Johnson', calls: 672, achievement: 112.0, status: 'achieved' },
-                        { name: 'Amit Sharma', calls: 523, achievement: 87.2, status: 'below' },
-                        { name: 'Kavita Reddy', calls: 611, achievement: 101.8, status: 'achieved' },
-                        { name: 'Deepak Singh', calls: 456, achievement: 76.0, status: 'below' },
-                        { name: 'Meera Gupta', calls: 634, achievement: 105.7, status: 'achieved' },
-                        { name: 'Vikram Joshi', calls: 487, achievement: 81.2, status: 'below' }
-                      ].map((csc) => (
-                        <TableRow 
-                          key={csc.name} 
-                          hover
-                          sx={{
-                            backgroundColor: csc.status === 'achieved' 
-                              ? alpha(theme.palette.success.main, 0.1) 
-                              : alpha(theme.palette.error.main, 0.1)
-                          }}
-                        >
-                          <TableCell>
-                            <Stack direction="row" alignItems="center" spacing={1}>
-                              {csc.status === 'achieved' ? (
-                                <CheckCircleIcon sx={{ color: theme.palette.success.main, fontSize: 20 }} />
-                              ) : (
-                                <CancelIcon sx={{ color: theme.palette.error.main, fontSize: 20 }} />
-                              )}
-                              <Typography variant="body2" fontWeight="600">
-                                {csc.name}
-                              </Typography>
-                            </Stack>
-                          </TableCell>
-                          <TableCell align="center">
-                            <Typography 
-                              variant="body2" 
-                              fontWeight="600"
-                              color={csc.status === 'achieved' ? 'success.main' : 'error.main'}
-                            >
-                              {csc.calls}
-                            </Typography>
-                          </TableCell>
-                          <TableCell align="center">
-                            <Chip
-                              label={`${csc.achievement}%`}
-                              size="small"
-                              color={csc.status === 'achieved' ? 'success' : 'error'}
-                            />
-                          </TableCell>
-                          <TableCell align="center">
-                            <Chip
-                              label={csc.status === 'achieved' ? 'Achieved ✅' : 'Below Target 🔴'}
-                              size="small"
-                              color={csc.status === 'achieved' ? 'success' : 'error'}
-                              variant={csc.status === 'achieved' ? 'filled' : 'outlined'}
-                            />
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </TableContainer>
-              </CardContent>
-            </Card>
-          </Grid>
-
-          {/* Bar Chart with Target Line */}
-          <Grid item xs={12} md={4}>
-            <Card>
-              <CardContent>
-                <Typography variant="h6" fontWeight="600" gutterBottom>
-                  Outbound Calls vs Target
-                </Typography>
-                <ResponsiveContainer width="100%" height={400}>
-                  <BarChart 
-                    data={[
-                      { name: 'Priya', calls: 645 },
-                      { name: 'Rahul', calls: 598 },
-                      { name: 'Sarah', calls: 672 },
-                      { name: 'Amit', calls: 523 },
-                      { name: 'Kavita', calls: 611 },
-                      { name: 'Deepak', calls: 456 },
-                      { name: 'Meera', calls: 634 },
-                      { name: 'Vikram', calls: 487 }
-                    ]}
-                    margin={{ top: 20, right: 30, left: 20, bottom: 60 }}
-                  >
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis 
-                      dataKey="name" 
-                      angle={-45} 
-                      textAnchor="end" 
-                      height={80}
-                      fontSize={12}
-                    />
-                    <YAxis />
-                    <RechartsTooltip formatter={(value) => [value, 'Calls']} />
-                    <Bar 
-                      dataKey="calls" 
-                      fill={(entry) => entry >= 600 ? theme.palette.success.main : theme.palette.error.main}
-                    >
-                      {[
-                        { name: 'Priya', calls: 645 },
-                        { name: 'Rahul', calls: 598 },
-                        { name: 'Sarah', calls: 672 },
-                        { name: 'Amit', calls: 523 },
-                        { name: 'Kavita', calls: 611 },
-                        { name: 'Deepak', calls: 456 },
-                        { name: 'Meera', calls: 634 },
-                        { name: 'Vikram', calls: 487 }
-                      ].map((entry, index) => (
-                        <Cell 
-                          key={`cell-${index}`} 
-                          fill={entry.calls >= 600 ? theme.palette.success.main : theme.palette.error.main} 
-                        />
-                      ))}
-                    </Bar>
-                    {/* Target Line at 600 */}
-                    <Line 
-                      type="monotone" 
-                      dataKey={() => 600} 
-                      stroke={theme.palette.warning.main} 
-                      strokeWidth={3}
-                      strokeDasharray="5 5"
-                      dot={false}
-                      name="Target (600)"
-                    />
-                  </BarChart>
-                </ResponsiveContainer>
-                <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block', textAlign: 'center' }}>
-                  Dashed line shows target of 600 calls/month
-                </Typography>
-              </CardContent>
-            </Card>
-          </Grid>
-
-          {/* Export Options */}
-          <Grid item xs={12}>
-            <Card>
-              <CardContent>
-                <Typography variant="h6" fontWeight="600" gutterBottom>
-                  Export Options
-                </Typography>
-                <Stack direction="row" spacing={2}>
-                  <Button
-                    variant="outlined"
-                    startIcon={<DownloadIcon />}
-                    onClick={handleExportExcel}
-                  >
-                    Download as Excel
-                  </Button>
-                  <Button
-                    variant="outlined"
-                    startIcon={<PdfIcon />}
-                    onClick={handleExportPDF}
-                  >
-                    Download as PDF
-                  </Button>
-                </Stack>
-              </CardContent>
-            </Card>
-          </Grid>
-        </Grid>
-      )}
-
-      {currentTab === 12 && (
-        <Grid container spacing={3}>
-          {/* Capacity Planning Filters */}
-          <Grid item xs={12}>
-            <Card sx={{ mb: 2 }}>
-              <CardContent>
-                <Grid container spacing={2} alignItems="center">
-                  <Grid item xs={12} sm={6} md={3}>
-                    <TextField
-                      fullWidth
-                      type="month"
-                      label="Select Month"
-                      defaultValue={new Date().toISOString().slice(0, 7)}
-                      InputLabelProps={{ shrink: true }}
-                    />
-                  </Grid>
-                  <Grid item xs={12} sm={6} md={3}>
-                    <TextField
-                      fullWidth
-                      select
-                      label="Region/Team Filter"
-                      defaultValue="all"
-                    >
-                      <MenuItem value="all">All Regions</MenuItem>
-                      <MenuItem value="north">North Region</MenuItem>
-                      <MenuItem value="south">South Region</MenuItem>
-                      <MenuItem value="east">East Region</MenuItem>
-                      <MenuItem value="west">West Region</MenuItem>
-                    </TextField>
-                  </Grid>
-                  <Grid item xs={12} sm={6} md={3}>
-                    <Button
-                      variant="contained"
-                      fullWidth
-                      sx={{ height: '56px' }}
-                    >
-                      Generate Plan
-                    </Button>
-                  </Grid>
-                </Grid>
-              </CardContent>
-            </Card>
-          </Grid>
-
-          {/* Alert Warning */}
-          <Grid item xs={12}>
-            <Card sx={{ bgcolor: alpha(theme.palette.warning.main, 0.1), border: `1px solid ${theme.palette.warning.main}` }}>
-              <CardContent>
-                <Stack direction="row" alignItems="center" spacing={1}>
-                  <WarningIcon sx={{ color: theme.palette.warning.main }} />
-                  <Typography variant="h6" color="warning.main" fontWeight="600">
-                    ⚠️ Staffing Shortfall: Add 2 CSCs to meet capacity requirements
+            {/* Premium Summary Table */}
+            <Grid item xs={12}>
+              <Card>
+                <CardContent>
+                  <Typography variant="h6" fontWeight="600" gutterBottom>
+                    Premium Registers - Tenure Breakdown
                   </Typography>
-                </Stack>
-              </CardContent>
-            </Card>
-          </Grid>
+                  <TableContainer>
+                    <Table>
+                      <TableHead>
+                        <TableRow>
+                          <TableCell>Insurer</TableCell>
+                          <TableCell>Policy Type</TableCell>
+                          <TableCell>Tenure</TableCell>
+                          <TableCell align="center">Total Policies</TableCell>
+                          <TableCell align="right">Total Premium</TableCell>
+                          <TableCell align="right">Average Premium</TableCell>
+                        </TableRow>
+                      </TableHead>
+                      <TableBody>
+                        {[
+                          { insurer: 'HDFC ERGO', type: 'Health', tenure: '3 Months', policies: 45, premium: '₹4,50,000', avg: '₹10,000' },
+                          { insurer: 'ICICI Lombard', type: 'Motor', tenure: '6 Months', policies: 120, premium: '₹14,40,000', avg: '₹12,000' },
+                          { insurer: 'Bajaj Allianz', type: 'Life', tenure: '12 Months', policies: 200, premium: '₹30,000,000', avg: '₹150,000' },
+                          { insurer: 'TATA AIG', type: 'Health', tenure: '12 Months', policies: 150, premium: '₹22,50,000', avg: '₹15,000' },
+                          { insurer: 'Reliance General', type: 'Motor', tenure: '3 Months', policies: 80, premium: '₹6,40,000', avg: '₹8,000' },
+                          { insurer: 'HDFC ERGO', type: 'Life', tenure: '6 Months', policies: 50, premium: '₹5,000,000', avg: '₹100,000' },
+                          { insurer: 'ICICI Lombard', type: 'Health', tenure: '12 Months', policies: 180, premium: '₹27,00,000', avg: '₹15,000' },
+                          { insurer: 'Bajaj Allianz', type: 'Motor', tenure: '3 Months', policies: 60, premium: '₹4,80,000', avg: '₹8,000' }
+                        ].filter(row => {
+                          const matchesInsurer = premiumSelectedInsurer === 'all' || row.insurer === premiumSelectedInsurer;
+                          const matchesType = premiumSelectedPolicyType === 'all' || row.type === premiumSelectedPolicyType;
+                          const matchesTenure = premiumSelectedTenure === 'all' || row.tenure === premiumSelectedTenure;
+                          return matchesInsurer && matchesType && matchesTenure;
+                        }).map((row, index) => (
+                          <TableRow key={index} hover>
+                            <TableCell><Typography fontWeight="600">{row.insurer}</Typography></TableCell>
+                            <TableCell>{row.type}</TableCell>
+                            <TableCell>{row.tenure}</TableCell>
+                            <TableCell align="center">{row.policies}</TableCell>
+                            <TableCell align="right">{row.premium}</TableCell>
+                            <TableCell align="right">{row.avg}</TableCell>
+                          </TableRow>
+                        ))}
+                        {[
+                          { insurer: 'HDFC ERGO', type: 'Health', tenure: '3 Months', policies: 45, premium: '₹4,50,000', avg: '₹10,000' },
+                          { insurer: 'ICICI Lombard', type: 'Motor', tenure: '6 Months', policies: 120, premium: '₹14,40,000', avg: '₹12,000' },
+                          { insurer: 'Bajaj Allianz', type: 'Life', tenure: '12 Months', policies: 200, premium: '₹30,000,000', avg: '₹150,000' },
+                          { insurer: 'TATA AIG', type: 'Health', tenure: '12 Months', policies: 150, premium: '₹22,50,000', avg: '₹15,000' },
+                          { insurer: 'Reliance General', type: 'Motor', tenure: '3 Months', policies: 80, premium: '₹6,40,000', avg: '₹8,000' },
+                          { insurer: 'HDFC ERGO', type: 'Life', tenure: '6 Months', policies: 50, premium: '₹5,000,000', avg: '₹100,000' },
+                          { insurer: 'ICICI Lombard', type: 'Health', tenure: '12 Months', policies: 180, premium: '₹27,00,000', avg: '₹15,000' },
+                          { insurer: 'Bajaj Allianz', type: 'Motor', tenure: '3 Months', policies: 60, premium: '₹4,80,000', avg: '₹8,000' }
+                        ].filter(row => {
+                          const matchesInsurer = premiumSelectedInsurer === 'all' || row.insurer === premiumSelectedInsurer;
+                          const matchesType = premiumSelectedPolicyType === 'all' || row.type === premiumSelectedPolicyType;
+                          const matchesTenure = premiumSelectedTenure === 'all' || row.tenure === premiumSelectedTenure;
+                          return matchesInsurer && matchesType && matchesTenure;
+                        }).length === 0 && (
+                            <TableRow>
+                              <TableCell colSpan={6} align="center" sx={{ py: 3 }}>
+                                <Typography variant="body1" color="text.secondary">
+                                  No records found for the selected filters.
+                                </Typography>
+                              </TableCell>
+                            </TableRow>
+                          )}
+                      </TableBody>
+                    </Table>
+                  </TableContainer>
+                </CardContent>
+              </Card>
+            </Grid>
 
-          {/* Dashboard Cards */}
-          <Grid item xs={12}>
-            <Grid container spacing={2} sx={{ mb: 3 }}>
-              <Grid item xs={12} sm={6} md={4}>
-                <Card sx={{ background: `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.primary.dark} 100%)`, color: 'white' }}>
-                  <CardContent>
-                    <Stack direction="row" alignItems="center" justifyContent="space-between">
-                      <Box>
-                        <Typography variant="body2" sx={{ opacity: 0.9 }}>Total Leads</Typography>
-                        <Typography variant="h3" fontWeight="700">1,250</Typography>
-                      </Box>
-                      <PeopleIcon sx={{ fontSize: 40, opacity: 0.3 }} />
-                    </Stack>
-                  </CardContent>
-                </Card>
-              </Grid>
-              <Grid item xs={12} sm={6} md={4}>
-                <Card sx={{ background: `linear-gradient(135deg, ${theme.palette.info.main} 0%, ${theme.palette.info.dark} 100%)`, color: 'white' }}>
-                  <CardContent>
-                    <Stack direction="row" alignItems="center" justifyContent="space-between">
-                      <Box>
-                        <Typography variant="body2" sx={{ opacity: 0.9 }}>Required CSCs</Typography>
-                        <Typography variant="h3" fontWeight="700">10</Typography>
-                      </Box>
-                      <AssessmentIcon sx={{ fontSize: 40, opacity: 0.3 }} />
-                    </Stack>
-                  </CardContent>
-                </Card>
-              </Grid>
-              <Grid item xs={12} sm={6} md={4}>
-                <Card sx={{ background: `linear-gradient(135deg, ${theme.palette.error.main} 0%, ${theme.palette.error.dark} 100%)`, color: 'white' }}>
-                  <CardContent>
-                    <Stack direction="row" alignItems="center" justifyContent="space-between">
-                      <Box>
-                        <Typography variant="body2" sx={{ opacity: 0.9 }}>Shortfall</Typography>
-                        <Typography variant="h3" fontWeight="700">2</Typography>
-                      </Box>
-                      <WarningIcon sx={{ fontSize: 40, opacity: 0.3 }} />
-                    </Stack>
-                  </CardContent>
-                </Card>
-              </Grid>
+            {/* Premium Distribution Chart */}
+            <Grid item xs={12} md={6}>
+              <Card>
+                <CardContent>
+                  <Typography variant="h6" fontWeight="600" gutterBottom>
+                    Premium Distribution by Tenure
+                  </Typography>
+                  <ResponsiveContainer width="100%" height={300}>
+                    <PieChart>
+                      <Pie
+                        data={[
+                          { name: '3M', value: 12.5, color: theme.palette.primary.main },
+                          { name: '6M', value: 35.8, color: theme.palette.success.main },
+                          { name: '12M', value: 89.4, color: theme.palette.warning.main }
+                        ]}
+                        dataKey="value"
+                        nameKey="name"
+                        cx="50%"
+                        cy="50%"
+                        outerRadius={100}
+                        label={({ name, value }) => `${name}: ₹${value}L`}
+                      >
+                        {[
+                          { name: '3M', value: 12.5, color: theme.palette.primary.main },
+                          { name: '6M', value: 35.8, color: theme.palette.success.main },
+                          { name: '12M', value: 89.4, color: theme.palette.warning.main }
+                        ].map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={entry.color} />
+                        ))}
+                      </Pie>
+                      <RechartsTooltip />
+                      <Legend />
+                    </PieChart>
+                  </ResponsiveContainer>
+                </CardContent>
+              </Card>
             </Grid>
           </Grid>
+        )
+      }
 
-          {/* Charts */}
-          <Grid item xs={12} md={6}>
-            <Card>
-              <CardContent>
-                <Typography variant="h6" fontWeight="600" gutterBottom>
-                  Available vs Required CSCs
-                </Typography>
-                <ResponsiveContainer width="100%" height={300}>
-                  <BarChart data={[
-                    { region: 'North', available: 3, required: 4 },
-                    { region: 'South', available: 2, required: 3 },
-                    { region: 'East', available: 2, required: 2 },
-                    { region: 'West', available: 1, required: 1 }
-                  ]}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="region" />
-                    <YAxis />
-                    <RechartsTooltip />
-                    <Legend />
-                    <Bar dataKey="available" fill={theme.palette.success.main} name="Available CSCs" />
-                    <Bar dataKey="required" fill={theme.palette.error.main} name="Required CSCs" />
-                  </BarChart>
-                </ResponsiveContainer>
-              </CardContent>
-            </Card>
-          </Grid>
 
-          <Grid item xs={12} md={6}>
-            <Card>
-              <CardContent>
-                <Typography variant="h6" fontWeight="600" gutterBottom>
-                  Workload Distribution by Region
-                </Typography>
-                <ResponsiveContainer width="100%" height={300}>
-                  <PieChart>
-                    <Pie
-                      data={[
-                        { name: 'North', value: 450, color: theme.palette.primary.main },
-                        { name: 'South', value: 380, color: theme.palette.success.main },
-                        { name: 'East', value: 250, color: theme.palette.warning.main },
-                        { name: 'West', value: 170, color: theme.palette.info.main }
-                      ]}
-                      dataKey="value"
-                      nameKey="name"
-                      cx="50%"
-                      cy="50%"
-                      outerRadius={100}
-                      label={({name, value}) => `${name}: ${value}`}
-                    >
-                      {[
-                        { name: 'North', value: 450, color: theme.palette.primary.main },
-                        { name: 'South', value: 380, color: theme.palette.success.main },
-                        { name: 'East', value: 250, color: theme.palette.warning.main },
-                        { name: 'West', value: 170, color: theme.palette.info.main }
-                      ].map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={entry.color} />
-                      ))}
-                    </Pie>
-                    <RechartsTooltip />
-                    <Legend />
-                  </PieChart>
-                </ResponsiveContainer>
-              </CardContent>
-            </Card>
-          </Grid>
 
-          {/* Table View */}
-          <Grid item xs={12}>
-            <Card>
-              <CardContent>
-                <Typography variant="h6" fontWeight="600" gutterBottom>
-                  CSC Capacity Analysis
-                </Typography>
-                <TableContainer>
-                  <Table>
-                    <TableHead>
-                      <TableRow>
-                        <TableCell>CSC</TableCell>
-                        <TableCell align="center">Assigned Leads</TableCell>
-                        <TableCell align="center">Capacity</TableCell>
-                        <TableCell align="center">Utilization %</TableCell>
-                        <TableCell align="center">Status</TableCell>
-                      </TableRow>
-                    </TableHead>
-                    <TableBody>
-                      {[
-                        { csc: 'North Team A', leads: 180, capacity: 150, utilization: 120.0, status: 'overloaded' },
-                        { csc: 'North Team B', leads: 145, capacity: 150, utilization: 96.7, status: 'optimal' },
-                        { csc: 'South Team A', leads: 165, capacity: 150, utilization: 110.0, status: 'overloaded' },
-                        { csc: 'South Team B', leads: 125, capacity: 150, utilization: 83.3, status: 'underutilized' },
-                        { csc: 'East Team A', calls: 130, capacity: 150, utilization: 86.7, status: 'optimal' },
-                        { csc: 'West Team A', calls: 95, capacity: 150, utilization: 63.3, status: 'underutilized' }
-                      ].map((team) => (
-                        <TableRow key={team.csc} hover>
-                          <TableCell>
-                            <Typography variant="body2" fontWeight="600">
-                              {team.csc}
-                            </Typography>
-                          </TableCell>
-                          <TableCell align="center">
-                            <Typography variant="body2" fontWeight="600">
-                              {team.leads || team.calls}
-                            </Typography>
-                          </TableCell>
-                          <TableCell align="center">{team.capacity}</TableCell>
-                          <TableCell align="center">
-                            <Chip
-                              label={`${team.utilization}%`}
-                              size="small"
-                              color={
-                                team.status === 'overloaded' ? 'error' :
-                                team.status === 'optimal' ? 'success' : 'warning'
-                              }
-                            />
-                          </TableCell>
-                          <TableCell align="center">
-                            <Chip
-                              label={
-                                team.status === 'overloaded' ? 'Overloaded' :
-                                team.status === 'optimal' ? 'Optimal' : 'Under-utilized'
-                              }
-                              size="small"
-                              color={
-                                team.status === 'overloaded' ? 'error' :
-                                team.status === 'optimal' ? 'success' : 'warning'
-                              }
-                              variant="outlined"
-                            />
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </TableContainer>
-              </CardContent>
-            </Card>
-          </Grid>
+      {
+        currentTab === 10 && (
+          <Grid container spacing={3}>
+            {/* Daily Insurer MIS Filters */}
+            <Grid item xs={12}>
+              <Card sx={{ mb: 2 }}>
+                <CardContent>
+                  <Grid container spacing={2} alignItems="center">
+                    <Grid item xs={12} sm={6} md={3}>
+                      <TextField
+                        fullWidth
+                        select
+                        label="Select Insurer"
+                        value={dailyMISSelectedInsurer}
+                        onChange={(e) => setDailyMISSelectedInsurer(e.target.value)}
+                      >
+                        <MenuItem value="all">All Insurers</MenuItem>
+                        <MenuItem value="TATA AIG">TATA AIG</MenuItem>
+                        <MenuItem value="Reliance General">Reliance General</MenuItem>
+                        <MenuItem value="HDFC ERGO">HDFC ERGO</MenuItem>
+                        <MenuItem value="ICICI Lombard">ICICI Lombard</MenuItem>
+                        <MenuItem value="Bajaj Allianz">Bajaj Allianz</MenuItem>
+                      </TextField>
+                    </Grid>
+                    <Grid item xs={12} sm={6} md={3}>
+                      <TextField
+                        fullWidth
+                        select
+                        label="Select Date"
+                        value={dailyMISSelectedDate}
+                        onChange={(e) => setDailyMISSelectedDate(e.target.value)}
+                      >
+                        <MenuItem value="all">All Dates</MenuItem>
+                        <MenuItem value="Jan 31, 2025">Jan 31, 2025</MenuItem>
+                        <MenuItem value="Jan 30, 2025">Jan 30, 2025</MenuItem>
+                        <MenuItem value="Jan 29, 2025">Jan 29, 2025</MenuItem>
+                        <MenuItem value="Jan 28, 2025">Jan 28, 2025</MenuItem>
+                        <MenuItem value="Jan 27, 2025">Jan 27, 2025</MenuItem>
+                      </TextField>
+                    </Grid>
+                    <Grid item xs={12} sm={6} md={3}>
+                      <TextField
+                        fullWidth
+                        select
+                        label="Filter by Conversion"
+                        value={dailyMISConversionFilter}
+                        onChange={(e) => setDailyMISConversionFilter(e.target.value)}
+                      >
+                        <MenuItem value="all">All Conversions</MenuItem>
+                        <MenuItem value="high">High (≥30%)</MenuItem>
+                        <MenuItem value="medium">Medium (20-29%)</MenuItem>
+                        <MenuItem value="low">Low (&lt;20%)</MenuItem>
+                      </TextField>
+                    </Grid>
+                    <Grid item xs={12} sm={6} md={3}>
+                      <Button
+                        variant="outlined"
+                        fullWidth
+                        sx={{ height: '56px' }}
+                        onClick={() => {
+                          setDailyMISSelectedInsurer('all');
+                          setDailyMISSelectedDate('all');
+                          setDailyMISConversionFilter('all');
+                        }}
+                      >
+                        Reset Filters
+                      </Button>
+                    </Grid>
+                  </Grid>
+                </CardContent>
+              </Card>
+            </Grid>
 
-          {/* Export Options */}
-          <Grid item xs={12}>
-            <Card>
-              <CardContent>
-                <Typography variant="h6" fontWeight="600" gutterBottom>
-                  Export Options
-                </Typography>
-                <Stack direction="row" spacing={2}>
-                  <Button
-                    variant="outlined"
-                    startIcon={<DownloadIcon />}
-                    onClick={handleExportExcel}
-                  >
-                    Export as Excel
-                  </Button>
-                  <Button
-                    variant="outlined"
-                    startIcon={<PdfIcon />}
-                    onClick={handleExportPDF}
-                  >
-                    Export as PDF
-                  </Button>
-                </Stack>
-              </CardContent>
-            </Card>
-          </Grid>
-        </Grid>
-      )}
-
-      {currentTab === 13 && (
-        <Grid container spacing={3}>
-          {/* Workload Distribution Summary */}
-          <Grid item xs={12}>
-            <Grid container spacing={2} sx={{ mb: 3 }}>
-              <Grid item xs={12} sm={6} md={3}>
-                <Card sx={{ background: `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.primary.dark} 100%)`, color: 'white' }}>
-                  <CardContent>
-                    <Stack direction="row" alignItems="center" justifyContent="space-between">
-                      <Box>
-                        <Typography variant="body2" sx={{ opacity: 0.9 }}>Total CSCs</Typography>
-                        <Typography variant="h3" fontWeight="700">25</Typography>
-                      </Box>
-                      <PeopleIcon sx={{ fontSize: 40, opacity: 0.3 }} />
-                    </Stack>
-                  </CardContent>
-                </Card>
-              </Grid>
-              <Grid item xs={12} sm={6} md={3}>
-                <Card sx={{ background: `linear-gradient(135deg, ${theme.palette.success.main} 0%, ${theme.palette.success.dark} 100%)`, color: 'white' }}>
-                  <CardContent>
-                    <Stack direction="row" alignItems="center" justifyContent="space-between">
-                      <Box>
-                        <Typography variant="body2" sx={{ opacity: 0.9 }}>Average Utilization</Typography>
-                        <Typography variant="h3" fontWeight="700">87.5%</Typography>
-                      </Box>
-                      <TrendingUpIcon sx={{ fontSize: 40, opacity: 0.3 }} />
-                    </Stack>
-                  </CardContent>
-                </Card>
-              </Grid>
-              <Grid item xs={12} sm={6} md={3}>
-                <Card sx={{ background: `linear-gradient(135deg, ${theme.palette.warning.main} 0%, ${theme.palette.warning.dark} 100%)`, color: 'white' }}>
-                  <CardContent>
-                    <Stack direction="row" alignItems="center" justifyContent="space-between">
-                      <Box>
-                        <Typography variant="body2" sx={{ opacity: 0.9 }}>Total Leads Assigned</Typography>
-                        <Typography variant="h3" fontWeight="700">1,250</Typography>
-                      </Box>
-                      <AssessmentIcon sx={{ fontSize: 40, opacity: 0.3 }} />
-                    </Stack>
-                  </CardContent>
-                </Card>
-              </Grid>
-              <Grid item xs={12} sm={6} md={3}>
-                <Card sx={{ background: `linear-gradient(135deg, ${theme.palette.info.main} 0%, ${theme.palette.info.dark} 100%)`, color: 'white' }}>
-                  <CardContent>
-                    <Stack direction="row" alignItems="center" justifyContent="space-between">
-                      <Box>
-                        <Typography variant="body2" sx={{ opacity: 0.9 }}>Overloaded CSCs</Typography>
-                        <Typography variant="h3" fontWeight="700">3</Typography>
-                      </Box>
-                      <WarningIcon sx={{ fontSize: 40, opacity: 0.3 }} />
-                    </Stack>
-                  </CardContent>
-                </Card>
+            {/* Daily MIS Summary Cards */}
+            <Grid item xs={12}>
+              <Grid container spacing={2} sx={{ mb: 3 }}>
+                <Grid item xs={12} sm={6} md={3}>
+                  <Card sx={{ background: `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.primary.dark} 100%)`, color: 'white' }}>
+                    <CardContent>
+                      <Stack direction="row" alignItems="center" justifyContent="space-between">
+                        <Box>
+                          <Typography variant="body2" sx={{ opacity: 0.9 }}>Total Premium</Typography>
+                          <Typography variant="h3" fontWeight="700">₹8.5L</Typography>
+                        </Box>
+                        <AttachMoneyIcon sx={{ fontSize: 40, opacity: 0.3 }} />
+                      </Stack>
+                    </CardContent>
+                  </Card>
+                </Grid>
+                <Grid item xs={12} sm={6} md={3}>
+                  <Card sx={{ background: `linear-gradient(135deg, ${theme.palette.success.main} 0%, ${theme.palette.success.dark} 100%)`, color: 'white' }}>
+                    <CardContent>
+                      <Stack direction="row" alignItems="center" justifyContent="space-between">
+                        <Box>
+                          <Typography variant="body2" sx={{ opacity: 0.9 }}>Policies Sold</Typography>
+                          <Typography variant="h3" fontWeight="700">42</Typography>
+                        </Box>
+                        <PolicyIcon sx={{ fontSize: 40, opacity: 0.3 }} />
+                      </Stack>
+                    </CardContent>
+                  </Card>
+                </Grid>
+                <Grid item xs={12} sm={6} md={3}>
+                  <Card sx={{ background: `linear-gradient(135deg, ${theme.palette.warning.main} 0%, ${theme.palette.warning.dark} 100%)`, color: 'white' }}>
+                    <CardContent>
+                      <Stack direction="row" alignItems="center" justifyContent="space-between">
+                        <Box>
+                          <Typography variant="body2" sx={{ opacity: 0.9 }}>Leads Generated</Typography>
+                          <Typography variant="h3" fontWeight="700">128</Typography>
+                        </Box>
+                        <PeopleIcon sx={{ fontSize: 40, opacity: 0.3 }} />
+                      </Stack>
+                    </CardContent>
+                  </Card>
+                </Grid>
+                <Grid item xs={12} sm={6} md={3}>
+                  <Card sx={{ background: `linear-gradient(135deg, ${theme.palette.info.main} 0%, ${theme.palette.info.dark} 100%)`, color: 'white' }}>
+                    <CardContent>
+                      <Stack direction="row" alignItems="center" justifyContent="space-between">
+                        <Box>
+                          <Typography variant="body2" sx={{ opacity: 0.9 }}>Conversion Rate</Typography>
+                          <Typography variant="h3" fontWeight="700">32.8%</Typography>
+                        </Box>
+                        <TrendingUpIcon sx={{ fontSize: 40, opacity: 0.3 }} />
+                      </Stack>
+                    </CardContent>
+                  </Card>
+                </Grid>
               </Grid>
             </Grid>
-          </Grid>
 
-          {/* Filters */}
-          <Grid item xs={12}>
-            <Card sx={{ mb: 2 }}>
-              <CardContent>
-                <Grid container spacing={2} alignItems="center">
-                  <Grid item xs={12} sm={6} md={3}>
-                    <TextField
-                      fullWidth
-                      select
-                      label="Date Range"
-                      defaultValue="thisMonth"
-                    >
-                      <MenuItem value="thisMonth">This Month</MenuItem>
-                      <MenuItem value="lastMonth">Last Month</MenuItem>
-                      <MenuItem value="last3Months">Last 3 Months</MenuItem>
-                    </TextField>
-                  </Grid>
-                  <Grid item xs={12} sm={6} md={3}>
-                    <TextField
-                      fullWidth
-                      select
-                      label="Region"
-                      defaultValue="all"
-                    >
-                      <MenuItem value="all">All Regions</MenuItem>
-                      <MenuItem value="north">North</MenuItem>
-                      <MenuItem value="south">South</MenuItem>
-                      <MenuItem value="east">East</MenuItem>
-                      <MenuItem value="west">West</MenuItem>
-                    </TextField>
-                  </Grid>
-                  <Grid item xs={12} sm={6} md={3}>
-                    <TextField
-                      fullWidth
-                      select
-                      label="Team Filter"
-                      defaultValue="all"
-                    >
-                      <MenuItem value="all">All Teams</MenuItem>
-                      <MenuItem value="team1">Team Alpha</MenuItem>
-                      <MenuItem value="team2">Team Beta</MenuItem>
-                      <MenuItem value="team3">Team Gamma</MenuItem>
-                    </TextField>
-                  </Grid>
-                  <Grid item xs={12} sm={6} md={3}>
-                    <Button
-                      variant="contained"
-                      startIcon={<DownloadIcon />}
-                      onClick={handleExportExcel}
-                      fullWidth
-                    >
-                      Export
-                    </Button>
-                  </Grid>
-                </Grid>
-              </CardContent>
-            </Card>
-          </Grid>
-
-          {/* Charts */}
-          <Grid item xs={12} md={8}>
-            <Card>
-              <CardContent>
-                <Typography variant="h6" fontWeight="600" gutterBottom>
-                  CSC Workload Distribution
-                </Typography>
-                <ResponsiveContainer width="100%" height={300}>
-                  <BarChart data={[
-                    { name: 'Rajesh Kumar', assigned: 65, completed: 58 },
-                    { name: 'Priya Sharma', assigned: 72, completed: 75 },
-                    { name: 'Amit Singh', assigned: 45, completed: 38 },
-                    { name: 'Sneha Patel', assigned: 58, completed: 52 },
-                    { name: 'Vikram Reddy', assigned: 68, completed: 71 }
-                  ]}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="name" angle={-45} textAnchor="end" height={80} />
-                    <YAxis />
-                    <RechartsTooltip />
-                    <Legend />
-                    <Bar dataKey="assigned" fill={theme.palette.primary.main} name="Assigned Leads" />
-                    <Bar dataKey="completed" fill={theme.palette.success.main} name="Completed" />
-                  </BarChart>
-                </ResponsiveContainer>
-              </CardContent>
-            </Card>
-          </Grid>
-
-          {/* Pie Chart */}
-          <Grid item xs={12} md={4}>
-            <Card>
-              <CardContent>
-                <Typography variant="h6" fontWeight="600" gutterBottom>
-                  Workload Share
-                </Typography>
-                <ResponsiveContainer width="100%" height={300}>
-                  <PieChart>
-                    <Pie
-                      data={[
-                        { name: 'Rajesh', value: 65, color: theme.palette.primary.main },
-                        { name: 'Priya', value: 72, color: theme.palette.success.main },
-                        { name: 'Amit', value: 45, color: theme.palette.warning.main },
-                        { name: 'Sneha', value: 58, color: theme.palette.info.main },
-                        { name: 'Vikram', value: 68, color: theme.palette.error.main }
-                      ]}
-                      cx="50%"
-                      cy="50%"
-                      outerRadius={80}
-                      dataKey="value"
-                      label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
-                    >
-                      {[
-                        { name: 'Rajesh', value: 65, color: theme.palette.primary.main },
-                        { name: 'Priya', value: 72, color: theme.palette.success.main },
-                        { name: 'Amit', value: 45, color: theme.palette.warning.main },
-                        { name: 'Sneha', value: 58, color: theme.palette.info.main },
-                        { name: 'Vikram', value: 68, color: theme.palette.error.main }
-                      ].map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={entry.color} />
-                      ))}
-                    </Pie>
-                    <RechartsTooltip />
-                  </PieChart>
-                </ResponsiveContainer>
-              </CardContent>
-            </Card>
-          </Grid>
-
-          {/* Detailed Table */}
-          <Grid item xs={12}>
-            <Card>
-              <CardContent>
-                <Typography variant="h6" fontWeight="600" gutterBottom>
-                  Detailed CSC Performance
-                </Typography>
-                <TableContainer>
-                  <Table>
-                    <TableHead>
-                      <TableRow>
-                        <TableCell>CSC</TableCell>
-                        <TableCell align="right">Assigned</TableCell>
-                        <TableCell align="right">Completed</TableCell>
-                        <TableCell align="right">Utilization %</TableCell>
-                        <TableCell align="center">Status</TableCell>
-                      </TableRow>
-                    </TableHead>
-                    <TableBody>
-                      {[
-                        { name: 'Rajesh Kumar', assigned: 65, completed: 58, utilization: 89.2, status: 'balanced' },
-                        { name: 'Priya Sharma', assigned: 72, completed: 75, utilization: 104.2, status: 'overloaded' },
-                        { name: 'Amit Singh', assigned: 45, completed: 38, utilization: 84.4, status: 'underutilized' },
-                        { name: 'Sneha Patel', assigned: 58, completed: 52, utilization: 89.7, status: 'balanced' },
-                        { name: 'Vikram Reddy', assigned: 68, completed: 71, utilization: 104.4, status: 'overloaded' },
-                        { name: 'Anita Desai', assigned: 52, completed: 48, utilization: 92.3, status: 'balanced' },
-                        { name: 'Ravi Nair', assigned: 38, completed: 32, utilization: 84.2, status: 'underutilized' },
-                        { name: 'Pooja Agarwal', assigned: 61, completed: 65, utilization: 106.6, status: 'overloaded' }
-                      ].map((row, index) => (
-                        <TableRow key={index} hover>
-                          <TableCell>
-                            <Typography variant="body2" fontWeight="600">
-                              {row.name}
-                            </Typography>
-                          </TableCell>
-                          <TableCell align="right">{row.assigned}</TableCell>
-                          <TableCell align="right">{row.completed}</TableCell>
-                          <TableCell align="right">{row.utilization}%</TableCell>
-                          <TableCell align="center">
-                            <Chip
-                              label={`${row.status === 'overloaded' ? '🔴' : row.status === 'balanced' ? '🟢' : '🟡'} ${row.status}`}
-                              size="small"
-                              sx={{
-                                backgroundColor: alpha(
-                                  row.status === 'overloaded' ? theme.palette.error.main : 
-                                  row.status === 'balanced' ? theme.palette.success.main : 
-                                  theme.palette.warning.main, 0.1
-                                ),
-                                color: row.status === 'overloaded' ? theme.palette.error.main : 
-                                       row.status === 'balanced' ? theme.palette.success.main : 
-                                       theme.palette.warning.main
-                              }}
-                            />
-                          </TableCell>
+            {/* Daily MIS Table */}
+            <Grid item xs={12} md={8}>
+              <Card>
+                <CardContent>
+                  <Typography variant="h6" fontWeight="600" gutterBottom>
+                    Daily Insurer MIS Data
+                  </Typography>
+                  <TableContainer>
+                    <Table>
+                      <TableHead>
+                        <TableRow>
+                          <TableCell>Date</TableCell>
+                          <TableCell>Insurer</TableCell>
+                          <TableCell align="center">Leads</TableCell>
+                          <TableCell align="center">Policies</TableCell>
+                          <TableCell align="right">Premium</TableCell>
+                          <TableCell align="center">Conversion %</TableCell>
                         </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </TableContainer>
-              </CardContent>
-            </Card>
-          </Grid>
-        </Grid>
-      )}
+                      </TableHead>
+                      <TableBody>
+                        {[
+                          { date: 'Jan 31, 2025', insurer: 'TATA AIG', leads: 128, policies: 42, premium: '₹8,50,000', conversion: 32.8, color: 'success' },
+                          { date: 'Jan 30, 2025', insurer: 'Reliance General', leads: 115, policies: 38, premium: '₹7,20,000', conversion: 33.0, color: 'success' },
+                          { date: 'Jan 29, 2025', insurer: 'HDFC ERGO', leads: 142, policies: 45, premium: '₹9,80,000', conversion: 31.7, color: 'success' },
+                          { date: 'Jan 28, 2025', insurer: 'ICICI Lombard', leads: 98, policies: 28, premium: '₹6,40,000', conversion: 28.6, color: 'warning' },
+                          { date: 'Jan 27, 2025', insurer: 'Bajaj Allianz', leads: 156, policies: 52, premium: '₹11,20,000', conversion: 33.3, color: 'success' },
+                          { date: 'Jan 31, 2025', insurer: 'Reliance General', leads: 95, policies: 30, premium: '₹5,50,000', conversion: 31.5, color: 'success' },
+                          { date: 'Jan 30, 2025', insurer: 'TATA AIG', leads: 110, policies: 35, premium: '₹6,80,000', conversion: 31.8, color: 'success' }
+                        ].filter(row => {
+                          const matchesInsurer = dailyMISSelectedInsurer === 'all' || row.insurer === dailyMISSelectedInsurer;
+                          const matchesDate = dailyMISSelectedDate === 'all' || row.date === dailyMISSelectedDate;
+                          let matchesConversion = true;
+                          if (dailyMISConversionFilter === 'high') matchesConversion = row.conversion >= 30;
+                          if (dailyMISConversionFilter === 'medium') matchesConversion = row.conversion >= 20 && row.conversion < 30;
+                          if (dailyMISConversionFilter === 'low') matchesConversion = row.conversion < 20;
+                          return matchesInsurer && matchesDate && matchesConversion;
+                        }).map((row, index) => (
+                          <TableRow key={index} hover>
+                            <TableCell>{row.date}</TableCell>
+                            <TableCell>{row.insurer}</TableCell>
+                            <TableCell align="center">{row.leads}</TableCell>
+                            <TableCell align="center">{row.policies}</TableCell>
+                            <TableCell align="right">{row.premium}</TableCell>
+                            <TableCell align="center">
+                              <Chip label={`${row.conversion}%`} size="small" color={row.color} />
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                        {[
+                          { date: 'Jan 31, 2025', insurer: 'TATA AIG', leads: 128, policies: 42, premium: '₹8,50,000', conversion: 32.8, color: 'success' },
+                          { date: 'Jan 30, 2025', insurer: 'Reliance General', leads: 115, policies: 38, premium: '₹7,20,000', conversion: 33.0, color: 'success' },
+                          { date: 'Jan 29, 2025', insurer: 'HDFC ERGO', leads: 142, policies: 45, premium: '₹9,80,000', conversion: 31.7, color: 'success' },
+                          { date: 'Jan 28, 2025', insurer: 'ICICI Lombard', leads: 98, policies: 28, premium: '₹6,40,000', conversion: 28.6, color: 'warning' },
+                          { date: 'Jan 27, 2025', insurer: 'Bajaj Allianz', leads: 156, policies: 52, premium: '₹11,20,000', conversion: 33.3, color: 'success' },
+                          { date: 'Jan 31, 2025', insurer: 'Reliance General', leads: 95, policies: 30, premium: '₹5,50,000', conversion: 31.5, color: 'success' },
+                          { date: 'Jan 30, 2025', insurer: 'TATA AIG', leads: 110, policies: 35, premium: '₹6,80,000', conversion: 31.8, color: 'success' }
+                        ].filter(row => {
+                          const matchesInsurer = dailyMISSelectedInsurer === 'all' || row.insurer === dailyMISSelectedInsurer;
+                          const matchesDate = dailyMISSelectedDate === 'all' || row.date === dailyMISSelectedDate;
+                          return matchesInsurer && matchesDate;
+                        }).length === 0 && (
+                            <TableRow>
+                              <TableCell colSpan={6} align="center" sx={{ py: 3 }}>
+                                <Typography variant="body1" color="text.secondary">
+                                  No records found for the selected filters.
+                                </Typography>
+                              </TableCell>
+                            </TableRow>
+                          )}
+                      </TableBody>
+                    </Table>
+                  </TableContainer>
+                </CardContent>
+              </Card>
+            </Grid>
 
-      {currentTab === 14 && (
-        <Grid container spacing={3}>
-          <Grid item xs={12}>
-            <Card>
-              <CardContent>
-                <Typography variant="h6" fontWeight="600" gutterBottom>
-                  Detailed MIS Report
-                </Typography>
-                <Divider sx={{ my: 2 }} />
-                <Grid container spacing={2}>
-                  <Grid item xs={12} md={6}>
-                    <Typography variant="subtitle2" color="text.secondary">Report Generated On:</Typography>
-                    <Typography variant="body1" fontWeight="600">{new Date().toLocaleString()}</Typography>
-                  </Grid>
-                  <Grid item xs={12} md={6}>
-                    <Typography variant="subtitle2" color="text.secondary">Period:</Typography>
-                    <Typography variant="body1" fontWeight="600">This Month</Typography>
-                  </Grid>
-                  <Grid item xs={12}>
-                    <Stack direction="row" spacing={1} sx={{ mt: 2 }}>
-                      <Button variant="outlined" startIcon={<DownloadIcon />} onClick={handleExportExcel}>
-                        Download Excel
-                      </Button>
-                      <Button variant="outlined" startIcon={<PdfIcon />} onClick={handleExportPDF}>
-                        Download PDF
-                      </Button>
-                    </Stack>
-                  </Grid>
-                </Grid>
-              </CardContent>
-            </Card>
+            {/* Daily Trend Chart */}
+            <Grid item xs={12} md={4}>
+              <Card>
+                <CardContent>
+                  <Typography variant="h6" fontWeight="600" gutterBottom>
+                    Daily Premium Trend
+                  </Typography>
+                  <ResponsiveContainer width="100%" height={300}>
+                    <BarChart data={[
+                      { date: 'Jan 27', premium: 11.2 },
+                      { date: 'Jan 28', premium: 6.4 },
+                      { date: 'Jan 29', premium: 9.8 },
+                      { date: 'Jan 30', premium: 7.2 },
+                      { date: 'Jan 31', premium: 8.5 }
+                    ]}>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="date" />
+                      <YAxis />
+                      <RechartsTooltip formatter={(value) => [`₹${value}L`, 'Premium']} />
+                      <Bar dataKey="premium" fill={theme.palette.primary.main} />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </CardContent>
+              </Card>
+            </Grid>
           </Grid>
-        </Grid>
-      )}
-    </Box>
+        )
+      }
+
+
+
+
+
+      {
+        currentTab === 12 && (
+          <Grid container spacing={3}>
+            {/* Capacity Planning Filters */}
+            <Grid item xs={12}>
+              <Card sx={{ mb: 2 }}>
+                <CardContent>
+                  <Grid container spacing={2} alignItems="center">
+                    <Grid item xs={12} sm={6} md={3}>
+                      <TextField
+                        fullWidth
+                        type="month"
+                        label="Select Month"
+                        value={capacitySelectedMonth}
+                        onChange={(e) => setCapacitySelectedMonth(e.target.value)}
+                        InputLabelProps={{ shrink: true }}
+                      />
+                    </Grid>
+                    <Grid item xs={12} sm={6} md={3}>
+                      <TextField
+                        fullWidth
+                        select
+                        label="Region/Team Filter"
+                        value={capacitySelectedRegion}
+                        onChange={(e) => setCapacitySelectedRegion(e.target.value)}
+                      >
+                        <MenuItem value="all">All Regions</MenuItem>
+                        <MenuItem value="North">North Region</MenuItem>
+                        <MenuItem value="South">South Region</MenuItem>
+                        <MenuItem value="East">East Region</MenuItem>
+                        <MenuItem value="West">West Region</MenuItem>
+                      </TextField>
+                    </Grid>
+                    <Grid item xs={12} sm={6} md={3}>
+                      <TextField
+                        fullWidth
+                        select
+                        label="Filter by Status"
+                        value={capacityStatusFilter}
+                        onChange={(e) => setCapacityStatusFilter(e.target.value)}
+                      >
+                        <MenuItem value="all">All Status</MenuItem>
+                        <MenuItem value="available">Available</MenuItem>
+                        <MenuItem value="at-capacity">At Capacity</MenuItem>
+                        <MenuItem value="overloaded">Overloaded</MenuItem>
+                        <MenuItem value="underutilized">Underutilized</MenuItem>
+                      </TextField>
+                    </Grid>
+                    <Grid item xs={12} sm={6} md={3}>
+                      <Button
+                        variant="outlined"
+                        fullWidth
+                        sx={{ height: '56px' }}
+                        onClick={() => {
+                          setCapacitySelectedMonth(new Date().toISOString().slice(0, 7));
+                          setCapacitySelectedRegion('all');
+                          setCapacityStatusFilter('all');
+                        }}
+                      >
+                        Reset Filters
+                      </Button>
+                    </Grid>
+                  </Grid>
+                </CardContent>
+              </Card>
+            </Grid>
+
+            {/* Alert Warning */}
+            <Grid item xs={12}>
+              <Card sx={{ bgcolor: alpha(theme.palette.warning.main, 0.1), border: `1px solid ${theme.palette.warning.main}` }}>
+                <CardContent>
+                  <Stack direction="row" alignItems="center" spacing={1}>
+                    <WarningIcon sx={{ color: theme.palette.warning.main }} />
+                    <Typography variant="h6" color="warning.main" fontWeight="600">
+                      ⚠️ Staffing Shortfall: Add 2 CSCs to meet capacity requirements
+                    </Typography>
+                  </Stack>
+                </CardContent>
+              </Card>
+            </Grid>
+
+            {/* Dashboard Cards */}
+            <Grid item xs={12}>
+              <Grid container spacing={2} sx={{ mb: 3 }}>
+                <Grid item xs={12} sm={6} md={4}>
+                  <Card sx={{ background: `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.primary.dark} 100%)`, color: 'white' }}>
+                    <CardContent>
+                      <Stack direction="row" alignItems="center" justifyContent="space-between">
+                        <Box>
+                          <Typography variant="body2" sx={{ opacity: 0.9 }}>Total Leads</Typography>
+                          <Typography variant="h3" fontWeight="700">1,250</Typography>
+                        </Box>
+                        <PeopleIcon sx={{ fontSize: 40, opacity: 0.3 }} />
+                      </Stack>
+                    </CardContent>
+                  </Card>
+                </Grid>
+                <Grid item xs={12} sm={6} md={4}>
+                  <Card sx={{ background: `linear-gradient(135deg, ${theme.palette.info.main} 0%, ${theme.palette.info.dark} 100%)`, color: 'white' }}>
+                    <CardContent>
+                      <Stack direction="row" alignItems="center" justifyContent="space-between">
+                        <Box>
+                          <Typography variant="body2" sx={{ opacity: 0.9 }}>Required CSCs</Typography>
+                          <Typography variant="h3" fontWeight="700">10</Typography>
+                        </Box>
+                        <AssessmentIcon sx={{ fontSize: 40, opacity: 0.3 }} />
+                      </Stack>
+                    </CardContent>
+                  </Card>
+                </Grid>
+                <Grid item xs={12} sm={6} md={4}>
+                  <Card sx={{ background: `linear-gradient(135deg, ${theme.palette.error.main} 0%, ${theme.palette.error.dark} 100%)`, color: 'white' }}>
+                    <CardContent>
+                      <Stack direction="row" alignItems="center" justifyContent="space-between">
+                        <Box>
+                          <Typography variant="body2" sx={{ opacity: 0.9 }}>Shortfall</Typography>
+                          <Typography variant="h3" fontWeight="700">2</Typography>
+                        </Box>
+                        <WarningIcon sx={{ fontSize: 40, opacity: 0.3 }} />
+                      </Stack>
+                    </CardContent>
+                  </Card>
+                </Grid>
+              </Grid>
+            </Grid>
+
+            {/* Charts */}
+            <Grid item xs={12} md={6}>
+              <Card>
+                <CardContent>
+                  <Typography variant="h6" fontWeight="600" gutterBottom>
+                    Available vs Required CSCs
+                  </Typography>
+                  <ResponsiveContainer width="100%" height={300}>
+                    <BarChart data={[
+                      { region: 'North', available: 3, required: 4 },
+                      { region: 'South', available: 2, required: 3 },
+                      { region: 'East', available: 2, required: 2 },
+                      { region: 'West', available: 1, required: 1 }
+                    ]}>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="region" />
+                      <YAxis />
+                      <RechartsTooltip />
+                      <Legend />
+                      <Bar dataKey="available" fill={theme.palette.success.main} name="Available CSCs" />
+                      <Bar dataKey="required" fill={theme.palette.error.main} name="Required CSCs" />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </CardContent>
+              </Card>
+            </Grid>
+
+            <Grid item xs={12} md={6}>
+              <Card>
+                <CardContent>
+                  <Typography variant="h6" fontWeight="600" gutterBottom>
+                    Workload Distribution by Region
+                  </Typography>
+                  <ResponsiveContainer width="100%" height={300}>
+                    <PieChart>
+                      <Pie
+                        data={[
+                          { name: 'North', value: 450, color: theme.palette.primary.main },
+                          { name: 'South', value: 380, color: theme.palette.success.main },
+                          { name: 'East', value: 250, color: theme.palette.warning.main },
+                          { name: 'West', value: 170, color: theme.palette.info.main }
+                        ]}
+                        dataKey="value"
+                        nameKey="name"
+                        cx="50%"
+                        cy="50%"
+                        outerRadius={100}
+                        label={({ name, value }) => `${name}: ${value}`}
+                      >
+                        {[
+                          { name: 'North', value: 450, color: theme.palette.primary.main },
+                          { name: 'South', value: 380, color: theme.palette.success.main },
+                          { name: 'East', value: 250, color: theme.palette.warning.main },
+                          { name: 'West', value: 170, color: theme.palette.info.main }
+                        ].map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={entry.color} />
+                        ))}
+                      </Pie>
+                      <RechartsTooltip />
+                      <Legend />
+                    </PieChart>
+                  </ResponsiveContainer>
+                </CardContent>
+              </Card>
+            </Grid>
+
+
+
+            {/* Table View */}
+            <Grid item xs={12}>
+              <Card>
+                <CardContent>
+                  <Typography variant="h6" fontWeight="600" gutterBottom>
+                    CSC Capacity Analysis
+                  </Typography>
+                  <TableContainer>
+                    <Table>
+                      <TableHead>
+                        <TableRow>
+                          <TableCell>CSC</TableCell>
+                          <TableCell>Month</TableCell>
+                          <TableCell>Region</TableCell>
+                          <TableCell align="center">Assigned Leads</TableCell>
+                          <TableCell align="center">Capacity</TableCell>
+                          <TableCell align="center">Utilization %</TableCell>
+                          <TableCell align="center">Status</TableCell>
+                        </TableRow>
+                      </TableHead>
+                      <TableBody>
+                        {[
+                          { csc: 'North Team A', month: '2025-12', region: 'North', leads: 180, capacity: 150, utilization: 120.0, status: 'overloaded' },
+                          { csc: 'North Team B', month: '2025-12', region: 'North', leads: 145, capacity: 150, utilization: 96.7, status: 'optimal' },
+                          { csc: 'South Team A', month: '2025-12', region: 'South', leads: 165, capacity: 150, utilization: 110.0, status: 'overloaded' },
+                          { csc: 'South Team B', month: '2025-12', region: 'South', leads: 125, capacity: 150, utilization: 83.3, status: 'underutilized' },
+                          { csc: 'East Team A', month: '2025-12', region: 'East', leads: 130, capacity: 150, utilization: 86.7, status: 'optimal' },
+                          { csc: 'West Team A', month: '2025-12', region: 'West', leads: 95, capacity: 150, utilization: 63.3, status: 'underutilized' },
+                          { csc: 'North Team A', month: '2025-11', region: 'North', leads: 175, capacity: 150, utilization: 116.7, status: 'overloaded' },
+                          { csc: 'South Team A', month: '2025-11', region: 'South', leads: 160, capacity: 150, utilization: 106.7, status: 'overloaded' }
+                        ]
+                          .filter(team => {
+                            const matchesMonth = team.month === capacitySelectedMonth;
+                            const matchesRegion = capacitySelectedRegion === 'all' || team.region === capacitySelectedRegion;
+                            const matchesStatus = capacityStatusFilter === 'all' || team.status === (
+                              capacityStatusFilter === 'available' ? 'available' :
+                                capacityStatusFilter === 'at-capacity' ? 'optimal' :
+                                  capacityStatusFilter === 'overloaded' ? 'overloaded' :
+                                    capacityStatusFilter === 'underutilized' ? 'underutilized' : team.status
+                            );
+                            return matchesMonth && matchesRegion && matchesStatus;
+                          })
+                          .map((team, index) => (
+                            <TableRow key={index} hover>
+                              <TableCell>
+                                <Typography variant="body2" fontWeight="600">
+                                  {team.csc}
+                                </Typography>
+                              </TableCell>
+                              <TableCell>
+                                {new Date(team.month + '-01').toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}
+                              </TableCell>
+                              <TableCell>
+                                <Chip
+                                  label={team.region}
+                                  size="small"
+                                  color="primary"
+                                  variant="outlined"
+                                />
+                              </TableCell>
+                              <TableCell align="center">
+                                <Typography variant="body2" fontWeight="600">
+                                  {team.leads}
+                                </Typography>
+                              </TableCell>
+                              <TableCell align="center">{team.capacity}</TableCell>
+                              <TableCell align="center">
+                                <Chip
+                                  label={`${team.utilization}%`}
+                                  size="small"
+                                  color={
+                                    team.status === 'overloaded' ? 'error' :
+                                      team.status === 'optimal' ? 'success' : 'warning'
+                                  }
+                                />
+                              </TableCell>
+                              <TableCell align="center">
+                                <Chip
+                                  label={
+                                    team.status === 'overloaded' ? 'Overloaded' :
+                                      team.status === 'optimal' ? 'Optimal' : 'Under-utilized'
+                                  }
+                                  size="small"
+                                  color={
+                                    team.status === 'overloaded' ? 'error' :
+                                      team.status === 'optimal' ? 'success' : 'warning'
+                                  }
+                                  variant="outlined"
+                                />
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                        {[
+                          { csc: 'North Team A', month: '2025-12', region: 'North', leads: 180, capacity: 150, utilization: 120.0, status: 'overloaded' },
+                          { csc: 'North Team B', month: '2025-12', region: 'North', leads: 145, capacity: 150, utilization: 96.7, status: 'optimal' },
+                          { csc: 'South Team A', month: '2025-12', region: 'South', leads: 165, capacity: 150, utilization: 110.0, status: 'overloaded' },
+                          { csc: 'South Team B', month: '2025-12', region: 'South', leads: 125, capacity: 150, utilization: 83.3, status: 'underutilized' },
+                          { csc: 'East Team A', month: '2025-12', region: 'East', leads: 130, capacity: 150, utilization: 86.7, status: 'optimal' },
+                          { csc: 'West Team A', month: '2025-12', region: 'West', leads: 95, capacity: 150, utilization: 63.3, status: 'underutilized' },
+                          { csc: 'North Team A', month: '2025-11', region: 'North', leads: 175, capacity: 150, utilization: 116.7, status: 'overloaded' },
+                          { csc: 'South Team A', month: '2025-11', region: 'South', leads: 160, capacity: 150, utilization: 106.7, status: 'overloaded' }
+                        ].filter(team => {
+                          const matchesMonth = team.month === capacitySelectedMonth;
+                          const matchesRegion = capacitySelectedRegion === 'all' || team.region === capacitySelectedRegion;
+                          return matchesMonth && matchesRegion;
+                        }).length === 0 && (
+                            <TableRow>
+                              <TableCell colSpan={7} align="center" sx={{ py: 4 }}>
+                                <Typography variant="body1" color="text.secondary">
+                                  No CSC capacity records found for the selected filters.
+                                </Typography>
+                                <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+                                  Try selecting a different month or region.
+                                </Typography>
+                              </TableCell>
+                            </TableRow>
+                          )}
+                      </TableBody>
+                    </Table>
+                  </TableContainer>
+                </CardContent>
+              </Card>
+            </Grid>
+          </Grid>
+        )
+      }
+
+
+
+      {
+        currentTab === 13 && (
+          <Grid container spacing={3}>
+            {/* Workload Distribution Summary */}
+            <Grid item xs={12}>
+              <Grid container spacing={2} sx={{ mb: 3 }}>
+                <Grid item xs={12} sm={6} md={3}>
+                  <Card sx={{ background: `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.primary.dark} 100%)`, color: 'white' }}>
+                    <CardContent>
+                      <Stack direction="row" alignItems="center" justifyContent="space-between">
+                        <Box>
+                          <Typography variant="body2" sx={{ opacity: 0.9 }}>Total CSCs</Typography>
+                          <Typography variant="h3" fontWeight="700">25</Typography>
+                        </Box>
+                        <PeopleIcon sx={{ fontSize: 40, opacity: 0.3 }} />
+                      </Stack>
+                    </CardContent>
+                  </Card>
+                </Grid>
+                <Grid item xs={12} sm={6} md={3}>
+                  <Card sx={{ background: `linear-gradient(135deg, ${theme.palette.success.main} 0%, ${theme.palette.success.dark} 100%)`, color: 'white' }}>
+                    <CardContent>
+                      <Stack direction="row" alignItems="center" justifyContent="space-between">
+                        <Box>
+                          <Typography variant="body2" sx={{ opacity: 0.9 }}>Average Utilization</Typography>
+                          <Typography variant="h3" fontWeight="700">87.5%</Typography>
+                        </Box>
+                        <TrendingUpIcon sx={{ fontSize: 40, opacity: 0.3 }} />
+                      </Stack>
+                    </CardContent>
+                  </Card>
+                </Grid>
+                <Grid item xs={12} sm={6} md={3}>
+                  <Card sx={{ background: `linear-gradient(135deg, ${theme.palette.warning.main} 0%, ${theme.palette.warning.dark} 100%)`, color: 'white' }}>
+                    <CardContent>
+                      <Stack direction="row" alignItems="center" justifyContent="space-between">
+                        <Box>
+                          <Typography variant="body2" sx={{ opacity: 0.9 }}>Total Leads Assigned</Typography>
+                          <Typography variant="h3" fontWeight="700">1,250</Typography>
+                        </Box>
+                        <AssessmentIcon sx={{ fontSize: 40, opacity: 0.3 }} />
+                      </Stack>
+                    </CardContent>
+                  </Card>
+                </Grid>
+                <Grid item xs={12} sm={6} md={3}>
+                  <Card sx={{ background: `linear-gradient(135deg, ${theme.palette.info.main} 0%, ${theme.palette.info.dark} 100%)`, color: 'white' }}>
+                    <CardContent>
+                      <Stack direction="row" alignItems="center" justifyContent="space-between">
+                        <Box>
+                          <Typography variant="body2" sx={{ opacity: 0.9 }}>Overloaded CSCs</Typography>
+                          <Typography variant="h3" fontWeight="700">3</Typography>
+                        </Box>
+                        <WarningIcon sx={{ fontSize: 40, opacity: 0.3 }} />
+                      </Stack>
+                    </CardContent>
+                  </Card>
+                </Grid>
+              </Grid>
+            </Grid>
+
+            {/* Filters */}
+            <Grid item xs={12}>
+              <Card sx={{ mb: 2 }}>
+                <CardContent>
+                  <Grid container spacing={2} alignItems="center">
+                    <Grid item xs={12} sm={6} md={3}>
+                      <TextField
+                        fullWidth
+                        select
+                        label="Date Range"
+                        value={workloadSelectedDateRange}
+                        onChange={(e) => setWorkloadSelectedDateRange(e.target.value)}
+                      >
+                        <MenuItem value="thisMonth">This Month</MenuItem>
+                        <MenuItem value="lastMonth">Last Month</MenuItem>
+                        <MenuItem value="last3Months">Last 3 Months</MenuItem>
+                      </TextField>
+                    </Grid>
+                    <Grid item xs={12} sm={6} md={3}>
+                      <TextField
+                        fullWidth
+                        select
+                        label="Region"
+                        value={workloadSelectedRegion}
+                        onChange={(e) => setWorkloadSelectedRegion(e.target.value)}
+                      >
+                        <MenuItem value="all">All Regions</MenuItem>
+                        <MenuItem value="North">North</MenuItem>
+                        <MenuItem value="South">South</MenuItem>
+                        <MenuItem value="East">East</MenuItem>
+                        <MenuItem value="West">West</MenuItem>
+                      </TextField>
+                    </Grid>
+                    <Grid item xs={12} sm={6} md={3}>
+                      <TextField
+                        fullWidth
+                        select
+                        label="Team Filter"
+                        value={workloadSelectedTeam}
+                        onChange={(e) => setWorkloadSelectedTeam(e.target.value)}
+                      >
+                        <MenuItem value="all">All Teams</MenuItem>
+                        <MenuItem value="North Team A">North Team A</MenuItem>
+                        <MenuItem value="North Team B">North Team B</MenuItem>
+                        <MenuItem value="South Team A">South Team A</MenuItem>
+                        <MenuItem value="South Team B">South Team B</MenuItem>
+                        <MenuItem value="East Team A">East Team A</MenuItem>
+                        <MenuItem value="East Team B">East Team B</MenuItem>
+                        <MenuItem value="West Team A">West Team A</MenuItem>
+                        <MenuItem value="West Team B">West Team B</MenuItem>
+                      </TextField>
+                    </Grid>
+                    <Grid item xs={12} sm={6} md={3}>
+                      <Button
+                        variant="outlined"
+                        fullWidth
+                        sx={{ height: '56px' }}
+                        onClick={() => {
+                          setWorkloadSelectedDateRange('thisMonth');
+                          setWorkloadSelectedRegion('all');
+                          setWorkloadSelectedTeam('all');
+                        }}
+                      >
+                        Reset Filters
+                      </Button>
+                    </Grid>
+                  </Grid>
+                </CardContent>
+              </Card>
+            </Grid>
+
+            {/* Charts */}
+            <Grid item xs={12} md={8}>
+              <Card>
+                <CardContent>
+                  <Typography variant="h6" fontWeight="600" gutterBottom>
+                    CSC Workload Distribution
+                  </Typography>
+                  <ResponsiveContainer width="100%" height={300}>
+                    <BarChart data={[
+                      { name: 'Rajesh Kumar', assigned: 65, completed: 58 },
+                      { name: 'Priya Sharma', assigned: 72, completed: 75 },
+                      { name: 'Amit Singh', assigned: 45, completed: 38 },
+                      { name: 'Sneha Patel', assigned: 58, completed: 52 },
+                      { name: 'Vikram Reddy', assigned: 68, completed: 71 }
+                    ]}>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="name" angle={-45} textAnchor="end" height={80} />
+                      <YAxis />
+                      <RechartsTooltip />
+                      <Legend />
+                      <Bar dataKey="assigned" fill={theme.palette.primary.main} name="Assigned Leads" />
+                      <Bar dataKey="completed" fill={theme.palette.success.main} name="Completed" />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </CardContent>
+              </Card>
+            </Grid>
+
+            {/* Pie Chart */}
+            <Grid item xs={12} md={4}>
+              <Card>
+                <CardContent>
+                  <Typography variant="h6" fontWeight="600" gutterBottom>
+                    Workload Share
+                  </Typography>
+                  <ResponsiveContainer width="100%" height={300}>
+                    <PieChart>
+                      <Pie
+                        data={[
+                          { name: 'Rajesh', value: 65, color: theme.palette.primary.main },
+                          { name: 'Priya', value: 72, color: theme.palette.success.main },
+                          { name: 'Amit', value: 45, color: theme.palette.warning.main },
+                          { name: 'Sneha', value: 58, color: theme.palette.info.main },
+                          { name: 'Vikram', value: 68, color: theme.palette.error.main }
+                        ]}
+                        cx="50%"
+                        cy="50%"
+                        outerRadius={80}
+                        dataKey="value"
+                        label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                      >
+                        {[
+                          { name: 'Rajesh', value: 65, color: theme.palette.primary.main },
+                          { name: 'Priya', value: 72, color: theme.palette.success.main },
+                          { name: 'Amit', value: 45, color: theme.palette.warning.main },
+                          { name: 'Sneha', value: 58, color: theme.palette.info.main },
+                          { name: 'Vikram', value: 68, color: theme.palette.error.main }
+                        ].map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={entry.color} />
+                        ))}
+                      </Pie>
+                      <RechartsTooltip />
+                    </PieChart>
+                  </ResponsiveContainer>
+                </CardContent>
+              </Card>
+            </Grid>
+
+            {/* Detailed Table */}
+            <Grid item xs={12}>
+              <Card>
+                <CardContent>
+                  <Typography variant="h6" fontWeight="600" gutterBottom>
+                    Detailed CSC Performance
+                  </Typography>
+                  <TableContainer>
+                    <Table>
+                      <TableHead>
+                        <TableRow>
+                          <TableCell>CSC</TableCell>
+                          <TableCell>Month</TableCell>
+                          <TableCell>Region</TableCell>
+                          <TableCell>Team</TableCell>
+                          <TableCell align="right">Assigned</TableCell>
+                          <TableCell align="right">Completed</TableCell>
+                          <TableCell align="right">Utilization %</TableCell>
+                          <TableCell align="center">Status</TableCell>
+                        </TableRow>
+                      </TableHead>
+                      <TableBody>
+                        {[
+                          { name: 'Rajesh Kumar', month: 'thisMonth', region: 'North', team: 'North Team A', assigned: 65, completed: 58, utilization: 89.2, status: 'balanced' },
+                          { name: 'Priya Sharma', month: 'thisMonth', region: 'South', team: 'South Team A', assigned: 72, completed: 75, utilization: 104.2, status: 'overloaded' },
+                          { name: 'Amit Singh', month: 'thisMonth', region: 'East', team: 'East Team A', assigned: 45, completed: 38, utilization: 84.4, status: 'underutilized' },
+                          { name: 'Sneha Patel', month: 'thisMonth', region: 'West', team: 'West Team A', assigned: 58, completed: 52, utilization: 89.7, status: 'balanced' },
+                          { name: 'Vikram Reddy', month: 'thisMonth', region: 'North', team: 'North Team B', assigned: 68, completed: 71, utilization: 104.4, status: 'overloaded' },
+                          { name: 'Anita Desai', month: 'lastMonth', region: 'South', team: 'South Team B', assigned: 52, completed: 48, utilization: 92.3, status: 'balanced' },
+                          { name: 'Ravi Nair', month: 'lastMonth', region: 'East', team: 'East Team B', assigned: 38, completed: 32, utilization: 84.2, status: 'underutilized' },
+                          { name: 'Pooja Agarwal', month: 'lastMonth', region: 'West', team: 'West Team B', assigned: 61, completed: 65, utilization: 106.6, status: 'overloaded' }
+                        ]
+                          .filter(row => {
+                            const matchesDateRange = workloadSelectedDateRange === 'last3Months' || row.month === workloadSelectedDateRange;
+                            const matchesRegion = workloadSelectedRegion === 'all' || row.region === workloadSelectedRegion;
+                            const matchesTeam = workloadSelectedTeam === 'all' || row.team === workloadSelectedTeam;
+                            return matchesDateRange && matchesRegion && matchesTeam;
+                          })
+                          .map((row, index) => (
+                            <TableRow key={index} hover>
+                              <TableCell>
+                                <Typography variant="body2" fontWeight="600">
+                                  {row.name}
+                                </Typography>
+                              </TableCell>
+                              <TableCell>
+                                <Typography variant="body2">
+                                  {row.month === 'thisMonth' ? 'This Month' : row.month === 'lastMonth' ? 'Last Month' : 'Last 3 Months'}
+                                </Typography>
+                              </TableCell>
+                              <TableCell>
+                                <Chip
+                                  label={row.region}
+                                  size="small"
+                                  color="primary"
+                                  variant="outlined"
+                                />
+                              </TableCell>
+                              <TableCell>
+                                <Chip
+                                  label={row.team}
+                                  size="small"
+                                  color="info"
+                                  variant="outlined"
+                                />
+                              </TableCell>
+                              <TableCell align="right">{row.assigned}</TableCell>
+                              <TableCell align="right">{row.completed}</TableCell>
+                              <TableCell align="right">{row.utilization}%</TableCell>
+                              <TableCell align="center">
+                                <Chip
+                                  label={`${row.status === 'overloaded' ? '🔴' : row.status === 'balanced' ? '🟢' : '🟡'} ${row.status}`}
+                                  size="small"
+                                  sx={{
+                                    backgroundColor: alpha(
+                                      row.status === 'overloaded' ? theme.palette.error.main :
+                                        row.status === 'balanced' ? theme.palette.success.main :
+                                          theme.palette.warning.main, 0.1
+                                    ),
+                                    color: row.status === 'overloaded' ? theme.palette.error.main :
+                                      row.status === 'balanced' ? theme.palette.success.main :
+                                        theme.palette.warning.main
+                                  }}
+                                />
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                        {[
+                          { name: 'Rajesh Kumar', month: 'thisMonth', region: 'North', team: 'Team Alpha', assigned: 65, completed: 58, utilization: 89.2, status: 'balanced' },
+                          { name: 'Priya Sharma', month: 'thisMonth', region: 'South', team: 'Team Beta', assigned: 72, completed: 75, utilization: 104.2, status: 'overloaded' },
+                          { name: 'Amit Singh', month: 'thisMonth', region: 'East', team: 'Team Gamma', assigned: 45, completed: 38, utilization: 84.4, status: 'underutilized' },
+                          { name: 'Sneha Patel', month: 'thisMonth', region: 'West', team: 'Team Alpha', assigned: 58, completed: 52, utilization: 89.7, status: 'balanced' },
+                          { name: 'Vikram Reddy', month: 'thisMonth', region: 'North', team: 'Team Beta', assigned: 68, completed: 71, utilization: 104.4, status: 'overloaded' },
+                          { name: 'Anita Desai', month: 'lastMonth', region: 'South', team: 'Team Gamma', assigned: 52, completed: 48, utilization: 92.3, status: 'balanced' },
+                          { name: 'Ravi Nair', month: 'lastMonth', region: 'East', team: 'Team Alpha', assigned: 38, completed: 32, utilization: 84.2, status: 'underutilized' },
+                          { name: 'Pooja Agarwal', month: 'lastMonth', region: 'West', team: 'Team Beta', assigned: 61, completed: 65, utilization: 106.6, status: 'overloaded' }
+                        ].filter(row => {
+                          const matchesDateRange = workloadSelectedDateRange === 'last3Months' || row.month === workloadSelectedDateRange;
+                          const matchesRegion = workloadSelectedRegion === 'all' || row.region === workloadSelectedRegion;
+                          const matchesTeam = workloadSelectedTeam === 'all' || row.team === workloadSelectedTeam;
+                          return matchesDateRange && matchesRegion && matchesTeam;
+                        }).length === 0 && (
+                            <TableRow>
+                              <TableCell colSpan={8} align="center" sx={{ py: 4 }}>
+                                <Typography variant="body1" color="text.secondary">
+                                  No CSC performance records found for the selected filters.
+                                </Typography>
+                                <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+                                  Try selecting different date range, region, or team filters.
+                                </Typography>
+                              </TableCell>
+                            </TableRow>
+                          )}
+                      </TableBody>
+                    </Table>
+                  </TableContainer>
+                </CardContent>
+              </Card>
+            </Grid>
+          </Grid>
+        )
+      }
+
+      {
+        currentTab === 14 && (
+          <Grid container spacing={3}>
+            <Grid item xs={12}>
+              <Card>
+                <CardContent>
+                  <Typography variant="h6" fontWeight="600" gutterBottom>
+                    Detailed MIS Report
+                  </Typography>
+                  <Divider sx={{ my: 2 }} />
+                  <Grid container spacing={2}>
+                    <Grid item xs={12} md={6}>
+                      <Typography variant="subtitle2" color="text.secondary">Report Generated On:</Typography>
+                      <Typography variant="body1" fontWeight="600">{new Date().toLocaleString()}</Typography>
+                    </Grid>
+                    <Grid item xs={12} md={6}>
+                      <Typography variant="subtitle2" color="text.secondary">Period:</Typography>
+                      <Typography variant="body1" fontWeight="600">This Month</Typography>
+                    </Grid>
+                    <Grid item xs={12}>
+                      <Stack direction="row" spacing={1} sx={{ mt: 2 }}>
+                        <Button variant="outlined" startIcon={<DownloadIcon />} onClick={handleExportExcel}>
+                          Download Excel
+                        </Button>
+                        <Button variant="outlined" startIcon={<PdfIcon />} onClick={handleExportPDF}>
+                          Download PDF
+                        </Button>
+                      </Stack>
+                    </Grid>
+                  </Grid>
+                </CardContent>
+              </Card>
+            </Grid>
+          </Grid>
+        )
+      }
+
+      {
+        currentTab === 11 && (
+          <Grid container spacing={3}>
+            {/* CSC Load Tracking Filters */}
+            <Grid item xs={12}>
+              <Card sx={{ mb: 2 }}>
+                <CardContent>
+                  <Grid container spacing={2} alignItems="center">
+                    <Grid item xs={12} sm={6} md={3}>
+                      <TextField
+                        fullWidth
+                        type="month"
+                        label="Select Month"
+                        value={cscSelectedMonth}
+                        onChange={(e) => setCscSelectedMonth(e.target.value)}
+                        InputLabelProps={{ shrink: true }}
+                      />
+                    </Grid>
+                    <Grid item xs={12} sm={6} md={3}>
+                      <TextField
+                        fullWidth
+                        select
+                        label="Select Region"
+                        value={cscSelectedRegion}
+                        onChange={(e) => setCscSelectedRegion(e.target.value)}
+                      >
+                        <MenuItem value="all">All Regions</MenuItem>
+                        <MenuItem value="Mumbai">Mumbai</MenuItem>
+                        <MenuItem value="Delhi">Delhi</MenuItem>
+                        <MenuItem value="Bangalore">Bangalore</MenuItem>
+                        <MenuItem value="Chennai">Chennai</MenuItem>
+                        <MenuItem value="Hyderabad">Hyderabad</MenuItem>
+                        <MenuItem value="Pune">Pune</MenuItem>
+                        <MenuItem value="Kolkata">Kolkata</MenuItem>
+                        <MenuItem value="Ahmedabad">Ahmedabad</MenuItem>
+                      </TextField>
+                    </Grid>
+                    <Grid item xs={12} sm={6} md={3}>
+                      <TextField
+                        fullWidth
+                        select
+                        label="Filter by Performance"
+                        value={cscPerformanceFilter}
+                        onChange={(e) => setCscPerformanceFilter(e.target.value)}
+                      >
+                        <MenuItem value="all">All Performance</MenuItem>
+                        <MenuItem value="excellent">Excellent</MenuItem>
+                        <MenuItem value="good">Good</MenuItem>
+                        <MenuItem value="average">Average</MenuItem>
+                        <MenuItem value="needs-improvement">Needs Improvement</MenuItem>
+                      </TextField>
+                    </Grid>
+                    <Grid item xs={12} sm={6} md={2}>
+                      <Button
+                        variant="outlined"
+                        fullWidth
+                        sx={{ height: '56px' }}
+                        onClick={() => {
+                          setCscSelectedMonth(new Date().toISOString().slice(0, 7));
+                          setCscSelectedRegion('all');
+                          setCscPerformanceFilter('all');
+                        }}
+                      >
+                        Reset Filters
+                      </Button>
+                    </Grid>
+                  </Grid>
+                </CardContent>
+              </Card>
+            </Grid>
+
+            {/* Summary Cards */}
+            <Grid item xs={12}>
+              <Grid container spacing={2} sx={{ mb: 3 }}>
+                <Grid item xs={12} sm={6} md={4}>
+                  <Card sx={{ background: `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.primary.dark} 100%)`, color: 'white' }}>
+                    <CardContent>
+                      <Stack direction="row" alignItems="center" justifyContent="space-between">
+                        <Box>
+                          <Typography variant="body2" sx={{ opacity: 0.9 }}>Total CSCs</Typography>
+                          <Typography variant="h3" fontWeight="700">8</Typography>
+                        </Box>
+                        <PeopleIcon sx={{ fontSize: 40, opacity: 0.3 }} />
+                      </Stack>
+                    </CardContent>
+                  </Card>
+                </Grid>
+                <Grid item xs={12} sm={6} md={4}>
+                  <Card sx={{ background: `linear-gradient(135deg, ${theme.palette.info.main} 0%, ${theme.palette.info.dark} 100%)`, color: 'white' }}>
+                    <CardContent>
+                      <Stack direction="row" alignItems="center" justifyContent="space-between">
+                        <Box>
+                          <Typography variant="body2" sx={{ opacity: 0.9 }}>Average Calls per CSC</Typography>
+                          <Typography variant="h3" fontWeight="700">578</Typography>
+                        </Box>
+                        <PhoneIcon sx={{ fontSize: 40, opacity: 0.3 }} />
+                      </Stack>
+                    </CardContent>
+                  </Card>
+                </Grid>
+                <Grid item xs={12} sm={6} md={4}>
+                  <Card sx={{ background: `linear-gradient(135deg, ${theme.palette.success.main} 0%, ${theme.palette.success.dark} 100%)`, color: 'white' }}>
+                    <CardContent>
+                      <Stack direction="row" alignItems="center" justifyContent="space-between">
+                        <Box>
+                          <Typography variant="body2" sx={{ opacity: 0.9 }}>% Meeting Target</Typography>
+                          <Typography variant="h3" fontWeight="700">62.5%</Typography>
+                        </Box>
+                        <CheckCircleIcon sx={{ fontSize: 40, opacity: 0.3 }} />
+                      </Stack>
+                    </CardContent>
+                  </Card>
+                </Grid>
+              </Grid>
+            </Grid>
+
+            {/* CSC Load Tracking Table */}
+            <Grid item xs={12}>
+              <Card>
+                <CardContent>
+                  <Typography variant="h6" fontWeight="600" gutterBottom>
+                    CSC Load Tracking Data
+                  </Typography>
+                  <TableContainer>
+                    <Table>
+                      <TableHead>
+                        <TableRow>
+                          <TableCell>CSC Name</TableCell>
+                          <TableCell>Month</TableCell>
+                          <TableCell>Region</TableCell>
+                          <TableCell align="center">Total Calls</TableCell>
+                          <TableCell align="center">Policies Sold</TableCell>
+                          <TableCell align="center">Conversion %</TableCell>
+                          <TableCell align="center">Performance</TableCell>
+                        </TableRow>
+                      </TableHead>
+                      <TableBody>
+                        {[
+                          { cscName: 'Priya Patel', month: '2025-12', region: 'Mumbai', calls: 145, policies: 28, conversion: 19.3, performance: 'Excellent' },
+                          { cscName: 'Rahul Kumar', month: '2025-12', region: 'Delhi', calls: 132, policies: 24, conversion: 18.2, performance: 'Good' },
+                          { cscName: 'Sarah Johnson', month: '2025-12', region: 'Bangalore', calls: 158, policies: 35, conversion: 22.2, performance: 'Excellent' },
+                          { cscName: 'Amit Sharma', month: '2025-12', region: 'Chennai', calls: 118, policies: 18, conversion: 15.3, performance: 'Average' },
+                          { cscName: 'Kavita Reddy', month: '2025-12', region: 'Hyderabad', calls: 125, policies: 22, conversion: 17.6, performance: 'Good' },
+                          { cscName: 'Deepak Singh', month: '2025-12', region: 'Pune', calls: 98, policies: 12, conversion: 12.2, performance: 'Needs Improvement' },
+                          { cscName: 'Meera Gupta', month: '2025-12', region: 'Kolkata', calls: 142, policies: 31, conversion: 21.8, performance: 'Excellent' },
+                          { cscName: 'Vikram Joshi', month: '2025-12', region: 'Ahmedabad', calls: 108, policies: 15, conversion: 13.9, performance: 'Average' },
+                          { cscName: 'Priya Patel', month: '2025-11', region: 'Mumbai', calls: 138, policies: 26, conversion: 18.8, performance: 'Good' },
+                          { cscName: 'Rahul Kumar', month: '2025-11', region: 'Delhi', calls: 125, policies: 22, conversion: 17.6, performance: 'Good' }
+                        ]
+                          .filter((record) => {
+                            const matchesMonth = record.month === cscSelectedMonth;
+                            const matchesRegion = cscSelectedRegion === 'all' || record.region === cscSelectedRegion;
+                            const matchesPerformance = cscPerformanceFilter === 'all' || record.performance === (
+                              cscPerformanceFilter === 'excellent' ? 'Excellent' :
+                                cscPerformanceFilter === 'good' ? 'Good' :
+                                  cscPerformanceFilter === 'average' ? 'Average' :
+                                    cscPerformanceFilter === 'needs-improvement' ? 'Needs Improvement' : record.performance
+                            );
+                            return matchesMonth && matchesRegion && matchesPerformance;
+                          })
+                          .map((record, index) => (
+                            <TableRow key={index} hover>
+                              <TableCell>
+                                <Typography fontWeight="600">{record.cscName}</Typography>
+                              </TableCell>
+                              <TableCell>
+                                {new Date(record.month + '-01').toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}
+                              </TableCell>
+                              <TableCell>
+                                <Chip
+                                  label={record.region}
+                                  size="small"
+                                  color="primary"
+                                  variant="outlined"
+                                />
+                              </TableCell>
+                              <TableCell align="center">{record.calls}</TableCell>
+                              <TableCell align="center">{record.policies}</TableCell>
+                              <TableCell align="center">
+                                <Chip
+                                  label={`${record.conversion}%`}
+                                  size="small"
+                                  color={record.conversion >= 18 ? 'success' : 'warning'}
+                                />
+                              </TableCell>
+                              <TableCell align="center">
+                                <Chip
+                                  label={record.performance}
+                                  size="small"
+                                  color={
+                                    record.performance === 'Excellent' ? 'success' :
+                                      record.performance === 'Good' ? 'info' :
+                                        record.performance === 'Average' ? 'warning' : 'error'
+                                  }
+                                />
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                        {[
+                          { cscName: 'Priya Patel', month: '2025-12', region: 'Mumbai', calls: 145, policies: 28, conversion: 19.3, performance: 'Excellent' },
+                          { cscName: 'Rahul Kumar', month: '2025-12', region: 'Delhi', calls: 132, policies: 24, conversion: 18.2, performance: 'Good' },
+                          { cscName: 'Sarah Johnson', month: '2025-12', region: 'Bangalore', calls: 158, policies: 35, conversion: 22.2, performance: 'Excellent' },
+                          { cscName: 'Amit Sharma', month: '2025-12', region: 'Chennai', calls: 118, policies: 18, conversion: 15.3, performance: 'Average' },
+                          { cscName: 'Kavita Reddy', month: '2025-12', region: 'Hyderabad', calls: 125, policies: 22, conversion: 17.6, performance: 'Good' },
+                          { cscName: 'Deepak Singh', month: '2025-12', region: 'Pune', calls: 98, policies: 12, conversion: 12.2, performance: 'Needs Improvement' },
+                          { cscName: 'Meera Gupta', month: '2025-12', region: 'Kolkata', calls: 142, policies: 31, conversion: 21.8, performance: 'Excellent' },
+                          { cscName: 'Vikram Joshi', month: '2025-12', region: 'Ahmedabad', calls: 108, policies: 15, conversion: 13.9, performance: 'Average' },
+                          { cscName: 'Priya Patel', month: '2025-11', region: 'Mumbai', calls: 138, policies: 26, conversion: 18.8, performance: 'Good' },
+                          { cscName: 'Rahul Kumar', month: '2025-11', region: 'Delhi', calls: 125, policies: 22, conversion: 17.6, performance: 'Good' }
+                        ].filter((record) => {
+                          const matchesMonth = record.month === cscSelectedMonth;
+                          const matchesRegion = cscSelectedRegion === 'all' || record.region === cscSelectedRegion;
+                          return matchesMonth && matchesRegion;
+                        }).length === 0 && (
+                            <TableRow>
+                              <TableCell colSpan={7} align="center" sx={{ py: 4 }}>
+                                <Typography variant="body1" color="text.secondary">
+                                  No CSC records found for the selected filters.
+                                </Typography>
+                                <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+                                  Try selecting a different month or region.
+                                </Typography>
+                              </TableCell>
+                            </TableRow>
+                          )}
+                      </TableBody>
+                    </Table>
+                  </TableContainer>
+                </CardContent>
+              </Card>
+            </Grid>
+          </Grid>
+        )
+      }
+    </Box >
   );
 };
-
 export default LeadMIS;

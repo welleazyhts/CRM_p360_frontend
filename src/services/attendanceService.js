@@ -200,6 +200,99 @@ const attendanceService = {
     }
   },
 
+  // --- Leave management APIs (with api.js and fallback) ---
+  // In-memory fallback storage
+  _mockLeaves: [
+    { id: '1', cscName: 'Priya Patel', fromDate: '2025-02-01', toDate: '2025-02-03', leaveType: 'Casual', status: 'Approved', reason: 'Personal work' },
+    { id: '2', cscName: 'Amit Kumar', fromDate: '2025-02-15', toDate: '2025-02-15', leaveType: 'Sick', status: 'Approved', reason: 'Medical appointment' }
+  ],
+
+  listLeaves: async (filters = {}) => {
+    try {
+      const response = await api.get('/attendance/leaves', { params: filters });
+      if (response.data && Array.isArray(response.data)) {
+        return response.data;
+      }
+      throw new Error('No data from API');
+    } catch (error) {
+      console.error('Error fetching leaves, using mock:', error);
+      const delay = (ms = 300) => new Promise(res => setTimeout(res, ms));
+      await delay();
+      return [...attendanceService._mockLeaves].reverse();
+    }
+  },
+
+  getLeave: async (id) => {
+    try {
+      const response = await api.get(`/attendance/leaves/${id}`);
+      if (response.data) {
+        return response.data;
+      }
+      throw new Error('No data from API');
+    } catch (error) {
+      console.error('Error fetching leave, using mock:', error);
+      const delay = (ms = 200) => new Promise(res => setTimeout(res, ms));
+      await delay();
+      return attendanceService._mockLeaves.find(l => l.id === String(id)) || null;
+    }
+  },
+
+  requestLeave: async (leaveData) => {
+    try {
+      const response = await api.post('/attendance/leaves', leaveData);
+      if (response.data) {
+        return response.data;
+      }
+      throw new Error('No data from API');
+    } catch (error) {
+      console.error('Error requesting leave, using mock:', error);
+      const delay = (ms = 300) => new Promise(res => setTimeout(res, ms));
+      await delay();
+      const id = String(Date.now());
+      const item = {
+        id,
+        cscName: leaveData.cscName || 'Current User',
+        fromDate: leaveData.fromDate,
+        toDate: leaveData.toDate,
+        leaveType: leaveData.leaveType,
+        status: 'Pending',
+        reason: leaveData.reason || ''
+      };
+      attendanceService._mockLeaves.push(item);
+      return item;
+    }
+  },
+
+  updateLeave: async (id, updates) => {
+    try {
+      const response = await api.put(`/attendance/leaves/${id}`, updates);
+      if (response.data) {
+        return response.data;
+      }
+      throw new Error('No data from API');
+    } catch (error) {
+      console.error('Error updating leave, using mock:', error);
+      const delay = (ms = 200) => new Promise(res => setTimeout(res, ms));
+      await delay();
+      const idx = attendanceService._mockLeaves.findIndex(l => l.id === String(id));
+      if (idx === -1) throw new Error('Leave not found');
+      attendanceService._mockLeaves[idx] = { ...attendanceService._mockLeaves[idx], ...updates };
+      return attendanceService._mockLeaves[idx];
+    }
+  },
+
+  cancelLeave: async (id) => {
+    return attendanceService.updateLeave(id, { status: 'Cancelled' });
+  },
+
+  approveLeave: async (id, approver) => {
+    return attendanceService.updateLeave(id, { status: 'Approved', approvedBy: approver || 'admin', approvedAt: new Date().toISOString() });
+  },
+
+  rejectLeave: async (id, reason) => {
+    return attendanceService.updateLeave(id, { status: 'Rejected', rejectedReason: reason || '', rejectedAt: new Date().toISOString() });
+  },
+
   // Get attendance alerts
   getAttendanceAlerts: async () => {
     try {
@@ -241,7 +334,7 @@ const attendanceService = {
     try {
       const formData = new FormData();
       formData.append('file', fileData);
-      
+
       const response = await api.post('/attendance/import', formData, {
         headers: {
           'Content-Type': 'multipart/form-data'

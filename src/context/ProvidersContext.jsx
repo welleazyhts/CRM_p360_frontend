@@ -504,7 +504,10 @@ export const ProvidersProvider = ({ children }) => {
     const savedProviders = localStorage.getItem('communicationProviders');
     if (savedProviders) {
       try {
-        setProviders(JSON.parse(savedProviders));
+        const parsed = JSON.parse(savedProviders);
+        if (parsed && typeof parsed === 'object') {
+          setProviders(parsed);
+        }
       } catch (error) {
         logger.error('Failed to parse saved providers:', error);
       }
@@ -538,8 +541,8 @@ export const ProvidersProvider = ({ children }) => {
   const updateProvider = (channel, providerId, updates) => {
     setProviders(prev => ({
       ...prev,
-      [channel]: prev[channel].map(provider => 
-        provider.id === providerId 
+      [channel]: prev[channel].map(provider =>
+        provider.id === providerId
           ? { ...provider, ...updates, updatedAt: new Date().toISOString() }
           : provider
       )
@@ -581,40 +584,34 @@ export const ProvidersProvider = ({ children }) => {
     // This would make an actual API call to test the provider
     // For now, we'll simulate the test
     updateProvider(channel, providerId, { status: 'testing' });
-    
+
     // Simulate API call delay
     await new Promise(resolve => setTimeout(resolve, 2000));
-    
-    // Simulate random success/failure
-    const success = Math.random() > 0.3;
-    updateProvider(channel, providerId, { 
-      status: success ? 'connected' : 'error',
-      lastTested: new Date().toISOString()
-    });
-    
-    return success;
+
   };
 
   // Get active provider for a channel
   const getActiveProvider = (channel) => {
-    return providers[channel]?.find(provider => provider.isActive);
+    return providers?.[channel]?.find(provider => provider.isActive);
   };
 
   // Get default provider for a channel
   const getDefaultProvider = (channel) => {
-    return providers[channel]?.find(provider => provider.isDefault);
+    return providers?.[channel]?.find(provider => provider.isDefault);
   };
 
   // Get all providers for a channel
   const getProviders = (channel) => {
-    return providers[channel] || [];
+    return providers?.[channel] || [];
   };
 
   // Get provider statistics
   const getProviderStats = () => {
     const stats = {};
+    if (!providers) return stats;
+
     Object.keys(providers).forEach(channel => {
-      const channelProviders = providers[channel];
+      const channelProviders = providers[channel] || [];
       stats[channel] = {
         total: channelProviders.length,
         active: channelProviders.filter(p => p.isActive).length,
@@ -648,4 +645,4 @@ export const ProvidersProvider = ({ children }) => {
   );
 };
 
-export default ProvidersProvider; 
+export default ProvidersProvider;

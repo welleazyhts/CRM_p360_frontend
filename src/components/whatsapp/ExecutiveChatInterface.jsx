@@ -1,8 +1,9 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import {
   Box, Paper, Typography, TextField, IconButton, Avatar,
   List, ListItem, ListItemText, ListItemAvatar, Chip,
-  Badge, Divider, Button, Menu, MenuItem, Alert,
+  Badge, Button, Menu, MenuItem, Alert,
+  Dialog, DialogTitle, DialogContent, DialogActions, ListItemButton, Snackbar,
   useTheme, alpha
 } from '@mui/material';
 import {
@@ -16,9 +17,9 @@ import {
   SmartToy as BotIcon,
   PersonOutline as ManualIcon
 } from '@mui/icons-material';
-import whatsappBotService from '../../services/whatsappBotService';
+import whatsappBotService, { sendTemplate, testSendTemplate, getTemplates } from '../../services/whatsappBotService';
 
-const ExecutiveChatInterface = ({ executiveId, onClose }) => {
+const ExecutiveChatInterface = ({ executiveId }) => {
   const theme = useTheme();
   const messagesEndRef = useRef(null);
   const [messages, setMessages] = useState([]);
@@ -27,17 +28,33 @@ const ExecutiveChatInterface = ({ executiveId, onClose }) => {
   const [selectedChat, setSelectedChat] = useState(null);
   const [botEnabled, setBotEnabled] = useState(true);
   const [menuAnchor, setMenuAnchor] = useState(null);
+  const [templatesDialogOpen, setTemplatesDialogOpen] = useState(false);
+  const [templates, setTemplates] = useState([]);
+  const [templatesLoading, setTemplatesLoading] = useState(false);
+  const [selectedTemplate, setSelectedTemplate] = useState(null);
+  const [snackbarState, setSnackbarState] = useState({ open: false, message: '', severity: 'info' });
 
-  useEffect(() => {
-    loadActiveChats();
-    loadMessages();
+  const loadTemplates = useCallback(async () => {
+    setTemplatesLoading(true);
+    try {
+      const botId = `BOT-${executiveId}`;
+      const res = await getTemplates(botId);
+      if (res && res.success) {
+        setTemplates(res.templates || []);
+      } else if (res && res.templates) {
+        setTemplates(res.templates || []);
+      } else {
+        setTemplates([]);
+      }
+    } catch (err) {
+      console.error('Error loading templates:', err);
+      setTemplates([]);
+    } finally {
+      setTemplatesLoading(false);
+    }
   }, [executiveId]);
 
-  useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
-
-  const loadActiveChats = () => {
+  const loadActiveChats = useCallback(() => {
     // Mock active chats for the executive
     const mockChats = [
       {
@@ -72,9 +89,9 @@ const ExecutiveChatInterface = ({ executiveId, onClose }) => {
     if (mockChats.length > 0) {
       setSelectedChat(mockChats[0]);
     }
-  };
+  }, []);
 
-  const loadMessages = () => {
+  const loadMessages = useCallback(() => {
     if (!selectedChat) return;
 
     // Mock conversation messages
@@ -117,7 +134,16 @@ const ExecutiveChatInterface = ({ executiveId, onClose }) => {
       }
     ];
     setMessages(mockMessages);
-  };
+  }, [selectedChat]);
+
+  useEffect(() => {
+    loadActiveChats();
+    loadMessages();
+  }, [executiveId, loadActiveChats, loadMessages]);
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -393,7 +419,83 @@ const ExecutiveChatInterface = ({ executiveId, onClose }) => {
           <MenuItem onClick={() => setMenuAnchor(null)}>
             End Conversation
           </MenuItem>
+          <MenuItem onClick={() => { setMenuAnchor(null); setTemplatesDialogOpen(true); loadTemplates(); }}>
+            Templates
+          </MenuItem>
         </Menu>
+
+        {/* Templates Picker Dialog */}
+        <Dialog open={templatesDialogOpen} onClose={() => setTemplatesDialogOpen(false)} fullWidth maxWidth="sm">
+          <DialogTitle>Templates</DialogTitle>
+          <DialogContent>
+            <Box sx={{ mb: 2 }}>
+              <Typography variant="body2" color="text.secondary">Select a template and send to the selected chat.</Typography>
+            </Box>
+            <List>
+              {templatesLoading && (
+                <ListItem>
+                  <ListItemText primary="Loading templates..." />
+                </ListItem>
+              )}
+              {!templatesLoading && templates.length === 0 && (
+                <ListItem>
+                  <ListItemText primary="No templates available" />
+                </ListItem>
+              )}
+              {templates.map((tpl) => (
+                <ListItemButton key={tpl.name} selected={selectedTemplate?.name === tpl.name} onClick={() => setSelectedTemplate(tpl)}>
+                  <ListItemText primary={tpl.name} secondary={tpl.description || tpl.language} />
+                </ListItemButton>
+              ))}
+            </List>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => setTemplatesDialogOpen(false)}>Cancel</Button>
+            <Button
+              variant="contained"
+              disabled={!selectedTemplate || !selectedChat}
+              onClick={async () => {
+                if (!selectedTemplate || !selectedChat) return;
+                setTemplatesLoading(true);
+                try {
+                  const payload = {
+                    templateName: selectedTemplate.name,
+                    to: selectedChat.customerNumber,
+                    language: selectedTemplate.language || 'en',
+                    components: selectedTemplate.components || [{ type: 'body', text: `Hello ${selectedChat.customerName}` }]
+                  };
+                  const testRes = await testSendTemplate(`BOT-${executiveId}`, payload);
+                  if (!testRes.success) {
+                    setSnackbarState({ open: true, message: `Template validation failed: ${testRes.error}`, severity: 'error' });
+                    setTemplatesLoading(false);
+                    return;
+                  }
+                  const sendRes = await sendTemplate(`BOT-${executiveId}`, payload);
+                  if (sendRes.success) {
+                    setSnackbarState({ open: true, message: 'Template sent', severity: 'success' });
+                  } else {
+                    setSnackbarState({ open: true, message: `Send failed: ${sendRes.error || sendRes.details}`, severity: 'error' });
+                  }
+                  setTemplatesDialogOpen(false);
+                } catch (err) {
+                  console.error('Template send error:', err);
+                  setSnackbarState({ open: true, message: 'Template send error', severity: 'error' });
+                } finally {
+                  setTemplatesLoading(false);
+                }
+              }}
+            >
+              Send Template
+            </Button>
+          </DialogActions>
+        </Dialog>
+
+        {/* Snackbar for template/send feedback */}
+        <Snackbar open={snackbarState.open} autoHideDuration={6000} onClose={() => setSnackbarState({ ...snackbarState, open: false })}>
+          <Alert onClose={() => setSnackbarState({ ...snackbarState, open: false })} severity={snackbarState.severity} sx={{ width: '100%' }}>
+            {snackbarState.message}
+          </Alert>
+        </Snackbar>
       </Box>
     </Box>
   );

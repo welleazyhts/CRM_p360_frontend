@@ -1,43 +1,18 @@
 import React, { useState, useEffect } from 'react';
+import leadService from '../services/leadService';
 import {
-  Box,
-  Card,
-  CardContent,
-  Typography,
-  Button,
-  Grid,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  IconButton,
-  Chip,
-  Stack,
-  TextField,
-  MenuItem,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  Paper,
-  Tooltip,
-  useTheme,
-  alpha,
-  Divider
+  Box, Typography, Card, CardContent, Grid, TextField, MenuItem,
+  Table, TableBody, TableCell, TableContainer, TableHead, TableRow,
+  Chip, IconButton, Tooltip, Stack, Dialog, DialogTitle, DialogContent,
+  DialogActions, Button, useTheme, alpha, Divider, Snackbar, Alert,
+  CircularProgress, List, ListItem, ListItemIcon, ListItemText, Avatar
 } from '@mui/material';
 import {
-  Visibility as VisibilityIcon,
-  History as HistoryIcon,
-  Email as EmailIcon,
-  WhatsApp as WhatsAppIcon,
-  FilterList as FilterIcon,
-  Search as SearchIcon,
-  Sort as SortIcon,
-  PictureAsPdf as PdfIcon,
-  Download as DownloadIcon,
-  Call as CallIcon
+  Search as SearchIcon, FilterList as FilterIcon, Sort as SortIcon,
+  Download as DownloadIcon, PictureAsPdf as PdfIcon, Call as CallIcon,
+  Visibility as VisibilityIcon, History as HistoryIcon, CheckCircle as CheckCircleIcon,
+  Phone as PhoneIcon, Note as NoteIcon, Email as EmailIcon, Upload as UploadIcon,
+  Add as AddIcon
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 
@@ -45,43 +20,112 @@ const ClosedLeads = () => {
   const theme = useTheme();
   const navigate = useNavigate();
   const [leads, setLeads] = useState([]);
+  const [filteredLeads, setFilteredLeads] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterResult, setFilterResult] = useState('All');
+  const [selectedDateRange, setSelectedDateRange] = useState('all');
   const [sortField, setSortField] = useState('closedDate');
   const [sortOrder, setSortOrder] = useState('desc');
-  const [selectedDateRange, setSelectedDateRange] = useState('last30');
   const [callDialogOpen, setCallDialogOpen] = useState(false);
   const [selectedCallLead, setSelectedCallLead] = useState(null);
-  
-  useEffect(() => {
-    // Mock data - Replace with API call
-    setLeads([
-      {
-        id: 1,
-        firstName: 'Rohit',
-        lastName: 'Kumar',
-        phone: '+91-98765-43210',
-        email: 'rohit.kumar@email.com',
-        status: 'Closed Won',
-        result: 'Policy Issued',
-        policyType: 'Motor Insurance',
-        policyNumber: 'POL789012',
-        premium: 25000,
-        closedDate: '2025-10-01',
-        closedBy: 'Sarah Johnson',
-        remarks: 'Customer satisfied with premium and coverage'
-      },
-      // Add more mock data as needed
-    ]);
-  }, []);
+  const [historyDialogOpen, setHistoryDialogOpen] = useState(false);
+  const [selectedHistoryLead, setSelectedHistoryLead] = useState(null);
+  const [leadHistory, setLeadHistory] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
 
   const resultOptions = ['Policy Issued', 'Not Interested', 'High Premium', 'Bought from Competitor', 'Invalid Lead'];
   const dateRangeOptions = [
+    { value: 'all', label: 'All Time' },
     { value: 'last7', label: 'Last 7 Days' },
     { value: 'last30', label: 'Last 30 Days' },
-    { value: 'last90', label: 'Last 90 Days' },
-    { value: 'custom', label: 'Custom Range' }
+    { value: 'last90', label: 'Last 90 Days' }
   ];
+
+  useEffect(() => {
+    const fetchLeads = async () => {
+      try {
+        const data = await leadService.getClosedLeads();
+        setLeads(data);
+        setFilteredLeads(data);
+      } catch (error) {
+        console.error('Error fetching closed leads:', error);
+      }
+    };
+    fetchLeads();
+  }, []);
+
+  // Apply filters whenever search term, filter result, or date range changes
+  useEffect(() => {
+    let filtered = [...leads];
+
+    // Apply search filter
+    if (searchTerm) {
+      filtered = filtered.filter(lead =>
+        lead.firstName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        lead.lastName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        lead.phone.includes(searchTerm) ||
+        lead.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        lead.id.toString().includes(searchTerm)
+      );
+    }
+
+    // Apply result filter
+    if (filterResult !== 'All') {
+      filtered = filtered.filter(lead => lead.result === filterResult);
+    }
+
+    // Apply date range filter
+    if (selectedDateRange !== 'all') {
+      const now = new Date();
+      const dateThreshold = new Date();
+
+      switch (selectedDateRange) {
+        case 'last7':
+          dateThreshold.setDate(now.getDate() - 7);
+          break;
+        case 'last30':
+          dateThreshold.setDate(now.getDate() - 30);
+          break;
+        case 'last90':
+          dateThreshold.setDate(now.getDate() - 90);
+          break;
+        default:
+          break;
+      }
+
+      if (selectedDateRange !== 'all') {
+        filtered = filtered.filter(lead => {
+          const closedDate = new Date(lead.closedDate);
+          return closedDate >= dateThreshold;
+        });
+      }
+    }
+
+    // Apply sorting
+    filtered.sort((a, b) => {
+      let aValue, bValue;
+
+      if (sortField === 'closedDate') {
+        aValue = new Date(a.closedDate);
+        bValue = new Date(b.closedDate);
+      } else if (sortField === 'premium') {
+        aValue = a.premium || 0;
+        bValue = b.premium || 0;
+      } else {
+        aValue = a[sortField];
+        bValue = b[sortField];
+      }
+
+      if (sortOrder === 'asc') {
+        return aValue > bValue ? 1 : -1;
+      } else {
+        return aValue < bValue ? 1 : -1;
+      }
+    });
+
+    setFilteredLeads(filtered);
+  }, [searchTerm, filterResult, selectedDateRange, sortField, sortOrder, leads]);
 
   const handleSearch = (event) => {
     setSearchTerm(event.target.value);
@@ -98,6 +142,174 @@ const ClosedLeads = () => {
       setSortField(field);
       setSortOrder('asc');
     }
+  };
+
+  const handleExportData = async () => {
+    try {
+      setLoading(true);
+      const filters = {
+        result: filterResult !== 'All' ? filterResult : null,
+        dateRange: selectedDateRange,
+        searchTerm: searchTerm
+      };
+
+      const blob = await leadService.exportClosedLeads(filters, 'csv');
+
+      if (blob) {
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `closed-leads-${new Date().toISOString().split('T')[0]}.csv`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(url);
+
+        setSnackbar({ open: true, message: 'Data exported successfully!', severity: 'success' });
+      } else {
+        // Fallback: client-side CSV generation
+        const csvContent = generateCSV(filteredLeads);
+        const csvBlob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const url = window.URL.createObjectURL(csvBlob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `closed-leads-${new Date().toISOString().split('T')[0]}.csv`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(url);
+
+        setSnackbar({ open: true, message: 'Data exported successfully!', severity: 'success' });
+      }
+    } catch (error) {
+      console.error('Error exporting data:', error);
+      setSnackbar({ open: true, message: 'Failed to export data', severity: 'error' });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleGenerateReport = async () => {
+    try {
+      setLoading(true);
+      const filters = {
+        result: filterResult !== 'All' ? filterResult : null,
+        dateRange: selectedDateRange,
+        searchTerm: searchTerm
+      };
+
+      const blob = await leadService.generateClosedLeadsReport(filters);
+
+      if (blob) {
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `closed-leads-report-${new Date().toISOString().split('T')[0]}.pdf`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(url);
+
+        setSnackbar({ open: true, message: 'Report generated successfully!', severity: 'success' });
+      } else {
+        setSnackbar({ open: true, message: 'Report generation not available. Please try export instead.', severity: 'warning' });
+      }
+    } catch (error) {
+      console.error('Error generating report:', error);
+      setSnackbar({ open: true, message: 'Failed to generate report', severity: 'error' });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleViewHistory = async (lead) => {
+    try {
+      setLoading(true);
+      setSelectedHistoryLead(lead);
+      const history = await leadService.getLeadHistory(lead.id);
+      setLeadHistory(history);
+      setHistoryDialogOpen(true);
+    } catch (error) {
+      console.error('Error fetching lead history:', error);
+      setSnackbar({ open: true, message: 'Failed to fetch lead history', severity: 'error' });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDownloadDocuments = async (lead) => {
+    try {
+      setLoading(true);
+      const blob = await leadService.downloadLeadDocuments(lead.id);
+
+      if (blob) {
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `lead-${lead.id}-documents.zip`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(url);
+
+        setSnackbar({ open: true, message: 'Documents downloaded successfully!', severity: 'success' });
+      } else {
+        setSnackbar({ open: true, message: 'No documents available for this lead', severity: 'warning' });
+      }
+    } catch (error) {
+      console.error('Error downloading documents:', error);
+      setSnackbar({ open: true, message: 'Failed to download documents', severity: 'error' });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const generateCSV = (data) => {
+    const headers = ['Lead ID', 'Name', 'Phone', 'Email', 'Result', 'Policy Type', 'Policy Number', 'Premium', 'Closed Date', 'Closed By', 'Remarks'];
+    const rows = data.map(lead => [
+      lead.id,
+      `${lead.firstName} ${lead.lastName}`,
+      lead.phone,
+      lead.email,
+      lead.result,
+      lead.policyType,
+      lead.policyNumber || '',
+      lead.premium || '',
+      lead.closedDate,
+      lead.closedBy,
+      lead.remarks || ''
+    ]);
+
+    const csvContent = [
+      headers.join(','),
+      ...rows.map(row => row.map(cell => `"${cell}"`).join(','))
+    ].join('\n');
+
+    return csvContent;
+  };
+
+  const getHistoryIcon = (iconName) => {
+    const icons = {
+      CheckCircle: <CheckCircleIcon />,
+      Phone: <PhoneIcon />,
+      Note: <NoteIcon />,
+      Email: <EmailIcon />,
+      Upload: <UploadIcon />,
+      Add: <AddIcon />
+    };
+    return icons[iconName] || <NoteIcon />;
+  };
+
+  const getHistoryColor = (type) => {
+    const colors = {
+      status_change: theme.palette.success.main,
+      call: theme.palette.info.main,
+      note: theme.palette.warning.main,
+      email: theme.palette.primary.main,
+      document: theme.palette.secondary.main,
+      created: theme.palette.grey[500]
+    };
+    return colors[type] || theme.palette.grey[500];
   };
 
   const getResultColor = (result) => {
@@ -123,14 +335,18 @@ const ClosedLeads = () => {
         <Grid item xs={12} sm={6} sx={{ textAlign: 'right' }}>
           <Button
             variant="outlined"
-            startIcon={<DownloadIcon />}
+            startIcon={loading ? <CircularProgress size={20} /> : <DownloadIcon />}
+            onClick={handleExportData}
+            disabled={loading}
             sx={{ mr: 1 }}
           >
             Export Data
           </Button>
           <Button
             variant="outlined"
-            startIcon={<PdfIcon />}
+            startIcon={loading ? <CircularProgress size={20} /> : <PdfIcon />}
+            onClick={handleGenerateReport}
+            disabled={loading}
           >
             Generate Report
           </Button>
@@ -215,7 +431,7 @@ const ClosedLeads = () => {
               </TableRow>
             </TableHead>
             <TableBody>
-              {leads.map((lead) => (
+              {filteredLeads.map((lead) => (
                 <TableRow key={lead.id} hover>
                   <TableCell>
                     <Box sx={{ display: 'flex', flexDirection: 'column' }}>
@@ -256,7 +472,7 @@ const ClosedLeads = () => {
                   </TableCell>
                   <TableCell>
                     <Typography variant="body2" fontWeight="600" color="primary.main">
-                      ₹{lead.premium.toLocaleString()}
+                      ₹{lead.premium?.toLocaleString() || 0}
                     </Typography>
                   </TableCell>
                   <TableCell>{lead.closedDate}</TableCell>
@@ -291,6 +507,7 @@ const ClosedLeads = () => {
                       <Tooltip title="View History">
                         <IconButton
                           size="small"
+                          onClick={() => handleViewHistory(lead)}
                           sx={{ color: theme.palette.info.main }}
                         >
                           <HistoryIcon />
@@ -299,6 +516,7 @@ const ClosedLeads = () => {
                       <Tooltip title="Download Documents">
                         <IconButton
                           size="small"
+                          onClick={() => handleDownloadDocuments(lead)}
                           sx={{ color: theme.palette.warning.main }}
                         >
                           <PdfIcon />
@@ -330,7 +548,6 @@ const ClosedLeads = () => {
         </DialogTitle>
         <DialogContent>
           <Stack spacing={3} sx={{ mt: 2 }}>
-            {/* Lead ID */}
             <Box>
               <Typography variant="caption" color="text.secondary" fontWeight="600">
                 Lead ID
@@ -340,7 +557,6 @@ const ClosedLeads = () => {
               </Typography>
             </Box>
 
-            {/* Lead Name */}
             <Box>
               <Typography variant="caption" color="text.secondary" fontWeight="600">
                 Lead Name
@@ -350,7 +566,6 @@ const ClosedLeads = () => {
               </Typography>
             </Box>
 
-            {/* Result Status */}
             <Box>
               <Typography variant="caption" color="text.secondary" fontWeight="600">
                 Result
@@ -368,7 +583,6 @@ const ClosedLeads = () => {
               </Box>
             </Box>
 
-            {/* Policy Information */}
             <Box>
               <Typography variant="caption" color="text.secondary" fontWeight="600">
                 Policy Details
@@ -381,12 +595,11 @@ const ClosedLeads = () => {
               )}
               {selectedCallLead?.premium && (
                 <Typography variant="body2" color="primary" fontWeight="600">
-                  Premium: ₹{selectedCallLead?.premium.toLocaleString()}
+                  Premium: ₹{selectedCallLead?.premium?.toLocaleString()}
                 </Typography>
               )}
             </Box>
 
-            {/* Closed Details */}
             <Box>
               <Typography variant="caption" color="text.secondary" fontWeight="600">
                 Closure Details
@@ -406,7 +619,6 @@ const ClosedLeads = () => {
 
             <Divider />
 
-            {/* Phone Number */}
             <Box>
               <Typography variant="caption" color="text.secondary" fontWeight="600" gutterBottom>
                 Phone Number
@@ -438,7 +650,6 @@ const ClosedLeads = () => {
               </Box>
             </Box>
 
-            {/* Email */}
             <Box>
               <Typography variant="caption" color="text.secondary" fontWeight="600">
                 Email
@@ -451,6 +662,116 @@ const ClosedLeads = () => {
           <Button onClick={() => setCallDialogOpen(false)}>Close</Button>
         </DialogActions>
       </Dialog>
+
+      {/* History Dialog */}
+      <Dialog
+        open={historyDialogOpen}
+        onClose={() => setHistoryDialogOpen(false)}
+        maxWidth="md"
+        fullWidth
+      >
+        <DialogTitle>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <HistoryIcon color="info" />
+            <Typography variant="h6" fontWeight="600">
+              Lead History
+            </Typography>
+          </Box>
+        </DialogTitle>
+        <DialogContent>
+          <Stack spacing={2} sx={{ mt: 2 }}>
+            {/* Lead Info */}
+            <Box>
+              <Typography variant="caption" color="text.secondary" fontWeight="600">
+                Lead Details
+              </Typography>
+              <Typography variant="body1" fontWeight="600">
+                {selectedHistoryLead?.firstName} {selectedHistoryLead?.lastName}
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                ID: {selectedHistoryLead?.id} | {selectedHistoryLead?.phone}
+              </Typography>
+            </Box>
+
+            <Divider />
+
+            {/* Activity List */}
+            <Box>
+              <Typography variant="subtitle2" fontWeight="600" gutterBottom>
+                Activity Timeline
+              </Typography>
+              <List sx={{ width: '100%' }}>
+                {leadHistory.map((activity, index) => (
+                  <ListItem
+                    key={activity.id}
+                    alignItems="flex-start"
+                    sx={{
+                      borderLeft: `3px solid ${getHistoryColor(activity.type)}`,
+                      mb: 1,
+                      bgcolor: alpha(getHistoryColor(activity.type), 0.05),
+                      borderRadius: 1
+                    }}
+                  >
+                    <ListItemIcon>
+                      <Avatar
+                        sx={{
+                          bgcolor: alpha(getHistoryColor(activity.type), 0.1),
+                          color: getHistoryColor(activity.type),
+                          width: 40,
+                          height: 40
+                        }}
+                      >
+                        {getHistoryIcon(activity.icon)}
+                      </Avatar>
+                    </ListItemIcon>
+                    <ListItemText
+                      primary={
+                        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                          <Typography variant="subtitle2" fontWeight="600">
+                            {activity.type.replace('_', ' ').toUpperCase()}
+                          </Typography>
+                          <Typography variant="caption" color="text.secondary">
+                            {activity.timestamp}
+                          </Typography>
+                        </Box>
+                      }
+                      secondary={
+                        <>
+                          <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+                            {activity.description}
+                          </Typography>
+                          <Typography variant="caption" color="text.secondary">
+                            By: {activity.user}
+                          </Typography>
+                        </>
+                      }
+                    />
+                  </ListItem>
+                ))}
+              </List>
+            </Box>
+          </Stack>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setHistoryDialogOpen(false)}>Close</Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Snackbar for notifications */}
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={6000}
+        onClose={() => setSnackbar({ ...snackbar, open: false })}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+      >
+        <Alert
+          onClose={() => setSnackbar({ ...snackbar, open: false })}
+          severity={snackbar.severity}
+          sx={{ width: '100%' }}
+        >
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
     </Box>
   );
 };

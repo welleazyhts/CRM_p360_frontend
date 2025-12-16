@@ -174,6 +174,7 @@ export const AuthProvider = ({ children }) => {
     checkAuthStatus();
   }, [applyUserLanguage]);
 
+<<<<<<< HEAD
   const login = async (email, password) => {
     try {
       const response = await authService.login(email, password);
@@ -233,6 +234,56 @@ export const AuthProvider = ({ children }) => {
 
       return { success: false, message: errorMessage };
     }
+=======
+  const login = async (email, _password) => {
+    // In a real app, this would call your authentication API
+    // const response = await fetch('/api/auth/login', {
+    //   method: 'POST',
+    //   headers: { 'Content-Type': 'application/json' },
+    //   body: JSON.stringify({ email, password })
+    // });
+    // const data = await response.json();
+
+    // Mock successful login - just validate credentials
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        // In a real app, you would validate credentials here
+        // For demo, we'll just consider any login attempt successful
+
+        const userData = getUserData(email);
+
+        // Check if account is expired
+        if (isAccountExpired(userData)) {
+          resolve({ success: false, message: 'Your account has expired. Please contact administrator.' });
+          return;
+        }
+
+        // For non-MFA logins, we need to set the token and user here
+        const savedSettings = localStorage.getItem('userSettings');
+        let mfaEnabled = false;
+
+        if (savedSettings) {
+          try {
+            const settings = JSON.parse(savedSettings);
+            mfaEnabled = settings.mfaEnabled;
+          } catch (error) {
+            // Failed to parse saved settings, using defaults
+          }
+        }
+
+        // If MFA is not enabled, log the user in directly
+        if (!mfaEnabled) {
+          const mockToken = 'mock-jwt-token-' + Math.random().toString(36).substring(2);
+          localStorage.setItem('authToken', mockToken);
+          localStorage.setItem('userEmail', email); // Store email for session persistence
+          setCurrentUser(userData);
+          applyUserLanguage(userData);
+        }
+
+        resolve({ success: true, user: userData });
+      }, 1000);
+    });
+>>>>>>> 0f0db02199acd11bdcb8309679f62aa88a7a39ee
   };
 
   // Function to verify MFA OTP

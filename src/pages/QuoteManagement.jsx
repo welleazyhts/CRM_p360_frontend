@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import {
   Box, Paper, Typography, Tabs, Tab, Button, TextField, Grid,
   Table, TableBody, TableCell, TableContainer, TableHead, TableRow,
@@ -6,8 +6,8 @@ import {
   FormControl, InputLabel, Select, MenuItem, Card, CardContent,
   useTheme, alpha, Stack, Divider, Avatar, IconButton, Badge,
   Tooltip, LinearProgress, CardHeader, CardActions, Alert,
-  List, ListItem, ListItemText, ListItemAvatar, InputAdornment,
-  Menu, Collapse, Stepper, Step, StepLabel
+  List, ListItem, ListItemText, ListItemAvatar, ListItemIcon, InputAdornment,
+  Menu, Collapse, Stepper, Step, StepLabel, Snackbar
 } from '@mui/material';
 import {
   Timeline,
@@ -25,7 +25,7 @@ import {
   Delete as DeleteIcon,
   Send as SendIcon,
   Download as DownloadIcon,
-  ContentCopy as CopyIcon,
+  ContentCopy,
   CheckCircle as ApprovedIcon,
   Cancel as RejectedIcon,
   HourglassEmpty as PendingIcon,
@@ -48,6 +48,10 @@ import {
   Print as PrintIcon
 } from '@mui/icons-material';
 
+// Quote Management Component - Updated with action handlers
+
+import QuoteService from '../services/qouteservice';
+
 const QuoteManagement = () => {
   const theme = useTheme();
   const [currentTab, setCurrentTab] = useState(0);
@@ -58,6 +62,10 @@ const QuoteManagement = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [expandedCards, setExpandedCards] = useState({});
+  const [deleteConfirmDialog, setDeleteConfirmDialog] = useState(false);
+  const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
+  const [emailPreviewDialog, setEmailPreviewDialog] = useState(false);
+  const [emailPreviewData, setEmailPreviewData] = useState(null);
 
   const [formData, setFormData] = useState({
     customerName: '',
@@ -80,211 +88,45 @@ const QuoteManagement = () => {
     previousInsurance: ''
   });
 
-  const [quotes, setQuotes] = useState([
-    {
-      id: 'Q001',
-      leadId: 'L1234',
-      customerName: 'Rajesh Kumar',
-      customerEmail: 'rajesh.k@example.com',
-      customerPhone: '+91 98765 43210',
-      productType: 'Health Insurance',
-      productPlan: 'Health Insurance Premium Plus',
-      coverageAmount: '₹10,00,000',
-      premium: '₹12,000',
-      sumInsured: '₹10,00,000',
-      tenure: '1 Year',
-      quoteAmount: '₹12,000',
-      status: 'Pending',
-      validUntil: '2025-02-15',
-      raisedDate: '2025-01-15',
-      raisedBy: 'Admin User',
-      lastUpdated: '2025-01-15',
-      version: 1,
-      conversionProbability: 75,
-      attachments: ['policy_terms.pdf', 'coverage_details.pdf'],
-      timeline: [
-        { action: 'Quote Created', user: 'Admin', timestamp: '2025-01-15 10:30 AM', details: 'Initial quote raised' },
-        { action: 'Email Sent', user: 'System', timestamp: '2025-01-15 10:35 AM', details: 'Quote sent to customer' }
-      ]
-    },
-    {
-      id: 'Q002',
-      leadId: 'L1235',
-      customerName: 'Priya Sharma',
-      customerEmail: 'priya.s@example.com',
-      customerPhone: '+91 98765 43211',
-      productType: 'Life Insurance',
-      productPlan: 'Life Insurance Gold',
-      coverageAmount: '₹50,00,000',
-      premium: '₹25,000',
-      sumInsured: '₹50,00,000',
-      tenure: '20 Years',
-      quoteAmount: '₹5,00,000',
-      status: 'Approved',
-      validUntil: '2025-02-16',
-      raisedDate: '2025-01-16',
-      raisedBy: 'Priya Patel',
-      lastUpdated: '2025-01-17',
-      version: 2,
-      conversionProbability: 90,
-      attachments: ['policy_document.pdf'],
-      timeline: [
-        { action: 'Quote Created', user: 'Priya Patel', timestamp: '2025-01-16 09:00 AM', details: 'Initial quote raised' },
-        { action: 'Status Changed', user: 'Manager', timestamp: '2025-01-17 02:15 PM', details: 'Status updated to Approved' },
-        { action: 'Customer Follow-up', user: 'Priya Patel', timestamp: '2025-01-17 03:00 PM', details: 'Customer confirmed interest' }
-      ]
-    },
-    {
-      id: 'Q003',
-      leadId: 'L1236',
-      customerName: 'Amit Singh',
-      customerEmail: 'amit.s@example.com',
-      customerPhone: '+91 98765 43212',
-      productType: 'Motor Insurance',
-      productPlan: 'Comprehensive Car Insurance',
-      coverageAmount: '₹10,00,000',
-      premium: '₹8,500',
-      sumInsured: '₹8,00,000',
-      tenure: '1 Year',
-      quoteAmount: '₹8,500',
-      status: 'Rejected',
-      validUntil: '2025-02-14',
-      raisedDate: '2025-01-14',
-      raisedBy: 'Amit Kumar',
-      lastUpdated: '2025-01-18',
-      version: 1,
-      conversionProbability: 30,
-      attachments: [],
-      timeline: [
-        { action: 'Quote Created', user: 'Amit Kumar', timestamp: '2025-01-14 11:00 AM', details: 'Initial quote raised' },
-        { action: 'Quote Rejected', user: 'Underwriter', timestamp: '2025-01-18 11:45 AM', details: 'High risk vehicle profile' }
-      ]
-    },
-    {
-      id: 'Q004',
-      leadId: 'L1237',
-      customerName: 'Sneha Reddy',
-      customerEmail: 'sneha.r@example.com',
-      customerPhone: '+91 98765 43213',
-      productType: 'Health Insurance',
-      productPlan: 'Family Floater Plan',
-      coverageAmount: '₹15,00,000',
-      premium: '₹18,000',
-      sumInsured: '₹15,00,000',
-      tenure: '1 Year',
-      quoteAmount: '₹18,000',
-      status: 'Converted',
-      validUntil: '2025-02-10',
-      raisedDate: '2025-01-10',
-      raisedBy: 'Admin User',
-      lastUpdated: '2025-01-19',
-      policyNumber: 'POL/2025/001234',
-      version: 3,
-      conversionProbability: 100,
-      attachments: ['policy_certificate.pdf', 'payment_receipt.pdf'],
-      timeline: [
-        { action: 'Quote Created', user: 'Admin', timestamp: '2025-01-10 10:00 AM', details: 'Initial quote raised' },
-        { action: 'Quote Revised', user: 'Admin', timestamp: '2025-01-12 03:00 PM', details: 'Coverage amount updated' },
-        { action: 'Status Changed', user: 'Manager', timestamp: '2025-01-15 10:00 AM', details: 'Approved by underwriter' },
-        { action: 'Converted to Policy', user: 'System', timestamp: '2025-01-19 11:00 AM', details: 'Policy issued' }
-      ]
-    },
-    {
-      id: 'Q005',
-      leadId: 'L1238',
-      customerName: 'Vikram Malhotra',
-      customerEmail: 'vikram.m@example.com',
-      customerPhone: '+91 98765 43214',
-      productType: 'Life Insurance',
-      productPlan: 'Term Insurance Basic',
-      coverageAmount: '₹1,00,00,000',
-      premium: '₹15,000',
-      sumInsured: '₹1,00,00,000',
-      tenure: '30 Years',
-      quoteAmount: '₹4,50,000',
-      status: 'Draft',
-      validUntil: '',
-      raisedDate: '2025-01-20',
-      raisedBy: 'Priya Patel',
-      lastUpdated: '2025-01-20',
-      version: 1,
-      conversionProbability: 50,
-      attachments: [],
-      timeline: [
-        { action: 'Quote Drafted', user: 'Priya Patel', timestamp: '2025-01-20 02:00 PM', details: 'Quote in preparation' }
-      ]
-    },
-    {
-      id: 'Q006',
-      leadId: 'L1239',
-      customerName: 'Kavita Nair',
-      customerEmail: 'kavita.n@example.com',
-      customerPhone: '+91 98765 43215',
-      productType: 'Travel Insurance',
-      productPlan: 'International Travel Insurance',
-      coverageAmount: '₹5,00,000',
-      premium: '₹3,500',
-      sumInsured: '₹5,00,000',
-      tenure: '30 Days',
-      quoteAmount: '₹3,500',
-      status: 'Lost',
-      validUntil: '2025-01-25',
-      raisedDate: '2025-01-05',
-      raisedBy: 'Amit Kumar',
-      lastUpdated: '2025-01-21',
-      version: 1,
-      conversionProbability: 0,
-      attachments: [],
-      timeline: [
-        { action: 'Quote Created', user: 'Amit Kumar', timestamp: '2025-01-05 09:00 AM', details: 'Initial quote raised' },
-        { action: 'Customer Follow-up', user: 'Amit Kumar', timestamp: '2025-01-08 10:00 AM', details: 'No response from customer' },
-        { action: 'Marked as Lost', user: 'Amit Kumar', timestamp: '2025-01-21 04:00 PM', details: 'Customer chose competitor' }
-      ]
-    }
-  ]);
+  // --- state now backed by QuoteService (instead of hard-coded list) ---
+  const [quotes, setQuotes] = useState([]);
+  const [mockHistory, setMockHistory] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
 
-  const mockHistory = [
-    {
-      id: 1,
-      quoteId: 'Q001',
-      action: 'Quote Created',
-      user: 'Admin',
-      timestamp: '2025-01-15 10:30 AM',
-      details: 'Initial quote raised for Health Insurance'
-    },
-    {
-      id: 2,
-      quoteId: 'Q002',
-      action: 'Status Changed',
-      user: 'Manager',
-      timestamp: '2025-01-16 02:15 PM',
-      details: 'Status updated from Pending to Approved'
-    },
-    {
-      id: 3,
-      quoteId: 'Q003',
-      action: 'Quote Rejected',
-      user: 'Underwriter',
-      timestamp: '2025-01-17 11:45 AM',
-      details: 'Quote rejected due to high risk profile'
-    },
-    {
-      id: 4,
-      quoteId: 'Q004',
-      action: 'Policy Issued',
-      user: 'System',
-      timestamp: '2025-01-19 11:00 AM',
-      details: 'Quote converted to policy POL/2025/001234'
-    },
-    {
-      id: 5,
-      quoteId: 'Q005',
-      action: 'Quote Drafted',
-      user: 'Priya Patel',
-      timestamp: '2025-01-20 02:00 PM',
-      details: 'New quote created for Term Insurance'
-    }
-  ];
+  // fetch quotes + history on mount
+  useEffect(() => {
+    let mounted = true;
+    const load = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const res = await QuoteService.listQuotes();
+        // service may return { items, total } or an array
+        const items = Array.isArray(res) ? res : (res.items || []);
+        if (!mounted) return;
+        setQuotes(items);
+
+        try {
+          const h = await QuoteService.listHistory();
+          if (!mounted) return;
+          setMockHistory(Array.isArray(h) ? h : (h.items || []));
+        } catch (histErr) {
+          // ignore history error but log
+          console.warn('Failed to load history', histErr);
+        }
+      } catch (err) {
+        console.error('Failed to load quotes', err);
+        if (mounted) setError(err.message || 'Failed to load quotes');
+      } finally {
+        if (mounted) setLoading(false);
+      }
+    };
+
+    load();
+
+    return () => { mounted = false; };
+  }, []);
 
   // Statistics
   const stats = useMemo(() => {
@@ -297,12 +139,14 @@ const QuoteManagement = () => {
     const lostQuotes = quotes.filter(q => q.status === 'Lost').length;
 
     const totalValue = quotes.reduce((acc, q) => {
-      const amount = parseInt(q.quoteAmount.replace(/[₹,]/g, ''));
+      // defensive parsing
+      const amt = (q.quoteAmount || '').toString().replace(/[₹,]/g, '');
+      const amount = parseInt(amt || '0', 10);
       return acc + (isNaN(amount) ? 0 : amount);
     }, 0);
 
     const conversionRate = totalQuotes > 0
-      ? ((convertedQuotes / (totalQuotes - draftQuotes)) * 100).toFixed(1)
+      ? ((convertedQuotes / Math.max(1, (totalQuotes - draftQuotes))) * 100).toFixed(1)
       : 0;
 
     const avgQuoteValue = totalQuotes > 0 ? Math.round(totalValue / totalQuotes) : 0;
@@ -325,9 +169,9 @@ const QuoteManagement = () => {
   const filteredQuotes = useMemo(() => {
     return quotes.filter(quote => {
       const matchesSearch = searchTerm === '' ||
-        quote.customerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        quote.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        quote.productPlan.toLowerCase().includes(searchTerm.toLowerCase());
+        (quote.customerName || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (quote.id || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (quote.productPlan || '').toLowerCase().includes(searchTerm.toLowerCase());
 
       const matchesStatus = statusFilter === 'all' || quote.status === statusFilter;
 
@@ -343,27 +187,52 @@ const QuoteManagement = () => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
-  const handleSubmit = () => {
-    const newQuote = {
-      id: `Q${String(quotes.length + 1).padStart(3, '0')}`,
-      leadId: formData.leadId || `L${1000 + quotes.length}`,
+  // Activity logging helper function
+  const addActivityHistory = (quoteId, action, details = '') => {
+    const activityEntry = {
+      id: `activity-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      quoteId: quoteId,
+      action: action,
+      user: 'Current User',
+      timestamp: new Date().toLocaleString('en-GB', {
+        day: '2-digit',
+        month: 'short',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      }),
+      details: details
+    };
+
+    setMockHistory(prev => [activityEntry, ...prev]);
+  };
+
+  // submit with QuoteService.createQuote
+  const handleSubmit = async () => {
+    // Validate required fields
+    if (!formData.customerName || !formData.customerEmail || !formData.customerPhone ||
+      !formData.productType || !formData.productPlan || !formData.quoteAmount) {
+      setError('Please fill in all required fields');
+      return;
+    }
+
+    const payload = {
+      leadId: formData.leadId || `L${Date.now()}`,
       customerName: formData.customerName,
       customerEmail: formData.customerEmail,
       customerPhone: formData.customerPhone,
       productType: formData.productType,
       productPlan: formData.productPlan,
-      coverageAmount: formData.coverageAmount,
-      premium: formData.premium,
-      sumInsured: formData.sumInsured,
-      tenure: formData.tenure,
-      quoteAmount: formData.quoteAmount.startsWith('₹') ? formData.quoteAmount : `₹${formData.quoteAmount}`,
+      coverageAmount: formData.coverageAmount || '₹0',
+      premium: formData.premium || '₹0',
+      sumInsured: formData.sumInsured || '₹0',
+      tenure: formData.tenure || '1 Year',
+      quoteAmount: formData.quoteAmount && formData.quoteAmount.toString().startsWith('₹') ? formData.quoteAmount : `₹${formData.quoteAmount}`,
       status: 'Draft',
       validUntil: '',
-      raisedDate: new Date().toISOString().split('T')[0],
       raisedBy: 'Current User',
-      lastUpdated: new Date().toISOString().split('T')[0],
-      version: 1,
-      conversionProbability: 50,
+      raisedDate: new Date().toLocaleDateString('en-GB'), // Add raised date
+      conversionProbability: 50, // Default conversion probability for new quotes
       attachments: [],
       timeline: [
         {
@@ -375,27 +244,93 @@ const QuoteManagement = () => {
       ]
     };
 
-    setQuotes([newQuote, ...quotes]);
-    setFormData({
-      customerName: '',
-      customerEmail: '',
-      customerPhone: '',
-      leadId: '',
-      productType: '',
-      productPlan: '',
-      coverageAmount: '',
-      premium: '',
-      sumInsured: '',
-      tenure: '1',
-      quoteAmount: '',
-      validityPeriod: '30',
-      remarks: '',
-      ageOfInsured: '',
-      medicalHistory: '',
-      vehicleDetails: '',
-      previousInsurance: ''
-    });
-    setCurrentTab(0);
+    setLoading(true);
+    setError(null);
+    try {
+      // Check if we're editing an existing quote
+      if (selectedQuote && selectedQuote.id) {
+        // UPDATE existing quote
+        const updatePayload = {
+          ...selectedQuote,
+          customerName: formData.customerName,
+          customerEmail: formData.customerEmail,
+          customerPhone: formData.customerPhone,
+          productType: formData.productType,
+          productPlan: formData.productPlan,
+          coverageAmount: formData.coverageAmount || '₹0',
+          premium: formData.premium || '₹0',
+          sumInsured: formData.sumInsured || '₹0',
+          tenure: formData.tenure || '1 Year',
+          quoteAmount: formData.quoteAmount && formData.quoteAmount.toString().startsWith('₹') ? formData.quoteAmount : `₹${formData.quoteAmount}`,
+          remarks: formData.remarks,
+          ageOfInsured: formData.ageOfInsured,
+          medicalHistory: formData.medicalHistory,
+          vehicleDetails: formData.vehicleDetails,
+          previousInsurance: formData.previousInsurance,
+          timeline: [
+            ...(selectedQuote.timeline || []),
+            {
+              action: 'Quote Updated',
+              user: 'Current User',
+              timestamp: new Date().toLocaleString(),
+              details: 'Quote details modified'
+            }
+          ]
+        };
+
+        // Update the quote in the list
+        setQuotes(prev => prev.map(q => q.id === selectedQuote.id ? updatePayload : q));
+
+        // Log activity
+        addActivityHistory(
+          selectedQuote.id,
+          'Quote Updated',
+          `Quote details modified for ${formData.customerName}`
+        );
+
+        // Clear selected quote
+        setSelectedQuote(null);
+      } else {
+        // CREATE new quote
+        const created = await QuoteService.createQuote(payload);
+        // QuoteService mock returns created item; prepend to local list
+        setQuotes(prev => [created, ...prev]);
+
+        // Log activity
+        addActivityHistory(
+          created.id,
+          'Quote Created',
+          `New quote created for ${formData.customerName} - ${formData.productType} (${formData.productPlan})`
+        );
+      }
+
+      // reset form
+      setFormData({
+        customerName: '',
+        customerEmail: '',
+        customerPhone: '',
+        leadId: '',
+        productType: '',
+        productPlan: '',
+        coverageAmount: '',
+        premium: '',
+        sumInsured: '',
+        tenure: '1',
+        quoteAmount: '',
+        validityPeriod: '30',
+        remarks: '',
+        ageOfInsured: '',
+        medicalHistory: '',
+        vehicleDetails: '',
+        previousInsurance: ''
+      });
+      setCurrentTab(0);
+    } catch (err) {
+      console.error('Quote operation error', err);
+      setError(err.message || 'Failed to process quote');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleViewQuote = (quote) => {
@@ -412,28 +347,33 @@ const QuoteManagement = () => {
     setMenuAnchor(null);
   };
 
-  const handleStatusChange = (newStatus) => {
-    if (selectedQuote) {
-      setQuotes(quotes.map(q =>
-        q.id === selectedQuote.id
-          ? {
-              ...q,
-              status: newStatus,
-              lastUpdated: new Date().toISOString().split('T')[0],
-              timeline: [
-                ...q.timeline,
-                {
-                  action: `Status Changed to ${newStatus}`,
-                  user: 'Current User',
-                  timestamp: new Date().toLocaleString(),
-                  details: `Quote status updated`
-                }
-              ]
-            }
-          : q
-      ));
+  // change status via QuoteService.changeStatus
+  const handleStatusChange = async (newStatus) => {
+    if (!selectedQuote) {
+      handleMenuClose();
+      return;
     }
-    handleMenuClose();
+    setLoading(true);
+    setError(null);
+    try {
+      const updated = await QuoteService.changeStatus(selectedQuote.id, newStatus, `Changed via UI to ${newStatus}`);
+      // update local list and selectedQuote
+      setQuotes(prev => prev.map(q => (q.id === updated.id ? updated : q)));
+      setSelectedQuote(updated);
+
+      // Log activity
+      addActivityHistory(
+        selectedQuote.id,
+        'Status Changed',
+        `Status changed from ${selectedQuote.status} to ${newStatus}`
+      );
+    } catch (err) {
+      console.error('changeStatus error', err);
+      setError(err.message || 'Failed to change status');
+    } finally {
+      setLoading(false);
+      handleMenuClose();
+    }
   };
 
   const toggleExpandCard = (quoteId) => {
@@ -464,6 +404,420 @@ const QuoteManagement = () => {
       case 'Converted': return <ConvertedIcon />;
       case 'Lost': return <LostIcon />;
       default: return <QuoteIcon />;
+    }
+  };
+
+  // helper: send quote (not wired in UI automatically)
+  const handleSendQuote = async (quoteId, opts = { channel: 'email' }) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await QuoteService.sendQuote(quoteId, opts);
+      // optionally reload quote
+      try {
+        const updated = await QuoteService.getQuote(quoteId);
+        setQuotes(prev => prev.map(q => (q.id === updated.id ? updated : q)));
+        setSelectedQuote(updated);
+      } catch (e) {
+        // ignore
+      }
+      return res;
+    } catch (err) {
+      console.error('sendQuote error', err);
+      setError(err.message || 'Failed to send quote');
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // helper: download PDF (generates HTML for now since we don't have a real PDF service)
+  const handleDownloadPDF = async (quoteId) => {
+    setError(null);
+    try {
+      // Since we don't have a real PDF service, generate an HTML document
+      // that can be opened in browser and printed as PDF
+      const quote = quotes.find(q => q.id === quoteId) || selectedQuote;
+
+      if (!quote) {
+        setError('Quote not found');
+        return;
+      }
+
+      // Generate HTML content for the quote
+      const htmlContent = `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Quote ${quote.id}</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 800px;
+      margin: 40px auto;
+      padding: 20px;
+      line-height: 1.6;
+    }
+    .header {
+      text-align: center;
+      border-bottom: 3px solid #1976d2;
+      padding-bottom: 20px;
+      margin-bottom: 30px;
+    }
+    .header h1 {
+      color: #1976d2;
+      margin: 0;
+    }
+    .section {
+      margin-bottom: 25px;
+    }
+    .section-title {
+      background: #f5f5f5;
+      padding: 10px;
+      font-weight: bold;
+      border-left: 4px solid #1976d2;
+      margin-bottom: 15px;
+    }
+    .info-row {
+      display: flex;
+      padding: 8px 0;
+      border-bottom: 1px solid #eee;
+    }
+    .info-label {
+      font-weight: bold;
+      width: 200px;
+      color: #555;
+    }
+    .info-value {
+      flex: 1;
+    }
+    .footer {
+      margin-top: 40px;
+      padding-top: 20px;
+      border-top: 2px solid #1976d2;
+      text-align: center;
+      color: #666;
+      font-size: 12px;
+    }
+    @media print {
+      body {
+        margin: 0;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>Insurance Quote</h1>
+    <p>Quote ID: ${quote.id}</p>
+    <p>Generated on: ${new Date().toLocaleDateString()}</p>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Customer Information</div>
+    <div class="info-row">
+      <div class="info-label">Customer Name:</div>
+      <div class="info-value">${quote.customerName || 'N/A'}</div>
+    </div>
+    <div class="info-row">
+      <div class="info-label">Email:</div>
+      <div class="info-value">${quote.customerEmail || 'N/A'}</div>
+    </div>
+    <div class="info-row">
+      <div class="info-label">Phone:</div>
+      <div class="info-value">${quote.customerPhone || 'N/A'}</div>
+    </div>
+    <div class="info-row">
+      <div class="info-label">Lead ID:</div>
+      <div class="info-value">${quote.leadId || 'N/A'}</div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Product Details</div>
+    <div class="info-row">
+      <div class="info-label">Product Type:</div>
+      <div class="info-value">${quote.productType || 'N/A'}</div>
+    </div>
+    <div class="info-row">
+      <div class="info-label">Plan:</div>
+      <div class="info-value">${quote.productPlan || 'N/A'}</div>
+    </div>
+    <div class="info-row">
+      <div class="info-label">Tenure:</div>
+      <div class="info-value">${quote.tenure || 'N/A'}</div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Financial Details</div>
+    <div class="info-row">
+      <div class="info-label">Coverage Amount:</div>
+      <div class="info-value">${quote.coverageAmount || 'N/A'}</div>
+    </div>
+    <div class="info-row">
+      <div class="info-label">Sum Insured:</div>
+      <div class="info-value">${quote.sumInsured || 'N/A'}</div>
+    </div>
+    <div class="info-row">
+      <div class="info-label">Premium (Annual):</div>
+      <div class="info-value">${quote.premium || 'N/A'}</div>
+    </div>
+    <div class="info-row">
+      <div class="info-label">Total Quote Amount:</div>
+      <div class="info-value"><strong>${quote.quoteAmount || 'N/A'}</strong></div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Quote Status</div>
+    <div class="info-row">
+      <div class="info-label">Status:</div>
+      <div class="info-value">${quote.status || 'N/A'}</div>
+    </div>
+    <div class="info-row">
+      <div class="info-label">Raised Date:</div>
+      <div class="info-value">${quote.raisedDate || 'N/A'}</div>
+    </div>
+    <div class="info-row">
+      <div class="info-label">Raised By:</div>
+      <div class="info-value">${quote.raisedBy || 'N/A'}</div>
+    </div>
+  </div>
+
+  ${quote.remarks ? `
+  <div class="section">
+    <div class="section-title">Remarks</div>
+    <p>${quote.remarks}</p>
+  </div>
+  ` : ''}
+
+  <div class="footer">
+    <p>This is a system-generated quote document.</p>
+    <p>For any queries, please contact our support team.</p>
+  </div>
+</body>
+</html>
+      `;
+
+      // Create blob with HTML content
+      const blob = new Blob([htmlContent], { type: 'text/html' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `Quote_${quoteId}.html`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error('downloadPDF error', err);
+      setError(err.message || 'Failed to download quote');
+    }
+  };
+
+  // helper: upload attachment (not wired in UI automatically)
+  const handleUploadAttachment = async (quoteId, file) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await QuoteService.uploadAttachment(quoteId, file);
+      // refresh quote
+      const updated = await QuoteService.getQuote(quoteId);
+      setQuotes(prev => prev.map(q => (q.id === updated.id ? updated : q)));
+      setSelectedQuote(updated);
+      return res;
+    } catch (err) {
+      console.error('uploadAttachment error', err);
+      setError(err.message || 'Failed to upload attachment');
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Edit Quote - populate form and switch to create tab
+  const handleEditQuote = (quote) => {
+    if (!quote) return;
+
+    // Populate form with quote data
+    setFormData({
+      customerName: quote.customerName || '',
+      customerEmail: quote.customerEmail || '',
+      customerPhone: quote.customerPhone || '',
+      leadId: quote.leadId || '',
+      productType: quote.productType || '',
+      productPlan: quote.productPlan || '',
+      coverageAmount: quote.coverageAmount?.replace('₹', '') || '',
+      premium: quote.premium?.replace('₹', '') || '',
+      sumInsured: quote.sumInsured?.replace('₹', '') || '',
+      tenure: quote.tenure || '1',
+      quoteAmount: quote.quoteAmount?.replace('₹', '') || '',
+      validityPeriod: '30',
+      remarks: quote.remarks || '',
+      ageOfInsured: quote.ageOfInsured || '',
+      medicalHistory: quote.medicalHistory || '',
+      vehicleDetails: quote.vehicleDetails || '',
+      previousInsurance: quote.previousInsurance || ''
+    });
+
+    // Store the quote ID for updating instead of creating new
+    setSelectedQuote(quote);
+
+    // Switch to raise quote tab
+    setCurrentTab(1);
+    handleMenuClose();
+  };
+
+  // Duplicate Quote - create a copy with new ID
+  const handleDuplicateQuote = async (quote) => {
+    if (!quote) return;
+
+    // Calculate valid until date (30 days from now)
+    const validUntilDate = new Date();
+    validUntilDate.setDate(validUntilDate.getDate() + 30);
+
+    const duplicatedQuote = {
+      ...quote,
+      id: `${quote.id}-duplicated`, // Use original ID with -duplicated suffix
+      status: 'Draft',
+      raisedDate: new Date().toLocaleDateString('en-GB'),
+      validUntil: validUntilDate.toLocaleDateString('en-GB'),
+      policyNumber: undefined,
+      timeline: [
+        {
+          action: 'Quote Duplicated',
+          user: 'Current User',
+          timestamp: new Date().toLocaleString(),
+          details: `Duplicated from ${quote.id}`
+        }
+      ]
+    };
+
+    setLoading(true);
+    try {
+      const created = await QuoteService.createQuote(duplicatedQuote);
+      setQuotes(prev => [created, ...prev]);
+
+      // Log activity
+      addActivityHistory(
+        created.id,
+        'Quote Duplicated',
+        `Duplicated from quote ${quote.id} for ${quote.customerName}`
+      );
+
+      handleMenuClose();
+    } catch (err) {
+      console.error('Duplicate quote error', err);
+      setError(err.message || 'Failed to duplicate quote');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Print Quote - open print dialog
+  const handlePrintQuote = (quote) => {
+    if (!quote) return;
+
+    // Store selected quote and open details dialog for printing
+    setSelectedQuote(quote);
+    setOpenDetailsDialog(true);
+    handleMenuClose();
+
+    // Trigger print after a short delay to ensure dialog is rendered
+    setTimeout(() => {
+      window.print();
+    }, 500);
+  };
+
+  // Delete Quote - show confirmation dialog
+  const handleDeleteQuote = (quote) => {
+    if (!quote) return;
+    setSelectedQuote(quote);
+    setDeleteConfirmDialog(true);
+  };
+
+  // Confirm Delete Quote
+  const handleConfirmDelete = () => {
+    if (!selectedQuote) return;
+
+    // Log activity before deleting
+    addActivityHistory(
+      selectedQuote.id,
+      'Quote Deleted',
+      `Quote deleted for ${selectedQuote.customerName} - ${selectedQuote.productType}`
+    );
+
+    setQuotes(prev => prev.filter(q => q.id !== selectedQuote.id));
+    setDeleteConfirmDialog(false);
+    handleMenuClose();
+    setSelectedQuote(null);
+  };
+
+  // Send Quote via Menu - Show preview first
+  const handleSendQuoteFromMenu = async () => {
+    if (!selectedQuote) return;
+
+    // Validate customer email
+    if (!selectedQuote.customerEmail) {
+      setSnackbar({
+        open: true,
+        message: 'Customer email is missing. Please update the quote with a valid email address.',
+        severity: 'error'
+      });
+      handleMenuClose();
+      return;
+    }
+
+    try {
+      setLoading(true);
+      // Get email preview from service
+      const result = await handleSendQuote(selectedQuote.id, {
+        channel: 'email',
+        to: selectedQuote.customerEmail
+      });
+
+      if (result && result.emailPreview) {
+        // Show email preview dialog
+        setEmailPreviewData({
+          quote: selectedQuote,
+          preview: result.emailPreview,
+          result: result
+        });
+        setEmailPreviewDialog(true);
+
+        // Log activity
+        addActivityHistory(
+          selectedQuote.id,
+          'Quote Sent',
+          `Quote sent via email to ${selectedQuote.customerEmail}`
+        );
+      }
+
+      handleMenuClose();
+    } catch (err) {
+      console.error('Error preparing email:', err);
+      setSnackbar({
+        open: true,
+        message: err.message || 'Failed to prepare email. Please try again.',
+        severity: 'error'
+      });
+      handleMenuClose();
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Download PDF via Menu
+  const handleDownloadPDFFromMenu = async () => {
+    if (!selectedQuote) return;
+
+    try {
+      await handleDownloadPDF(selectedQuote.id);
+      handleMenuClose();
+    } catch (err) {
+      // Error already handled in handleDownloadPDF
     }
   };
 
@@ -546,10 +900,10 @@ const QuoteManagement = () => {
                     quote.status === 'Converted'
                       ? theme.palette.info.main
                       : quote.status === 'Approved'
-                      ? theme.palette.success.main
-                      : quote.status === 'Rejected' || quote.status === 'Lost'
-                      ? theme.palette.error.main
-                      : theme.palette.grey[300],
+                        ? theme.palette.success.main
+                        : quote.status === 'Rejected' || quote.status === 'Lost'
+                          ? theme.palette.error.main
+                          : theme.palette.grey[300],
                     0.3
                   )}`,
                   transition: 'all 0.3s ease',
@@ -567,16 +921,16 @@ const QuoteManagement = () => {
                           quote.status === 'Converted'
                             ? theme.palette.info.main
                             : quote.status === 'Approved'
-                            ? theme.palette.success.main
-                            : theme.palette.primary.main,
+                              ? theme.palette.success.main
+                              : theme.palette.primary.main,
                           0.1
                         ),
                         color:
                           quote.status === 'Converted'
                             ? 'info.main'
                             : quote.status === 'Approved'
-                            ? 'success.main'
-                            : 'primary.main',
+                              ? 'success.main'
+                              : 'primary.main',
                       }}
                     >
                       {getStatusIcon(quote.status)}
@@ -666,12 +1020,12 @@ const QuoteManagement = () => {
                             Conversion Probability
                           </Typography>
                           <Typography variant="caption" fontWeight="600">
-                            {quote.conversionProbability}%
+                            {quote.conversionProbability || 0}%
                           </Typography>
                         </Stack>
                         <LinearProgress
                           variant="determinate"
-                          value={quote.conversionProbability}
+                          value={quote.conversionProbability || 0}
                           sx={{
                             height: 6,
                             borderRadius: 3,
@@ -717,12 +1071,28 @@ const QuoteManagement = () => {
                   </Button>
                   <Stack direction="row" spacing={0.5}>
                     <Tooltip title="Send Email">
-                      <IconButton size="small" color="primary">
+                      <IconButton
+                        size="small"
+                        color="primary"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setSelectedQuote(quote);
+                          handleSendQuoteFromMenu();
+                        }}
+                      >
                         <SendIcon fontSize="small" />
                       </IconButton>
                     </Tooltip>
                     <Tooltip title="Download PDF">
-                      <IconButton size="small" color="primary">
+                      <IconButton
+                        size="small"
+                        color="primary"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setSelectedQuote(quote);
+                          handleDownloadPDFFromMenu();
+                        }}
+                      >
                         <DownloadIcon fontSize="small" />
                       </IconButton>
                     </Tooltip>
@@ -1057,10 +1427,10 @@ const QuoteManagement = () => {
               <Button
                 variant="contained"
                 size="large"
-                startIcon={<AddIcon />}
+                startIcon={selectedQuote ? <EditIcon /> : <AddIcon />}
                 onClick={handleSubmit}
               >
-                Create Quote
+                {selectedQuote ? 'Update Quote' : 'Create Quote'}
               </Button>
             </Stack>
           </Grid>
@@ -1093,15 +1463,15 @@ const QuoteManagement = () => {
                     entry.action.includes('Created') || entry.action.includes('Issued')
                       ? 'success'
                       : entry.action.includes('Rejected')
-                      ? 'error'
-                      : 'primary'
+                        ? 'error'
+                        : 'primary'
                   }
                 >
                   {entry.action.includes('Created') ? <AddIcon fontSize="small" /> :
-                   entry.action.includes('Changed') ? <EditIcon fontSize="small" /> :
-                   entry.action.includes('Rejected') ? <RejectedIcon fontSize="small" /> :
-                   entry.action.includes('Issued') ? <ConvertedIcon fontSize="small" /> :
-                   <QuoteIcon fontSize="small" />}
+                    entry.action.includes('Changed') ? <EditIcon fontSize="small" /> :
+                      entry.action.includes('Rejected') ? <RejectedIcon fontSize="small" /> :
+                        entry.action.includes('Issued') ? <ConvertedIcon fontSize="small" /> :
+                          <QuoteIcon fontSize="small" />}
                 </TimelineDot>
                 {index < mockHistory.length - 1 && <TimelineConnector />}
               </TimelineSeparator>
@@ -1161,6 +1531,14 @@ const QuoteManagement = () => {
           New Quote
         </Button>
       </Box>
+
+      {/* show loading / error as logic-only — UI left untouched otherwise */}
+      {loading && <LinearProgress sx={{ mb: 2 }} />}
+      {error && (
+        <Alert severity="error" onClose={() => setError(null)} sx={{ mb: 2 }}>
+          {error}
+        </Alert>
+      )}
 
       {/* Enhanced Statistics Cards */}
       <Grid container spacing={3} sx={{ mb: 4 }}>
@@ -1344,51 +1722,6 @@ const QuoteManagement = () => {
         {currentTab === 2 && renderQuoteHistory()}
       </Box>
 
-      {/* Context Menu */}
-      <Menu anchorEl={menuAnchor} open={Boolean(menuAnchor)} onClose={handleMenuClose}>
-        {selectedQuote && selectedQuote.status === 'Draft' && (
-          <MenuItem onClick={() => handleStatusChange('Pending')}>
-            <PendingIcon sx={{ mr: 1 }} fontSize="small" /> Submit for Approval
-          </MenuItem>
-        )}
-        {selectedQuote && selectedQuote.status === 'Pending' && (
-          <>
-            <MenuItem onClick={() => handleStatusChange('Approved')}>
-              <ApprovedIcon sx={{ mr: 1 }} fontSize="small" color="success" /> Approve Quote
-            </MenuItem>
-            <MenuItem onClick={() => handleStatusChange('Rejected')}>
-              <RejectedIcon sx={{ mr: 1 }} fontSize="small" color="error" /> Reject Quote
-            </MenuItem>
-          </>
-        )}
-        {selectedQuote && selectedQuote.status === 'Approved' && (
-          <>
-            <MenuItem onClick={() => handleStatusChange('Converted')}>
-              <ConvertedIcon sx={{ mr: 1 }} fontSize="small" color="info" /> Convert to Policy
-            </MenuItem>
-            <MenuItem onClick={() => handleStatusChange('Lost')}>
-              <LostIcon sx={{ mr: 1 }} fontSize="small" color="error" /> Mark as Lost
-            </MenuItem>
-          </>
-        )}
-        <Divider />
-        <MenuItem onClick={handleMenuClose}>
-          <EditIcon sx={{ mr: 1 }} fontSize="small" /> Edit Quote
-        </MenuItem>
-        <MenuItem onClick={handleMenuClose}>
-          <CopyIcon sx={{ mr: 1 }} fontSize="small" /> Duplicate Quote
-        </MenuItem>
-        <MenuItem onClick={handleMenuClose}>
-          <SendIcon sx={{ mr: 1 }} fontSize="small" /> Send to Customer
-        </MenuItem>
-        <MenuItem onClick={handleMenuClose}>
-          <PrintIcon sx={{ mr: 1 }} fontSize="small" /> Print Quote
-        </MenuItem>
-        <Divider />
-        <MenuItem onClick={handleMenuClose}>
-          <DeleteIcon sx={{ mr: 1 }} fontSize="small" color="error" /> Delete Quote
-        </MenuItem>
-      </Menu>
 
       {/* Quote Details Dialog */}
       <Dialog
@@ -1608,17 +1941,315 @@ const QuoteManagement = () => {
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setOpenDetailsDialog(false)}>Close</Button>
-          <Button variant="outlined" startIcon={<PrintIcon />}>
+          <Button
+            variant="outlined"
+            startIcon={<PrintIcon />}
+            onClick={() => handlePrintQuote(selectedQuote)}
+          >
             Print
           </Button>
-          <Button variant="outlined" startIcon={<DownloadIcon />}>
+          <Button
+            variant="outlined"
+            startIcon={<DownloadIcon />}
+            onClick={handleDownloadPDFFromMenu}
+          >
             Download PDF
           </Button>
-          <Button variant="contained" startIcon={<SendIcon />}>
+          <Button
+            variant="contained"
+            startIcon={<SendIcon />}
+            onClick={handleSendQuoteFromMenu}
+          >
             Send to Customer
           </Button>
         </DialogActions>
       </Dialog>
+
+      {/* Quote Actions Menu */}
+      <Menu
+        anchorEl={menuAnchor}
+        open={Boolean(menuAnchor)}
+        onClose={handleMenuClose}
+        PaperProps={{
+          sx: {
+            borderRadius: 2,
+            minWidth: 200,
+            boxShadow: '0 4px 20px rgba(0,0,0,0.1)'
+          }
+        }}
+      >
+        {/* Status Change Options */}
+        {selectedQuote && selectedQuote.status === 'Draft' && (
+          <>
+            <MenuItem onClick={() => handleStatusChange('Pending')}>
+              <ListItemIcon>
+                <PendingIcon fontSize="small" />
+              </ListItemIcon>
+              <ListItemText>Submit for Approval</ListItemText>
+            </MenuItem>
+            <Divider />
+          </>
+        )}
+        {selectedQuote && selectedQuote.status === 'Pending' && (
+          <>
+            <MenuItem onClick={() => handleStatusChange('Approved')}>
+              <ListItemIcon>
+                <ApprovedIcon fontSize="small" color="success" />
+              </ListItemIcon>
+              <ListItemText>Approve Quote</ListItemText>
+            </MenuItem>
+            <MenuItem onClick={() => handleStatusChange('Rejected')}>
+              <ListItemIcon>
+                <RejectedIcon fontSize="small" color="error" />
+              </ListItemIcon>
+              <ListItemText>Reject Quote</ListItemText>
+            </MenuItem>
+            <Divider />
+          </>
+        )}
+        {selectedQuote && selectedQuote.status === 'Approved' && (
+          <>
+            <MenuItem onClick={() => handleStatusChange('Converted')}>
+              <ListItemIcon>
+                <ConvertedIcon fontSize="small" color="info" />
+              </ListItemIcon>
+              <ListItemText>Convert to Policy</ListItemText>
+            </MenuItem>
+            <MenuItem onClick={() => handleStatusChange('Lost')}>
+              <ListItemIcon>
+                <LostIcon fontSize="small" color="error" />
+              </ListItemIcon>
+              <ListItemText>Mark as Lost</ListItemText>
+            </MenuItem>
+            <Divider />
+          </>
+        )}
+
+        {/* Quote Actions */}
+        <MenuItem onClick={() => handleEditQuote(selectedQuote)}>
+          <ListItemIcon>
+            <EditIcon fontSize="small" />
+          </ListItemIcon>
+          <ListItemText>Edit Quote</ListItemText>
+        </MenuItem>
+        <MenuItem onClick={() => handleDuplicateQuote(selectedQuote)}>
+          <ListItemIcon>
+            <ContentCopy fontSize="small" />
+          </ListItemIcon>
+          <ListItemText>Duplicate Quote</ListItemText>
+        </MenuItem>
+        <Divider />
+        <MenuItem onClick={handleSendQuoteFromMenu}>
+          <ListItemIcon>
+            <SendIcon fontSize="small" />
+          </ListItemIcon>
+          <ListItemText>Send to Customer</ListItemText>
+        </MenuItem>
+        <MenuItem onClick={handleDownloadPDFFromMenu}>
+          <ListItemIcon>
+            <DownloadIcon fontSize="small" />
+          </ListItemIcon>
+          <ListItemText>Download PDF</ListItemText>
+        </MenuItem>
+        <MenuItem onClick={() => handlePrintQuote(selectedQuote)}>
+          <ListItemIcon>
+            <PrintIcon fontSize="small" />
+          </ListItemIcon>
+          <ListItemText>Print Quote</ListItemText>
+        </MenuItem>
+        <Divider />
+        <MenuItem onClick={() => handleDeleteQuote(selectedQuote)} sx={{ color: 'error.main' }}>
+          <ListItemIcon>
+            <DeleteIcon fontSize="small" color="error" />
+          </ListItemIcon>
+          <ListItemText>Delete Quote</ListItemText>
+        </MenuItem>
+      </Menu>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog
+        open={deleteConfirmDialog}
+        onClose={() => setDeleteConfirmDialog(false)}
+        maxWidth="xs"
+        fullWidth
+      >
+        <DialogTitle>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <DeleteIcon color="error" />
+            <Typography variant="h6">Delete Quote</Typography>
+          </Box>
+        </DialogTitle>
+        <DialogContent>
+          <Typography variant="body1" gutterBottom>
+            Are you sure you want to delete this quote?
+          </Typography>
+          {selectedQuote && (
+            <Box sx={{ mt: 2, p: 2, bgcolor: 'background.default', borderRadius: 1 }}>
+              <Typography variant="body2" color="text.secondary">
+                <strong>Quote ID:</strong> {selectedQuote.id}
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                <strong>Customer:</strong> {selectedQuote.customerName}
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                <strong>Amount:</strong> {selectedQuote.quoteAmount}
+              </Typography>
+            </Box>
+          )}
+          <Alert severity="warning" sx={{ mt: 2 }}>
+            This action cannot be undone.
+          </Alert>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setDeleteConfirmDialog(false)}>
+            Cancel
+          </Button>
+          <Button
+            onClick={handleConfirmDelete}
+            color="error"
+            variant="contained"
+            startIcon={<DeleteIcon />}
+          >
+            Delete
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Email Preview Dialog */}
+      <Dialog
+        open={emailPreviewDialog}
+        onClose={() => setEmailPreviewDialog(false)}
+        maxWidth="md"
+        fullWidth
+        PaperProps={{
+          sx: {
+            borderRadius: 3,
+            maxHeight: '90vh'
+          }
+        }}
+      >
+        <DialogTitle>
+          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <EmailIcon color="primary" />
+              <Typography variant="h6">Email Preview</Typography>
+            </Box>
+            <IconButton onClick={() => setEmailPreviewDialog(false)} size="small">
+              <CloseIcon />
+            </IconButton>
+          </Box>
+        </DialogTitle>
+        <DialogContent dividers>
+          {emailPreviewData && (
+            <Box>
+              {/* Email Metadata */}
+              <Paper sx={{ p: 2, mb: 2, bgcolor: 'background.default', borderRadius: 2 }}>
+                <Grid container spacing={2}>
+                  <Grid item xs={12}>
+                    <Typography variant="caption" color="text.secondary">From</Typography>
+                    <Typography variant="body2" fontWeight="600">
+                      {emailPreviewData.preview.from}
+                    </Typography>
+                  </Grid>
+                  <Grid item xs={12}>
+                    <Typography variant="caption" color="text.secondary">To</Typography>
+                    <Typography variant="body2" fontWeight="600">
+                      {emailPreviewData.preview.to}
+                    </Typography>
+                  </Grid>
+                  <Grid item xs={12}>
+                    <Typography variant="caption" color="text.secondary">Subject</Typography>
+                    <Typography variant="body2" fontWeight="600">
+                      {emailPreviewData.preview.subject}
+                    </Typography>
+                  </Grid>
+                </Grid>
+              </Paper>
+
+              {/* Email Content Preview */}
+              <Box sx={{
+                border: '1px solid',
+                borderColor: 'divider',
+                borderRadius: 2,
+                overflow: 'hidden',
+                bgcolor: '#f5f5f5'
+              }}>
+                <Box sx={{
+                  p: 1.5,
+                  bgcolor: 'background.paper',
+                  borderBottom: '1px solid',
+                  borderColor: 'divider',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 1
+                }}>
+                  <Typography variant="caption" fontWeight="600" color="text.secondary">
+                    EMAIL PREVIEW
+                  </Typography>
+                </Box>
+                <Box
+                  sx={{
+                    p: 2,
+                    maxHeight: '400px',
+                    overflow: 'auto',
+                    bgcolor: 'white'
+                  }}
+                  dangerouslySetInnerHTML={{ __html: emailPreviewData.preview.html }}
+                />
+              </Box>
+
+              {/* Success Info */}
+              <Alert severity="success" sx={{ mt: 2 }}>
+                <Typography variant="body2">
+                  Email is ready to be sent to <strong>{emailPreviewData.preview.to}</strong>
+                </Typography>
+              </Alert>
+            </Box>
+          )}
+        </DialogContent>
+        <DialogActions sx={{ p: 2.5 }}>
+          <Button
+            onClick={() => setEmailPreviewDialog(false)}
+            variant="outlined"
+          >
+            Close
+          </Button>
+          <Button
+            onClick={() => {
+              // Show success notification
+              setSnackbar({
+                open: true,
+                message: `Quote email sent successfully to ${emailPreviewData?.preview?.to}`,
+                severity: 'success'
+              });
+              setEmailPreviewDialog(false);
+              setEmailPreviewData(null);
+            }}
+            variant="contained"
+            startIcon={<SendIcon />}
+            color="primary"
+          >
+            Confirm & Send Email
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+
+      {/* Snackbar for notifications */}
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={4000}
+        onClose={() => setSnackbar({ ...snackbar, open: false })}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      >
+        <Alert
+          onClose={() => setSnackbar({ ...snackbar, open: false })}
+          severity={snackbar.severity}
+          sx={{ width: '100%' }}
+        >
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
     </Box>
   );
 };

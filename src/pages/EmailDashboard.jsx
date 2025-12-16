@@ -61,7 +61,7 @@ const EmailDashboard = () => {
   const [loaded, setLoaded] = useState(false);
   const [lastUpdated, setLastUpdated] = useState(new Date());
   const [isRefreshing, setIsRefreshing] = useState(false);
-  
+
   // Filter states
   const [filters, setFilters] = useState({
     dateFrom: null,
@@ -130,10 +130,10 @@ const EmailDashboard = () => {
 
     // Apply category filter
     if (filters.category !== 'all') {
-      const categoryMultiplier = filters.category === 'complaint' ? 1.5 : 
-                                 filters.category === 'feedback' ? 1.2 : 
-                                 filters.category === 'refund' ? 1.3 : 1.1;
-      
+      const categoryMultiplier = filters.category === 'complaint' ? 1.5 :
+        filters.category === 'feedback' ? 1.2 :
+          filters.category === 'refund' ? 1.3 : 1.1;
+
       Object.keys(baseData.categoryBreakdown).forEach(key => {
         if (key === filters.category) {
           baseData.categoryBreakdown[key] = Math.floor(baseData.categoryBreakdown[key] * categoryMultiplier);
@@ -145,9 +145,9 @@ const EmailDashboard = () => {
 
     // Apply status filter
     if (filters.status !== 'all') {
-      const statusMultiplier = filters.status === 'resolved' ? 1.4 : 
-                              filters.status === 'inProgress' ? 1.3 : 1.2;
-      
+      const statusMultiplier = filters.status === 'resolved' ? 1.4 :
+        filters.status === 'inProgress' ? 1.3 : 1.2;
+
       if (filters.status === 'resolved') {
         baseData.todayStats.resolved = Math.floor(baseData.todayStats.resolved * statusMultiplier);
         baseData.todayStats.inProgress = Math.floor(baseData.todayStats.inProgress * 0.6);
@@ -176,7 +176,7 @@ const EmailDashboard = () => {
       const refund = Math.floor((baseData.categoryBreakdown.refund / 7) * dayMultiplier * (Math.random() * 0.5 + 0.75));
       const appointment = Math.floor((baseData.categoryBreakdown.appointment / 7) * dayMultiplier * (Math.random() * 0.5 + 0.75));
       const uncategorized = Math.floor((baseData.categoryBreakdown.uncategorized / 7) * dayMultiplier * (Math.random() * 0.5 + 0.75));
-      
+
       return {
         day,
         complaint,
@@ -190,17 +190,17 @@ const EmailDashboard = () => {
 
     // Generate SLA compliance based on current performance
     const slaCompliance = [
-      { 
-        category: 'Within SLA', 
-        value: Math.floor(85 + Math.random() * 10), 
-        percentage: Math.floor(85 + Math.random() * 10), 
-        color: theme.palette.success.main 
+      {
+        category: 'Within SLA',
+        value: Math.floor(85 + Math.random() * 10),
+        percentage: Math.floor(85 + Math.random() * 10),
+        color: theme.palette.success.main
       },
-      { 
-        category: 'Breached SLA', 
-        value: Math.floor(10 + Math.random() * 10), 
-        percentage: Math.floor(10 + Math.random() * 10), 
-        color: theme.palette.error.main 
+      {
+        category: 'Breached SLA',
+        value: Math.floor(10 + Math.random() * 10),
+        percentage: Math.floor(10 + Math.random() * 10),
+        color: theme.palette.error.main
       }
     ];
 
@@ -216,7 +216,7 @@ const EmailDashboard = () => {
       const completed = Math.floor(assigned * (0.6 + Math.random() * 0.3));
       const pending = assigned - completed;
       const efficiency = Math.floor((completed / assigned) * 100);
-      
+
       return { ...agent, assigned, completed, pending, efficiency };
     });
 
@@ -254,10 +254,10 @@ const EmailDashboard = () => {
 
   const handleRefresh = async () => {
     setIsRefreshing(true);
-    
+
     // Simulate API call delay
     await new Promise(resolve => setTimeout(resolve, 1000));
-    
+
     const newData = generateFilteredData();
     setDashboardData(newData);
     setLastUpdated(new Date());
@@ -312,12 +312,12 @@ const EmailDashboard = () => {
     // Create a gradient background similar to renewal dashboard
     const gradientFrom = alpha(color, theme.palette.mode === 'dark' ? 0.7 : 0.9);
     const gradientTo = alpha(color, theme.palette.mode === 'dark' ? 0.4 : 0.6);
-    
+
     return (
       <Grow in={loaded} timeout={(index + 1) * 200}>
-        <Card 
-          sx={{ 
-            height: '100%', 
+        <Card
+          sx={{
+            height: '100%',
             background: `linear-gradient(135deg, ${gradientFrom} 0%, ${gradientTo} 100%)`,
             borderRadius: 4,
             boxShadow: `0 10px 20px ${alpha(color, 0.2)}`,
@@ -366,12 +366,12 @@ const EmailDashboard = () => {
     const icon = getCategoryIcon(category);
     const gradientFrom = alpha(color, theme.palette.mode === 'dark' ? 0.7 : 0.9);
     const gradientTo = alpha(color, theme.palette.mode === 'dark' ? 0.4 : 0.6);
-    
+
     return (
       <Grow in={loaded} timeout={1200 + index * 200}>
-        <Card 
-          sx={{ 
-            height: '100%', 
+        <Card
+          sx={{
+            height: '100%',
             background: `linear-gradient(135deg, ${gradientFrom} 0%, ${gradientTo} 100%)`,
             borderRadius: 4,
             boxShadow: `0 10px 20px ${alpha(color, 0.2)}`,
@@ -415,10 +415,10 @@ const EmailDashboard = () => {
       <Fade in={true} timeout={800}>
         <Box sx={{ px: 1 }}>
           {/* Header */}
-          <Box sx={{ 
-            display: 'flex', 
-            justifyContent: 'space-between', 
-            alignItems: 'center', 
+          <Box sx={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
             mb: 4
           }}>
             <Box>
@@ -430,21 +430,10 @@ const EmailDashboard = () => {
               </Typography>
             </Box>
             <Box sx={{ display: 'flex', gap: 2 }}>
-              <Tooltip title="Toggle Filters">
-                <IconButton 
-                  onClick={() => setShowFilters(!showFilters)}
-                  sx={{ 
-                    bgcolor: showFilters ? alpha(theme.palette.primary.main, 0.2) : alpha(theme.palette.primary.main, 0.1),
-                    '&:hover': { bgcolor: alpha(theme.palette.primary.main, 0.2) }
-                  }}
-                >
-                  <FilterIcon />
-                </IconButton>
-              </Tooltip>
               <Tooltip title="Refresh Data">
-                <IconButton 
+                <IconButton
                   onClick={handleRefresh}
-                  sx={{ 
+                  sx={{
                     bgcolor: alpha(theme.palette.primary.main, 0.1),
                     '&:hover': { bgcolor: alpha(theme.palette.primary.main, 0.2) }
                   }}
@@ -458,10 +447,10 @@ const EmailDashboard = () => {
           {/* Filters Section */}
           {showFilters && (
             <Grow in={showFilters} timeout={400}>
-              <Paper 
-                sx={{ 
-                  p: 3, 
-                  mb: 3, 
+              <Paper
+                sx={{
+                  p: 3,
+                  mb: 3,
                   borderRadius: 3,
                   boxShadow: '0 4px 12px rgba(0,0,0,0.05)',
                   bgcolor: alpha(theme.palette.primary.main, 0.02)
@@ -542,10 +531,10 @@ const EmailDashboard = () => {
           {/* SLA Breach Alert */}
           {dashboardData.todayStats.slaBreaches > 0 && (
             <Grow in={loaded} timeout={400}>
-              <Alert 
-                severity="warning" 
-                sx={{ 
-                  mb: 3, 
+              <Alert
+                severity="warning"
+                sx={{
+                  mb: 3,
                   borderRadius: 2,
                   boxShadow: '0 4px 12px rgba(0,0,0,0.05)'
                 }}
@@ -629,7 +618,7 @@ const EmailDashboard = () => {
             {/* Category Distribution - Bar Chart */}
             <Grid item xs={12} lg={6}>
               <Grow in={loaded} timeout={1800}>
-                <Card sx={{ 
+                <Card sx={{
                   borderRadius: 3,
                   boxShadow: '0 8px 24px rgba(0,0,0,0.05)',
                   height: 400
@@ -642,16 +631,16 @@ const EmailDashboard = () => {
                       <ResponsiveContainer>
                         <BarChart data={dashboardData.weeklyTrend}>
                           <CartesianGrid strokeDasharray="3 3" stroke={alpha(theme.palette.divider, 0.3)} />
-                          <XAxis 
-                            dataKey="day" 
+                          <XAxis
+                            dataKey="day"
                             stroke={theme.palette.text.secondary}
                             fontSize={12}
                           />
-                          <YAxis 
+                          <YAxis
                             stroke={theme.palette.text.secondary}
                             fontSize={12}
                           />
-                          <RechartsTooltip 
+                          <RechartsTooltip
                             contentStyle={{
                               backgroundColor: theme.palette.background.paper,
                               border: `1px solid ${theme.palette.divider}`,
@@ -675,7 +664,7 @@ const EmailDashboard = () => {
             {/* Total Emails Trend - Line Chart */}
             <Grid item xs={12} lg={6}>
               <Grow in={loaded} timeout={2000}>
-                <Card sx={{ 
+                <Card sx={{
                   borderRadius: 3,
                   boxShadow: '0 8px 24px rgba(0,0,0,0.05)',
                   height: 400
@@ -688,16 +677,16 @@ const EmailDashboard = () => {
                       <ResponsiveContainer>
                         <LineChart data={dashboardData.weeklyTrend}>
                           <CartesianGrid strokeDasharray="3 3" stroke={alpha(theme.palette.divider, 0.3)} />
-                          <XAxis 
-                            dataKey="day" 
+                          <XAxis
+                            dataKey="day"
                             stroke={theme.palette.text.secondary}
                             fontSize={12}
                           />
-                          <YAxis 
+                          <YAxis
                             stroke={theme.palette.text.secondary}
                             fontSize={12}
                           />
-                          <RechartsTooltip 
+                          <RechartsTooltip
                             contentStyle={{
                               backgroundColor: theme.palette.background.paper,
                               border: `1px solid ${theme.palette.divider}`,
@@ -705,9 +694,9 @@ const EmailDashboard = () => {
                               boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
                             }}
                           />
-                          <Line 
-                            type="monotone" 
-                            dataKey="total" 
+                          <Line
+                            type="monotone"
+                            dataKey="total"
                             stroke={theme.palette.primary.main}
                             strokeWidth={3}
                             dot={{ fill: theme.palette.primary.main, strokeWidth: 2, r: 6 }}
@@ -716,7 +705,7 @@ const EmailDashboard = () => {
                         </LineChart>
                       </ResponsiveContainer>
                     </Box>
-                    
+
                     {/* Summary Stats */}
                     <Box sx={{ mt: 2, display: 'flex', flexDirection: 'column', gap: 1 }}>
                       <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
@@ -744,7 +733,7 @@ const EmailDashboard = () => {
             {/* SLA Compliance Pie Chart */}
             <Grid item xs={12} lg={6}>
               <Grow in={loaded} timeout={2200}>
-                <Card sx={{ 
+                <Card sx={{
                   borderRadius: 3,
                   boxShadow: '0 8px 24px rgba(0,0,0,0.05)',
                   height: 400
@@ -771,7 +760,7 @@ const EmailDashboard = () => {
                               <Cell key={`cell-${index}`} fill={entry.color} />
                             ))}
                           </Pie>
-                          <RechartsTooltip 
+                          <RechartsTooltip
                             contentStyle={{
                               backgroundColor: theme.palette.background.paper,
                               border: `1px solid ${theme.palette.divider}`,
@@ -785,10 +774,10 @@ const EmailDashboard = () => {
                     </Box>
                     <Box sx={{ mt: 2, display: 'flex', justifyContent: 'center', gap: 2 }}>
                       {dashboardData.slaCompliance.map((item, index) => (
-                        <Chip 
+                        <Chip
                           key={index}
                           label={`${item.category}: ${item.percentage}%`}
-                          sx={{ 
+                          sx={{
                             bgcolor: alpha(item.color, 0.1),
                             color: item.color,
                             fontWeight: 600
@@ -804,7 +793,7 @@ const EmailDashboard = () => {
             {/* Agent-wise Case Load */}
             <Grid item xs={12} lg={6}>
               <Grow in={loaded} timeout={2400}>
-                <Card sx={{ 
+                <Card sx={{
                   borderRadius: 3,
                   boxShadow: '0 8px 24px rgba(0,0,0,0.05)',
                   height: 400
@@ -816,24 +805,24 @@ const EmailDashboard = () => {
                     </Typography>
                     <Box sx={{ height: 280, width: '100%' }}>
                       <ResponsiveContainer>
-                        <BarChart 
+                        <BarChart
                           data={dashboardData.agentCaseLoad}
                           margin={{ top: 20, right: 30, left: 20, bottom: 50 }}
                         >
                           <CartesianGrid strokeDasharray="3 3" stroke={alpha(theme.palette.divider, 0.3)} />
-                          <XAxis 
-                            dataKey="agent" 
+                          <XAxis
+                            dataKey="agent"
                             stroke={theme.palette.text.secondary}
                             fontSize={12}
                             height={60}
                             interval={0}
                           />
-                          <YAxis 
+                          <YAxis
                             stroke={theme.palette.text.secondary}
                             fontSize={12}
                             label={{ value: 'Cases', angle: -90, position: 'insideLeft' }}
                           />
-                          <RechartsTooltip 
+                          <RechartsTooltip
                             contentStyle={{
                               backgroundColor: theme.palette.background.paper,
                               border: `1px solid ${theme.palette.divider}`,
@@ -846,17 +835,17 @@ const EmailDashboard = () => {
                               `Agent: ${props.payload.name}`
                             ]}
                           />
-                          <Bar 
-                            dataKey="completed" 
-                            stackId="a" 
-                            fill={theme.palette.success.main} 
+                          <Bar
+                            dataKey="completed"
+                            stackId="a"
+                            fill={theme.palette.success.main}
                             name="Completed"
                             radius={[0, 0, 0, 0]}
                           />
-                          <Bar 
-                            dataKey="pending" 
-                            stackId="a" 
-                            fill={theme.palette.warning.main} 
+                          <Bar
+                            dataKey="pending"
+                            stackId="a"
+                            fill={theme.palette.warning.main}
                             name="Pending"
                             radius={[4, 4, 0, 0]}
                           />
@@ -865,17 +854,17 @@ const EmailDashboard = () => {
                     </Box>
                     <Box sx={{ mt: 2 }}>
                       <Box sx={{ display: 'flex', justifyContent: 'center', gap: 2, mb: 2 }}>
-                        <Chip 
+                        <Chip
                           label="Completed"
-                          sx={{ 
+                          sx={{
                             bgcolor: alpha(theme.palette.success.main, 0.1),
                             color: theme.palette.success.main,
                             fontWeight: 600
                           }}
                         />
-                        <Chip 
+                        <Chip
                           label="Pending"
-                          sx={{ 
+                          sx={{
                             bgcolor: alpha(theme.palette.warning.main, 0.1),
                             color: theme.palette.warning.main,
                             fontWeight: 600

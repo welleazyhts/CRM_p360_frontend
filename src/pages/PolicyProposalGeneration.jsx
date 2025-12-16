@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { jsPDF } from 'jspdf';
 import {
   Box,
   Typography,
@@ -43,6 +44,8 @@ import {
   CalendarToday as CalendarIcon,
   CheckCircle as CheckCircleIcon
 } from '@mui/icons-material';
+
+import policyService from '../services/policyService';
 
 const PolicyProposalGeneration = () => {
   const theme = useTheme();
@@ -103,24 +106,12 @@ const PolicyProposalGeneration = () => {
 
   const handleGenerateProposal = async () => {
     setLoading(true);
-    
-    try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
-      const newProposal = {
-        id: proposals.length + 1,
-        proposalNumber: `PROP-2024-${String(proposals.length + 1).padStart(3, '0')}`,
-        customerName: proposalForm.customerName,
-        policyType: proposalForm.policyType,
-        coverageAmount: parseInt(proposalForm.coverageAmount),
-        premium: parseInt(proposalForm.premium),
-        status: 'Generated',
-        generatedDate: new Date().toISOString().split('T')[0],
-        agentName: proposalForm.agentName
-      };
 
-      setProposals([newProposal, ...proposals]);
+    try {
+      // Use policyService to generate and persist proposal
+      await policyService.generateProposal(proposalForm);
+      const list = await policyService.listProposals();
+      setProposals(list);
       setProposalDialog(false);
       setProposalForm({
         customerName: '',
@@ -154,18 +145,195 @@ const PolicyProposalGeneration = () => {
     }
   };
 
+  useEffect(() => {
+    let mounted = true;
+    (async () => {
+      try {
+        const list = await policyService.listProposals();
+        if (mounted) setProposals(list);
+      } catch (e) {
+        // ignore
+      }
+    })();
+    return () => { mounted = false; };
+  }, []);
+
   const handlePreview = (proposal) => {
     setSelectedProposal(proposal);
     setPreviewDialog(true);
   };
 
+  // Generate and download PDF for a proposal
   const handleDownload = (proposal) => {
-    // Simulate PDF download
-    setSnackbar({
-      open: true,
-      message: `Downloading proposal ${proposal.proposalNumber}`,
-      severity: 'info'
-    });
+    try {
+      // Create PDF document
+      const doc = new jsPDF({
+        orientation: 'portrait',
+        unit: 'pt',
+        format: 'a4'
+      });
+
+      const pageWidth = doc.internal.pageSize.getWidth();
+      const pageHeight = doc.internal.pageSize.getHeight();
+      const margin = 40;
+      let yPos = margin;
+
+      // Header with blue background
+      doc.setFillColor(41, 98, 255);
+      doc.rect(0, 0, pageWidth, 80, 'F');
+
+      // Header text
+      doc.setTextColor(255, 255, 255);
+      doc.setFontSize(24);
+      doc.setFont('helvetica', 'bold');
+      doc.text('POLICY PROPOSAL', margin, 45);
+      doc.setFontSize(12);
+      doc.setFont('helvetica', 'normal');
+      doc.text(proposal.proposalNumber, margin, 65);
+
+      // Reset text color
+      doc.setTextColor(0, 0, 0);
+      yPos = 110;
+
+      // Proposal Info Section
+      doc.setFontSize(14);
+      doc.setFont('helvetica', 'bold');
+      doc.text('Proposal Information', margin, yPos);
+      yPos += 25;
+
+      doc.setFontSize(11);
+      doc.setFont('helvetica', 'normal');
+
+      // Proposal details
+      const proposalInfo = [
+        { label: 'Proposal Number', value: proposal.proposalNumber },
+        { label: 'Generated Date', value: new Date(proposal.generatedDate).toLocaleDateString() },
+        { label: 'Status', value: proposal.status },
+        { label: 'Agent Name', value: proposal.agentName || 'N/A' }
+      ];
+
+      proposalInfo.forEach(item => {
+        doc.setFont('helvetica', 'bold');
+        doc.text(`${item.label}:`, margin, yPos);
+        doc.setFont('helvetica', 'normal');
+        doc.text(item.value, margin + 120, yPos);
+        yPos += 18;
+      });
+
+      // Divider
+      yPos += 10;
+      doc.setDrawColor(200, 200, 200);
+      doc.line(margin, yPos, pageWidth - margin, yPos);
+      yPos += 25;
+
+      // Customer Information Section
+      doc.setFontSize(14);
+      doc.setFont('helvetica', 'bold');
+      doc.text('Customer Information', margin, yPos);
+      yPos += 25;
+
+      doc.setFontSize(11);
+      doc.setFont('helvetica', 'normal');
+
+      const customerInfo = [
+        { label: 'Customer Name', value: proposal.customerName },
+        { label: 'Email', value: proposal.raw?.email || 'N/A' },
+        { label: 'Phone', value: proposal.raw?.phone || 'N/A' },
+        { label: 'Address', value: proposal.raw?.address || 'N/A' }
+      ];
+
+      customerInfo.forEach(item => {
+        doc.setFont('helvetica', 'bold');
+        doc.text(`${item.label}:`, margin, yPos);
+        doc.setFont('helvetica', 'normal');
+        doc.text(String(item.value), margin + 120, yPos);
+        yPos += 18;
+      });
+
+      // Divider
+      yPos += 10;
+      doc.line(margin, yPos, pageWidth - margin, yPos);
+      yPos += 25;
+
+      // Policy Details Section
+      doc.setFontSize(14);
+      doc.setFont('helvetica', 'bold');
+      doc.text('Policy Details', margin, yPos);
+      yPos += 25;
+
+      doc.setFontSize(11);
+      doc.setFont('helvetica', 'normal');
+
+      const policyInfo = [
+        { label: 'Policy Type', value: proposal.policyType },
+        { label: 'Coverage Amount', value: `₹${proposal.coverageAmount?.toLocaleString() || '0'}` },
+        { label: 'Premium Amount', value: `₹${proposal.premium?.toLocaleString() || '0'}` },
+        { label: 'Tenure', value: proposal.raw?.tenure ? `${proposal.raw.tenure} Years` : 'N/A' },
+        { label: 'Start Date', value: proposal.raw?.startDate || 'To be determined' },
+        { label: 'End Date', value: proposal.raw?.endDate || 'To be determined' }
+      ];
+
+      policyInfo.forEach(item => {
+        doc.setFont('helvetica', 'bold');
+        doc.text(`${item.label}:`, margin, yPos);
+        doc.setFont('helvetica', 'normal');
+        doc.text(String(item.value), margin + 120, yPos);
+        yPos += 18;
+      });
+
+      // Remarks Section (if available)
+      if (proposal.raw?.remarks) {
+        yPos += 10;
+        doc.line(margin, yPos, pageWidth - margin, yPos);
+        yPos += 25;
+
+        doc.setFontSize(14);
+        doc.setFont('helvetica', 'bold');
+        doc.text('Remarks', margin, yPos);
+        yPos += 20;
+
+        doc.setFontSize(11);
+        doc.setFont('helvetica', 'normal');
+        const splitRemarks = doc.splitTextToSize(proposal.raw.remarks, pageWidth - 2 * margin);
+        doc.text(splitRemarks, margin, yPos);
+        yPos += splitRemarks.length * 14;
+      }
+
+      // Signature Section
+      yPos = Math.max(yPos + 40, pageHeight - 150);
+      doc.line(margin, yPos, pageWidth - margin, yPos);
+      yPos += 30;
+
+      doc.setFontSize(11);
+      doc.text('Customer Signature: ______________________', margin, yPos);
+      doc.text('Date: _______________', pageWidth - margin - 120, yPos);
+      yPos += 30;
+      doc.text('Agent Signature: ________________________', margin, yPos);
+      doc.text('Date: _______________', pageWidth - margin - 120, yPos);
+
+      // Footer
+      doc.setFontSize(9);
+      doc.setTextColor(128, 128, 128);
+      doc.text(`Generated on: ${new Date().toLocaleString()}`, margin, pageHeight - 30);
+      doc.text('This is a computer-generated document', pageWidth - margin - 150, pageHeight - 30);
+
+      // Generate filename and download
+      const filename = `${proposal.proposalNumber}.pdf`;
+      doc.save(filename);
+
+      setSnackbar({
+        open: true,
+        message: `Downloaded proposal ${proposal.proposalNumber} successfully!`,
+        severity: 'success'
+      });
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+      setSnackbar({
+        open: true,
+        message: 'Failed to download proposal PDF',
+        severity: 'error'
+      });
+    }
   };
 
   const handleSend = (proposal) => {
@@ -174,9 +342,9 @@ const PolicyProposalGeneration = () => {
       message: `Proposal ${proposal.proposalNumber} sent to customer`,
       severity: 'success'
     });
-    
+
     // Update status
-    setProposals(prev => prev.map(p => 
+    setProposals(prev => prev.map(p =>
       p.id === proposal.id ? { ...p, status: 'Sent' } : p
     ));
   };
@@ -335,7 +503,7 @@ const PolicyProposalGeneration = () => {
                     <TableCell>{new Date(proposal.generatedDate).toLocaleDateString()}</TableCell>
                     <TableCell>{proposal.agentName}</TableCell>
                     <TableCell align="center">
-                      <Tooltip title="Preview">
+                      <Tooltip title="View Details">
                         <IconButton size="small" onClick={() => handlePreview(proposal)}>
                           <PreviewIcon />
                         </IconButton>
@@ -378,7 +546,7 @@ const PolicyProposalGeneration = () => {
                 <Typography variant="subtitle1" fontWeight="600">Customer Information</Typography>
               </Box>
             </Grid>
-            
+
             <Grid item xs={12} sm={6}>
               <TextField
                 fullWidth
@@ -568,13 +736,33 @@ const PolicyProposalGeneration = () => {
                   <Typography variant="body2" color="text.secondary">Premium:</Typography>
                   <Typography variant="body1" fontWeight="600">₹{selectedProposal.premium.toLocaleString()}</Typography>
                 </Grid>
+                <Grid item xs={6}>
+                  <Typography variant="body2" color="text.secondary">Status:</Typography>
+                  <Chip label={selectedProposal.status} size="small" color={getStatusColor(selectedProposal.status)} />
+                </Grid>
+                <Grid item xs={6}>
+                  <Typography variant="body2" color="text.secondary">Generated Date:</Typography>
+                  <Typography variant="body1">{new Date(selectedProposal.generatedDate).toLocaleDateString()}</Typography>
+                </Grid>
+                <Grid item xs={6}>
+                  <Typography variant="body2" color="text.secondary">Agent:</Typography>
+                  <Typography variant="body1">{selectedProposal.agentName}</Typography>
+                </Grid>
               </Grid>
             </Box>
           )}
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setPreviewDialog(false)}>Close</Button>
-          <Button variant="contained" startIcon={<DownloadIcon />}>
+          <Button
+            variant="contained"
+            startIcon={<DownloadIcon />}
+            onClick={() => {
+              if (selectedProposal) {
+                handleDownload(selectedProposal);
+              }
+            }}
+          >
             Download PDF
           </Button>
         </DialogActions>

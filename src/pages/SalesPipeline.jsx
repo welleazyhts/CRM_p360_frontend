@@ -37,6 +37,8 @@ import {
   Add as AddIcon,
   Edit as EditIcon,
   Delete as DeleteIcon,
+  ArrowUpward as ArrowUpwardIcon,
+  ArrowDownward as ArrowDownwardIcon,
   Visibility as ViewIcon,
   Email as EmailIcon,
   Phone as PhoneIcon,
@@ -53,9 +55,10 @@ import {
   Close as CloseIcon
 } from '@mui/icons-material';
 import InputAdornment from '@mui/material/InputAdornment';
+import { listPipelines, getPipeline, addStage, updateStage, deleteStage, reorderStages } from '../services/pipelineService';
 
-// Mock pipeline stages
-const pipelineStages = [
+// Default mock pipeline stages (will be replaced by service data when available)
+const defaultPipelineStages = [
   { id: 'new', name: 'New Leads', color: '#A4D7E1', order: 1 },
   { id: 'contacted', name: 'Contacted', color: '#B3EBD5', order: 2 },
   { id: 'qualified', name: 'Qualified', color: '#F2C94C', order: 3 },
@@ -228,6 +231,14 @@ const SalesPipeline = () => {
   const theme = useTheme();
   const [leads, setLeads] = useState(mockPipelineLeads);
   const [filteredLeads, setFilteredLeads] = useState(mockPipelineLeads);
+  const [pipelineStages, setPipelineStages] = useState(defaultPipelineStages);
+  const [pipelines, setPipelines] = useState([]);
+  const [selectedPipelineId, setSelectedPipelineId] = useState(null);
+
+  // Stage dialog state
+  const [stageDialogOpen, setStageDialogOpen] = useState(false);
+  const [stageEditing, setStageEditing] = useState(null);
+  const [stageName, setStageName] = useState('');
   const [selectedLead, setSelectedLead] = useState(null);
   const [openDialog, setOpenDialog] = useState(false);
   const [editingLead, setEditingLead] = useState(null);
@@ -246,6 +257,133 @@ const SalesPipeline = () => {
       setCustomerHistory([]);
     }
   }, [selectedLead]);
+
+  // Load pipelines and stages from pipelineService
+  useEffect(() => {
+    let mounted = true;
+    const load = async () => {
+      try {
+        const res = await listPipelines({ page: 1, limit: 10 });
+        if (!mounted) return;
+        const fetched = res.pipelines || [];
+        setPipelines(fetched);
+        if (fetched.length > 0) setSelectedPipelineId(fetched[0].id);
+        // If there is at least one pipeline, load its stages
+        if (fetched.length > 0) {
+          try {
+            const p = await getPipeline(fetched[0].id);
+            if (!mounted) return;
+            if (p && p.stages) {
+              // Map stages to UI shape with color placeholders
+              const mapped = p.stages.map((s, idx) => ({
+                id: s.id,
+                name: s.name,
+                color: ['#A4D7E1', '#B3EBD5', '#F2C94C', '#E0F7FA', '#6B8E23', '#4CAF50', '#F44336'][idx % 7],
+                order: s.order || idx + 1
+              }));
+              setPipelineStages(mapped);
+            }
+          } catch (e) {
+            // ignore pipeline fetch error, keep defaults
+          }
+        }
+      } catch (e) {
+        // keep defaults on error
+      }
+    };
+    load();
+    return () => { mounted = false; };
+  }, []);
+
+  // Stage CRUD handlers
+  const handleOpenStageDialog = (stage = null) => {
+    setStageEditing(stage);
+    setStageName(stage ? stage.name : '');
+    setStageDialogOpen(true);
+  };
+
+  const handleCloseStageDialog = () => {
+    setStageDialogOpen(false);
+    setStageEditing(null);
+    setStageName('');
+  };
+
+  const handleSaveStage = async () => {
+    if (!selectedPipelineId) {
+      setSnackbar({ open: true, message: 'No pipeline selected', severity: 'error' });
+      return;
+    }
+    try {
+      if (stageEditing) {
+        const updated = await updateStage(selectedPipelineId, stageEditing.id, { name: stageName });
+        setPipelineStages(prev => prev.map(s => s.id === updated.id ? { ...s, name: updated.name } : s));
+        setSnackbar({ open: true, message: 'Stage updated', severity: 'success' });
+      } else {
+        const created = await addStage(selectedPipelineId, { name: stageName });
+        setPipelineStages(prev => [...prev, { id: created.id, name: created.name, color: '#E0F7FA', order: created.order || prev.length + 1 }]);
+        setSnackbar({ open: true, message: 'Stage added', severity: 'success' });
+      }
+    } catch (e) {
+      setSnackbar({ open: true, message: `Error saving stage: ${e.message}`, severity: 'error' });
+    } finally {
+      handleCloseStageDialog();
+    }
+  };
+
+  const handleDeleteStage = async (stageId) => {
+    if (!selectedPipelineId) {
+      setSnackbar({ open: true, message: 'No pipeline selected', severity: 'error' });
+      return;
+    }
+    if (!window.confirm('Delete stage? This cannot be undone.')) return;
+    try {
+      await deleteStage(selectedPipelineId, stageId);
+      setPipelineStages(prev => prev.filter(s => s.id !== stageId));
+      setSnackbar({ open: true, message: 'Stage deleted', severity: 'success' });
+    } catch (e) {
+      setSnackbar({ open: true, message: `Error deleting stage: ${e.message}`, severity: 'error' });
+    }
+  };
+
+  const handleSelectPipeline = async (id) => {
+    setSelectedPipelineId(id);
+    try {
+      const p = await getPipeline(id);
+      if (p && p.stages) {
+        const mapped = p.stages.map((s, idx) => ({ id: s.id, name: s.name, color: ['#A4D7E1', '#B3EBD5', '#F2C94C', '#E0F7FA', '#6B8E23', '#4CAF50', '#F44336'][idx % 7], order: s.order || idx + 1 }));
+        setPipelineStages(mapped);
+      }
+    } catch (e) {
+      setSnackbar({ open: true, message: 'Failed to load pipeline stages', severity: 'warning' });
+    }
+  };
+
+  const handleMoveStage = async (stageId, direction) => {
+    const idx = pipelineStages.findIndex(s => s.id === stageId);
+    if (idx === -1) return;
+    const targetIdx = direction === 'up' ? idx - 1 : idx + 1;
+    if (targetIdx < 0 || targetIdx >= pipelineStages.length) return;
+    const newStages = pipelineStages.slice();
+    // swap order
+    const a = newStages[idx];
+    const b = newStages[targetIdx];
+    const aOrder = a.order || idx + 1;
+    const bOrder = b.order || targetIdx + 1;
+    a.order = bOrder;
+    b.order = aOrder;
+    newStages[idx] = b;
+    newStages[targetIdx] = a;
+    newStages.sort((x, y) => (x.order || 0) - (y.order || 0));
+    setPipelineStages(newStages);
+    // persist order
+    try {
+      const orderPayload = newStages.map(s => ({ id: s.id, order: s.order }));
+      await reorderStages(selectedPipelineId, orderPayload);
+      setSnackbar({ open: true, message: 'Stages reordered', severity: 'success' });
+    } catch (e) {
+      setSnackbar({ open: true, message: 'Failed to persist reorder', severity: 'warning' });
+    }
+  };
 
   // Form state
   const [formData, setFormData] = useState({
@@ -274,8 +412,6 @@ const SalesPipeline = () => {
   ];
 
   const priorityOptions = ['Low', 'Medium', 'High', 'Urgent'];
-  const stageOptions = pipelineStages.map(stage => stage.name);
-
   // Filter leads based on search and filter
   useEffect(() => {
     let filtered = leads;
@@ -299,7 +435,7 @@ const SalesPipeline = () => {
     }
 
     setFilteredLeads(filtered);
-  }, [leads, searchTerm, filter]);
+  }, [leads, searchTerm, filter, pipelineStages]);
 
   // Get leads by stage
   const getLeadsByStage = (stageId) => {
@@ -307,9 +443,7 @@ const SalesPipeline = () => {
   };
 
   // Get stage info
-  const getStageInfo = (stageId) => {
-    return pipelineStages.find(stage => stage.id === stageId);
-  };
+
 
   // Calculate stage totals
   const getStageTotal = (stageId) => {
@@ -325,20 +459,26 @@ const SalesPipeline = () => {
   const handleDragOver = (e) => {
     e.preventDefault();
     const element = e.currentTarget;
-    element.style.backgroundColor = alpha(theme.palette.primary.main, 0.05);
+    if (element && element.style) {
+      element.style.backgroundColor = alpha(theme.palette.primary.main, 0.05);
+    }
   };
 
   const handleDragLeave = (e) => {
     e.preventDefault();
     const element = e.currentTarget;
-    element.style.backgroundColor = 'transparent';
+    if (element && element.style) {
+      element.style.backgroundColor = 'transparent';
+    }
   };
 
   const handleDrop = (e, newStage) => {
     e.preventDefault();
     const element = e.currentTarget;
-    element.style.backgroundColor = 'transparent';
-    
+    if (element && element.style) {
+      element.style.backgroundColor = 'transparent';
+    }
+
     try {
       const lead = JSON.parse(e.dataTransfer.getData('text/plain'));
       if (lead.stage !== newStage) {
@@ -387,7 +527,7 @@ const SalesPipeline = () => {
   // Handle save lead
   const handleSaveLead = () => {
     setLoading(true);
-    
+
     setTimeout(() => {
       if (editingLead) {
         // Update existing lead
@@ -410,7 +550,7 @@ const SalesPipeline = () => {
         setLeads([...leads, newLead]);
         setSnackbar({ open: true, message: 'Lead added successfully!', severity: 'success' });
       }
-      
+
       setLoading(false);
       handleCloseDialog();
     }, 1000);
@@ -477,6 +617,34 @@ const SalesPipeline = () => {
           Add Lead
         </Button>
       </Box>
+
+      {/* Pipeline selector + stage management */}
+      <Card className="healthcare-card" sx={{ mb: 3, p: 2 }}>
+        <Grid container spacing={2} alignItems="center">
+          <Grid item xs={12} md={6}>
+            <FormControl fullWidth>
+              <InputLabel>Pipeline</InputLabel>
+              <Select
+                value={selectedPipelineId || ''}
+                label="Pipeline"
+                onChange={(e) => handleSelectPipeline(e.target.value)}
+              >
+                {pipelines.length === 0 && (
+                  <MenuItem value="">Default Pipeline</MenuItem>
+                )}
+                {pipelines.map(p => (
+                  <MenuItem key={p.id} value={p.id}>{p.name}</MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+          </Grid>
+          <Grid item xs={12} md={6} sx={{ display: 'flex', gap: 1, justifyContent: 'flex-end' }}>
+            <Button variant="outlined" startIcon={<AddIcon />} onClick={() => handleOpenStageDialog(null)}>
+              Add Stage
+            </Button>
+          </Grid>
+        </Grid>
+      </Card>
 
       {/* Pipeline Metrics */}
       <Grid container spacing={3} sx={{ mb: 3 }}>
@@ -594,7 +762,7 @@ const SalesPipeline = () => {
         {pipelineStages.map((stage) => {
           const stageLeads = getLeadsByStage(stage.id);
           const stageTotal = getStageTotal(stage.id);
-          
+
           return (
             <Paper
               key={stage.id}
@@ -608,16 +776,34 @@ const SalesPipeline = () => {
             >
               {/* Stage Header */}
               <Box sx={{ p: 2, borderBottom: `1px solid ${alpha(stage.color, 0.2)}` }}>
-                <Typography variant="h6" fontWeight="600" color={stage.color}>
-                  {stage.name}
-                </Typography>
-                <Typography variant="body2" color="text.secondary">
-                  {stageLeads.length} leads • ₹{stageTotal.toLocaleString()}
-                </Typography>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <Box>
+                    <Typography variant="h6" fontWeight="600" color={stage.color}>
+                      {stage.name}
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary">
+                      {stageLeads.length} leads • ₹{stageTotal.toLocaleString()}
+                    </Typography>
+                  </Box>
+                  <Box>
+                    <IconButton size="small" onClick={(e) => { e.stopPropagation(); handleMoveStage(stage.id, 'up'); }}>
+                      <ArrowUpwardIcon fontSize="small" />
+                    </IconButton>
+                    <IconButton size="small" onClick={(e) => { e.stopPropagation(); handleMoveStage(stage.id, 'down'); }}>
+                      <ArrowDownwardIcon fontSize="small" />
+                    </IconButton>
+                    <IconButton size="small" onClick={(e) => { e.stopPropagation(); handleOpenStageDialog(stage); }}>
+                      <EditIcon fontSize="small" />
+                    </IconButton>
+                    <IconButton size="small" onClick={(e) => { e.stopPropagation(); handleDeleteStage(stage.id); }}>
+                      <DeleteIcon fontSize="small" />
+                    </IconButton>
+                  </Box>
+                </Box>
               </Box>
 
               {/* Stage Leads */}
-              <Box 
+              <Box
                 sx={{ p: 1, minHeight: 400 }}
                 onDragOver={handleDragOver}
                 onDragLeave={handleDragLeave}
@@ -672,7 +858,7 @@ const SalesPipeline = () => {
                           </IconButton>
                         </Box>
                       </Box>
-                      
+
                       <Box sx={{ mt: 2 }}>
                         <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
                           <BusinessIcon fontSize="small" sx={{ mr: 1, color: 'text.secondary' }} />
@@ -684,7 +870,7 @@ const SalesPipeline = () => {
                           {lead.position}
                         </Typography>
                       </Box>
-                      
+
                       <Box sx={{ mt: 2, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                         <Chip
                           label={lead.priority}
@@ -735,9 +921,9 @@ const SalesPipeline = () => {
                               key={nextStage.id}
                               size="small"
                               variant="outlined"
-                              sx={{ 
-                                minWidth: 'auto', 
-                                px: 1, 
+                              sx={{
+                                minWidth: 'auto',
+                                px: 1,
                                 fontSize: '0.7rem',
                                 borderColor: alpha(nextStage.color, 0.3),
                                 color: nextStage.color,
@@ -749,7 +935,7 @@ const SalesPipeline = () => {
                               onClick={(e) => {
                                 e.stopPropagation();
                                 const mockDragEvent = {
-                                  preventDefault: () => {},
+                                  preventDefault: () => { },
                                   dataTransfer: {
                                     getData: () => JSON.stringify(lead)
                                   }
@@ -771,10 +957,29 @@ const SalesPipeline = () => {
       </Box>
 
       {/* Lead Details/Edit Dialog */}
-      <Dialog 
-        open={openDialog} 
-        onClose={handleCloseDialog} 
-        maxWidth="md" 
+      {/* Stage Add/Edit Dialog */}
+      <Dialog open={stageDialogOpen} onClose={handleCloseStageDialog} maxWidth="sm" fullWidth>
+        <DialogTitle>{stageEditing ? 'Edit Stage' : 'Add Stage'}</DialogTitle>
+        <DialogContent>
+          <TextField
+            fullWidth
+            label="Stage Name"
+            value={stageName}
+            onChange={(e) => setStageName(e.target.value)}
+            sx={{ mt: 1 }}
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseStageDialog}>Cancel</Button>
+          <Button variant="contained" onClick={handleSaveStage} disabled={!stageName.trim()}>
+            {stageEditing ? 'Update' : 'Create'}
+          </Button>
+        </DialogActions>
+      </Dialog>
+      <Dialog
+        open={openDialog}
+        onClose={handleCloseDialog}
+        maxWidth="md"
         fullWidth
         PaperProps={{
           sx: {
@@ -783,9 +988,9 @@ const SalesPipeline = () => {
           }
         }}
       >
-        <DialogTitle sx={{ 
-          display: 'flex', 
-          justifyContent: 'space-between', 
+        <DialogTitle sx={{
+          display: 'flex',
+          justifyContent: 'space-between',
           alignItems: 'center',
           bgcolor: 'background.paper',
           borderBottom: `1px solid ${theme.palette.divider}`
@@ -921,8 +1126,8 @@ const SalesPipeline = () => {
                   label="Assigned To"
                   onChange={(e) => {
                     const user = users.find(u => u.id === e.target.value);
-                    setFormData({ 
-                      ...formData, 
+                    setFormData({
+                      ...formData,
                       assignedToId: e.target.value,
                       assignedTo: user?.name || ''
                     });
@@ -990,7 +1195,7 @@ const SalesPipeline = () => {
                             </TableCell>
                             <TableCell>
                               <Typography variant="body2">
-                                {new Date(policy.startDate).toLocaleDateString()} - 
+                                {new Date(policy.startDate).toLocaleDateString()} -
                                 {new Date(policy.endDate).toLocaleDateString()}
                               </Typography>
                             </TableCell>
@@ -1017,10 +1222,10 @@ const SalesPipeline = () => {
                       </TableBody>
                     </Table>
                   </TableContainer>
-                  
+
                   {/* Summary Box */}
-                  <Box 
-                    sx={{ 
+                  <Box
+                    sx={{
                       mt: 2,
                       p: 2,
                       borderRadius: 2,

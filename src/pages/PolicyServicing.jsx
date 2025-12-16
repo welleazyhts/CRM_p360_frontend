@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import {
   Box,
   Typography,
@@ -13,8 +13,21 @@ import {
   Construction as ConstructionIcon
 } from '@mui/icons-material';
 
+import policyService from '../services/policyService';
+
 const PolicyServicing = () => {
   const theme = useTheme();
+
+  // warm up the policy service (non-blocking)
+  useEffect(() => {
+    (async () => {
+      try {
+        await policyService.listServicingRecords('POL-VEHICLE-987');
+      } catch (e) {
+        // ignore
+      }
+    })();
+  }, []);
 
   return (
     <Fade in={true} timeout={800}>
