@@ -773,10 +773,12 @@ export const slaAnalyticsAPI = {
    */
   getDashboard: async () => {
     const url = getApiUrl(`${API_BASE}/analytics/dashboard/`);
+    const token = localStorage.getItem('authToken');
+    console.log('SLA Dashboard Request:', { url, token: token ? 'Present' : 'Missing' });
 
     const response = await fetch(url, {
       headers: {
-        'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
+        'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json'
       }
     });

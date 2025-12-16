@@ -56,14 +56,15 @@ const SLAMonitoring = () => {
     violations,
     approaching,
     getComplianceByEntityType,
-    exportSLAData
+    exportSLAData,
+    error // Destructure error from context
   } = useSLA();
 
   const [currentTab, setCurrentTab] = useState(0);
   const [filterEntity, setFilterEntity] = useState('all');
   const [filterStatus, setFilterStatus] = useState('all');
   const [filteredTrackings, setFilteredTrackings] = useState([]);
-  
+
   // Retry attempt tracking states
   const [retryRuleEnabled, setRetryRuleEnabled] = useState(true);
   const maxAttempts = 5; // Fixed value for 5 Attempts in 5 Days Rule
@@ -180,31 +181,31 @@ const SLAMonitoring = () => {
     const checkAndExecuteRetries = () => {
       const now = new Date();
       const today = now.toISOString().split('T')[0];
-      
-      setRetryLeads(prevLeads => 
+
+      setRetryLeads(prevLeads =>
         prevLeads.map(lead => {
           // Check if lead is due for auto-retry
-          if (lead.nextRetryDate === today && 
-              lead.attemptCount < maxAttempts && 
-              lead.autoRetryScheduled) {
-            
+          if (lead.nextRetryDate === today &&
+            lead.attemptCount < maxAttempts &&
+            lead.autoRetryScheduled) {
+
             // Check if within 5-day window
             const daysSinceFirst = Math.floor(
               (now - new Date(lead.firstAttemptDate)) / (1000 * 60 * 60 * 24)
             );
-            
+
             if (daysSinceFirst <= daysLimit) {
               const newAttemptCount = lead.attemptCount + 1;
-              const newStatus = newAttemptCount >= maxAttempts ? 'Unreachable' : 
-                               newAttemptCount >= 3 ? 'Retry in Progress' : 'Active Leads';
-              
+              const newStatus = newAttemptCount >= maxAttempts ? 'Unreachable' :
+                newAttemptCount >= 3 ? 'Retry in Progress' : 'Active Leads';
+
               return {
                 ...lead,
                 attemptCount: newAttemptCount,
                 lastAttemptDate: today,
                 status: newStatus,
-                nextRetryDate: newAttemptCount >= maxAttempts ? null : 
-                              new Date(Date.now() + retryInterval * 60 * 60 * 1000).toISOString().split('T')[0],
+                nextRetryDate: newAttemptCount >= maxAttempts ? null :
+                  new Date(Date.now() + retryInterval * 60 * 60 * 1000).toISOString().split('T')[0],
                 autoRetryScheduled: newAttemptCount < maxAttempts
               };
             } else {
@@ -224,10 +225,10 @@ const SLAMonitoring = () => {
 
     // Check every minute for demo purposes (in production, use longer intervals)
     const interval = setInterval(checkAndExecuteRetries, 60000);
-    
+
     // Initial check
     checkAndExecuteRetries();
-    
+
     return () => clearInterval(interval);
   }, [autoRetryEnabled, retryRuleEnabled, maxAttempts, daysLimit, retryInterval]);
 
@@ -243,19 +244,19 @@ const SLAMonitoring = () => {
   };
 
   const handleRetryNow = (leadId) => {
-    setRetryLeads(prevLeads => 
+    setRetryLeads(prevLeads =>
       prevLeads.map(lead => {
         if (lead.id === leadId && lead.attemptCount < maxAttempts) {
           const newAttemptCount = lead.attemptCount + 1;
-          const newStatus = newAttemptCount >= maxAttempts ? 'Unreachable' : 
-                           newAttemptCount >= 3 ? 'Retry in Progress' : 'Active Leads';
+          const newStatus = newAttemptCount >= maxAttempts ? 'Unreachable' :
+            newAttemptCount >= 3 ? 'Retry in Progress' : 'Active Leads';
           return {
             ...lead,
             attemptCount: newAttemptCount,
             lastAttemptDate: new Date().toISOString().split('T')[0],
             status: newStatus,
-            nextRetryDate: newAttemptCount >= maxAttempts ? null : 
-                          new Date(Date.now() + retryInterval * 60 * 60 * 1000).toISOString().split('T')[0],
+            nextRetryDate: newAttemptCount >= maxAttempts ? null :
+              new Date(Date.now() + retryInterval * 60 * 60 * 1000).toISOString().split('T')[0],
             autoRetryScheduled: newAttemptCount < maxAttempts
           };
         }
@@ -306,7 +307,7 @@ const SLAMonitoring = () => {
     const inProgress = retryLeads.filter(l => l.status === 'Retry in Progress').length;
     const unreachable = retryLeads.filter(l => l.status === 'Unreachable').length;
     const autoScheduled = retryLeads.filter(l => l.autoRetryScheduled).length;
-    
+
     return { totalLeads, activeLeads, inProgress, unreachable, autoScheduled };
   };
 
@@ -398,6 +399,13 @@ const SLAMonitoring = () => {
           </Button>
         </Box>
       </Box>
+
+      {/* Backend Error Alert */}
+      {error && (
+        <Alert severity="error" sx={{ mb: 3 }} icon={<ErrorIcon />}>
+          <strong>Check Backend:</strong> {error}
+        </Alert>
+      )}
 
       {/* Metrics Cards */}
       <Grid container spacing={3} sx={{ mb: 3 }}>
@@ -615,8 +623,8 @@ const SLAMonitoring = () => {
                               tracking.priority === 'urgent'
                                 ? 'error'
                                 : tracking.priority === 'high'
-                                ? 'warning'
-                                : 'default'
+                                  ? 'warning'
+                                  : 'default'
                             }
                             sx={{ textTransform: 'capitalize' }}
                           />

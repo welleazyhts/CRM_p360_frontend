@@ -1,6 +1,7 @@
 import React, { createContext, useState, useEffect, useContext, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import logger from '../utils/logger';
+import { authService } from '../api/authService';
 
 const AuthContext = createContext();
 
@@ -123,13 +124,18 @@ export const AuthProvider = ({ children }) => {
         ]
       }
     };
-    
+
     return mockUsers[email] || {
       id: '1',
       name: 'Demo User',
       email: email,
-      role: 'user',
-      portalLanguage: 'en' // Default to English
+      role: 'renewals_specialist', // Changed from 'user' to give proper access
+      portalLanguage: 'en', // Default to English
+      // Explicitly add permissions to ensure immediate access without refresh
+      permissions: [
+        'dashboard', 'upload', 'cases', 'closed-cases', 'policy-timeline', 'logs',
+        'renewal-email-manager', 'renewal-whatsapp-manager', 'profile'
+      ]
     };
   };
 
@@ -139,20 +145,20 @@ export const AuthProvider = ({ children }) => {
       try {
         // In a real app, this would verify the token with your backend
         const token = localStorage.getItem('authToken');
-        
+
         if (token) {
           // In a real app, you would decode the token to get user email/id
           // For demo, we'll use a stored email or default
           const storedEmail = localStorage.getItem('userEmail') || 'admin@client.com';
           const userData = getUserData(storedEmail);
-          
+
           // Check if account is expired
           if (isAccountExpired(userData)) {
             localStorage.removeItem('authToken');
             localStorage.removeItem('userEmail');
             return;
           }
-          
+
           setCurrentUser(userData);
           applyUserLanguage(userData);
         }
@@ -164,58 +170,69 @@ export const AuthProvider = ({ children }) => {
         setLoading(false);
       }
     };
-    
+
     checkAuthStatus();
   }, [applyUserLanguage]);
 
-  const login = async (email, _password) => {
-    // In a real app, this would call your authentication API
-    // const response = await fetch('/api/auth/login', {
-    //   method: 'POST',
-    //   headers: { 'Content-Type': 'application/json' },
-    //   body: JSON.stringify({ email, password })
-    // });
-    // const data = await response.json();
-    
-    // Mock successful login - just validate credentials
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        // In a real app, you would validate credentials here
-        // For demo, we'll just consider any login attempt successful
-        
-        const userData = getUserData(email);
-        
-        // Check if account is expired
-        if (isAccountExpired(userData)) {
-          resolve({ success: false, message: 'Your account has expired. Please contact administrator.' });
-          return;
+  const login = async (email, password) => {
+    try {
+      const response = await authService.login(email, password);
+
+      // Logic to handle different response structures
+      console.log('Login API Response:', response); // Debugging log
+
+      // Use logical OR to handle direct access (if response is just data) or nested in data property
+      const responseData = response.data || response;
+
+      const token = responseData.access || responseData.token || responseData.accessToken;
+      const refreshToken = responseData.refresh || responseData.refreshToken;
+      const user = responseData.user || { email };
+
+      if (token) {
+        localStorage.setItem('authToken', token);
+        if (refreshToken) {
+          localStorage.setItem('refreshToken', refreshToken);
         }
-        
-        // For non-MFA logins, we need to set the token and user here
-        const savedSettings = localStorage.getItem('userSettings');
-        let mfaEnabled = false;
-        
-        if (savedSettings) {
-          try {
-            const settings = JSON.parse(savedSettings);
-            mfaEnabled = settings.mfaEnabled;
-                  } catch (error) {
-          // Failed to parse saved settings, using defaults
-        }
-        }
-        
-        // If MFA is not enabled, log the user in directly
-        if (!mfaEnabled) {
-          const mockToken = 'mock-jwt-token-' + Math.random().toString(36).substring(2);
-          localStorage.setItem('authToken', mockToken);
-          localStorage.setItem('userEmail', email); // Store email for session persistence
-          setCurrentUser(userData);
-          applyUserLanguage(userData);
-        }
-        
-        resolve({ success: true, user: userData });
-      }, 1000);
-    });
+        localStorage.setItem('userEmail', email);
+
+        // Use real user data from API but merge with mock permissions for now
+        // This ensures permissions are available immediately after login
+        const mockUserData = getUserData(email);
+
+        // Prioritize mock permissions for demo accounts to ensure full access
+        const finalPermissions = mockUserData.permissions && mockUserData.permissions.length > 0
+          ? mockUserData.permissions
+          : (user.permissions || []);
+
+        const mappedUser = {
+          ...user,
+          ...mockUserData,
+          // Ensure we keep the ID/Email from the real backend if needed, but allow mock data to augment it
+          id: user.id || mockUserData.id,
+          email: user.email || mockUserData.email,
+          role: mockUserData.role || user.role || 'user', // Prioritize mock role for demo users
+          permissions: finalPermissions
+        };
+
+        setCurrentUser(mappedUser);
+        applyUserLanguage(mappedUser);
+
+        return { success: true, user: mappedUser };
+      } else {
+        return { success: false, message: 'Invalid response from server' };
+      }
+    } catch (error) {
+      logger.error('Login error:', error);
+      let errorMessage = 'Login failed. Please try again.';
+
+      if (error.detail) {
+        errorMessage = error.detail;
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+
+      return { success: false, message: errorMessage };
+    }
   };
 
   // Function to verify MFA OTP
@@ -228,12 +245,12 @@ export const AuthProvider = ({ children }) => {
           // OTP is valid, log the user in now
           const mockToken = 'mock-jwt-token-' + Math.random().toString(36).substring(2);
           localStorage.setItem('authToken', mockToken);
-          
+
           // Note: userData would come from your backend in a real app
           // Here we'll get it from the stored email
           const storedEmail = localStorage.getItem('userEmail') || 'admin@client.com';
           const userData = getUserData(storedEmail);
-          
+
           setCurrentUser(userData);
           applyUserLanguage(userData);
           resolve({ success: true, user: userData });
@@ -251,6 +268,28 @@ export const AuthProvider = ({ children }) => {
     setCurrentUser(null);
   };
 
+  const register = async (userData) => {
+    try {
+      const response = await authService.register(userData);
+      return { success: true, data: response };
+    } catch (error) {
+      logger.error('Registration error:', error);
+      let errorMessage = 'Registration failed. Please try again.';
+
+      if (error.detail) {
+        errorMessage = error.detail;
+      } else if (error.message) {
+        errorMessage = error.message;
+      } else if (typeof error === 'object') {
+        // Handle field-specific errors if returned as object (e.g. { email: ['invalid'] })
+        const fieldErrors = Object.values(error).flat().join(', ');
+        if (fieldErrors) errorMessage = fieldErrors;
+      }
+
+      return { success: false, message: errorMessage };
+    }
+  };
+
   const value = {
     currentUser,
     login,
@@ -259,7 +298,10 @@ export const AuthProvider = ({ children }) => {
     isAuthenticated: !!currentUser,
     verifyMfaOtp,
     isAccountExpired,
-    getDaysUntilExpiry
+    verifyMfaOtp,
+    isAccountExpired,
+    getDaysUntilExpiry,
+    register
   };
 
   return (

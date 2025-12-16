@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useMemo } from 'react';
 import { useAuth } from './AuthContext';
 
 const PermissionsContext = createContext();
@@ -141,25 +141,29 @@ const mockUserPermissions = {
     'dashboard', 'cases', 'closed-cases', 'policy-timeline',
     // Personal Pages
     'profile'
+  ],
+  'user': [
+    // Default permissions for new signups
+    'dashboard', 'profile' 
   ]
 };
 
 export const PermissionsProvider = ({ children }) => {
-  const { currentUser } = useAuth();
-  const [userPermissions, setUserPermissions] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const { currentUser, loading: authLoading } = useAuth();
 
-  useEffect(() => {
+  // Derive permissions directly from currentUser to avoid synchronization issues
+  // This ensures permissions are available in the same render cycle as the user login
+  const userPermissions = useMemo(() => {
     if (currentUser) {
       // Check if user has explicit permissions in their profile (from AuthContext)
       // Otherwise fall back to role-based permissions
-      const permissions = currentUser.permissions || mockUserPermissions[currentUser.role] || [];
-      setUserPermissions(permissions);
-    } else {
-      setUserPermissions([]);
+      return currentUser.permissions || mockUserPermissions[currentUser.role] || [];
     }
-    setLoading(false);
+    return [];
   }, [currentUser]);
+
+  // Use auth loading state directly as permissions are now derived synchronously
+  const loading = authLoading;
 
   const hasPermission = (permission) => {
     if (!currentUser) return false;
@@ -213,7 +217,7 @@ export const PermissionsProvider = ({ children }) => {
 
     const requiredPermission = routePermissions[routePath];
     if (!requiredPermission) return true; // Allow access to routes without specific permissions
-    
+
     return hasPermission(requiredPermission);
   };
 
@@ -230,33 +234,33 @@ export const PermissionsProvider = ({ children }) => {
       { path: '/policy-servicing', permission: 'policy-servicing', name: 'Policy Servicing' },
       { path: '/new-business', permission: 'new-business', name: 'New Business' },
       { path: '/medical-management', permission: 'medical-management', name: 'Medical Management' },
-      
+
       // Email Pages
       { path: '/emails', permission: 'emails', name: 'Email Inbox' },
       { path: '/emails/dashboard', permission: 'email-dashboard', name: 'Email Dashboard' },
       { path: '/emails/analytics', permission: 'email-analytics', name: 'Email Analytics' },
       { path: '/emails/bulk', permission: 'bulk-email', name: 'Bulk Email' },
-      
+
       // Renewal Communication Pages
       { path: '/renewals/email-manager', permission: 'renewal-email-manager', name: 'Email Manager' },
-              { path: '/renewals/whatsapp-manager', permission: 'renewal-whatsapp-manager', name: 'WhatsApp Manager' },
-      
+      { path: '/renewals/whatsapp-manager', permission: 'renewal-whatsapp-manager', name: 'WhatsApp Manager' },
+
       // Marketing Pages
       { path: '/campaigns', permission: 'campaigns', name: 'Campaigns' },
       { path: '/templates', permission: 'templates', name: 'Template Manager' },
-      
+
       // Survey Pages
       { path: '/feedback', permission: 'feedback', name: 'Feedback & Surveys' },
       { path: '/survey-designer', permission: 'survey-designer', name: 'Survey Designer' },
-      
+
       // WhatsApp Pages
       { path: '/whatsapp-flow', permission: 'whatsapp-flow', name: 'WhatsApp Flow' },
-      
+
       // Admin Pages
       { path: '/settings', permission: 'settings', name: 'Settings' },
       { path: '/billing', permission: 'billing', name: 'Billing' },
       { path: '/users', permission: 'users', name: 'User Management' },
-      
+
       // Personal Pages
       { path: '/profile', permission: 'profile', name: 'Profile' }
     ];
@@ -282,7 +286,7 @@ export const PermissionsProvider = ({ children }) => {
 
   // Permission grouping for module-based access control
   const permissionGroups = {
-    renewals: ['cases', 'closed-cases', 'policy-timeline', 'logs', 'renewal-email-manager', 'renewal-whatsapp-manager'],
+    renewals: ['dashboard', 'cases', 'closed-cases', 'policy-timeline', 'logs', 'renewal-email-manager', 'renewal-whatsapp-manager'],
     email: ['emails', 'email-dashboard', 'email-analytics', 'bulk-email'],
     business: ['claims', 'policy-servicing', 'new-business', 'medical-management', 'leads', 'lead-management', 'lead-analytics', 'pipeline', 'attendance', 'kpi'],
     marketing: ['campaigns', 'templates'],

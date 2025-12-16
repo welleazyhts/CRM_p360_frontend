@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  Box, Typography, TextField, Button, 
+import {
+  Box, Typography, TextField, Button,
   CircularProgress, Alert, Container, Link,
   Card, CardContent, InputAdornment, IconButton,
   alpha, useTheme, Fade, Grow, Dialog, DialogTitle,
@@ -8,8 +8,8 @@ import {
 } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { 
-  Email as EmailIcon, 
+import {
+  Email as EmailIcon,
   Lock as LockIcon,
   Visibility as VisibilityIcon,
   VisibilityOff as VisibilityOffIcon,
@@ -23,16 +23,17 @@ const Login = () => {
   const [otp, setOtp] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [loginSuccess, setLoginSuccess] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [mfaEnabled, setMfaEnabled] = useState(false);
-  
+
   // Password reset state
   const [resetDialogOpen, setResetDialogOpen] = useState(false);
   const [resetEmail, setResetEmail] = useState('');
   const [resetSuccess, setResetSuccess] = useState(false);
   const [resetLoading, setResetLoading] = useState(false);
   const [resetError, setResetError] = useState('');
-  
+
   const { login, verifyMfaOtp } = useAuth();
   const navigate = useNavigate();
 
@@ -49,61 +50,50 @@ const Login = () => {
     }
   }, []);
 
+  // Redirect to dashboard when authenticated
+  useEffect(() => {
+    if (loginSuccess) {
+      // Navigate directly to the renewals dashboard as requested
+      navigate('/dashboard/renewals', { replace: true });
+    }
+  }, [loginSuccess, navigate]);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     if (!email || !password) {
       setError('Please enter both email and password');
       return;
     }
-    
+
     // Check if OTP is required (MFA enabled) but not provided
     if (mfaEnabled && !otp) {
       setError('Please enter the 6-digit verification code');
       return;
     }
-    
+
     setLoading(true);
     setError('');
-    
+
     try {
       // First, authenticate with email and password
       const result = await login(email, password);
       // Login successful
-      
+
       if (result.success) {
         // If MFA is enabled, verify the OTP code
         if (mfaEnabled) {
           const otpResult = await verifyMfaOtp(otp);
           // OTP verification completed
-          
+
           if (otpResult.success) {
-            // Navigating to dashboard after OTP verification
-            // Add a small delay to ensure auth state is updated
-            setTimeout(() => {
-              try {
-                navigate('/');
-              } catch (navError) {
-                // Fallback to direct page navigation
-                window.location.href = '/';
-              }
-            }, 100);
+            setLoginSuccess(true);
           } else {
             setError(otpResult.message || 'Invalid verification code. Please try again.');
           }
         } else {
           // If MFA is not enabled, proceed to dashboard
-          // Navigating to dashboard (no MFA)
-          // Add a small delay to ensure auth state is updated
-          setTimeout(() => {
-            try {
-              navigate('/');
-            } catch (navError) {
-              console.error('Navigation error:', navError);
-              // Fallback to direct page navigation
-              window.location.href = '/';
-            }
-          }, 100);
+          setLoginSuccess(true);
         }
       } else {
         setError(result.message || 'Login failed. Please try again.');
@@ -112,21 +102,23 @@ const Login = () => {
       setError('An error occurred during login. Please try again.');
       console.error(err);
     } finally {
-      setLoading(false);
+      if (!loginSuccess) {
+        setLoading(false);
+      }
     }
   };
 
   const handleTogglePasswordVisibility = () => {
     setShowPassword(!showPassword);
   };
-  
+
   const handleResetDialogOpen = () => {
     setResetDialogOpen(true);
     setResetEmail(email || '');
     setResetError('');
     setResetSuccess(false);
   };
-  
+
   const handleResetDialogClose = () => {
     setResetDialogOpen(false);
     if (resetSuccess) {
@@ -134,23 +126,23 @@ const Login = () => {
       setResetSuccess(false);
     }
   };
-  
+
   const handleResetPassword = async (e) => {
     e.preventDefault();
-    
+
     if (!resetEmail) {
       setResetError('Please enter your email address');
       return;
     }
-    
+
     if (!/\S+@\S+\.\S+/.test(resetEmail)) {
       setResetError('Please enter a valid email address');
       return;
     }
-    
+
     setResetLoading(true);
     setResetError('');
-    
+
     // In a real app, this would call an API to send a reset link
     // For demo purposes, we'll simulate a successful API call
     setTimeout(() => {
@@ -167,7 +159,7 @@ const Login = () => {
         flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'center',
-        background: theme.palette.mode === 'dark' 
+        background: theme.palette.mode === 'dark'
           ? `linear-gradient(135deg, ${alpha(theme.palette.primary.dark, 0.6)} 0%, ${alpha(theme.palette.background.default, 0.9)} 100%)`
           : `linear-gradient(135deg, ${alpha(theme.palette.primary.light, 0.2)} 0%, ${alpha(theme.palette.background.default, 0.8)} 100%)`,
         backgroundSize: 'cover',
@@ -176,25 +168,25 @@ const Login = () => {
     >
       <Fade in={true} timeout={800}>
         <Container maxWidth="sm">
-          <Box 
-            sx={{ 
+          <Box
+            sx={{
               display: 'flex',
               flexDirection: 'column',
               alignItems: 'center',
               mb: 4
             }}
           >
-            <SecurityIcon 
-              sx={{ 
-                fontSize: 60, 
+            <SecurityIcon
+              sx={{
+                fontSize: 60,
                 color: theme.palette.primary.main,
                 mb: 2
               }}
             />
-            <Typography 
-              variant="h3" 
-              component="h1" 
-              sx={{ 
+            <Typography
+              variant="h3"
+              component="h1"
+              sx={{
                 fontWeight: 700,
                 background: theme.palette.mode === 'dark'
                   ? `linear-gradient(90deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`
@@ -209,11 +201,11 @@ const Login = () => {
               Py360
             </Typography>
           </Box>
-          
+
           <Grow in={true} timeout={1000}>
-            <Card 
-              elevation={0} 
-              sx={{ 
+            <Card
+              elevation={0}
+              sx={{
                 borderRadius: 4,
                 overflow: 'hidden',
                 boxShadow: '0 10px 40px rgba(164, 215, 225, 0.15)',
@@ -238,15 +230,15 @@ const Login = () => {
                     Sign in to access your account
                   </Typography>
                 </Box>
-                
+
                 {error && (
                   <Grow in={Boolean(error)}>
-                    <Alert 
+                    <Alert
                       severity={error.includes('expired') ? 'warning' : 'error'}
-                      sx={{ 
-                        mb: 3, 
+                      sx={{
+                        mb: 3,
                         borderRadius: 2,
-                        boxShadow: error.includes('expired') 
+                        boxShadow: error.includes('expired')
                           ? '0 4px 12px rgba(255, 152, 0, 0.1)'
                           : '0 4px 12px rgba(244, 67, 54, 0.1)'
                       }}
@@ -255,7 +247,7 @@ const Login = () => {
                     </Alert>
                   </Grow>
                 )}
-                
+
                 <form onSubmit={handleSubmit}>
                   <TextField
                     label="Email Address"
@@ -281,7 +273,7 @@ const Login = () => {
                       }
                     }}
                   />
-                  
+
                   <TextField
                     label="Password"
                     type={showPassword ? 'text' : 'password'}
@@ -316,7 +308,7 @@ const Login = () => {
                       }
                     }}
                   />
-                  
+
                   {mfaEnabled && (
                     <TextField
                       label="6-Digit Verification Code"
@@ -343,7 +335,7 @@ const Login = () => {
                       }}
                     />
                   )}
-                  
+
                   <Button
                     type="submit"
                     fullWidth
@@ -386,7 +378,7 @@ const Login = () => {
                   >
                     {loading ? <CircularProgress size={24} /> : 'Sign In'}
                   </Button>
-                  
+
                   <Box sx={{ textAlign: 'center' }}>
                     <Link
                       onClick={handleResetDialogOpen}
@@ -434,7 +426,7 @@ const Login = () => {
               </CardContent>
             </Card>
           </Grow>
-          
+
           <Box sx={{ textAlign: 'center', mt: 4 }}>
             <Typography variant="body2" color="text.secondary">
               © {new Date().getFullYear()} Veriright Management Solutions Private Limited. All rights reserved.
@@ -442,10 +434,10 @@ const Login = () => {
           </Box>
         </Container>
       </Fade>
-      
+
       {/* Password Reset Dialog */}
-      <Dialog 
-        open={resetDialogOpen} 
+      <Dialog
+        open={resetDialogOpen}
         onClose={handleResetDialogClose}
         maxWidth="sm"
         fullWidth
@@ -456,10 +448,10 @@ const Login = () => {
           }
         }}
       >
-        <DialogTitle 
-          sx={{ 
-            px: 3, 
-            pt: 3, 
+        <DialogTitle
+          sx={{
+            px: 3,
+            pt: 3,
             pb: 1,
             fontWeight: 600
           }}
@@ -469,10 +461,10 @@ const Login = () => {
         <DialogContent sx={{ px: 3, py: 2 }}>
           {resetSuccess ? (
             <Box>
-              <Alert 
-                severity="success" 
-                sx={{ 
-                  mb: 2, 
+              <Alert
+                severity="success"
+                sx={{
+                  mb: 2,
                   borderRadius: 2,
                   boxShadow: '0 4px 12px rgba(76, 175, 80, 0.1)'
                 }}
@@ -480,7 +472,7 @@ const Login = () => {
                 Password reset link sent successfully!
               </Alert>
               <DialogContentText>
-                We've sent a password reset link to <strong>{resetEmail}</strong>. 
+                We've sent a password reset link to <strong>{resetEmail}</strong>.
                 Please check your email and follow the instructions to reset your password.
               </DialogContentText>
             </Box>
@@ -489,12 +481,12 @@ const Login = () => {
               <DialogContentText sx={{ mb: 2 }}>
                 Enter your email address below and we'll send you a link to reset your password.
               </DialogContentText>
-              
+
               {resetError && (
-                <Alert 
-                  severity="error" 
-                  sx={{ 
-                    mb: 2, 
+                <Alert
+                  severity="error"
+                  sx={{
+                    mb: 2,
                     borderRadius: 2,
                     boxShadow: '0 4px 12px rgba(244, 67, 54, 0.1)'
                   }}
@@ -502,7 +494,7 @@ const Login = () => {
                   {resetError}
                 </Alert>
               )}
-              
+
               <form onSubmit={handleResetPassword}>
                 <TextField
                   autoFocus
@@ -532,25 +524,25 @@ const Login = () => {
           )}
         </DialogContent>
         <DialogActions sx={{ px: 3, pb: 3 }}>
-          <Button 
-            onClick={handleResetDialogClose} 
+          <Button
+            onClick={handleResetDialogClose}
             color={resetSuccess ? "primary" : "secondary"}
             variant="outlined"
-            sx={{ 
+            sx={{
               borderRadius: 2,
               px: 3
             }}
           >
             {resetSuccess ? 'Close' : 'Cancel'}
           </Button>
-          
+
           {!resetSuccess && (
-            <Button 
+            <Button
               onClick={handleResetPassword}
               color="primary"
               variant="contained"
               disabled={resetLoading}
-              sx={{ 
+              sx={{
                 borderRadius: 2,
                 px: 3
               }}

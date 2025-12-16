@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { 
-  Grid, Paper, Typography, Box, Card, CardContent, 
+import {
+  Grid, Paper, Typography, Box, Card, CardContent,
   FormControl, InputLabel, Select, MenuItem, alpha, useTheme,
   Fade, Grow, Chip, IconButton, Button, Collapse, Divider,
   Table, TableBody, TableCell, TableContainer, TableHead, TableRow,
@@ -11,16 +11,16 @@ import {
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
-import { 
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, 
+import {
+  BarChart, Bar, XAxis, YAxis, CartesianGrid,
   Tooltip as RechartsTooltip, Legend, ResponsiveContainer, AreaChart, Area, LineChart, Line, PieChart, Pie, Cell,
   RadialBarChart, RadialBar
 } from 'recharts';
 import { fetchDashboardStats, fetchTrendData, fetchBatchStatus, fetchTeams, fetchTeamMembers } from '../services/api';
-import { 
+import {
   Timeline as TimelineIcon,
-  Policy as PolicyIcon, 
-  AssignmentTurnedIn as CompletedIcon, 
+  Policy as PolicyIcon,
+  AssignmentTurnedIn as CompletedIcon,
   Watch as PendingIcon,
   ErrorOutline as ErrorIcon,
   Payments as PaymentsIcon,
@@ -73,7 +73,7 @@ const Dashboard = () => {
     paymentCollected: 0,
     paymentPending: 0
   });
-  
+
   const [trendData, setTrendData] = useState([]);
   const [batchData, setBatchData] = useState([]);
   const [dateRange, setDateRange] = useState('week');
@@ -87,7 +87,7 @@ const Dashboard = () => {
   const [selectedTeamMember, setSelectedTeamMember] = useState('all');
   const [teams, setTeams] = useState([]);
   const [teamMembers, setTeamMembers] = useState([]);
-  
+
   // MIS Export states
   const [exportExpanded, setExportExpanded] = useState(false);
   const [exportDateRange, setExportDateRange] = useState('month');
@@ -107,7 +107,7 @@ const Dashboard = () => {
   const [paymentModeData, setPaymentModeData] = useState([]);
   const [costData, setCostData] = useState([]);
   const [costPerChannelData, setCostPerChannelData] = useState([]);
-  
+
   // Payment analysis chart data states
   const [paymentTypeData, setPaymentTypeData] = useState([]);
   const [paymentTimelineData, setPaymentTimelineData] = useState([]);
@@ -115,10 +115,10 @@ const Dashboard = () => {
   const [policyRenewalData, setPolicyRenewalData] = useState([]);
   const [channelCollectionData, setChannelCollectionData] = useState([]);
   const [collectionModeData, setCollectionModeData] = useState([]);
-  
+
   // Campaign data state
   const [campaignData, setCampaignData] = useState([]);
-  
+
   // Customer Retention data
   const customerRetentionData = {
     overallRetentionRate: 85.2,
@@ -140,10 +140,10 @@ const Dashboard = () => {
       { segment: 'Basic', retention: 78.9, customers: 3300 }
     ]
   };
-  
+
   // Channel and Hierarchy Management states
   const [activeManagementTab, setActiveManagementTab] = useState(0);
-  
+
   // Channel Management states
   const [channels, setChannels] = useState([]);
   const [channelDialog, setChannelDialog] = useState({
@@ -168,7 +168,7 @@ const Dashboard = () => {
       }
     }
   });
-  
+
   // Hierarchy Management states
   const [hierarchyData, setHierarchyData] = useState([]);
   const [hierarchyDialog, setHierarchyDialog] = useState({
@@ -186,10 +186,10 @@ const Dashboard = () => {
       status: 'active'
     }
   });
-  
+
   const [channelPerformanceData, setChannelPerformanceData] = useState([]);
   const [hierarchyPerformanceData, setHierarchyPerformanceData] = useState([]);
-  
+
   // Distribution Channel Management states
   const [distributionChannels, setDistributionChannels] = useState([]);
   const [distributionDialog, setDistributionDialog] = useState({
@@ -226,7 +226,7 @@ const Dashboard = () => {
           ...statsData
         }));
       }
-      
+
       const trends = await fetchTrendData(dateRange, policyType, caseStatus, startDate, endDate, selectedTeam, selectedTeamMember);
       if (trends && Array.isArray(trends)) {
         setTrendData(trends);
@@ -238,7 +238,9 @@ const Dashboard = () => {
         setBatchData(batchStatusData);
       }
     } catch (error) {
-              // Failed to load dashboard data
+      console.error('Failed to load dashboard data:', error);
+    } finally {
+      setLoaded(true);
     }
   }, [dateRange, policyType, caseStatus, startDate, endDate, selectedTeam, selectedTeamMember]);
 
@@ -254,7 +256,7 @@ const Dashboard = () => {
         console.error('Failed to load teams:', error);
       }
     };
-    
+
     loadTeams();
   }, []);
 
@@ -275,18 +277,18 @@ const Dashboard = () => {
         setSelectedTeamMember('all');
       }
     };
-    
+
     loadTeamMembers();
   }, [selectedTeam]);
 
   // MIS Export functionality
   const handleMISExport = async () => {
     setExporting(true);
-    
+
     try {
       // Simulate export process
       await new Promise(resolve => setTimeout(resolve, 2000));
-      
+
       // Create export data based on selected filters
       const exportData = {
         dateRange: exportDateRange,
@@ -300,21 +302,21 @@ const Dashboard = () => {
         trends: trendData,
         timestamp: new Date().toISOString()
       };
-      
+
       // Generate filename
       const timestamp = new Date().toISOString().split('T')[0];
-      const dateRangeStr = exportDateRange === 'custom' && exportStartDate && exportEndDate ? 
-        `${exportStartDate.toISOString().split('T')[0]}_to_${exportEndDate.toISOString().split('T')[0]}` : 
+      const dateRangeStr = exportDateRange === 'custom' && exportStartDate && exportEndDate ?
+        `${exportStartDate.toISOString().split('T')[0]}_to_${exportEndDate.toISOString().split('T')[0]}` :
         exportDateRange;
-      
+
       // Build filename parts
       const filenameParts = ['MIS_Report', exportDataType];
       if (exportPolicyType !== 'all') filenameParts.push(exportPolicyType);
       if (exportCaseStatus !== 'all') filenameParts.push(exportCaseStatus);
       filenameParts.push(dateRangeStr, timestamp);
-      
+
       const filename = `${filenameParts.join('_')}.${exportFormat === 'excel' ? 'xlsx' : exportFormat === 'csv' ? 'csv' : exportFormat === 'pdf' ? 'pdf' : 'json'}`;
-      
+
       // Simulate file download
       const dataStr = JSON.stringify(exportData, null, 2);
       const dataBlob = new Blob([dataStr], { type: 'application/json' });
@@ -326,10 +328,10 @@ const Dashboard = () => {
       link.click();
       document.body.removeChild(link);
       URL.revokeObjectURL(url);
-      
+
       // Collapse the export panel after successful export
       setExportExpanded(false);
-      
+
     } catch (error) {
       console.error('Export failed:', error);
     } finally {
@@ -348,12 +350,12 @@ const Dashboard = () => {
       paymentCollected: 0,
       paymentPending: 0
     };
-    
+
     setStats(initialStats);
-    
+
     // Load dashboard data
     loadDashboardData();
-    
+
     // For demo purposes, let's set some mock data with a slight delay to simulate API fetch
     const mockTimer = setTimeout(() => {
       setStats({
@@ -366,7 +368,7 @@ const Dashboard = () => {
         paymentPending: 3250000
       });
     }, 300);
-    
+
     const mockTrendData = [
       { name: 'Mon', newCases: 65, renewals: 42, successRate: 0.85 },
       { name: 'Tue', newCases: 59, renewals: 38, successRate: 0.82 },
@@ -376,9 +378,9 @@ const Dashboard = () => {
       { name: 'Sat', newCases: 25, renewals: 20, successRate: 0.92 },
       { name: 'Sun', newCases: 15, renewals: 12, successRate: 0.90 },
     ];
-    
+
     setTrendData(mockTrendData);
-    
+
     // Mock data for new charts
     const mockChannelChartData = [
       { name: 'Online Portal', value: 45, color: '#A4D7E1' },
@@ -570,7 +572,7 @@ const Dashboard = () => {
         conversionRate: 17.8
       }
     ];
-    
+
     setCampaignData(mockCampaignData);
 
     // Mock Channel Management Data
@@ -1079,7 +1081,7 @@ const Dashboard = () => {
       };
       setChannels(prev => [...prev, newChannel]);
     } else {
-      setChannels(prev => prev.map(ch => 
+      setChannels(prev => prev.map(ch =>
         ch.id === channelDialog.channelData.id ? channelDialog.channelData : ch
       ));
     }
@@ -1134,7 +1136,7 @@ const Dashboard = () => {
       };
       setHierarchyData(prev => [...prev, newNode]);
     } else {
-      setHierarchyData(prev => prev.map(node => 
+      setHierarchyData(prev => prev.map(node =>
         node.id === hierarchyDialog.nodeData.id ? hierarchyDialog.nodeData : node
       ));
     }
@@ -1197,7 +1199,7 @@ const Dashboard = () => {
       };
       setDistributionChannels(prev => [...prev, newChannel]);
     } else {
-      setDistributionChannels(prev => prev.map(ch => 
+      setDistributionChannels(prev => prev.map(ch =>
         ch.id === distributionDialog.channelData.id ? distributionDialog.channelData : ch
       ));
     }
@@ -1246,15 +1248,15 @@ const Dashboard = () => {
     // Create a gradient background
     const gradientFrom = alpha(color, theme.palette.mode === 'dark' ? 0.7 : 0.9);
     const gradientTo = alpha(color, theme.palette.mode === 'dark' ? 0.4 : 0.6);
-    
+
     // Safe number conversion and formatting
     let displayValue = value;
     if (isCurrency) {
       // Ensure we have a valid number before formatting
       const numericValue = Number(value);
       if (!isNaN(numericValue)) {
-        displayValue = new Intl.NumberFormat('en-IN', { 
-          style: 'currency', 
+        displayValue = new Intl.NumberFormat('en-IN', {
+          style: 'currency',
           currency: 'INR',
           minimumFractionDigits: 0,
           maximumFractionDigits: 0
@@ -1263,12 +1265,12 @@ const Dashboard = () => {
         displayValue = '₹0'; // Default fallback for NaN values
       }
     }
-    
+
     return (
       <Grow in={loaded} style={{ transformOrigin: '0 0 0' }} timeout={(index + 1) * 200}>
-        <Card 
-          sx={{ 
-            height: '100%', 
+        <Card
+          sx={{
+            height: '100%',
             background: `linear-gradient(135deg, ${gradientFrom} 0%, ${gradientTo} 100%)`,
             borderRadius: 4,
             boxShadow: `0 10px 20px ${alpha(color, 0.2)}`,
@@ -1307,7 +1309,7 @@ const Dashboard = () => {
         <Typography variant="h4" gutterBottom sx={{ mb: 3 }}>
           Dashboard
         </Typography>
-        
+
         {/* Filters */}
         <Card sx={{ mb: 4, boxShadow: 'none', p: 1 }}>
           <CardContent sx={{ p: 2 }}>
@@ -1332,7 +1334,7 @@ const Dashboard = () => {
                   <MenuItem value="custom">Custom Range</MenuItem>
                 </Select>
               </FormControl>
-              
+
               {dateRange === 'custom' && (
                 <LocalizationProvider dateAdapter={AdapterDateFns}>
                   <Box sx={{ display: 'flex', gap: 2 }}>
@@ -1410,7 +1412,7 @@ const Dashboard = () => {
                   </Box>
                 </LocalizationProvider>
               )}
-              
+
               <FormControl sx={{ minWidth: 160 }} size="small">
                 <InputLabel>Policy Type</InputLabel>
                 <Select
@@ -1424,7 +1426,7 @@ const Dashboard = () => {
                   <MenuItem value="life">Life</MenuItem>
                 </Select>
               </FormControl>
-              
+
               <FormControl sx={{ minWidth: 160 }} size="small">
                 <InputLabel>Case Status</InputLabel>
                 <Select
@@ -1439,13 +1441,13 @@ const Dashboard = () => {
                   <MenuItem value="failed">Failed</MenuItem>
                 </Select>
               </FormControl>
-              
+
               <FormControl sx={{ minWidth: 160 }} size="small">
                 <InputLabel>
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
                     <TeamIcon fontSize="small" />
                     Team
-            </Box>
+                  </Box>
                 </InputLabel>
                 <Select
                   value={selectedTeam}
@@ -1476,7 +1478,7 @@ const Dashboard = () => {
                   ))}
                 </Select>
               </FormControl>
-              
+
               {selectedTeam !== 'all' && teamMembers.length > 0 && (
                 <FormControl sx={{ minWidth: 180 }} size="small">
                   <InputLabel>
@@ -1513,7 +1515,7 @@ const Dashboard = () => {
                 </FormControl>
               )}
             </Box>
-            
+
             {/* Active Filters Summary */}
             {(selectedTeam !== 'all' || selectedTeamMember !== 'all') && (
               <Box sx={{ mt: 2, display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
@@ -1562,7 +1564,7 @@ const Dashboard = () => {
                 startIcon={<ExportIcon />}
                 endIcon={exportExpanded ? <ExpandLessIcon /> : <ExpandMoreIcon />}
                 onClick={() => setExportExpanded(!exportExpanded)}
-                sx={{ 
+                sx={{
                   borderRadius: 2,
                   textTransform: 'none',
                   fontWeight: 600
@@ -1571,7 +1573,7 @@ const Dashboard = () => {
                 {exportExpanded ? 'Collapse Export' : 'Export Data'}
               </Button>
             </Box>
-            
+
             <Collapse in={exportExpanded} timeout="auto" unmountOnExit>
               <Divider sx={{ mb: 2 }} />
               <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2, mb: 3 }}>
@@ -1708,7 +1710,7 @@ const Dashboard = () => {
                   </Select>
                 </FormControl>
               </Box>
-              
+
               {/* Validation Message for Custom Date Range */}
               {exportDateRange === 'custom' && (!exportStartDate || !exportEndDate) && (
                 <Box sx={{ mb: 2, p: 1.5, bgcolor: alpha(theme.palette.warning.main, 0.1), borderRadius: 1, border: `1px solid ${alpha(theme.palette.warning.main, 0.3)}` }}>
@@ -1727,7 +1729,7 @@ const Dashboard = () => {
                   startIcon={<ExportIcon />}
                   onClick={handleMISExport}
                   disabled={exporting || (exportDateRange === 'custom' && (!exportStartDate || !exportEndDate))}
-                  sx={{ 
+                  sx={{
                     borderRadius: 2,
                     textTransform: 'none',
                     fontWeight: 600,
@@ -1737,7 +1739,7 @@ const Dashboard = () => {
                   {exporting ? 'Exporting...' : 'Generate Export'}
                 </Button>
               </Box>
-              
+
               {/* Export Info */}
               <Box sx={{ mt: 2, p: 2, bgcolor: alpha(theme.palette.info.main, 0.1), borderRadius: 2 }}>
                 <Typography variant="body2" color="info.main" sx={{ fontWeight: 500, mb: 1 }}>
@@ -1746,11 +1748,11 @@ const Dashboard = () => {
                 <Typography variant="caption" color="text.secondary">
                   • Date Range: {
                     exportDateRange === 'all' ? 'All Time' :
-                    exportDateRange === 'custom' ? 
-                      (exportStartDate && exportEndDate ? 
-                        `${exportStartDate.toLocaleDateString()} - ${exportEndDate.toLocaleDateString()}` : 
-                        'Custom Range (Please select dates)') :
-                      exportDateRange.charAt(0).toUpperCase() + exportDateRange.slice(1)
+                      exportDateRange === 'custom' ?
+                        (exportStartDate && exportEndDate ?
+                          `${exportStartDate.toLocaleDateString()} - ${exportEndDate.toLocaleDateString()}` :
+                          'Custom Range (Please select dates)') :
+                        exportDateRange.charAt(0).toUpperCase() + exportDateRange.slice(1)
                   }
                   <br />
                   • Data Type: {exportDataType === 'all' ? 'Complete Dataset' : exportDataType.charAt(0).toUpperCase() + exportDataType.slice(1)}
@@ -1799,7 +1801,7 @@ const Dashboard = () => {
             {activeManagementTab === 0 && (
               <Collapse in={true} timeout="auto">
                 <Divider sx={{ mb: 3 }} />
-                
+
                 {/* Communication Channel Management Header */}
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
                   <Box>
@@ -1825,7 +1827,7 @@ const Dashboard = () => {
                   {channels.map((channel, index) => (
                     <Grid item xs={12} md={6} lg={4} key={channel.id}>
                       <Grow in={loaded} timeout={(index + 1) * 200}>
-                        <Card sx={{ 
+                        <Card sx={{
                           height: '100%',
                           borderRadius: 3,
                           boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
@@ -1839,7 +1841,7 @@ const Dashboard = () => {
                           <CardContent sx={{ p: 3 }}>
                             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', mb: 2 }}>
                               <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                                <Avatar sx={{ 
+                                <Avatar sx={{
                                   bgcolor: channel.status === 'active' ? 'success.main' : 'warning.main',
                                   width: 40,
                                   height: 40
@@ -1850,8 +1852,8 @@ const Dashboard = () => {
                                   <Typography variant="h6" fontWeight="600">
                                     {channel.name}
                                   </Typography>
-                                  <Chip 
-                                    label={channel.status} 
+                                  <Chip
+                                    label={channel.status}
                                     color={channel.status === 'active' ? 'success' : 'warning'}
                                     size="small"
                                     sx={{ textTransform: 'capitalize' }}
@@ -1905,8 +1907,8 @@ const Dashboard = () => {
                                 <Typography variant="body2">Conversion Rate</Typography>
                                 <Typography variant="body2" fontWeight="600">{channel.conversionRate}%</Typography>
                               </Box>
-                              <LinearProgress 
-                                variant="determinate" 
+                              <LinearProgress
+                                variant="determinate"
                                 value={channel.conversionRate}
                                 sx={{ height: 6, borderRadius: 3 }}
                               />
@@ -1972,9 +1974,9 @@ const Dashboard = () => {
                             </Box>
                           </TableCell>
                           <TableCell align="center">
-                            <Chip 
-                              label={channel.type} 
-                              size="small" 
+                            <Chip
+                              label={channel.type}
+                              size="small"
                               variant="outlined"
                               sx={{ textTransform: 'capitalize' }}
                             />
@@ -1985,8 +1987,8 @@ const Dashboard = () => {
                           <TableCell align="center">
                             <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1 }}>
                               <Typography variant="body2" fontWeight="600">{channel.conversionRate}%</Typography>
-                              {channel.conversionRate >= 70 ? 
-                                <TrendingUpIcon fontSize="small" color="success" /> : 
+                              {channel.conversionRate >= 70 ?
+                                <TrendingUpIcon fontSize="small" color="success" /> :
                                 <TrendingDownIcon fontSize="small" color="error" />
                               }
                             </Box>
@@ -2012,7 +2014,7 @@ const Dashboard = () => {
             {activeManagementTab === 1 && (
               <Collapse in={true} timeout="auto">
                 <Divider sx={{ mb: 3 }} />
-                
+
                 {/* Distribution Channel Management Header */}
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
                   <Box>
@@ -2038,7 +2040,7 @@ const Dashboard = () => {
                   {distributionChannels.map((channel, index) => (
                     <Grid item xs={12} md={6} lg={4} key={channel.id}>
                       <Grow in={loaded} timeout={(index + 1) * 200}>
-                        <Card sx={{ 
+                        <Card sx={{
                           height: '100%',
                           borderRadius: 3,
                           boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
@@ -2052,7 +2054,7 @@ const Dashboard = () => {
                           <CardContent sx={{ p: 3 }}>
                             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', mb: 2 }}>
                               <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                                <Avatar sx={{ 
+                                <Avatar sx={{
                                   bgcolor: channel.status === 'active' ? 'success.main' : 'warning.main',
                                   width: 40,
                                   height: 40
@@ -2063,15 +2065,15 @@ const Dashboard = () => {
                                   <Typography variant="h6" fontWeight="600">
                                     {channel.name}
                                   </Typography>
-                                  <Chip 
-                                    label={channel.type} 
+                                  <Chip
+                                    label={channel.type}
                                     color="primary"
                                     size="small"
                                     variant="outlined"
                                     sx={{ textTransform: 'capitalize', mr: 1 }}
                                   />
-                                  <Chip 
-                                    label={channel.status} 
+                                  <Chip
+                                    label={channel.status}
                                     color={channel.status === 'active' ? 'success' : 'warning'}
                                     size="small"
                                     sx={{ textTransform: 'capitalize' }}
@@ -2140,20 +2142,20 @@ const Dashboard = () => {
                               </Box>
                             </Box>
 
-                            <Box sx={{ 
-                              display: 'flex', 
-                              justifyContent: 'space-between', 
+                            <Box sx={{
+                              display: 'flex',
+                              justifyContent: 'space-between',
                               alignItems: 'center',
                               pt: 2,
                               borderTop: `1px solid ${theme.palette.divider}`
                             }}>
                               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                <Box sx={{ 
-                                  width: 8, 
-                                  height: 8, 
-                                  borderRadius: '50%', 
-                                  bgcolor: channel.performance.efficiency > 90 ? 'success.main' : 
-                                           channel.performance.efficiency > 80 ? 'warning.main' : 'error.main'
+                                <Box sx={{
+                                  width: 8,
+                                  height: 8,
+                                  borderRadius: '50%',
+                                  bgcolor: channel.performance.efficiency > 90 ? 'success.main' :
+                                    channel.performance.efficiency > 80 ? 'warning.main' : 'error.main'
                                 }} />
                                 <Typography variant="body2" fontWeight="600">
                                   {channel.performance.efficiency}% Efficiency
@@ -2175,7 +2177,7 @@ const Dashboard = () => {
             {activeManagementTab === 2 && (
               <Collapse in={true} timeout="auto">
                 <Divider sx={{ mb: 3 }} />
-                
+
                 {/* Hierarchy Management Header */}
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
                   <Box>
@@ -2201,17 +2203,17 @@ const Dashboard = () => {
                   {hierarchyData.filter(node => !node.parentId).map((rootNode, index) => (
                     <Grid item xs={12} key={rootNode.id}>
                       <Grow in={loaded} timeout={(index + 1) * 200}>
-                        <Accordion 
+                        <Accordion
                           defaultExpanded
-                          sx={{ 
+                          sx={{
                             borderRadius: 2,
                             boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
                             '&:before': { display: 'none' }
                           }}
                         >
-                          <AccordionSummary 
+                          <AccordionSummary
                             expandIcon={<ExpandMoreIcon />}
-                            sx={{ 
+                            sx={{
                               bgcolor: alpha(theme.palette.primary.main, 0.05),
                               borderRadius: '8px 8px 0 0'
                             }}
@@ -2261,7 +2263,7 @@ const Dashboard = () => {
                             <Grid container spacing={2}>
                               {hierarchyData.filter(node => node.parentId === rootNode.id).map((childNode) => (
                                 <Grid item xs={12} md={6} lg={4} key={childNode.id}>
-                                  <Card sx={{ 
+                                  <Card sx={{
                                     border: `1px solid ${theme.palette.divider}`,
                                     borderRadius: 2,
                                     transition: 'all 0.3s ease',
@@ -2273,10 +2275,10 @@ const Dashboard = () => {
                                     <CardContent sx={{ p: 2 }}>
                                       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', mb: 2 }}>
                                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-                                          <Avatar sx={{ 
-                                            bgcolor: 'secondary.main', 
-                                            width: 32, 
-                                            height: 32 
+                                          <Avatar sx={{
+                                            bgcolor: 'secondary.main',
+                                            width: 32,
+                                            height: 32
                                           }}>
                                             {getHierarchyTypeIcon(childNode.type)}
                                           </Avatar>
@@ -2382,9 +2384,9 @@ const Dashboard = () => {
                             </Box>
                           </TableCell>
                           <TableCell align="center">
-                            <Chip 
-                              label={node.type} 
-                              size="small" 
+                            <Chip
+                              label={node.type}
+                              size="small"
                               variant="outlined"
                               sx={{ textTransform: 'capitalize' }}
                             />
@@ -2398,8 +2400,8 @@ const Dashboard = () => {
                           <TableCell align="center">
                             <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1 }}>
                               <Typography variant="body2" fontWeight="600">{node.performance?.efficiency || 0}%</Typography>
-                              {(node.performance?.efficiency || 0) >= 85 ? 
-                                <CheckCircleIcon fontSize="small" color="success" /> : 
+                              {(node.performance?.efficiency || 0) >= 85 ?
+                                <CheckCircleIcon fontSize="small" color="success" /> :
                                 <WarningIcon fontSize="small" color="warning" />
                               }
                             </Box>
@@ -2425,7 +2427,7 @@ const Dashboard = () => {
             {activeManagementTab === 3 && (
               <Collapse in={true} timeout="auto">
                 <Divider sx={{ mb: 3 }} />
-                
+
                 {/* Analytics Tab */}
                 <Typography variant="h6" fontWeight="600" sx={{ mb: 3 }}>
                   Channel & Hierarchy Analytics
@@ -2447,13 +2449,13 @@ const Dashboard = () => {
                           <XAxis dataKey="channel" angle={-45} textAnchor="end" height={80} />
                           <YAxis yAxisId="left" />
                           <YAxis yAxisId="right" orientation="right" />
-                                              <RechartsTooltip 
-                      contentStyle={{ 
-                        backgroundColor: theme.palette.mode === 'dark' ? '#2a2a2a' : '#fff',
-                        borderRadius: 8,
-                        boxShadow: '0 4px 20px rgba(0,0,0,0.15)'
-                      }} 
-                    />
+                          <RechartsTooltip
+                            contentStyle={{
+                              backgroundColor: theme.palette.mode === 'dark' ? '#2a2a2a' : '#fff',
+                              borderRadius: 8,
+                              boxShadow: '0 4px 20px rgba(0,0,0,0.15)'
+                            }}
+                          />
                           <Legend />
                           <Bar yAxisId="left" dataKey="efficiency" fill={alpha(theme.palette.primary.main, 0.8)} name="Efficiency %" />
                           <Bar yAxisId="right" dataKey="cost" fill={alpha(theme.palette.error.main, 0.8)} name="Cost per Lead (₹)" />
@@ -2473,15 +2475,15 @@ const Dashboard = () => {
                       </Typography>
                       <ResponsiveContainer width="100%" height="85%">
                         <RadialBarChart data={hierarchyPerformanceData} innerRadius="20%" outerRadius="80%">
-                          <RadialBar 
-                            dataKey="efficiency" 
-                            cornerRadius={10} 
+                          <RadialBar
+                            dataKey="efficiency"
+                            cornerRadius={10}
                             fill={theme.palette.primary.main}
                             label={{ position: 'insideStart', fill: '#fff' }}
                           />
-                          <RechartsTooltip 
+                          <RechartsTooltip
                             formatter={(value) => [`${value}%`, 'Efficiency']}
-                            contentStyle={{ 
+                            contentStyle={{
                               backgroundColor: theme.palette.mode === 'dark' ? '#2a2a2a' : '#fff',
                               borderRadius: 8,
                               boxShadow: '0 4px 20px rgba(0,0,0,0.15)'
@@ -2497,76 +2499,76 @@ const Dashboard = () => {
             )}
           </CardContent>
         </Card>
-        
+
         {/* Stats Cards */}
         <Grid container spacing={3} sx={{ mb: 4 }}>
           <Grid item xs={12} sm={6} md={4} lg={3}>
-            <StatCard 
-              title="Total Cases" 
-              value={stats.totalCases} 
-              color={theme.palette.primary.main} 
+            <StatCard
+              title="Total Cases"
+              value={stats.totalCases}
+              color={theme.palette.primary.main}
               icon={<TimelineIcon fontSize="inherit" />}
               index={0}
             />
           </Grid>
           <Grid item xs={12} sm={6} md={4} lg={3}>
-            <StatCard 
-              title="In Progress" 
-              value={stats.inProgress} 
-              color={theme.palette.warning.main} 
+            <StatCard
+              title="In Progress"
+              value={stats.inProgress}
+              color={theme.palette.warning.main}
               icon={<PolicyIcon fontSize="inherit" />}
               index={1}
             />
           </Grid>
           <Grid item xs={12} sm={6} md={4} lg={3}>
-            <StatCard 
-              title="Renewed" 
-              value={stats.renewed} 
-              color={theme.palette.success.main} 
+            <StatCard
+              title="Renewed"
+              value={stats.renewed}
+              color={theme.palette.success.main}
               icon={<CompletedIcon fontSize="inherit" />}
               index={2}
             />
           </Grid>
           <Grid item xs={12} sm={6} md={4} lg={3}>
-            <StatCard 
-              title="Pending Action" 
-              value={stats.pendingAction} 
-              color="#9c27b0" 
+            <StatCard
+              title="Pending Action"
+              value={stats.pendingAction}
+              color="#9c27b0"
               icon={<PendingIcon fontSize="inherit" />}
               index={3}
             />
           </Grid>
           <Grid item xs={12} sm={6} md={4} lg={3}>
-            <StatCard 
-              title="Failed" 
-              value={stats.errors} 
-              color={theme.palette.error.main} 
+            <StatCard
+              title="Failed"
+              value={stats.errors}
+              color={theme.palette.error.main}
               icon={<ErrorIcon fontSize="inherit" />}
               index={4}
             />
           </Grid>
           <Grid item xs={12} sm={6} md={4} lg={3}>
-            <StatCard 
-              title="Payments Collected" 
-              value={stats.paymentCollected} 
-              color="#00897b" 
+            <StatCard
+              title="Payments Collected"
+              value={stats.paymentCollected}
+              color="#00897b"
               icon={<PaymentsIcon fontSize="inherit" />}
               index={5}
               isCurrency={true}
             />
           </Grid>
           <Grid item xs={12} sm={6} md={4} lg={3}>
-            <StatCard 
-              title="Payments Pending" 
-              value={stats.paymentPending} 
-              color="#ff9800" 
+            <StatCard
+              title="Payments Pending"
+              value={stats.paymentPending}
+              color="#ff9800"
               icon={<AccountBalanceIcon fontSize="inherit" />}
               index={6}
               isCurrency={true}
             />
           </Grid>
         </Grid>
-        
+
         {/* Charts */}
         <Grid container spacing={3}>
           <Grid item xs={12} md={6}>
@@ -2583,32 +2585,32 @@ const Dashboard = () => {
                     <CartesianGrid strokeDasharray="3 3" opacity={0.1} />
                     <XAxis dataKey="name" />
                     <YAxis />
-                    <RechartsTooltip 
-                      contentStyle={{ 
+                    <RechartsTooltip
+                      contentStyle={{
                         backgroundColor: theme.palette.mode === 'dark' ? '#2a2a2a' : '#fff',
                         borderRadius: 8,
                         boxShadow: '0 4px 20px rgba(0,0,0,0.15)'
-                      }} 
+                      }}
                     />
                     <Legend />
-                    <Bar 
-                      dataKey="newCases" 
-                      fill={alpha(theme.palette.primary.main, 0.8)} 
-                      name="New Cases" 
-                      radius={[4, 4, 0, 0]} 
+                    <Bar
+                      dataKey="newCases"
+                      fill={alpha(theme.palette.primary.main, 0.8)}
+                      name="New Cases"
+                      radius={[4, 4, 0, 0]}
                     />
-                    <Bar 
-                      dataKey="renewals" 
-                      fill={alpha(theme.palette.success.main, 0.8)}  
-                      name="Completed Renewals" 
-                      radius={[4, 4, 0, 0]} 
+                    <Bar
+                      dataKey="renewals"
+                      fill={alpha(theme.palette.success.main, 0.8)}
+                      name="Completed Renewals"
+                      radius={[4, 4, 0, 0]}
                     />
                   </BarChart>
                 </ResponsiveContainer>
               </Paper>
             </Grow>
           </Grid>
-          
+
           <Grid item xs={12} md={6}>
             <Grow in={loaded} style={{ transformOrigin: '0 0 0' }} timeout={600}>
               <Paper sx={{ p: 3, height: 380, boxShadow: '0 8px 32px rgba(0,0,0,0.1)' }}>
@@ -2622,26 +2624,26 @@ const Dashboard = () => {
                   <AreaChart data={trendData}>
                     <defs>
                       <linearGradient id="successGradient" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor={theme.palette.success.main} stopOpacity={0.8}/>
-                        <stop offset="95%" stopColor={theme.palette.success.main} stopOpacity={0.1}/>
+                        <stop offset="5%" stopColor={theme.palette.success.main} stopOpacity={0.8} />
+                        <stop offset="95%" stopColor={theme.palette.success.main} stopOpacity={0.1} />
                       </linearGradient>
                     </defs>
                     <CartesianGrid strokeDasharray="3 3" opacity={0.1} />
                     <XAxis dataKey="name" />
                     <YAxis domain={[0, 1]} tickFormatter={(tick) => `${(tick * 100).toFixed(0)}%`} />
-                    <RechartsTooltip 
-                      formatter={(value) => `${(value * 100).toFixed(2)}%`} 
-                      contentStyle={{ 
+                    <RechartsTooltip
+                      formatter={(value) => `${(value * 100).toFixed(2)}%`}
+                      contentStyle={{
                         backgroundColor: theme.palette.mode === 'dark' ? '#2a2a2a' : '#fff',
                         borderRadius: 8,
                         boxShadow: '0 4px 20px rgba(0,0,0,0.15)'
-                      }} 
+                      }}
                     />
                     <Legend />
-                    <Area 
-                      type="monotone" 
-                      dataKey="successRate" 
-                      stroke={theme.palette.success.main} 
+                    <Area
+                      type="monotone"
+                      dataKey="successRate"
+                      stroke={theme.palette.success.main}
                       fillOpacity={1}
                       fill="url(#successGradient)"
                       name="Success Rate"
@@ -2666,7 +2668,7 @@ const Dashboard = () => {
                       Status breakdown of cases by batch upload
                     </Typography>
                   </Box>
-                  
+
                   <FormControl sx={{ minWidth: 200 }} size="small">
                     <InputLabel>Select Batch</InputLabel>
                     <Select
@@ -2683,10 +2685,10 @@ const Dashboard = () => {
                     </Select>
                   </FormControl>
                 </Box>
-                
+
                 <Box sx={{ height: '85%' }}>
                   <ResponsiveContainer width="100%" height="100%">
-                    <BarChart 
+                    <BarChart
                       data={selectedBatch === 'all' ? batchData : batchData.filter(batch => batch.id === selectedBatch)}
                       layout="vertical"
                       barGap={0}
@@ -2694,43 +2696,43 @@ const Dashboard = () => {
                     >
                       <CartesianGrid strokeDasharray="3 3" opacity={0.1} horizontal={false} />
                       <XAxis type="number" />
-                      <YAxis 
-                        dataKey="fileName" 
-                        type="category" 
+                      <YAxis
+                        dataKey="fileName"
+                        type="category"
                         width={150}
                         tick={{ fontSize: 12 }}
                       />
-                      <RechartsTooltip 
-                        contentStyle={{ 
+                      <RechartsTooltip
+                        contentStyle={{
                           backgroundColor: theme.palette.mode === 'dark' ? '#2a2a2a' : '#fff',
                           borderRadius: 8,
                           boxShadow: '0 4px 20px rgba(0,0,0,0.15)'
                         }}
                       />
                       <Legend />
-                      <Bar 
-                        dataKey="status.renewed" 
-                        stackId="a" 
-                        fill={theme.palette.success.main} 
-                        name="Renewed" 
+                      <Bar
+                        dataKey="status.renewed"
+                        stackId="a"
+                        fill={theme.palette.success.main}
+                        name="Renewed"
                       />
-                      <Bar 
-                        dataKey="status.inProgress" 
-                        stackId="a" 
-                        fill={theme.palette.warning.main} 
-                        name="In Progress" 
+                      <Bar
+                        dataKey="status.inProgress"
+                        stackId="a"
+                        fill={theme.palette.warning.main}
+                        name="In Progress"
                       />
-                      <Bar 
-                        dataKey="status.pending" 
-                        stackId="a" 
-                        fill={theme.palette.info.main} 
-                        name="Pending" 
+                      <Bar
+                        dataKey="status.pending"
+                        stackId="a"
+                        fill={theme.palette.info.main}
+                        name="Pending"
                       />
-                      <Bar 
-                        dataKey="status.failed" 
-                        stackId="a" 
-                        fill={theme.palette.error.main} 
-                        name="Failed" 
+                      <Bar
+                        dataKey="status.failed"
+                        stackId="a"
+                        fill={theme.palette.error.main}
+                        name="Failed"
                       />
                     </BarChart>
                   </ResponsiveContainer>
@@ -2752,7 +2754,7 @@ const Dashboard = () => {
                       Payment trends over time
                     </Typography>
                   </Box>
-                  
+
                   <FormControl sx={{ minWidth: 200 }} size="small">
                     <InputLabel>Select Batch</InputLabel>
                     <Select
@@ -2769,7 +2771,7 @@ const Dashboard = () => {
                     </Select>
                   </FormControl>
                 </Box>
-                
+
                 <Box sx={{ height: '85%' }}>
                   <ResponsiveContainer width="100%" height="100%">
                     <LineChart
@@ -2777,43 +2779,43 @@ const Dashboard = () => {
                       margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
                     >
                       <CartesianGrid strokeDasharray="3 3" opacity={0.1} />
-                      <XAxis 
-                        dataKey="fileName" 
+                      <XAxis
+                        dataKey="fileName"
                         tick={{ fontSize: 12 }}
                         angle={-45}
                         textAnchor="end"
                         height={70}
                       />
-                      <YAxis 
+                      <YAxis
                         tickFormatter={(value) => `₹${(value / 100000).toFixed(1)}L`}
                       />
-                      <RechartsTooltip 
-                        formatter={(value) => new Intl.NumberFormat('en-IN', { 
-                          style: 'currency', 
+                      <RechartsTooltip
+                        formatter={(value) => new Intl.NumberFormat('en-IN', {
+                          style: 'currency',
                           currency: 'INR',
                           minimumFractionDigits: 0,
                           maximumFractionDigits: 0
                         }).format(value)}
-                        contentStyle={{ 
+                        contentStyle={{
                           backgroundColor: theme.palette.mode === 'dark' ? '#2a2a2a' : '#fff',
                           borderRadius: 8,
                           boxShadow: '0 4px 20px rgba(0,0,0,0.15)'
                         }}
                       />
                       <Legend />
-                      <Line 
-                        type="monotone" 
-                        dataKey="payment.received" 
-                        stroke={theme.palette.success.main} 
+                      <Line
+                        type="monotone"
+                        dataKey="payment.received"
+                        stroke={theme.palette.success.main}
                         strokeWidth={2}
                         dot={{ r: 4 }}
                         activeDot={{ r: 6 }}
                         name="Payment Received"
                       />
-                      <Line 
-                        type="monotone" 
-                        dataKey="payment.pending" 
-                        stroke={theme.palette.warning.main} 
+                      <Line
+                        type="monotone"
+                        dataKey="payment.pending"
+                        stroke={theme.palette.warning.main}
                         strokeWidth={2}
                         dot={{ r: 4 }}
                         activeDot={{ r: 6 }}
@@ -2882,21 +2884,21 @@ const Dashboard = () => {
                 <ResponsiveContainer width="100%" height="85%">
                   <BarChart data={regionData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
                     <CartesianGrid strokeDasharray="3 3" opacity={0.1} />
-                    <XAxis 
-                      dataKey="branch" 
+                    <XAxis
+                      dataKey="branch"
                       angle={-45}
                       textAnchor="end"
                       height={80}
                       fontSize={10}
                     />
                     <YAxis />
-                    <RechartsTooltip 
+                    <RechartsTooltip
                       formatter={(value, name) => [value, name]}
                       labelFormatter={(label) => {
                         const item = regionData.find(r => r.branch === label);
                         return item ? `${item.state} - ${label}` : label;
                       }}
-                      contentStyle={{ 
+                      contentStyle={{
                         backgroundColor: theme.palette.mode === 'dark' ? '#2a2a2a' : '#fff',
                         borderRadius: 8,
                         boxShadow: '0 4px 20px rgba(0,0,0,0.15)'
@@ -2928,12 +2930,12 @@ const Dashboard = () => {
                     <XAxis dataKey="type" />
                     <YAxis yAxisId="left" />
                     <YAxis yAxisId="right" orientation="right" domain={[80, 90]} />
-                    <RechartsTooltip 
+                    <RechartsTooltip
                       formatter={(value, name) => {
                         if (name === 'Efficiency') return [`${value}%`, name];
                         return [value, name];
                       }}
-                      contentStyle={{ 
+                      contentStyle={{
                         backgroundColor: theme.palette.mode === 'dark' ? '#2a2a2a' : '#fff',
                         borderRadius: 8,
                         boxShadow: '0 4px 20px rgba(0,0,0,0.15)'
@@ -2966,13 +2968,13 @@ const Dashboard = () => {
                     <XAxis dataKey="mode" />
                     <YAxis yAxisId="left" />
                     <YAxis yAxisId="right" orientation="right" />
-                    <RechartsTooltip 
+                    <RechartsTooltip
                       formatter={(value, name) => {
                         if (name === 'Success Rate') return [`${value}%`, name];
                         if (name === 'Cost per Contact') return [`₹${value}`, name];
                         return [value, name];
                       }}
-                      contentStyle={{ 
+                      contentStyle={{
                         backgroundColor: theme.palette.mode === 'dark' ? '#2a2a2a' : '#fff',
                         borderRadius: 8,
                         boxShadow: '0 4px 20px rgba(0,0,0,0.15)'
@@ -3006,7 +3008,7 @@ const Dashboard = () => {
                       cx="50%"
                       cy="50%"
                       labelLine={false}
-                      label={({ mode, value, amount }) => `${mode}: ${value}% (₹${(amount/100000).toFixed(1)}L)`}
+                      label={({ mode, value, amount }) => `${mode}: ${value}% (₹${(amount / 100000).toFixed(1)}L)`}
                       outerRadius={80}
                       fill="#8884d8"
                       dataKey="value"
@@ -3015,7 +3017,7 @@ const Dashboard = () => {
                         <Cell key={`cell-${index}`} fill={entry.color} />
                       ))}
                     </Pie>
-                    <RechartsTooltip 
+                    <RechartsTooltip
                       formatter={(value, name, props) => [
                         `${value}% (₹${new Intl.NumberFormat('en-IN').format(props.payload.amount)})`,
                         'Share'
@@ -3045,13 +3047,13 @@ const Dashboard = () => {
                     <XAxis dataKey="channel" angle={-45} textAnchor="end" height={80} />
                     <YAxis yAxisId="left" />
                     <YAxis yAxisId="right" orientation="right" />
-                    <RechartsTooltip 
+                    <RechartsTooltip
                       formatter={(value, name) => {
                         if (name === 'Cost per Renewal') return [`₹${value}`, name];
                         if (name === 'Total Cost') return [`₹${new Intl.NumberFormat('en-IN').format(value)}`, name];
                         return [value, name];
                       }}
-                      contentStyle={{ 
+                      contentStyle={{
                         backgroundColor: theme.palette.mode === 'dark' ? '#2a2a2a' : '#fff',
                         borderRadius: 8,
                         boxShadow: '0 4px 20px rgba(0,0,0,0.15)'
@@ -3081,23 +3083,23 @@ const Dashboard = () => {
                 <ResponsiveContainer width="100%" height="85%">
                   <BarChart data={costPerChannelData} margin={{ top: 20, right: 30, left: 20, bottom: 60 }}>
                     <CartesianGrid strokeDasharray="3 3" opacity={0.1} />
-                    <XAxis 
-                      dataKey="channel" 
-                      angle={-45} 
-                      textAnchor="end" 
+                    <XAxis
+                      dataKey="channel"
+                      angle={-45}
+                      textAnchor="end"
                       height={80}
                       interval={0}
                     />
                     <YAxis yAxisId="left" />
                     <YAxis yAxisId="right" orientation="right" />
-                    <RechartsTooltip 
+                    <RechartsTooltip
                       formatter={(value, name) => {
                         if (name === 'Cost per Renewal') return [`₹${value}`, name];
                         if (name === 'Total Cost') return [`₹${new Intl.NumberFormat('en-IN').format(value)}`, name];
                         if (name === 'Efficiency') return [`${value}%`, name];
                         return [value, name];
                       }}
-                      contentStyle={{ 
+                      contentStyle={{
                         backgroundColor: theme.palette.mode === 'dark' ? '#2a2a2a' : '#fff',
                         borderRadius: 8,
                         boxShadow: '0 4px 20px rgba(0,0,0,0.15)'
@@ -3118,7 +3120,7 @@ const Dashboard = () => {
         <Typography variant="h5" gutterBottom sx={{ mt: 6, mb: 3, fontWeight: 600 }}>
           Customer Retention Analysis
         </Typography>
-        
+
         <Grid container spacing={3} sx={{ mb: 6 }}>
           {/* Retention Rate Display */}
           <Grid item xs={12} md={4}>
@@ -3131,19 +3133,19 @@ const Dashboard = () => {
                   Current retention rate across all customer segments
                 </Typography>
                 <Box sx={{ position: 'relative', display: 'inline-flex', mb: 3 }}>
-                  <Box sx={{ 
-                    width: 200, 
-                    height: 200, 
-                    borderRadius: '50%', 
+                  <Box sx={{
+                    width: 200,
+                    height: 200,
+                    borderRadius: '50%',
                     background: `conic-gradient(${theme.palette.success.main} 0deg ${customerRetentionData.overallRetentionRate * 3.6}deg, ${alpha(theme.palette.grey[300], 0.3)} ${customerRetentionData.overallRetentionRate * 3.6}deg 360deg)`,
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center'
                   }}>
-                    <Box sx={{ 
-                      width: 160, 
-                      height: 160, 
-                      borderRadius: '50%', 
+                    <Box sx={{
+                      width: 160,
+                      height: 160,
+                      borderRadius: '50%',
                       bgcolor: 'background.paper',
                       display: 'flex',
                       flexDirection: 'column',
@@ -3195,13 +3197,13 @@ const Dashboard = () => {
                         <Cell key={`cell-${index}`} fill={entry.color} />
                       ))}
                     </Pie>
-                    <RechartsTooltip 
+                    <RechartsTooltip
                       formatter={(value, name) => [`${value}%`, name]}
-                      contentStyle={{ 
+                      contentStyle={{
                         backgroundColor: theme.palette.mode === 'dark' ? '#2a2a2a' : '#fff',
                         borderRadius: 8,
                         boxShadow: '0 4px 20px rgba(0,0,0,0.15)'
-                      }} 
+                      }}
                     />
                     <Legend />
                   </PieChart>
@@ -3225,27 +3227,27 @@ const Dashboard = () => {
                     <CartesianGrid strokeDasharray="3 3" opacity={0.1} />
                     <XAxis dataKey="month" />
                     <YAxis domain={[70, 95]} />
-                    <RechartsTooltip 
+                    <RechartsTooltip
                       formatter={(value, name) => [`${value}%`, name === 'retained' ? 'Retained' : 'Churned']}
-                      contentStyle={{ 
+                      contentStyle={{
                         backgroundColor: theme.palette.mode === 'dark' ? '#2a2a2a' : '#fff',
                         borderRadius: 8,
                         boxShadow: '0 4px 20px rgba(0,0,0,0.15)'
-                      }} 
+                      }}
                     />
                     <Legend />
-                    <Line 
-                      type="monotone" 
-                      dataKey="retained" 
-                      stroke={theme.palette.success.main} 
+                    <Line
+                      type="monotone"
+                      dataKey="retained"
+                      stroke={theme.palette.success.main}
                       strokeWidth={3}
                       name="Retention Rate"
                       dot={{ fill: theme.palette.success.main, strokeWidth: 2, r: 4 }}
                     />
-                    <Line 
-                      type="monotone" 
-                      dataKey="churned" 
-                      stroke={theme.palette.error.main} 
+                    <Line
+                      type="monotone"
+                      dataKey="churned"
+                      stroke={theme.palette.error.main}
                       strokeWidth={2}
                       strokeDasharray="5 5"
                       name="Churn Rate"
@@ -3270,8 +3272,8 @@ const Dashboard = () => {
                 <Grid container spacing={3}>
                   {customerRetentionData.segmentRetention.map((segment, index) => (
                     <Grid item xs={12} md={4} key={segment.segment}>
-                      <Card sx={{ 
-                        p: 3, 
+                      <Card sx={{
+                        p: 3,
                         textAlign: 'center',
                         border: `2px solid ${segment.retention >= 90 ? theme.palette.success.main : segment.retention >= 85 ? theme.palette.warning.main : theme.palette.error.main}`,
                         borderRadius: 3
@@ -3279,7 +3281,7 @@ const Dashboard = () => {
                         <Typography variant="h6" fontWeight="600" gutterBottom>
                           {segment.segment} Tier
                         </Typography>
-                        <Typography variant="h3" fontWeight="700" 
+                        <Typography variant="h3" fontWeight="700"
                           color={segment.retention >= 90 ? 'success.main' : segment.retention >= 85 ? 'warning.main' : 'error.main'}
                           sx={{ mb: 1 }}
                         >
@@ -3289,8 +3291,8 @@ const Dashboard = () => {
                           {segment.customers.toLocaleString()} customers
                         </Typography>
                         <Box sx={{ mt: 2 }}>
-                          <LinearProgress 
-                            variant="determinate" 
+                          <LinearProgress
+                            variant="determinate"
                             value={segment.retention}
                             color={segment.retention >= 90 ? 'success' : segment.retention >= 85 ? 'warning' : 'error'}
                             sx={{ height: 8, borderRadius: 4 }}
@@ -3309,7 +3311,7 @@ const Dashboard = () => {
         <Typography variant="h5" gutterBottom sx={{ mt: 6, mb: 3, fontWeight: 600 }}>
           Payment & Collection Analysis
         </Typography>
-        
+
         <Grid container spacing={3} sx={{ mb: 6 }}>
           {/* Payment Type Breakdown */}
           <Grid item xs={12} md={6}>
@@ -3360,18 +3362,18 @@ const Dashboard = () => {
                     <CartesianGrid strokeDasharray="3 3" opacity={0.1} />
                     <XAxis dataKey="month" />
                     <YAxis />
-                    <RechartsTooltip 
-                      contentStyle={{ 
+                    <RechartsTooltip
+                      contentStyle={{
                         backgroundColor: theme.palette.mode === 'dark' ? '#2a2a2a' : '#fff',
                         borderRadius: 8,
                         boxShadow: '0 4px 20px rgba(0,0,0,0.15)'
-                      }} 
+                      }}
                     />
                     <Legend />
-                    <Line 
-                      type="monotone" 
-                      dataKey="avgDays" 
-                      stroke={theme.palette.primary.main} 
+                    <Line
+                      type="monotone"
+                      dataKey="avgDays"
+                      stroke={theme.palette.primary.main}
                       strokeWidth={3}
                       name="Avg Days to Payment"
                       dot={{ fill: theme.palette.primary.main, strokeWidth: 2, r: 4 }}
@@ -3397,17 +3399,17 @@ const Dashboard = () => {
                     <CartesianGrid strokeDasharray="3 3" opacity={0.1} />
                     <XAxis type="number" />
                     <YAxis dataKey="category" type="category" width={120} />
-                    <RechartsTooltip 
+                    <RechartsTooltip
                       formatter={(value, name) => [value, name]}
-                      contentStyle={{ 
+                      contentStyle={{
                         backgroundColor: theme.palette.mode === 'dark' ? '#2a2a2a' : '#fff',
                         borderRadius: 8,
                         boxShadow: '0 4px 20px rgba(0,0,0,0.15)'
-                      }} 
+                      }}
                     />
                     <Legend />
-                    <Bar 
-                      dataKey="count" 
+                    <Bar
+                      dataKey="count"
                       fill={({ payload }) => payload?.color || '#8884d8'}
                       name="Payment Count"
                       radius={[0, 4, 4, 0]}
@@ -3437,27 +3439,27 @@ const Dashboard = () => {
                     <CartesianGrid strokeDasharray="3 3" opacity={0.1} />
                     <XAxis dataKey="policyType" angle={-45} textAnchor="end" height={80} />
                     <YAxis />
-                    <RechartsTooltip 
-                      contentStyle={{ 
+                    <RechartsTooltip
+                      contentStyle={{
                         backgroundColor: theme.palette.mode === 'dark' ? '#2a2a2a' : '#fff',
                         borderRadius: 8,
                         boxShadow: '0 4px 20px rgba(0,0,0,0.15)'
-                      }} 
+                      }}
                     />
                     <Legend />
-                    <Bar 
-                      dataKey="pending" 
+                    <Bar
+                      dataKey="pending"
                       stackId="a"
-                      fill={alpha(theme.palette.warning.main, 0.8)} 
-                      name="Pending" 
-                      radius={[0, 0, 0, 0]} 
+                      fill={alpha(theme.palette.warning.main, 0.8)}
+                      name="Pending"
+                      radius={[0, 0, 0, 0]}
                     />
-                    <Bar 
-                      dataKey="collected" 
+                    <Bar
+                      dataKey="collected"
                       stackId="a"
-                      fill={alpha(theme.palette.success.main, 0.8)} 
-                      name="Collected" 
-                      radius={[4, 4, 0, 0]} 
+                      fill={alpha(theme.palette.success.main, 0.8)}
+                      name="Collected"
+                      radius={[4, 4, 0, 0]}
                     />
                   </BarChart>
                 </ResponsiveContainer>
@@ -3480,26 +3482,26 @@ const Dashboard = () => {
                     <CartesianGrid strokeDasharray="3 3" opacity={0.1} />
                     <XAxis dataKey="channel" angle={-45} textAnchor="end" height={80} />
                     <YAxis />
-                    <RechartsTooltip 
-                      formatter={(value, name) => [`₹${(value/100000).toFixed(1)}L`, name]}
-                      contentStyle={{ 
+                    <RechartsTooltip
+                      formatter={(value, name) => [`₹${(value / 100000).toFixed(1)}L`, name]}
+                      contentStyle={{
                         backgroundColor: theme.palette.mode === 'dark' ? '#2a2a2a' : '#fff',
                         borderRadius: 8,
                         boxShadow: '0 4px 20px rgba(0,0,0,0.15)'
-                      }} 
+                      }}
                     />
                     <Legend />
-                    <Bar 
-                      dataKey="target" 
-                      fill={alpha(theme.palette.info.main, 0.3)} 
-                      name="Target (₹)" 
-                      radius={[4, 4, 0, 0]} 
+                    <Bar
+                      dataKey="target"
+                      fill={alpha(theme.palette.info.main, 0.3)}
+                      name="Target (₹)"
+                      radius={[4, 4, 0, 0]}
                     />
-                    <Bar 
-                      dataKey="collected" 
-                      fill={alpha(theme.palette.success.main, 0.8)} 
-                      name="Collected (₹)" 
-                      radius={[4, 4, 0, 0]} 
+                    <Bar
+                      dataKey="collected"
+                      fill={alpha(theme.palette.success.main, 0.8)}
+                      name="Collected (₹)"
+                      radius={[4, 4, 0, 0]}
                     />
                   </BarChart>
                 </ResponsiveContainer>
@@ -3533,13 +3535,13 @@ const Dashboard = () => {
                         <Cell key={`cell-${index}`} fill={entry.color} />
                       ))}
                     </Pie>
-                    <RechartsTooltip 
+                    <RechartsTooltip
                       formatter={(value, name) => [`${value}%`, name]}
-                      contentStyle={{ 
+                      contentStyle={{
                         backgroundColor: theme.palette.mode === 'dark' ? '#2a2a2a' : '#fff',
                         borderRadius: 8,
                         boxShadow: '0 4px 20px rgba(0,0,0,0.15)'
-                      }} 
+                      }}
                     />
                     <Legend />
                   </PieChart>
@@ -3553,7 +3555,7 @@ const Dashboard = () => {
         <Typography variant="h5" gutterBottom sx={{ mt: 6, mb: 3, fontWeight: 600 }}>
           Renewals Campaign Tracking
         </Typography>
-        
+
         <Grid container spacing={3}>
           <Grid item xs={12}>
             <Grow in={loaded} style={{ transformOrigin: '0 0 0' }} timeout={1600}>
@@ -3569,12 +3571,12 @@ const Dashboard = () => {
                     </Typography>
                   </Box>
                 </Box>
-                
+
                 <Grid container spacing={3}>
                   {campaignData.map((campaign, index) => (
                     <Grid item xs={12} md={6} lg={3} key={campaign.id}>
                       <Grow in={loaded} timeout={(index + 1) * 200}>
-                        <Card sx={{ 
+                        <Card sx={{
                           height: '100%',
                           borderRadius: 3,
                           boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
@@ -3589,21 +3591,21 @@ const Dashboard = () => {
                               left: 0,
                               right: 0,
                               height: 4,
-                              background: campaign.status === 'active' 
+                              background: campaign.status === 'active'
                                 ? 'linear-gradient(90deg, #4caf50, #66bb6a)'
                                 : campaign.status === 'paused'
-                                ? 'linear-gradient(90deg, #ff9800, #ffb74d)'
-                                : 'linear-gradient(90deg, #2196f3, #64b5f6)'
+                                  ? 'linear-gradient(90deg, #ff9800, #ffb74d)'
+                                  : 'linear-gradient(90deg, #2196f3, #64b5f6)'
                             }}
                           />
                           <CardContent sx={{ p: 3 }}>
                             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', mb: 2 }}>
                               <Box sx={{ flex: 1 }}>
                                 <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-                                  <Box sx={{ 
-                                    width: 32, 
-                                    height: 32, 
-                                    borderRadius: '50%', 
+                                  <Box sx={{
+                                    width: 32,
+                                    height: 32,
+                                    borderRadius: '50%',
                                     bgcolor: theme.palette.primary.main,
                                     display: 'flex',
                                     alignItems: 'center',
@@ -3622,14 +3624,14 @@ const Dashboard = () => {
                                   {campaign.uploadFilename}
                                 </Typography>
                                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                  <Chip 
-                                    label={campaign.status} 
+                                  <Chip
+                                    label={campaign.status}
                                     color={
                                       campaign.status === 'active' ? 'success' :
-                                      campaign.status === 'paused' ? 'warning' : 'info'
+                                        campaign.status === 'paused' ? 'warning' : 'info'
                                     }
                                     size="small"
-                                    sx={{ 
+                                    sx={{
                                       fontWeight: 500,
                                       textTransform: 'capitalize',
                                       fontSize: '0.75rem'
@@ -3653,11 +3655,11 @@ const Dashboard = () => {
                                 </IconButton>
                               </Box>
                             </Box>
-                            
-                            <Box sx={{ 
-                              mt: 2, 
-                              p: 2, 
-                              borderRadius: 2, 
+
+                            <Box sx={{
+                              mt: 2,
+                              p: 2,
+                              borderRadius: 2,
                               backgroundColor: theme.palette.mode === 'dark' ? alpha(theme.palette.background.paper, 0.4) : alpha(theme.palette.background.default, 0.8),
                               border: `1px solid ${theme.palette.divider}`
                             }}>
@@ -3678,7 +3680,7 @@ const Dashboard = () => {
                                     {campaign.sent}
                                   </Typography>
                                 </Grid>
-                                
+
                                 {campaign.type === 'email' && (
                                   <>
                                     <Grid item xs={6}>
@@ -3699,7 +3701,7 @@ const Dashboard = () => {
                                     </Grid>
                                   </>
                                 )}
-                                
+
                                 {campaign.type === 'whatsapp' && (
                                   <>
                                     <Grid item xs={6}>
@@ -3720,7 +3722,7 @@ const Dashboard = () => {
                                     </Grid>
                                   </>
                                 )}
-                                
+
                                 {campaign.type === 'sms' && (
                                   <>
                                     <Grid item xs={6}>
@@ -3741,11 +3743,11 @@ const Dashboard = () => {
                                     </Grid>
                                   </>
                                 )}
-                                
+
                                 <Grid item xs={12}>
-                                  <Box sx={{ 
-                                    display: 'flex', 
-                                    justifyContent: 'space-between', 
+                                  <Box sx={{
+                                    display: 'flex',
+                                    justifyContent: 'space-between',
                                     alignItems: 'center',
                                     mt: 1,
                                     pt: 1,
@@ -3766,7 +3768,7 @@ const Dashboard = () => {
                                 </Grid>
                               </Grid>
                             </Box>
-                            
+
                             <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 2 }}>
                               Created: {new Date(campaign.createdAt).toLocaleDateString()}
                             </Typography>
@@ -3923,8 +3925,8 @@ const Dashboard = () => {
                     value={channelDialog.channelData.settings?.priority || 'medium'}
                     onChange={(e) => setChannelDialog(prev => ({
                       ...prev,
-                      channelData: { 
-                        ...prev.channelData, 
+                      channelData: {
+                        ...prev.channelData,
                         settings: { ...prev.channelData.settings, priority: e.target.value }
                       }
                     }))}
@@ -3943,8 +3945,8 @@ const Dashboard = () => {
                   value={channelDialog.channelData.settings?.workingHours || '9-18'}
                   onChange={(e) => setChannelDialog(prev => ({
                     ...prev,
-                    channelData: { 
-                      ...prev.channelData, 
+                    channelData: {
+                      ...prev.channelData,
                       settings: { ...prev.channelData.settings, workingHours: e.target.value }
                     }
                   }))}
@@ -3959,8 +3961,8 @@ const Dashboard = () => {
                   value={channelDialog.channelData.settings?.maxCapacity || 100}
                   onChange={(e) => setChannelDialog(prev => ({
                     ...prev,
-                    channelData: { 
-                      ...prev.channelData, 
+                    channelData: {
+                      ...prev.channelData,
                       settings: { ...prev.channelData.settings, maxCapacity: Number(e.target.value) }
                     }
                   }))}
@@ -3973,8 +3975,8 @@ const Dashboard = () => {
                       checked={channelDialog.channelData.settings?.autoAssignment || false}
                       onChange={(e) => setChannelDialog(prev => ({
                         ...prev,
-                        channelData: { 
-                          ...prev.channelData, 
+                        channelData: {
+                          ...prev.channelData,
                           settings: { ...prev.channelData.settings, autoAssignment: e.target.checked }
                         }
                       }))}

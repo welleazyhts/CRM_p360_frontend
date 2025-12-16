@@ -108,10 +108,17 @@ export const SLAProvider = ({ children }) => {
       setDashboardData(response.data);
       return response;
     } catch (err) {
-      setError(err.message);
-      console.error('Error fetching dashboard:', err);
-      // Don't throw error - just log it and continue
-      // This allows the app to work even when backend is not available
+      setError('Backend database error: SLA features unavailable.');
+      console.warn('SLA Dashboard failed (likely DB migration issue):', err);
+      // Set empty data to prevent UI crash
+      setDashboardData({
+        policies: [],
+        violations: [],
+        stats: {},
+        trackings: [],
+        approaching: [],
+        metrics: { total: 0, active: 0, complianceRate: 100, met: 0, breachRate: 0 }
+      });
       return null;
     } finally {
       setLoading(false);
@@ -476,20 +483,25 @@ export const SLAProvider = ({ children }) => {
     }
   }, [fetchPolicies]);
 
-  // Initial data load
-  useEffect(() => {
-    fetchDashboard();
-  }, [fetchDashboard]);
+  // Derive helper data for potential missing backend structure
+  const slaTrackings = dashboardData?.trackings || dashboardData?.policies || [];
+  const metrics = dashboardData?.metrics || dashboardData?.stats || { total: 0, active: 0, complianceRate: 100 };
+  const approaching = dashboardData?.approaching || dashboardData?.atRisk || [];
 
   const value = {
     // State
     templates,
     policies,
-    violations,
+    violations, // Note: This comes from fetchViolations state, might differ from dashboardData.violations
     escalations,
     dashboardData,
     loading,
     error,
+
+    // Derived State for Monitoring Dashboard
+    slaTrackings,
+    metrics,
+    approaching,
 
     // Fetch methods
     fetchTemplates,
