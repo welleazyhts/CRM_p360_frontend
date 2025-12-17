@@ -245,6 +245,13 @@ const LeadDetails = () => {
     assignedTo: ''
   });
 
+  // Call Log Filter States
+  const [callLogSearchTerm, setCallLogSearchTerm] = useState('');
+  const [callLogTypeFilter, setCallLogTypeFilter] = useState('All');
+  const [callLogStatusFilter, setCallLogStatusFilter] = useState('All');
+  const [callLogAgentFilter, setCallLogAgentFilter] = useState('All');
+  const [callLogDateFilter, setCallLogDateFilter] = useState('');
+
   // Mock data states
   const [notes, setNotes] = useState([]);
   const [tasks, setTasks] = useState([]);
@@ -754,6 +761,29 @@ const LeadDetails = () => {
     const matchesType = fileTypeFilter === 'All' || file.documentType === fileTypeFilter;
     return matchesSearch && matchesStatus && matchesType;
   });
+
+  // Filter call logs
+  const filteredCallLogs = callLogs.filter(log => {
+    const matchesSearch = (log.notes && log.notes.toLowerCase().includes(callLogSearchTerm.toLowerCase())) ||
+      (log.callSummary && log.callSummary.toLowerCase().includes(callLogSearchTerm.toLowerCase())) ||
+      (log.agentName && log.agentName.toLowerCase().includes(callLogSearchTerm.toLowerCase()));
+
+    const matchesType = callLogTypeFilter === 'All' || log.type === callLogTypeFilter;
+    const matchesStatus = callLogStatusFilter === 'All' || log.status === callLogStatusFilter;
+    const matchesAgent = callLogAgentFilter === 'All' || log.agentName === callLogAgentFilter;
+    const matchesDate = !callLogDateFilter || log.date === callLogDateFilter;
+
+    return matchesSearch && matchesType && matchesStatus && matchesAgent && matchesDate;
+  });
+
+  // Reset Call Log Filters
+  const handleResetCallLogFilters = () => {
+    setCallLogSearchTerm('');
+    setCallLogTypeFilter('All');
+    setCallLogStatusFilter('All');
+    setCallLogAgentFilter('All');
+    setCallLogDateFilter('');
+  };
 
   // Handle view policy details
   const handleViewPolicyDetails = (policy) => {
@@ -1636,6 +1666,8 @@ Document Reference: ${doc.id}
                           <TextField
                             fullWidth
                             placeholder="Search calls..."
+                            value={callLogSearchTerm}
+                            onChange={(e) => setCallLogSearchTerm(e.target.value)}
                             InputProps={{
                               startAdornment: <SearchIcon sx={{ mr: 1, color: 'text.secondary' }} />
                             }}
@@ -1644,7 +1676,11 @@ Document Reference: ${doc.id}
                         <Grid item xs={12} md={2}>
                           <FormControl fullWidth>
                             <InputLabel>Call Type</InputLabel>
-                            <Select defaultValue="All" label="Call Type">
+                            <Select
+                              value={callLogTypeFilter}
+                              onChange={(e) => setCallLogTypeFilter(e.target.value)}
+                              label="Call Type"
+                            >
                               <MenuItem value="All">All Types</MenuItem>
                               <MenuItem value="Inbound">Inbound</MenuItem>
                               <MenuItem value="Outbound">Outbound</MenuItem>
@@ -1654,7 +1690,11 @@ Document Reference: ${doc.id}
                         <Grid item xs={12} md={2}>
                           <FormControl fullWidth>
                             <InputLabel>Status</InputLabel>
-                            <Select defaultValue="All" label="Status">
+                            <Select
+                              value={callLogStatusFilter}
+                              onChange={(e) => setCallLogStatusFilter(e.target.value)}
+                              label="Status"
+                            >
                               <MenuItem value="All">All Status</MenuItem>
                               <MenuItem value="Completed">Completed</MenuItem>
                               <MenuItem value="Missed">Missed</MenuItem>
@@ -1665,7 +1705,11 @@ Document Reference: ${doc.id}
                         <Grid item xs={12} md={2}>
                           <FormControl fullWidth>
                             <InputLabel>Agent</InputLabel>
-                            <Select defaultValue="All" label="Agent">
+                            <Select
+                              value={callLogAgentFilter}
+                              onChange={(e) => setCallLogAgentFilter(e.target.value)}
+                              label="Agent"
+                            >
                               <MenuItem value="All">All Agents</MenuItem>
                               <MenuItem value="Sarah Johnson">Sarah Johnson</MenuItem>
                               <MenuItem value="Mike Wilson">Mike Wilson</MenuItem>
@@ -1675,13 +1719,20 @@ Document Reference: ${doc.id}
                         <Grid item xs={12} md={2}>
                           <TextField
                             fullWidth
-                            label="Date Range"
+                            label="Date"
                             type="date"
+                            value={callLogDateFilter}
+                            onChange={(e) => setCallLogDateFilter(e.target.value)}
                             InputLabelProps={{ shrink: true }}
                           />
                         </Grid>
                         <Grid item xs={12} md={1}>
-                          <Button variant="outlined" fullWidth startIcon={<FilterIcon />}>
+                          <Button
+                            variant="outlined"
+                            fullWidth
+                            startIcon={<FilterIcon />}
+                            onClick={handleResetCallLogFilters}
+                          >
                             Reset
                           </Button>
                         </Grid>
@@ -1704,7 +1755,7 @@ Document Reference: ${doc.id}
                         </TableRow>
                       </TableHead>
                       <TableBody>
-                        {callLogs.map((log) => (
+                        {filteredCallLogs.map((log) => (
                           <TableRow key={log.id} hover>
                             <TableCell>
                               <Typography variant="body2" fontWeight="600" color="primary">
