@@ -3692,9 +3692,6 @@ const LeadMIS = () => {
       }
 
 
-
-
-
       {
         currentTab === 12 && (
           <Grid container spacing={3}>

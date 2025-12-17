@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { LocalizationProvider } from '@mui/x-date-pickers';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import BulkUpload from '../components/common/BulkUpload';
@@ -9,9 +9,6 @@ import { useVahan } from '../context/VahanContext';
 import { History as HistoryIcon } from '@mui/icons-material';
 import LeadScoringIndicator from '../components/leads/LeadScoringIndicator';
 import PriorityIndicator from '../components/leads/PriorityIndicator';
-import leadSanitizationService from '../services/leadSanitizationService';
-import callAttemptService from '../services/callAttemptService';
-import leadService from '../services/leadService';
 import {
   Box,
   Card,
@@ -629,14 +626,10 @@ const calculateLeadScore = (lead) => {
 const LeadManagement = () => {
   const theme = useTheme();
   const navigate = useNavigate();
-  const [searchParams, setSearchParams] = useSearchParams();
   const { checkDuplicate } = useDedupe();
   const { verifyVehicle, bulkVerifyVehicles, getVerificationByLeadId, isVehicleVerified, loading: vahanLoading } = useVahan();
-  const [leads, setLeads] = useState([]);
-  const [filteredLeads, setFilteredLeads] = useState([]);
-  const [apiLoading, setApiLoading] = useState(true);
-  const [apiError, setApiError] = useState(null);
-  const [totalCount, setTotalCount] = useState(0);
+  const [leads, setLeads] = useState(mockLeads);
+  const [filteredLeads, setFilteredLeads] = useState(mockLeads);
   const [openDialog, setOpenDialog] = useState(false);
   const [editingLead, setEditingLead] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
@@ -744,136 +737,17 @@ const LeadManagement = () => {
     vehicleType: ''
   });
 
-  // Agents state - will be fetched from API
-  const [agents, setAgents] = useState([]);
+  // Mock agents with ratings and language capabilities for assignment
+  const agents = [
+    { id: 'priya.patel', name: 'Priya Patel', rating: 4.8, totalLeads: 45, closedDeals: 32, specialization: 'Corporate Insurance', languages: ['English', 'Hindi', 'Gujarati'] },
+    { id: 'amit.kumar', name: 'Amit Kumar', rating: 4.6, totalLeads: 38, closedDeals: 28, specialization: 'Health Insurance', languages: ['English', 'Hindi', 'Bengali'] },
+    { id: 'sneha.gupta', name: 'Sneha Gupta', rating: 4.9, totalLeads: 52, closedDeals: 41, specialization: 'Vehicle Insurance', languages: ['English', 'Tamil', 'Telugu'] },
+    { id: 'rajesh.kumar', name: 'Rajesh Kumar', rating: 4.7, totalLeads: 41, closedDeals: 30, specialization: 'Life Insurance', languages: ['English', 'Marathi', 'Kannada'] },
+    { id: 'deepak.sharma', name: 'Deepak Sharma', rating: 4.5, totalLeads: 35, closedDeals: 24, specialization: 'Property Insurance', languages: ['English', 'Punjabi', 'Urdu'] }
+  ];
 
   // Keep users for backward compatibility
   const users = agents.map(agent => ({ id: agent.id, name: agent.name }));
-
-  // Helper function to transform backend lead data to frontend format
-  const transformLeadFromAPI = (apiLead) => {
-    const leadDisplay = apiLead.lead_display || {};
-    return {
-      id: apiLead.id || apiLead.lead_id,
-      lead_id: apiLead.lead_id,
-      firstName: leadDisplay.name?.split(' ')[0] || apiLead.first_name || '',
-      lastName: leadDisplay.name?.split(' ').slice(1).join(' ') || apiLead.last_name || '',
-      email: leadDisplay.email || apiLead.email || '',
-      phone: leadDisplay.phone || apiLead.phone || '',
-      company: apiLead.company_display?.split(' - ')[0] || apiLead.company || '',
-      position: apiLead.company_display?.split(' - ')[1] || apiLead.position || '',
-      source: apiLead.source || '',
-      status: apiLead.status_display || apiLead.status || 'New',
-      priority: apiLead.priority_display || apiLead.priority || 'Medium',
-      leadType: leadDisplay.lead_type || apiLead.lead_type || 'Regular',
-      assignedTo: apiLead.assigned_to_name || '',
-      assignedToId: apiLead.assigned_to || '',
-      value: parseFloat(apiLead.value) || 0,
-      expectedCloseDate: apiLead.expected_close_date || '',
-      lastContactDate: apiLead.last_contact || apiLead.updated_at || '',
-      notes: apiLead.notes || '',
-      tags: apiLead.tags || [],
-      createdAt: apiLead.created_at || '',
-      updatedAt: apiLead.updated_at || '',
-      preferredLanguage: apiLead.preferred_language_display || apiLead.preferred_language || 'English',
-      totalCalls: apiLead.total_calls || 0,
-      score: apiLead.score || calculateLeadScore(apiLead),
-      // Insurance specific
-      product: apiLead.product || 'Insurance',
-      subProduct: apiLead.sub_product || '',
-      vehicleRegistrationNumber: apiLead.vehicle_reg_number || '',
-      vehicleType: apiLead.vehicle_type || '',
-      policyExpiryDate: apiLead.policy_expiry_date || '',
-    };
-  };
-
-  // Helper function to transform frontend lead data to backend format
-  const transformLeadToAPI = (frontendLead) => {
-    return {
-      first_name: frontendLead.firstName,
-      last_name: frontendLead.lastName,
-      email: frontendLead.email,
-      phone: frontendLead.phone,
-      company: frontendLead.company,
-      position: frontendLead.position,
-      source: frontendLead.source?.toLowerCase().replace(/ /g, '_'),
-      status: frontendLead.status?.toLowerCase().replace(/ /g, '_'),
-      priority: frontendLead.priority?.toLowerCase(),
-      lead_type: frontendLead.leadType?.toLowerCase(),
-      assigned_to: frontendLead.assignedToId || null,
-      value: frontendLead.value || null,
-      expected_close_date: frontendLead.expectedCloseDate || null,
-      notes: frontendLead.notes,
-      preferred_language: frontendLead.preferredLanguage?.toLowerCase().substring(0, 2) || 'en',
-      product: frontendLead.product,
-      sub_product: frontendLead.subProduct,
-      vehicle_reg_number: frontendLead.vehicleRegistrationNumber,
-      vehicle_type: frontendLead.vehicleType,
-    };
-  };
-
-  // Fetch leads from API
-  const fetchLeads = useCallback(async (filters = {}) => {
-    setApiLoading(true);
-    setApiError(null);
-    try {
-      const response = await leadService.getLeads({
-        status: statusFilter !== 'All' ? statusFilter.toLowerCase().replace(/ /g, '_') : undefined,
-        priority: priorityFilter !== 'All' ? priorityFilter.toLowerCase() : undefined,
-        leadType: leadTypeFilter !== 'All' ? leadTypeFilter.toLowerCase() : undefined,
-        isArchived: false,
-        ...filters
-      });
-
-      // Handle paginated response
-      const leadsData = response.results || response;
-      const transformedLeads = Array.isArray(leadsData)
-        ? leadsData.map(transformLeadFromAPI)
-        : [];
-
-      setLeads(transformedLeads);
-      setFilteredLeads(transformedLeads);
-      setTotalCount(response.count || transformedLeads.length);
-    } catch (error) {
-      console.error('Error fetching leads:', error);
-      setApiError('Failed to load leads. Please try again.');
-      // Fallback to mock data for development
-      setLeads(mockLeads);
-      setFilteredLeads(mockLeads);
-    } finally {
-      setApiLoading(false);
-    }
-  }, [statusFilter, priorityFilter, leadTypeFilter]);
-
-  // Fetch agents from API
-  const fetchAgents = useCallback(async () => {
-    try {
-      const agentsData = await leadService.getAvailableUsers();
-      setAgents(agentsData.map(agent => ({
-        id: agent.id,
-        name: agent.name,
-        rating: agent.rating || 4.0,
-        totalLeads: 0,
-        closedDeals: 0,
-        specialization: agent.specialization || 'General',
-        languages: agent.languages || ['English']
-      })));
-    } catch (error) {
-      console.error('Error fetching agents:', error);
-      // Keep default agents as fallback
-      setAgents([
-        { id: 1, name: 'Priya Patel', rating: 4.8, totalLeads: 45, closedDeals: 32, specialization: 'Corporate Insurance', languages: ['English', 'Hindi', 'Gujarati'] },
-        { id: 2, name: 'Amit Kumar', rating: 4.6, totalLeads: 38, closedDeals: 28, specialization: 'Health Insurance', languages: ['English', 'Hindi', 'Bengali'] },
-        { id: 3, name: 'Sneha Gupta', rating: 4.9, totalLeads: 52, closedDeals: 41, specialization: 'Vehicle Insurance', languages: ['English', 'Tamil', 'Telugu'] },
-      ]);
-    }
-  }, []);
-
-  // Initial data fetch
-  useEffect(() => {
-    fetchLeads();
-    fetchAgents();
-  }, []);
 
   const statusOptions = ['New', 'Contacted', 'Qualified', 'Proposal', 'Negotiation', 'Closed Won', 'Closed Lost'];
   const priorityOptions = ['Low', 'Medium', 'High', 'Urgent'];
@@ -932,19 +806,6 @@ const LeadManagement = () => {
   ];
 
   // Filter and search functionality
-  // Handle editLead query parameter
-  useEffect(() => {
-    const editLeadId = searchParams.get('editLead');
-    if (editLeadId) {
-      const leadToEdit = leads.find(lead => lead.id === parseInt(editLeadId));
-      if (leadToEdit) {
-        handleOpenDialog(leadToEdit);
-        // Remove the query parameter after opening the dialog
-        setSearchParams({});
-      }
-    }
-  }, [searchParams, leads]);
-
   useEffect(() => {
     let filtered = leads;
 
@@ -1042,28 +903,9 @@ const LeadManagement = () => {
   };
 
   const handleSaveLead = () => {
-    // Sanitize lead data first
-    const { sanitized, validationReport } = leadSanitizationService.sanitizeLead(formData);
-
-    // Show validation warnings/errors
-    if (validationReport.warnings.length > 0) {
-      console.warn('Lead validation warnings:', validationReport.warnings);
-    }
-
-    if (!validationReport.isValid) {
-      alert(`Lead validation failed:\n\n${validationReport.errors.join('\n')}\n\nQuality Score: ${validationReport.qualityScore}/100 (${validationReport.qualityLevel})`);
-      return;
-    }
-
-    // Show quality score notification
-    if (validationReport.corrections.length > 0) {
-      console.log('Auto-corrections applied:', validationReport.corrections);
-    }
-    console.log(`Lead Quality Score: ${validationReport.qualityScore}/100 (${validationReport.qualityLevel})`);
-
     // Real-time duplicate check for new leads
     if (!editingLead) {
-      const dedupeCheck = checkDuplicate(sanitized, leads, 'leads');
+      const dedupeCheck = checkDuplicate(formData, leads, 'leads');
       if (dedupeCheck.isDuplicate) {
         let duplicateInfo = dedupeCheck.duplicates.map(d => {
           if (d.type === 'fleet') {
@@ -1083,17 +925,8 @@ const LeadManagement = () => {
       }
     }
 
-    // Use sanitized data instead of formData
-    const dataToSave = sanitized;
-
     setLoading(true);
 
-<<<<<<< HEAD
-    // API call for create/update
-    const saveLeadAsync = async () => {
-      try {
-        const apiData = transformLeadToAPI(dataToSave);
-=======
     // Simulate API call
     setTimeout(() => {
       if (editingLead) {
@@ -1121,59 +954,15 @@ const LeadManagement = () => {
         setLeads([...leads, newLead]);
         setSnackbar({ open: true, message: 'Lead added successfully!', severity: 'success' });
       }
->>>>>>> 0f0db02199acd11bdcb8309679f62aa88a7a39ee
 
-        if (editingLead) {
-          // Update existing lead via API
-          const leadId = editingLead.lead_id || editingLead.id;
-          await leadService.updateLead(leadId, apiData);
-          setSnackbar({ open: true, message: 'Lead updated successfully!', severity: 'success' });
-        } else {
-          // Create new lead via API
-          await leadService.createLead(apiData);
-          setSnackbar({
-            open: true,
-            message: `Lead added successfully! Quality Score: ${validationReport.qualityScore}/100 (${validationReport.qualityLevel})`,
-            severity: 'success'
-          });
-        }
-
-        // Refresh leads list from API
-        await fetchLeads();
-        handleCloseDialog();
-      } catch (error) {
-        console.error('Error saving lead:', error);
-        setSnackbar({
-          open: true,
-          message: `Failed to save lead: ${error.message || 'Unknown error'}`,
-          severity: 'error'
-        });
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    saveLeadAsync();
+      setLoading(false);
+      handleCloseDialog();
+    }, 1000);
   };
 
-  const handleArchiveLead = async (leadId) => {
-    try {
-      setLoading(true);
-      // Find the lead to get its lead_id
-      const lead = leads.find(l => l.id === leadId || l.lead_id === leadId);
-      const apiLeadId = lead?.lead_id || leadId;
-
-      await leadService.archiveLead(apiLeadId, 'Archived via UI');
-
-      // Refresh leads list
-      await fetchLeads();
-      setSnackbar({ open: true, message: 'Lead archived successfully!', severity: 'success' });
-    } catch (error) {
-      console.error('Error archiving lead:', error);
-      setSnackbar({ open: true, message: `Failed to archive lead: ${error.message}`, severity: 'error' });
-    } finally {
-      setLoading(false);
-    }
+  const handleArchiveLead = (leadId) => {
+    setLeads(leads.filter(lead => lead.id !== leadId));
+    setSnackbar({ open: true, message: 'Lead archived successfully!', severity: 'success' });
   };
 
   const handleSendEmail = (lead) => {
@@ -1386,50 +1175,12 @@ const LeadManagement = () => {
     setAssignmentPreview(preview);
     setLanguageAssignDialog(true);
   };
-<<<<<<< HEAD
-  
-  const confirmLanguageAssignment = async () => {
-    try {
-      setLoading(true);
-
-      // Get lead_ids for the API call
-      const leadIds = selectedLeads.map(id => {
-        const lead = leads.find(l => l.id === id);
-        return lead?.lead_id || id;
-      });
-
-      // Call the API for language-based assignment
-      const result = await leadService.languageMatchAssign(leadIds);
-
-      // Refresh leads list
-      await fetchLeads();
-
-      setSelectedLeads([]);
-      setLanguageAssignDialog(false);
-      setAssignmentPreview([]);
-      setSnackbar({
-        open: true,
-        message: result.message || 'Leads assigned based on language preference',
-        severity: 'success'
-      });
-    } catch (error) {
-      console.error('Error language-based assignment:', error);
-      setSnackbar({
-        open: true,
-        message: `Failed to assign leads: ${error.message}`,
-        severity: 'error'
-      });
-    } finally {
-      setLoading(false);
-    }
-=======
 
   const confirmLanguageAssignment = () => {
     autoAssignByLanguage(selectedLeads);
     setSelectedLeads([]);
     setLanguageAssignDialog(false);
     setAssignmentPreview([]);
->>>>>>> 0f0db02199acd11bdcb8309679f62aa88a7a39ee
   };
 
   const handleSelectAllLeads = () => {
@@ -1604,39 +1355,12 @@ const LeadManagement = () => {
     });
   };
 
-  const handleConfirmBulkAssignment = async () => {
+  const handleConfirmBulkAssignment = () => {
     if (!bulkAssignmentAgent) {
       setSnackbar({ open: true, message: 'Please select an agent', severity: 'warning' });
       return;
     }
 
-<<<<<<< HEAD
-    try {
-      setLoading(true);
-      const agent = agents.find(u => u.id === bulkAssignmentAgent);
-
-      // Get lead_ids for the API call
-      const leadIds = selectedLeads.map(id => {
-        const lead = leads.find(l => l.id === id);
-        return lead?.lead_id || id;
-      });
-
-      await leadService.bulkAssignLeads(leadIds, bulkAssignmentAgent);
-
-      // Refresh leads list
-      await fetchLeads();
-
-      setSelectedLeads([]);
-      setBulkAssignmentDialog(false);
-      setBulkAssignmentAgent('');
-      setSnackbar({ open: true, message: `${selectedLeads.length} leads assigned to ${agent?.name || 'agent'}`, severity: 'success' });
-    } catch (error) {
-      console.error('Error bulk assigning leads:', error);
-      setSnackbar({ open: true, message: `Failed to assign leads: ${error.message}`, severity: 'error' });
-    } finally {
-      setLoading(false);
-    }
-=======
     const agent = agents.find(u => u.id === bulkAssignmentAgent);
     const updatedLeads = leads.map(lead =>
       selectedLeads.includes(lead.id)
@@ -1649,38 +1373,15 @@ const LeadManagement = () => {
     setBulkAssignmentDialog(false);
     setBulkAssignmentAgent('');
     setSnackbar({ open: true, message: `${selectedLeads.length} leads assigned to ${agent.name}`, severity: 'success' });
->>>>>>> 0f0db02199acd11bdcb8309679f62aa88a7a39ee
   };
 
   // Auto-assign Premium leads to top-rated agents
-  const handleAutoAssign = async () => {
-    try {
-      setLoading(true);
-
-      // Call the API to auto-assign premium leads
-      const result = await leadService.autoAssignPremium();
-
-      // Refresh leads list
-      await fetchLeads();
-
-      setAutoAssignDialog(false);
-      setSnackbar({
-        open: true,
-        message: result.message || 'Premium leads auto-assigned to top-rated agents',
-        severity: 'success'
-      });
-    } catch (error) {
-      console.error('Error auto-assigning leads:', error);
-      setSnackbar({
-        open: true,
-        message: `Failed to auto-assign: ${error.message}`,
-        severity: 'error'
-      });
-    } finally {
-      setLoading(false);
+  const handleAutoAssign = () => {
+    const premiumLeads = leads.filter(lead => lead.leadType === 'Premium' && !lead.assignedTo);
+    if (premiumLeads.length === 0) {
+      setSnackbar({ open: true, message: 'No unassigned Premium leads found', severity: 'info' });
+      return;
     }
-<<<<<<< HEAD
-=======
 
     // Sort agents by rating (highest first)
     const topAgents = [...agents].sort((a, b) => b.rating - a.rating);
@@ -1711,7 +1412,6 @@ const LeadManagement = () => {
       message: `${premiumLeads.length} Premium leads auto-assigned to top-rated agents`,
       severity: 'success'
     });
->>>>>>> 0f0db02199acd11bdcb8309679f62aa88a7a39ee
   };
 
   // ============ VAHAN VERIFICATION HANDLERS ============
@@ -1945,54 +1645,6 @@ const LeadManagement = () => {
               </Button>
             </Box>
             <Button
-<<<<<<< HEAD
-              variant="outlined"
-              startIcon={<CloudUploadIcon />}
-              onClick={() => setUploadDialog(true)}
-            >
-              Data Provider Upload
-            </Button>
-            <Button
-              variant="outlined"
-              startIcon={<CloudUploadIcon />}
-              onClick={() => setBulkUploadOpen(true)}
-            >
-              Bulk Upload
-            </Button>
-            <Button
-              variant="outlined"
-              startIcon={<HistoryIcon />}
-              onClick={() => setShowUploadHistory(!showUploadHistory)}
-            >
-              Upload History
-            </Button>
-            <Button
-              variant="outlined"
-              startIcon={<GroupIcon />}
-              onClick={() => setAgentTableOpen(true)}
-            >
-              View Agents
-            </Button>
-          </Box>
-          <Button
-            variant="contained"
-            startIcon={<AddIcon />}
-            onClick={() => handleOpenDialog()}
-            sx={{
-              background: `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.secondary.main} 100%)`,
-              boxShadow: '0 4px 15px rgba(164, 215, 225, 0.3)',
-              '&:hover': {
-                background: `linear-gradient(135deg, ${theme.palette.secondary.main} 0%, ${theme.palette.primary.main} 100%)`,
-                transform: 'translateY(-1px)',
-                boxShadow: '0 6px 20px rgba(164, 215, 225, 0.4)',
-              }
-            }}
-          >
-            Add Lead
-          </Button>
-        </Stack>
-      </Box>
-=======
               variant="contained"
               startIcon={<AddIcon />}
               onClick={() => handleOpenDialog()}
@@ -2010,7 +1662,6 @@ const LeadManagement = () => {
             </Button>
           </Stack>
         </Box>
->>>>>>> 0f0db02199acd11bdcb8309679f62aa88a7a39ee
 
         {/* Upload History Section */}
         {showUploadHistory && (
@@ -2360,402 +2011,12 @@ const LeadManagement = () => {
                         }
                       }}
                     >
-<<<<<<< HEAD
-                      {vehicleTypeOptions.map(type => (
-                        <MenuItem key={type} value={type}>{type}</MenuItem>
-                      ))}
-                    </Select>
-                  </FormControl>
-                </Grid>
-              </>
-            )}
-
-            <Grid item xs={12} sm={6}>
-              <FormControl fullWidth>
-                <InputLabel>Preferred Language</InputLabel>
-                <Select
-                  value={formData.preferredLanguage || 'English'}
-                  label="Preferred Language"
-                  onChange={(e) => setFormData({ ...formData, preferredLanguage: e.target.value })}
-                >
-                  <MenuItem value="English">English</MenuItem>
-                  <MenuItem value="Hindi">Hindi</MenuItem>
-                  <MenuItem value="Bengali">Bengali</MenuItem>
-                  <MenuItem value="Tamil">Tamil</MenuItem>
-                  <MenuItem value="Telugu">Telugu</MenuItem>
-                  <MenuItem value="Marathi">Marathi</MenuItem>
-                  <MenuItem value="Gujarati">Gujarati</MenuItem>
-                  <MenuItem value="Kannada">Kannada</MenuItem>
-                  <MenuItem value="Punjabi">Punjabi</MenuItem>
-                  <MenuItem value="Urdu">Urdu</MenuItem>
-                </Select>
-              </FormControl>
-            </Grid>
-            <Grid item xs={12}>
-              <TextField
-                fullWidth
-                label="Notes"
-                multiline
-                rows={3}
-                value={formData.notes}
-                onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-              />
-            </Grid>
-          </Grid>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={handleCloseDialog}>Cancel</Button>
-          <Button
-            onClick={handleSaveLead}
-            variant="contained"
-            disabled={loading}
-            startIcon={loading ? <CircularProgress size={20} /> : null}
-          >
-            {loading ? 'Saving...' : (editingLead ? 'Update' : 'Save')}
-          </Button>
-        </DialogActions>
-      </Dialog>
-
-      {/* Bulk Assignment Dialog */}
-      <Dialog open={bulkAssignmentDialog} onClose={() => setBulkAssignmentDialog(false)}>
-        <DialogTitle>Bulk Assign Leads</DialogTitle>
-        <DialogContent>
-          <Typography variant="body2" sx={{ mb: 2 }}>
-            Assign {selectedLeads.length} selected lead(s) to an agent:
-          </Typography>
-          <FormControl fullWidth>
-            <InputLabel>Select Agent</InputLabel>
-            <Select
-              value={bulkAssignmentAgent}
-              label="Select Agent"
-              onChange={(e) => setBulkAssignmentAgent(e.target.value)}
-            >
-              {agents.map(agent => (
-                <MenuItem key={agent.id} value={agent.id}>
-                  <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
-                    <span>{agent.name}</span>
-                    <Chip
-                      label={`⭐ ${agent.rating}`}
-                      size="small"
-                      sx={{ ml: 1, fontSize: '0.7rem', height: '20px' }}
-                    />
-                  </Box>
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setBulkAssignmentDialog(false)}>Cancel</Button>
-          <Button onClick={handleConfirmBulkAssignment} variant="contained">
-            Assign Leads
-          </Button>
-        </DialogActions>
-      </Dialog>
-
-      {/* Quick Update Dialog */}
-      <Dialog open={quickUpdateDialog} onClose={() => setQuickUpdateDialog(false)} maxWidth="sm" fullWidth>
-        <DialogTitle>Quick Update - {selectedLead?.firstName} {selectedLead?.lastName}</DialogTitle>
-        <DialogContent>
-          <Grid container spacing={2} sx={{ mt: 1 }}>
-            <Grid item xs={12}>
-              <FormControl fullWidth>
-                <InputLabel>Status</InputLabel>
-                <Select
-                  value={quickUpdateData.status}
-                  label="Status"
-                  onChange={(e) => setQuickUpdateData({ ...quickUpdateData, status: e.target.value })}
-                >
-                  {statusOptions.map(status => (
-                    <MenuItem key={status} value={status}>{status}</MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-            </Grid>
-            <Grid item xs={12}>
-              <TextField
-                fullWidth
-                label="Follow-up Date"
-                type="date"
-                value={quickUpdateData.followUpDate}
-                onChange={(e) => setQuickUpdateData({ ...quickUpdateData, followUpDate: e.target.value })}
-                InputLabelProps={{ shrink: true }}
-              />
-            </Grid>
-            <Grid item xs={12}>
-              <TextField
-                fullWidth
-                multiline
-                rows={4}
-                label="Notes"
-                value={quickUpdateData.notes}
-                onChange={(e) => setQuickUpdateData({ ...quickUpdateData, notes: e.target.value })}
-                placeholder="Add notes about this lead..."
-              />
-            </Grid>
-          </Grid>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setQuickUpdateDialog(false)}>Cancel</Button>
-          <Button onClick={handleSaveQuickUpdate} variant="contained">
-            Save Updates
-          </Button>
-        </DialogActions>
-      </Dialog>
-
-      {/* Actions Menu */}
-      <Menu
-        anchorEl={anchorEl}
-        open={Boolean(anchorEl)}
-        onClose={handleMenuClose}
-      >
-        <MenuItem onClick={() => {
-          handleSendEmail(selectedLead);
-          handleMenuClose();
-        }}>
-          <ListItemIcon>
-            <EmailIcon fontSize="small" />
-          </ListItemIcon>
-          <ListItemText>Send Email</ListItemText>
-        </MenuItem>
-        <Divider />
-        <MenuItem onClick={() => {
-          handleArchiveLead(selectedLead?.id);
-          handleMenuClose();
-        }}>
-          <ListItemIcon>
-            <ArchiveIcon fontSize="small" />
-          </ListItemIcon>
-          <ListItemText>Archive</ListItemText>
-        </MenuItem>
-      </Menu>
-
-      {/* Data Provider Upload Dialog */}
-      <Dialog open={uploadDialog} onClose={() => setUploadDialog(false)} maxWidth="sm" fullWidth>
-        <DialogTitle>Data Provider Upload</DialogTitle>
-        <DialogContent>
-          <Box sx={{ mt: 2 }}>
-            <Typography variant="body2" color="text.secondary" gutterBottom>
-              Upload Excel/CSV file from data provider
-            </Typography>
-            <Button
-              variant="outlined"
-              component="label"
-              fullWidth
-              startIcon={<CloudUploadIcon />}
-              sx={{ mt: 2, mb: 2 }}
-            >
-              Choose File (Excel/CSV)
-              <input
-                type="file"
-                hidden
-                accept=".xlsx,.xls,.csv"
-                onChange={handleFileUpload}
-              />
-            </Button>
-            {uploadFile && (
-              <Typography variant="body2" color="primary" gutterBottom>
-                Selected: {uploadFile.name}
-              </Typography>
-            )}
-            {loading && (
-              <Box sx={{ mt: 2 }}>
-                <LinearProgress variant="determinate" value={uploadProgress} />
-                <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-                  Uploading... {uploadProgress}%
-                </Typography>
-              </Box>
-            )}
-            {uploadSuccess && (
-              <Alert severity="success" sx={{ mt: 2 }}>
-                ✅ Upload Success! File processed successfully.
-              </Alert>
-            )}
-          </Box>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setUploadDialog(false)}>Cancel</Button>
-          <Button
-            onClick={handleUploadSubmit}
-            variant="contained"
-            disabled={!uploadFile || loading}
-          >
-            Upload
-          </Button>
-        </DialogActions>
-      </Dialog>
-
-      {/* Expiry Check Dialog */}
-      <Dialog open={expiryCheckDialog} onClose={() => setExpiryCheckDialog(false)} maxWidth="sm" fullWidth>
-        <DialogTitle>
-          📅 Policy Expiry Verification
-        </DialogTitle>
-        <DialogContent>
-          {selectedPolicy && (
-            <Box sx={{ mt: 2 }}>
-              <Typography variant="h6" gutterBottom>
-                {selectedPolicy.policyNumber}
-              </Typography>
-              
-              <Grid container spacing={2} sx={{ mb: 3 }}>
-                <Grid item xs={6}>
-                  <Paper sx={{ p: 2, bgcolor: 'primary.main', color: '#fff' }}>
-                    <Typography variant="caption">CRM System</Typography>
-                    <Typography variant="h6">{selectedPolicy.crmExpiryDate}</Typography>
-                  </Paper>
-                </Grid>
-                <Grid item xs={6}>
-                  <Paper sx={{ p: 2, bgcolor: 'secondary.main', color: '#fff' }}>
-                    <Typography variant="caption">NAV System</Typography>
-                    <Typography variant="h6">{selectedPolicy.navExpiryDate}</Typography>
-                  </Paper>
-                </Grid>
-              </Grid>
-              
-              <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                <Typography variant="body1" sx={{ mr: 1 }}>Status:</Typography>
-                <Typography variant="h6">
-                  {getStatusIcon(getExpiryStatus(selectedPolicy.crmExpiryDate))}
-                </Typography>
-                <Typography variant="body1" sx={{ ml: 1, fontWeight: 600 }}>
-                  {getExpiryStatus(selectedPolicy.crmExpiryDate)}
-                </Typography>
-              </Box>
-              
-              <Typography variant="body2" color="text.secondary" gutterBottom>
-                Customer: {selectedPolicy.customerName}
-              </Typography>
-              
-              <Typography variant="body2" color="text.secondary">
-                Vehicle: {selectedPolicy.vehicleNumber}
-              </Typography>
-              
-              {navCheckLoading && (
-                <Box sx={{ mt: 2, display: 'flex', alignItems: 'center' }}>
-                  <CircularProgress size={20} sx={{ mr: 1 }} />
-                  <Typography variant="body2">Verifying with NAV system...</Typography>
-                </Box>
-              )}
-            </Box>
-          )}
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setExpiryCheckDialog(false)}>Close</Button>
-          <Button 
-            onClick={handleNavVerification} 
-            variant="contained"
-            disabled={navCheckLoading}
-            startIcon={navCheckLoading ? <CircularProgress size={16} /> : null}
-          >
-            {navCheckLoading ? 'Verifying...' : 'Verify with NAV'}
-          </Button>
-        </DialogActions>
-      </Dialog>
-
-      {/* Snackbar */}
-      <Snackbar
-        open={snackbar.open}
-        autoHideDuration={6000}
-        onClose={() => setSnackbar({ ...snackbar, open: false })}
-      >
-        <Alert
-          onClose={() => setSnackbar({ ...snackbar, open: false })}
-          severity={snackbar.severity}
-          sx={{ width: '100%' }}
-        >
-          {snackbar.message}
-        </Alert>
-      </Snackbar>
-
-      {/* Bulk Upload Component */}
-      <BulkUpload
-        open={bulkUploadOpen}
-        onClose={() => setBulkUploadOpen(false)}
-        title="Bulk Upload Leads"
-        source="leads"
-        existingData={leads}
-        requiredFields={['firstName', 'lastName', 'email', 'phone']}
-        fieldMapping={{
-          'First Name': 'firstName',
-          'Last Name': 'lastName',
-          'Email': 'email',
-          'Phone': 'phone',
-          'Company': 'company',
-          'Position': 'position',
-          'Source': 'source',
-          'Status': 'status',
-          'Priority': 'priority',
-          'Value': 'value',
-          'Expected Close Date': 'expectedCloseDate',
-          'Notes': 'notes',
-          'Product': 'product',
-          'Sub Product': 'subProduct',
-          'Vehicle Registration Number': 'vehicleRegistrationNumber',
-          'Vehicle Type': 'vehicleType'
-        }}
-        onUploadComplete={(validRecords, failedRecords) => {
-          // Add uploaded leads to the list
-          const newLeads = validRecords.map((record, index) => ({
-            id: Math.max(...leads.map(l => l.id)) + index + 1,
-            ...record.record,
-            createdAt: new Date().toISOString().split('T')[0],
-            updatedAt: new Date().toISOString().split('T')[0],
-            lastContactDate: null,
-            tags: []
-          }));
-
-          setLeads([...leads, ...newLeads]);
-          setBulkUploadOpen(false);
-          setSnackbar({
-            open: true,
-            message: `${validRecords.length} leads uploaded successfully! ${failedRecords.length > 0 ? `${failedRecords.length} records failed.` : ''}`,
-            severity: 'success'
-          });
-
-          // Show upload history if there were failures
-          if (failedRecords.length > 0) {
-            setShowUploadHistory(true);
-          }
-        }}
-        allowOverride={true}
-      />
-
-      {/* Agent Table Dialog */}
-      <Dialog open={agentTableOpen} onClose={() => setAgentTableOpen(false)} maxWidth="md" fullWidth>
-        <DialogTitle>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            <GroupIcon color="primary" />
-            <Typography variant="h6" fontWeight="600">Agent Performance Dashboard</Typography>
-          </Box>
-        </DialogTitle>
-        <DialogContent>
-          <TableContainer>
-            <Table>
-              <TableHead>
-                <TableRow>
-                  <TableCell>Agent</TableCell>
-                  <TableCell>Rating</TableCell>
-                  <TableCell>Total Leads</TableCell>
-                  <TableCell>Closed Deals</TableCell>
-                  <TableCell>Success Rate</TableCell>
-                  <TableCell>Languages</TableCell>
-                  <TableCell>Specialization</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {agents.map((agent) => {
-                  const successRate = ((agent.closedDeals / agent.totalLeads) * 100).toFixed(1);
-                  const currentWorkload = leads.filter(l => l.assignedToId === agent.id).length;
-                  return (
-                    <TableRow key={agent.id} hover>
-=======
                       <TableCell padding="checkbox">
                         <Checkbox
                           checked={selectedLeads.includes(lead.id)}
                           onChange={() => handleSelectLead(lead.id)}
                         />
                       </TableCell>
->>>>>>> 0f0db02199acd11bdcb8309679f62aa88a7a39ee
                       <TableCell>
                         <Box sx={{ display: 'flex', alignItems: 'center' }}>
                           <Tooltip title={starredLeads.includes(lead.id) ? "Mark as Unimportant" : "Mark as Important"}>

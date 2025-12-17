@@ -1,8 +1,4 @@
-<<<<<<< HEAD
 import React, { createContext, useContext, useState, useEffect, useMemo } from 'react';
-=======
-import React, { createContext, useContext, useMemo } from 'react';
->>>>>>> 0f0db02199acd11bdcb8309679f62aa88a7a39ee
 import { useAuth } from './AuthContext';
 
 const PermissionsContext = createContext();
@@ -148,20 +144,17 @@ const mockUserPermissions = {
   ],
   'user': [
     // Default permissions for new signups
-    'dashboard', 'profile' 
+    'dashboard', 'profile'
   ]
 };
 
+
 export const PermissionsProvider = ({ children }) => {
-<<<<<<< HEAD
   const { currentUser, loading: authLoading } = useAuth();
 
   // Derive permissions directly from currentUser to avoid synchronization issues
   // This ensures permissions are available in the same render cycle as the user login
-=======
-  const { currentUser } = useAuth();
 
->>>>>>> 0f0db02199acd11bdcb8309679f62aa88a7a39ee
   const userPermissions = useMemo(() => {
     if (currentUser) {
       // Check if user has explicit permissions in their profile (from AuthContext)
@@ -171,14 +164,8 @@ export const PermissionsProvider = ({ children }) => {
     return [];
   }, [currentUser]);
 
-<<<<<<< HEAD
   // Use auth loading state directly as permissions are now derived synchronously
   const loading = authLoading;
-=======
-  // Since permissions are derived synchronously from currentUser, 
-  // we don't need a separate loading state.
-  const loading = false;
->>>>>>> 0f0db02199acd11bdcb8309679f62aa88a7a39ee
 
   const hasPermission = (permission) => {
     if (!currentUser) return false;

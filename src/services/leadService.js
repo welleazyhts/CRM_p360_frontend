@@ -19,11 +19,7 @@ export const leadService = {
     try {
       const params = new URLSearchParams();
 
-<<<<<<< HEAD
       // Map frontend filter names to backend filter names
-=======
->>>>>>> 0f0db02199acd11bdcb8309679f62aa88a7a39ee
-      if (filters.status) params.append('status', filters.status);
       if (filters.priority) params.append('priority', filters.priority);
       if (filters.assignedTo) params.append('assigned_to', filters.assignedTo);
       if (filters.source) params.append('source', filters.source);
@@ -207,12 +203,10 @@ export const leadService = {
   // Timeline & Activities
   // ============================================
 
-<<<<<<< HEAD
   /**
    * Get lead timeline/activities
    * Backend: GET /api/leads/{lead_id}/timeline/
    */
-=======
   // Add activity to lead
   addLeadActivity: async (leadId, activityData) => {
     try {
@@ -375,7 +369,6 @@ export const leadService = {
   },
 
   // Get lead timeline
->>>>>>> 0f0db02199acd11bdcb8309679f62aa88a7a39ee
   getLeadTimeline: async (leadId) => {
     try {
       const response = await api.get(`/leads/${leadId}/timeline/`);
@@ -706,7 +699,6 @@ export const leadService = {
     }
   },
 
-<<<<<<< HEAD
   // ============================================
   // Special Assignment Operations
   // ============================================
@@ -992,7 +984,7 @@ export const leadService = {
       throw error;
     }
   },
-=======
+
   // --- Merged from leadServices.js ---
 
   getAssignedLeads: async (params = {}) => {
@@ -1286,6 +1278,45 @@ export const leadService = {
     }
   },
 
+  getAssignedLeads: async (params = {}) => {
+    try {
+      const res = await api.get('/leads/assigned', { params });
+      if (res && res.data && Array.isArray(res.data)) return res.data;
+    } catch (e) {
+      // ignore and fall through to mock
+    }
+
+    // Mock fallback
+    return [
+      {
+        id: 101,
+        lead_id: 'L-2023-001',
+        name: 'Rahul Sharma',
+        phone: '9876543210',
+        email: 'rahul.s@example.com',
+        status: 'New',
+        source: 'Website',
+        priority: 'High',
+        assignedTo: 1, // Current user
+        createdAt: '2023-05-15T10:30:00Z',
+        notes: 'Interested in term insurance'
+      },
+      {
+        id: 102,
+        lead_id: 'L-2023-002',
+        name: 'Priya Singh',
+        phone: '9876543211',
+        email: 'priya.s@example.com',
+        status: 'Contacted',
+        source: 'Referral',
+        priority: 'Medium',
+        assignedTo: 1, // Current user
+        createdAt: '2023-05-16T14:20:00Z',
+        notes: 'Called twice, busy'
+      }
+    ];
+  },
+
   // Export archived leads to CSV/Excel
   exportArchivedLeads: async (filters = {}, format = 'csv') => {
     try {
@@ -1328,7 +1359,6 @@ export const leadService = {
       return { success: true, message: 'Lead deleted permanently' };
     }
   }
->>>>>>> 0f0db02199acd11bdcb8309679f62aa88a7a39ee
 };
 
 export default leadService;

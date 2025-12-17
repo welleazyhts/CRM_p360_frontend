@@ -98,7 +98,6 @@ const LeadDetails = () => {
   const [documentType, setDocumentType] = useState('vehicle'); // 'vehicle' or 'insurance'
   const [fileUploadDialog, setFileUploadDialog] = useState(false);
   const [followUpDialog, setFollowUpDialog] = useState(false);
-<<<<<<< HEAD
   const [paymentLinkDialog, setPaymentLinkDialog] = useState(false);
   const [callNumberDialog, setCallNumberDialog] = useState(false);
   const [postCallDialog, setPostCallDialog] = useState(false);
@@ -122,7 +121,8 @@ const LeadDetails = () => {
     subStatus: '',
     followUpDate: '',
     followUpTime: '',
-=======
+  });
+
   const [policyViewDialog, setPolicyViewDialog] = useState(false);
   const [selectedPolicy, setSelectedPolicy] = useState(null);
   const [documentViewDialog, setDocumentViewDialog] = useState(false);
@@ -135,7 +135,6 @@ const LeadDetails = () => {
     premium: '',
     coverage: '',
     validTill: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
->>>>>>> 0f0db02199acd11bdcb8309679f62aa88a7a39ee
     notes: ''
   });
 
@@ -3313,7 +3312,6 @@ Document Reference: ${doc.id}
         </DialogActions>
       </Dialog>
 
-<<<<<<< HEAD
       {/* Payment Link Dialog */}
       <Dialog open={paymentLinkDialog} onClose={() => setPaymentLinkDialog(false)} maxWidth="sm" fullWidth>
         <DialogTitle>Send Payment Link</DialogTitle>
@@ -3432,7 +3430,9 @@ Document Reference: ${doc.id}
             startIcon={<SendIcon />}
           >
             Generate & Send Link
-=======
+          </Button>
+        </DialogActions>
+      </Dialog>
       {/* Policy View Details Dialog */}
       <Dialog
         open={policyViewDialog}
@@ -3615,12 +3615,12 @@ Document Reference: ${doc.id}
             }}
           >
             Download Policy
->>>>>>> 0f0db02199acd11bdcb8309679f62aa88a7a39ee
+
           </Button>
         </DialogActions>
       </Dialog>
 
-<<<<<<< HEAD
+
       {/* Call Number Selection Dialog */}
       <Dialog open={callNumberDialog} onClose={() => setCallNumberDialog(false)} maxWidth="xs" fullWidth>
         <DialogTitle>Select Number to Call</DialogTitle>
@@ -3810,7 +3810,9 @@ Document Reference: ${doc.id}
             }}
           >
             Save Call Details
-=======
+          </Button>
+        </DialogActions>
+      </Dialog>
       {/* Document View Details Dialog */}
       <Dialog
         open={documentViewDialog}
@@ -4028,7 +4030,7 @@ Document Reference: ${doc.id}
             disabled={!quoteForm.premium || !quoteForm.coverage}
           >
             Share Quote
->>>>>>> 0f0db02199acd11bdcb8309679f62aa88a7a39ee
+
           </Button>
         </DialogActions>
       </Dialog>

@@ -256,13 +256,9 @@ const Dashboard = () => {
         setBatchData(batchStatusData);
       }
     } catch (error) {
-<<<<<<< HEAD
       console.error('Failed to load dashboard data:', error);
     } finally {
       setLoaded(true);
-=======
-      // Failed to load dashboard data
->>>>>>> 0f0db02199acd11bdcb8309679f62aa88a7a39ee
     }
   }, [dateRange, policyType, caseStatus, startDate, endDate, selectedTeam, selectedTeamMember]);
 
@@ -378,7 +374,6 @@ const Dashboard = () => {
     // Load dashboard data
     loadDashboardData();
 
-<<<<<<< HEAD
     // For demo purposes, let's set some mock data with a slight delay to simulate API fetch
     const mockTimer = setTimeout(() => {
       setStats({
@@ -403,10 +398,6 @@ const Dashboard = () => {
     ];
 
     setTrendData(mockTrendData);
-=======
-    // Set loaded state
-    setTimeout(() => setLoaded(true), 500);
->>>>>>> 0f0db02199acd11bdcb8309679f62aa88a7a39ee
 
     // Mock data for new charts
     const mockChannelChartData = [
@@ -2482,20 +2473,17 @@ const Dashboard = () => {
                               boxShadow: '0 4px 20px rgba(0,0,0,0.15)'
                             }}
                           />
-<<<<<<< HEAD
-                          <Legend />
-=======
                           <Legend iconType="circle" />
 >>>>>>> 0f0db02199acd11bdcb8309679f62aa88a7a39ee
                           <Bar yAxisId="left" dataKey="efficiency" fill={alpha(theme.palette.primary.main, 0.8)} name="Efficiency %" />
                           <Bar yAxisId="right" dataKey="cost" fill={alpha(theme.palette.error.main, 0.8)} name="Cost per Lead (₹)" />
-                        </BarChart>
-                      </ResponsiveContainer>
-                    </Paper>
-                  </Grid>
+                        </BarChart >
+                      </ResponsiveContainer >
+                    </Paper >
+                  </Grid >
 
                   {/* Hierarchy Performance Chart */}
-                  <Grid item xs={12} lg={6}>
+                  < Grid item xs={12} lg={6} >
                     <Paper sx={{ p: 3, height: 400, boxShadow: '0 8px 32px rgba(0,0,0,0.1)' }}>
                       <Typography variant="h6" gutterBottom fontWeight="600">
                         Regional Performance Overview
@@ -2523,15 +2511,15 @@ const Dashboard = () => {
                         </RadialBarChart>
                       </ResponsiveContainer>
                     </Paper>
-                  </Grid>
-                </Grid>
-              </Collapse>
+                  </Grid >
+                </Grid >
+              </Collapse >
             )}
-          </CardContent>
-        </Card>
+          </CardContent >
+        </Card >
 
         {/* Stats Cards */}
-        <Grid container spacing={3} sx={{ mb: 4 }}>
+        < Grid container spacing={3} sx={{ mb: 4 }}>
           <Grid item xs={12} sm={6} md={4} lg={3}>
             <StatCard
               title="Total Cases"
@@ -2597,10 +2585,10 @@ const Dashboard = () => {
               isCurrency={true}
             />
           </Grid>
-        </Grid>
+        </Grid >
 
         {/* Charts */}
-        <Grid container spacing={3}>
+        < Grid container spacing={3} >
           <Grid item xs={12} md={6}>
             <Grow in={loaded} style={{ transformOrigin: '0 0 0' }} timeout={400}>
               <Paper sx={{ p: 3, height: 380, boxShadow: '0 8px 32px rgba(0,0,0,0.1)' }}>
@@ -2622,11 +2610,7 @@ const Dashboard = () => {
                         boxShadow: '0 4px 20px rgba(0,0,0,0.15)'
                       }}
                     />
-<<<<<<< HEAD
-                    <Legend />
-=======
                     <Legend iconType="circle" />
->>>>>>> 0f0db02199acd11bdcb8309679f62aa88a7a39ee
                     <Bar
                       dataKey="newCases"
                       fill={alpha(theme.palette.primary.main, 0.8)}
@@ -2639,11 +2623,11 @@ const Dashboard = () => {
                       name="Completed Renewals"
                       radius={[4, 4, 0, 0]}
                     />
-                  </BarChart>
-                </ResponsiveContainer>
-              </Paper>
-            </Grow>
-          </Grid>
+                  </BarChart >
+                </ResponsiveContainer >
+              </Paper >
+            </Grow >
+          </Grid >
 
           <Grid item xs={12} md={6}>
             <Grow in={loaded} style={{ transformOrigin: '0 0 0' }} timeout={600}>
@@ -2673,11 +2657,7 @@ const Dashboard = () => {
                         boxShadow: '0 4px 20px rgba(0,0,0,0.15)'
                       }}
                     />
-<<<<<<< HEAD
-                    <Legend />
-=======
                     <Legend iconType="circle" />
->>>>>>> 0f0db02199acd11bdcb8309679f62aa88a7a39ee
                     <Area
                       type="monotone"
                       dataKey="successRate"
@@ -2687,14 +2667,14 @@ const Dashboard = () => {
                       name="Success Rate"
                       strokeWidth={2}
                     />
-                  </AreaChart>
-                </ResponsiveContainer>
-              </Paper>
-            </Grow>
-          </Grid>
+                  </AreaChart >
+                </ResponsiveContainer >
+              </Paper >
+            </Grow >
+          </Grid >
 
           {/* Batch Status and Payment Status Charts */}
-          <Grid item xs={12} md={6}>
+          < Grid item xs={12} md={6} >
             <Grow in={loaded} style={{ transformOrigin: '0 0 0' }} timeout={800}>
               <Paper sx={{ p: 3, height: 450, boxShadow: '0 8px 32px rgba(0,0,0,0.1)' }}>
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
@@ -2747,11 +2727,7 @@ const Dashboard = () => {
                           boxShadow: '0 4px 20px rgba(0,0,0,0.15)'
                         }}
                       />
-<<<<<<< HEAD
-                      <Legend />
-=======
                       <Legend iconType="circle" />
->>>>>>> 0f0db02199acd11bdcb8309679f62aa88a7a39ee
                       <Bar
                         dataKey="status.renewed"
                         stackId="a"
@@ -2776,15 +2752,15 @@ const Dashboard = () => {
                         fill={theme.palette.error.main}
                         name="Failed"
                       />
-                    </BarChart>
-                  </ResponsiveContainer>
-                </Box>
-              </Paper>
-            </Grow>
-          </Grid>
+                    </BarChart >
+                  </ResponsiveContainer >
+                </Box >
+              </Paper >
+            </Grow >
+          </Grid >
 
           {/* Payment Status Chart */}
-          <Grid item xs={12} md={6}>
+          < Grid item xs={12} md={6} >
             <Grow in={loaded} style={{ transformOrigin: '0 0 0' }} timeout={900}>
               <Paper sx={{ p: 3, height: 450, boxShadow: '0 8px 32px rgba(0,0,0,0.1)' }}>
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
@@ -2844,11 +2820,7 @@ const Dashboard = () => {
                           boxShadow: '0 4px 20px rgba(0,0,0,0.15)'
                         }}
                       />
-<<<<<<< HEAD
-                      <Legend />
-=======
                       <Legend iconType="circle" />
->>>>>>> 0f0db02199acd11bdcb8309679f62aa88a7a39ee
                       <Line
                         type="monotone"
                         dataKey="payment.received"
@@ -2867,18 +2839,18 @@ const Dashboard = () => {
                         activeDot={{ r: 6 }}
                         name="Payment Pending"
                       />
-                    </LineChart>
-                  </ResponsiveContainer>
-                </Box>
-              </Paper>
-            </Grow>
-          </Grid>
-        </Grid>
+                    </LineChart >
+                  </ResponsiveContainer >
+                </Box >
+              </Paper >
+            </Grow >
+          </Grid >
+        </Grid >
 
         {/* New Charts Section */}
-        <Typography variant="h5" gutterBottom sx={{ mt: 4, mb: 3, fontWeight: 600 }}>
+        < Typography variant="h5" gutterBottom sx={{ mt: 4, mb: 3, fontWeight: 600 }}>
           Advanced Analytics
-        </Typography>
+        </Typography >
 
         <Grid container spacing={3}>
           {/* Channel Wise Case Bifurcation */}
@@ -3281,11 +3253,7 @@ const Dashboard = () => {
                         boxShadow: '0 4px 20px rgba(0,0,0,0.15)'
                       }}
                     />
-<<<<<<< HEAD
-                    <Legend />
-=======
                     <Legend iconType="circle" />
->>>>>>> 0f0db02199acd11bdcb8309679f62aa88a7a39ee
                     <Line
                       type="monotone"
                       dataKey="retained"
@@ -3303,14 +3271,14 @@ const Dashboard = () => {
                       name="Churn Rate"
                       dot={{ fill: theme.palette.error.main, strokeWidth: 2, r: 3 }}
                     />
-                  </LineChart>
-                </ResponsiveContainer>
-              </Paper>
-            </Grow>
-          </Grid>
+                  </LineChart >
+                </ResponsiveContainer >
+              </Paper >
+            </Grow >
+          </Grid >
 
           {/* Segment-wise Retention */}
-          <Grid item xs={12}>
+          < Grid item xs={12} >
             <Grow in={loaded} style={{ transformOrigin: '0 0 0' }} timeout={1400}>
               <Paper sx={{ p: 3, boxShadow: '0 8px 32px rgba(0,0,0,0.1)' }}>
                 <Typography variant="h6" fontWeight="600" gutterBottom>
@@ -3354,13 +3322,13 @@ const Dashboard = () => {
                 </Grid>
               </Paper>
             </Grow>
-          </Grid>
-        </Grid>
+          </Grid >
+        </Grid >
 
         {/* Payment Analysis Charts */}
-        <Typography variant="h5" gutterBottom sx={{ mt: 6, mb: 3, fontWeight: 600 }}>
+        < Typography variant="h5" gutterBottom sx={{ mt: 6, mb: 3, fontWeight: 600 }}>
           Payment & Collection Analysis
-        </Typography>
+        </Typography >
 
         <Grid container spacing={3} sx={{ mb: 6 }}>
           {/* Payment Type Breakdown */}
@@ -3419,11 +3387,7 @@ const Dashboard = () => {
                         boxShadow: '0 4px 20px rgba(0,0,0,0.15)'
                       }}
                     />
-<<<<<<< HEAD
-                    <Legend />
-=======
                     <Legend iconType="circle" />
->>>>>>> 0f0db02199acd11bdcb8309679f62aa88a7a39ee
                     <Line
                       type="monotone"
                       dataKey="avgDays"
@@ -3432,14 +3396,14 @@ const Dashboard = () => {
                       name="Avg Days to Payment"
                       dot={{ fill: theme.palette.primary.main, strokeWidth: 2, r: 4 }}
                     />
-                  </LineChart>
-                </ResponsiveContainer>
-              </Paper>
-            </Grow>
-          </Grid>
+                  </LineChart >
+                </ResponsiveContainer >
+              </Paper >
+            </Grow >
+          </Grid >
 
           {/* Due Date Analysis */}
-          <Grid item xs={12} md={6}>
+          < Grid item xs={12} md={6} >
             <Grow in={loaded} style={{ transformOrigin: '0 0 0' }} timeout={1400}>
               <Paper sx={{ p: 3, height: 400, boxShadow: '0 8px 32px rgba(0,0,0,0.1)' }}>
                 <Typography variant="h6" gutterBottom fontWeight="600">
@@ -3461,11 +3425,7 @@ const Dashboard = () => {
                         boxShadow: '0 4px 20px rgba(0,0,0,0.15)'
                       }}
                     />
-<<<<<<< HEAD
-                    <Legend />
-=======
                     <Legend iconType="circle" />
->>>>>>> 0f0db02199acd11bdcb8309679f62aa88a7a39ee
                     <Bar
                       dataKey="count"
                       fill={({ payload }) => payload?.color || '#8884d8'}
@@ -3476,14 +3436,14 @@ const Dashboard = () => {
                         <Cell key={`cell-${index}`} fill={entry.color} />
                       ))}
                     </Bar>
-                  </BarChart>
-                </ResponsiveContainer>
-              </Paper>
-            </Grow>
-          </Grid>
+                  </BarChart >
+                </ResponsiveContainer >
+              </Paper >
+            </Grow >
+          </Grid >
 
           {/* Policy-wise Renewal & Collection */}
-          <Grid item xs={12} md={6}>
+          < Grid item xs={12} md={6} >
             <Grow in={loaded} style={{ transformOrigin: '0 0 0' }} timeout={1500}>
               <Paper sx={{ p: 3, height: 400, boxShadow: '0 8px 32px rgba(0,0,0,0.1)' }}>
                 <Typography variant="h6" gutterBottom fontWeight="600">
@@ -3504,11 +3464,7 @@ const Dashboard = () => {
                         boxShadow: '0 4px 20px rgba(0,0,0,0.15)'
                       }}
                     />
-<<<<<<< HEAD
-                    <Legend />
-=======
                     <Legend iconType="circle" />
->>>>>>> 0f0db02199acd11bdcb8309679f62aa88a7a39ee
                     <Bar
                       dataKey="pending"
                       stackId="a"
@@ -3523,14 +3479,14 @@ const Dashboard = () => {
                       name="Collected"
                       radius={[4, 4, 0, 0]}
                     />
-                  </BarChart>
-                </ResponsiveContainer>
-              </Paper>
-            </Grow>
-          </Grid>
+                  </BarChart >
+                </ResponsiveContainer >
+              </Paper >
+            </Grow >
+          </Grid >
 
           {/* Channel-wise Collection */}
-          <Grid item xs={12} md={6}>
+          < Grid item xs={12} md={6} >
             <Grow in={loaded} style={{ transformOrigin: '0 0 0' }} timeout={1600}>
               <Paper sx={{ p: 3, height: 400, boxShadow: '0 8px 32px rgba(0,0,0,0.1)' }}>
                 <Typography variant="h6" gutterBottom fontWeight="600">
@@ -3552,11 +3508,7 @@ const Dashboard = () => {
                         boxShadow: '0 4px 20px rgba(0,0,0,0.15)'
                       }}
                     />
-<<<<<<< HEAD
-                    <Legend />
-=======
                     <Legend iconType="circle" />
->>>>>>> 0f0db02199acd11bdcb8309679f62aa88a7a39ee
                     <Bar
                       dataKey="target"
                       fill={alpha(theme.palette.info.main, 0.3)}
@@ -3569,14 +3521,14 @@ const Dashboard = () => {
                       name="Collected (₹)"
                       radius={[4, 4, 0, 0]}
                     />
-                  </BarChart>
-                </ResponsiveContainer>
-              </Paper>
-            </Grow>
-          </Grid>
+                  </BarChart >
+                </ResponsiveContainer >
+              </Paper >
+            </Grow >
+          </Grid >
 
           {/* Collection Mode Analysis */}
-          <Grid item xs={12} md={6}>
+          < Grid item xs={12} md={6} >
             <Grow in={loaded} style={{ transformOrigin: '0 0 0' }} timeout={1700}>
               <Paper sx={{ p: 3, height: 400, boxShadow: '0 8px 32px rgba(0,0,0,0.1)' }}>
                 <Typography variant="h6" gutterBottom fontWeight="600">
@@ -3614,13 +3566,13 @@ const Dashboard = () => {
                 </ResponsiveContainer>
               </Paper>
             </Grow>
-          </Grid>
-        </Grid>
+          </Grid >
+        </Grid >
 
         {/* Renewals Campaign Tracking */}
-        <Typography variant="h5" gutterBottom sx={{ mt: 6, mb: 3, fontWeight: 600 }}>
+        < Typography variant="h5" gutterBottom sx={{ mt: 6, mb: 3, fontWeight: 600 }}>
           Renewals Campaign Tracking
-        </Typography>
+        </Typography >
 
         <Grid container spacing={3}>
           <Grid item xs={12}>
@@ -4603,8 +4555,8 @@ const Dashboard = () => {
             </>
           )}
         </Dialog>
-      </Box>
-    </Fade>
+      </Box >
+    </Fade >
   );
 };
 

@@ -67,12 +67,8 @@ import {
   HealthAndSafety as HealthAndSafetyIcon,
   ArrowBack as ArrowBackIcon
 } from '@mui/icons-material';
-<<<<<<< HEAD
 import { useLocation, useNavigate } from 'react-router-dom';
-=======
-import { useLocation } from 'react-router-dom';
 import policyService from '../services/policyService';
->>>>>>> 0f0db02199acd11bdcb8309679f62aa88a7a39ee
 
 const PolicyTimeline = () => {
   const location = useLocation();
@@ -432,17 +428,17 @@ const PolicyTimeline = () => {
       try {
         // In a real app, you would fetch data based on customerIdFromUrl
         // For example: const response = await api.getPolicyData(customerIdFromUrl);
-        
+
         // Simulating API call delay
         await new Promise(resolve => setTimeout(resolve, 800));
-        
+
         // Use the customer data from URL if available
         const policyDataToUse = {
           ...mockPolicyData,
           customerId: customerIdFromUrl || mockPolicyData.customerId,
           customerName: customerNameFromUrl || mockPolicyData.customerName
         };
-        
+
         setPolicyData(policyDataToUse);
         setLoading(false);
         // Set loaded state for animations after a brief delay
@@ -454,7 +450,7 @@ const PolicyTimeline = () => {
         setLoading(false);
       }
     };
-    
+
     fetchPolicyData();
   }, [customerIdFromUrl, customerNameFromUrl, mockPolicyData]);
 
@@ -466,7 +462,7 @@ const PolicyTimeline = () => {
         // Trigger a window resize event to force tabs to recalculate
         window.dispatchEvent(new Event('resize'));
       }, 50);
-      
+
       return () => clearTimeout(timer);
     }
   }, [policyData]);
@@ -643,17 +639,17 @@ const PolicyTimeline = () => {
   const handleSearchChange = (event) => {
     setSearchTerm(event.target.value);
   };
-  
 
-  
+
+
   const handleFilterTypeChange = (type) => {
     setFilterType(type);
   };
-  
+
   const handleTabChange = (event, newValue) => {
     setTabValue(newValue);
   };
-  
+
   const getEventIcon = (type) => {
     switch (type) {
       case 'policy_created':
@@ -703,7 +699,7 @@ const PolicyTimeline = () => {
     const options = { year: 'numeric', month: 'long', day: 'numeric' };
     return new Date(dateString).toLocaleDateString('en-US', options);
   };
-  
+
   // Get currently selected policy based on tab
   const getCurrentPolicy = () => {
     if (!policyData || !policyData.policies || policyData.policies.length === 0) {
@@ -711,21 +707,21 @@ const PolicyTimeline = () => {
     }
     return policyData.policies[tabValue];
   };
-  
+
   // Filter events based on filterType
   const getFilteredEvents = () => {
     const currentPolicy = getCurrentPolicy();
     if (!currentPolicy || !currentPolicy.events) return [];
-    
+
     return currentPolicy.events
       .filter(event => filterType === 'all' || event.type === filterType)
-      .filter(event => !searchTerm || 
+      .filter(event => !searchTerm ||
         event.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
         event.description.toLowerCase().includes(searchTerm.toLowerCase())
       )
       .sort((a, b) => new Date(b.date) - new Date(a.date));  // Sort by date descending
   };
-  
+
   if (loading) {
     return (
       <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '50vh' }}>
@@ -733,20 +729,20 @@ const PolicyTimeline = () => {
       </Box>
     );
   }
-  
+
   if (error) {
     return (
-      <Box sx={{ 
-        display: 'flex', 
-        justifyContent: 'center', 
-        alignItems: 'center', 
+      <Box sx={{
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
         height: '50vh',
         flexDirection: 'column',
         gap: 2
       }}>
         <Typography variant="h5" color="error">{error}</Typography>
-        <Button 
-          variant="contained" 
+        <Button
+          variant="contained"
           onClick={() => window.location.reload()}
           sx={{ borderRadius: 2 }}
         >
@@ -755,7 +751,7 @@ const PolicyTimeline = () => {
       </Box>
     );
   }
-  
+
   const currentPolicy = getCurrentPolicy();
   const filteredEvents = getFilteredEvents();
 
@@ -797,19 +793,19 @@ const PolicyTimeline = () => {
           </Box>
 
         </Box>
-        
+
         {/* Customer Information */}
         <Grow in={loaded} timeout={400}>
           <Card sx={{ mb: 4, boxShadow: '0 8px 24px rgba(0,0,0,0.05)', borderRadius: 3 }}>
             <CardContent>
               <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                <Avatar 
-                  sx={{ 
-                    bgcolor: theme.palette.primary.main, 
-                    width: 60, 
+                <Avatar
+                  sx={{
+                    bgcolor: theme.palette.primary.main,
+                    width: 60,
                     height: 60,
                     boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
-                    mr: 2 
+                    mr: 2
                   }}
                 >
                   {policyData?.customerName.charAt(0)}
@@ -823,12 +819,12 @@ const PolicyTimeline = () => {
                   </Typography>
                 </Box>
               </Box>
-              
+
               {/* Policy Tabs */}
               <Box sx={{ mt: 3 }}>
-                <Tabs 
+                <Tabs
                   key={`tabs-${policyData?.policies?.length || 0}`}
-                  value={tabValue} 
+                  value={tabValue}
                   onChange={handleTabChange}
                   variant="scrollable"
                   scrollButtons="auto"
@@ -856,21 +852,21 @@ const PolicyTimeline = () => {
                   }}
                 >
                   {policyData?.policies.map((policy, _index) => (
-                    <Tab 
-                      key={policy.policyId} 
+                    <Tab
+                      key={policy.policyId}
                       label={
-                        <Box sx={{ 
-                          display: 'flex', 
-                          alignItems: 'center', 
+                        <Box sx={{
+                          display: 'flex',
+                          alignItems: 'center',
                           justifyContent: 'center',
                           gap: 1,
                           width: '100%'
                         }}>
                           <PolicyIcon fontSize="small" />
-                          <Typography component="span" sx={{ display: { xs: 'none', sm: 'inline' }}}>
+                          <Typography component="span" sx={{ display: { xs: 'none', sm: 'inline' } }}>
                             {policy.policyType}
                           </Typography>
-                          <Typography component="span" sx={{ display: { xs: 'inline', sm: 'none' }}}>
+                          <Typography component="span" sx={{ display: { xs: 'inline', sm: 'none' } }}>
                             {policy.policyType.split(' ')[0]}
                           </Typography>
                         </Box>
@@ -882,7 +878,7 @@ const PolicyTimeline = () => {
             </CardContent>
           </Card>
         </Grow>
-        
+
         {/* Enhanced Customer Profile */}
         {policyData?.customerProfile && (
           <Grow in={loaded} timeout={600}>
@@ -896,14 +892,14 @@ const PolicyTimeline = () => {
                       <Typography variant="h6" fontWeight="600">Financial Profile</Typography>
                     </Box>
                     <Divider sx={{ mb: 2 }} />
-                    
+
                     <Box sx={{ mb: 3 }}>
                       <Typography variant="body2" color="text.secondary">Annual Income</Typography>
                       <Typography variant="h5" fontWeight="600" color="success.main">
                         ₹{policyData.customerProfile.annualIncome.amount.toLocaleString()}
                       </Typography>
                       <Typography variant="caption" color="text.secondary">
-                        Captured on {formatDate(policyData.customerProfile.annualIncome.dateCaptured)} 
+                        Captured on {formatDate(policyData.customerProfile.annualIncome.dateCaptured)}
                         • {policyData.customerProfile.annualIncome.source}
                       </Typography>
                     </Box>
@@ -912,13 +908,13 @@ const PolicyTimeline = () => {
                       <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>Policy Capacity Utilization</Typography>
                       <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 1 }}>
                         <Box sx={{ flex: 1, bgcolor: 'grey.200', borderRadius: 1, height: 8 }}>
-                          <Box 
-                            sx={{ 
+                          <Box
+                            sx={{
                               width: `${policyData.customerProfile.policyCapacity.utilizationPercentage}%`,
                               height: '100%',
                               bgcolor: 'primary.main',
                               borderRadius: 1
-                            }} 
+                            }}
                           />
                         </Box>
                         <Typography variant="body2" fontWeight="600">
@@ -936,11 +932,11 @@ const PolicyTimeline = () => {
                         {policyData.customerProfile.riskProfile.category === 'safe' && <TrendingDownIcon color="success" />}
                         {policyData.customerProfile.riskProfile.category === 'medium' && <TrendingFlatIcon color="warning" />}
                         {policyData.customerProfile.riskProfile.category === 'high' && <TrendingUpIcon color="error" />}
-                        <Chip 
+                        <Chip
                           label={`${policyData.customerProfile.riskProfile.category.charAt(0).toUpperCase() + policyData.customerProfile.riskProfile.category.slice(1)} Risk`}
                           color={
-                            policyData.customerProfile.riskProfile.category === 'safe' ? 'success' : 
-                            policyData.customerProfile.riskProfile.category === 'medium' ? 'warning' : 'error'
+                            policyData.customerProfile.riskProfile.category === 'safe' ? 'success' :
+                              policyData.customerProfile.riskProfile.category === 'medium' ? 'warning' : 'error'
                           }
                           size="small"
                         />
@@ -962,7 +958,7 @@ const PolicyTimeline = () => {
                       <Typography variant="h6" fontWeight="600">Location & Assets</Typography>
                     </Box>
                     <Divider sx={{ mb: 2 }} />
-                    
+
                     {/* Location */}
                     <Box sx={{ mb: 3 }}>
                       <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>Residence</Typography>
@@ -970,18 +966,18 @@ const PolicyTimeline = () => {
                         {policyData.customerProfile.residence.type === 'apartment' && <ApartmentIcon color="primary" />}
                         {policyData.customerProfile.residence.type === 'villa' && <VillaIcon color="primary" />}
                         <Typography variant="body1" fontWeight="500">
-                          {policyData.customerProfile.residence.type.charAt(0).toUpperCase() + policyData.customerProfile.residence.type.slice(1)} 
+                          {policyData.customerProfile.residence.type.charAt(0).toUpperCase() + policyData.customerProfile.residence.type.slice(1)}
                           ({policyData.customerProfile.residence.ownership === 'owned' ? 'Owned' : 'Rented'})
                         </Typography>
                       </Box>
                       <Typography variant="body2" color="text.secondary">
                         {policyData.customerProfile.location.residentialArea}, {policyData.customerProfile.location.city}
                       </Typography>
-                      <Chip 
+                      <Chip
                         label={`${policyData.customerProfile.location.areaRating.charAt(0).toUpperCase() + policyData.customerProfile.location.areaRating.slice(1)} Area`}
                         color={
-                          policyData.customerProfile.location.areaRating === 'good' ? 'success' : 
-                          policyData.customerProfile.location.areaRating === 'average' ? 'warning' : 'error'
+                          policyData.customerProfile.location.areaRating === 'good' ? 'success' :
+                            policyData.customerProfile.location.areaRating === 'average' ? 'warning' : 'error'
                         }
                         size="small"
                         sx={{ mt: 1 }}
@@ -1019,7 +1015,7 @@ const PolicyTimeline = () => {
                       <Typography variant="h6" fontWeight="600">Policy Preferences</Typography>
                     </Box>
                     <Divider sx={{ mb: 2 }} />
-                    
+
                     <Box sx={{ mb: 3 }}>
                       <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>Preferred Policy Types</Typography>
                       <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
@@ -1057,24 +1053,24 @@ const PolicyTimeline = () => {
                       <Typography variant="h6" fontWeight="600">Family Medical History</Typography>
                     </Box>
                     <Divider sx={{ mb: 2 }} />
-                    
+
                     <Box sx={{ mb: 3 }}>
                       <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>Medical Conditions</Typography>
                       {Object.entries(policyData.customerProfile.familyHistory.medicalHistory).map(([condition, data]) => (
                         <Box key={condition} sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
-                          <LocalHospitalIcon 
-                            color={data.present ? 'error' : 'disabled'} 
-                            sx={{ fontSize: 16 }} 
+                          <LocalHospitalIcon
+                            color={data.present ? 'error' : 'disabled'}
+                            sx={{ fontSize: 16 }}
                           />
                           <Typography variant="body2" fontWeight="500">
                             {condition.charAt(0).toUpperCase() + condition.slice(1).replace(/([A-Z])/g, ' $1')}
                           </Typography>
                           {data.present ? (
-                            <Chip 
-                              label={`${data.relation} (Age ${data.ageOfOnset})`} 
-                              color="error" 
-                              size="small" 
-                              variant="outlined" 
+                            <Chip
+                              label={`${data.relation} (Age ${data.ageOfOnset})`}
+                              color="error"
+                              size="small"
+                              variant="outlined"
                             />
                           ) : (
                             <Chip label="Not Present" color="success" size="small" variant="outlined" />
@@ -1102,15 +1098,15 @@ const PolicyTimeline = () => {
                       <Typography variant="h6" fontWeight="600">Other Insurance Policies</Typography>
                     </Box>
                     <Divider sx={{ mb: 2 }} />
-                    
+
                     <Grid container spacing={2}>
                       {policyData.customerProfile.otherPolicies.map((policy, _index) => (
                         <Grid item xs={12} sm={6} md={4} key={_index}>
-                          <Box 
-                            sx={{ 
-                              p: 2, 
-                              border: '1px solid', 
-                              borderColor: 'divider', 
+                          <Box
+                            sx={{
+                              p: 2,
+                              border: '1px solid',
+                              borderColor: 'divider',
                               borderRadius: 2,
                               bgcolor: alpha(theme.palette.secondary.main, 0.05)
                             }}
@@ -1129,9 +1125,9 @@ const PolicyTimeline = () => {
                               <Typography variant="body2">Coverage:</Typography>
                               <Typography variant="body2" fontWeight="500">₹{policy.coverage.toLocaleString()}</Typography>
                             </Box>
-                            <Chip 
-                              label={policy.source} 
-                              size="small" 
+                            <Chip
+                              label={policy.source}
+                              size="small"
                               color={policy.source === 'Bank Channel' ? 'primary' : 'secondary'}
                               variant="outlined"
                             />
@@ -1145,7 +1141,7 @@ const PolicyTimeline = () => {
             </Grid>
           </Grow>
         )}
-        
+
         {/* AI Powered Summary Card */}
         {aiSummary && (
           <Grow in={loaded} timeout={700}>
@@ -1159,7 +1155,7 @@ const PolicyTimeline = () => {
                       <Typography variant="h6" fontWeight="600">AI Insights</Typography>
                     </Box>
                     <Divider sx={{ mb: 2 }} />
-                    
+
                     <Grid container spacing={2}>
                       <Grid item xs={12} sm={6}>
                         <Typography variant="body2" color="text.secondary">Claim Likelihood:</Typography>
@@ -1194,21 +1190,21 @@ const PolicyTimeline = () => {
                       <Typography variant="h6" fontWeight="600">AI Policy Recommendations</Typography>
                     </Box>
                     <Divider sx={{ mb: 2 }} />
-                    
+
                     {aiSummary.policyRecommendations && aiSummary.policyRecommendations.length > 0 ? (
                       <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
                         {aiSummary.policyRecommendations.map((recommendation, index) => (
-                          <Box 
+                          <Box
                             key={index}
-                            sx={{ 
-                              p: 2, 
-                              border: '1px solid', 
-                              borderColor: recommendation.priority === 'Critical' ? 'error.main' : 
-                                          recommendation.priority === 'High' ? 'warning.main' : 'success.main',
+                            sx={{
+                              p: 2,
+                              border: '1px solid',
+                              borderColor: recommendation.priority === 'Critical' ? 'error.main' :
+                                recommendation.priority === 'High' ? 'warning.main' : 'success.main',
                               borderRadius: 2,
                               bgcolor: alpha(
-                                recommendation.priority === 'Critical' ? theme.palette.error.main : 
-                                recommendation.priority === 'High' ? theme.palette.warning.main : theme.palette.success.main, 
+                                recommendation.priority === 'Critical' ? theme.palette.error.main :
+                                  recommendation.priority === 'High' ? theme.palette.warning.main : theme.palette.success.main,
                                 0.05
                               )
                             }}
@@ -1217,11 +1213,11 @@ const PolicyTimeline = () => {
                               <Typography variant="body2" fontWeight="600">
                                 {recommendation.type}
                               </Typography>
-                              <Chip 
+                              <Chip
                                 label={recommendation.priority}
                                 color={
-                                  recommendation.priority === 'Critical' ? 'error' : 
-                                  recommendation.priority === 'High' ? 'warning' : 'success'
+                                  recommendation.priority === 'Critical' ? 'error' :
+                                    recommendation.priority === 'High' ? 'warning' : 'success'
                                 }
                                 size="small"
                               />
@@ -1257,9 +1253,9 @@ const PolicyTimeline = () => {
         {/* Customer Preferences */}
         <Grid item xs={12} sx={{ mb: 4 }}>
           <Grow in={loaded} timeout={800}>
-            <Card 
+            <Card
               elevation={0}
-              sx={{ 
+              sx={{
                 borderRadius: 3,
                 boxShadow: '0 8px 24px rgba(0,0,0,0.05)',
                 overflow: 'visible',
@@ -1276,7 +1272,7 @@ const PolicyTimeline = () => {
                   <Typography variant="h6" fontWeight="600">Customer Preferences</Typography>
                 </Box>
                 <Divider sx={{ mb: 3 }} />
-                
+
                 <Grid container spacing={3}>
                   {/* Communication Preferences */}
                   <Grid item xs={12} md={3}>
@@ -1293,85 +1289,85 @@ const PolicyTimeline = () => {
                             <EmailIcon color="action" sx={{ mr: 1, fontSize: 20 }} />
                             <Typography variant="body2">Email</Typography>
                           </Box>
-                          <Chip 
-                            label="Preferred" 
-                            size="small" 
-                            color="primary" 
-                            sx={{ fontWeight: 'medium', borderRadius: 5 }} 
+                          <Chip
+                            label="Preferred"
+                            size="small"
+                            color="primary"
+                            sx={{ fontWeight: 'medium', borderRadius: 5 }}
                           />
                         </Box>
-                        
+
                         <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                           <Box sx={{ display: 'flex', alignItems: 'center' }}>
                             <PhoneIcon color="action" sx={{ mr: 1, fontSize: 20 }} />
                             <Typography variant="body2">Phone Call</Typography>
                           </Box>
-                          <Chip 
-                            label="Backup" 
-                            size="small" 
-                            variant="outlined" 
-                            sx={{ fontWeight: 'medium', borderRadius: 5 }} 
+                          <Chip
+                            label="Backup"
+                            size="small"
+                            variant="outlined"
+                            sx={{ fontWeight: 'medium', borderRadius: 5 }}
                           />
                         </Box>
-                        
+
                         <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                           <Box sx={{ display: 'flex', alignItems: 'center' }}>
                             <WhatsAppIcon color="action" sx={{ mr: 1, fontSize: 20 }} />
                             <Typography variant="body2">WhatsApp</Typography>
                           </Box>
-                          <Chip 
-                            label="Accepted" 
-                            size="small" 
+                          <Chip
+                            label="Accepted"
+                            size="small"
                             variant="outlined"
-                            color="success" 
-                            sx={{ fontWeight: 'medium', borderRadius: 5 }} 
+                            color="success"
+                            sx={{ fontWeight: 'medium', borderRadius: 5 }}
                           />
                         </Box>
-                        
+
                         <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                           <Box sx={{ display: 'flex', alignItems: 'center' }}>
                             <SmsIcon color="action" sx={{ mr: 1, fontSize: 20 }} />
                             <Typography variant="body2">SMS</Typography>
                           </Box>
-                          <Chip 
-                            label="Preferred" 
-                            size="small" 
-                            color="primary" 
-                            sx={{ fontWeight: 'medium', borderRadius: 5 }} 
+                          <Chip
+                            label="Preferred"
+                            size="small"
+                            color="primary"
+                            sx={{ fontWeight: 'medium', borderRadius: 5 }}
                           />
                         </Box>
-                        
+
                         <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                           <Box sx={{ display: 'flex', alignItems: 'center' }}>
                             <SmartToyIcon color="action" sx={{ mr: 1, fontSize: 20 }} />
                             <Typography variant="body2">AI Call</Typography>
                           </Box>
-                          <Chip 
-                            label="Accepted" 
-                            size="small" 
+                          <Chip
+                            label="Accepted"
+                            size="small"
                             variant="outlined"
-                            color="info" 
-                            sx={{ fontWeight: 'medium', borderRadius: 5 }} 
+                            color="info"
+                            sx={{ fontWeight: 'medium', borderRadius: 5 }}
                           />
                         </Box>
-                        
+
                         <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                           <Box sx={{ display: 'flex', alignItems: 'center' }}>
                             <MailOutlineIcon color="action" sx={{ mr: 1, fontSize: 20 }} />
                             <Typography variant="body2">Postal Mail</Typography>
                           </Box>
-                          <Chip 
-                            label="Opted Out" 
-                            size="small" 
+                          <Chip
+                            label="Opted Out"
+                            size="small"
                             variant="outlined"
-                            color="error" 
-                            sx={{ fontWeight: 'medium', borderRadius: 5 }} 
+                            color="error"
+                            sx={{ fontWeight: 'medium', borderRadius: 5 }}
                           />
                         </Box>
                       </Box>
                     </Box>
                   </Grid>
-                  
+
                   {/* Renewal Timeline Preferences */}
                   <Grid item xs={12} md={3}>
                     <Box sx={{ p: 3, bgcolor: alpha(theme.palette.primary.main, 0.04), borderRadius: 2, height: '100%' }}>
@@ -1381,7 +1377,7 @@ const PolicyTimeline = () => {
                           Renewal Timeline
                         </Typography>
                       </Box>
-                      
+
                       <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
                         <Box sx={{ mb: 2 }}>
                           <Box sx={{ mb: 1 }}>
@@ -1389,12 +1385,12 @@ const PolicyTimeline = () => {
                               Typical Renewal Pattern:
                             </Typography>
                           </Box>
-                          <Box 
-                            sx={{ 
-                              p: 1.5, 
-                              bgcolor: alpha(theme.palette.primary.main, 0.1), 
-                              color: theme.palette.primary.main, 
-                              borderRadius: 2, 
+                          <Box
+                            sx={{
+                              p: 1.5,
+                              bgcolor: alpha(theme.palette.primary.main, 0.1),
+                              color: theme.palette.primary.main,
+                              borderRadius: 2,
                               display: 'flex',
                               alignItems: 'center',
                               gap: 1
@@ -1406,7 +1402,7 @@ const PolicyTimeline = () => {
                             </Typography>
                           </Box>
                         </Box>
-                        
+
                         <Box>
                           <Box sx={{ mb: 1 }}>
                             <Typography variant="body2" color="text.secondary">
@@ -1422,7 +1418,7 @@ const PolicyTimeline = () => {
                       </Box>
                     </Box>
                   </Grid>
-                  
+
                   {/* Payment Method Preferences */}
                   <Grid item xs={12} md={3}>
                     <Box sx={{ p: 3, bgcolor: alpha(theme.palette.primary.main, 0.04), borderRadius: 2, height: '100%' }}>
@@ -1432,7 +1428,7 @@ const PolicyTimeline = () => {
                           Payment Methods
                         </Typography>
                       </Box>
-                      
+
                       <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
                         <Box>
                           <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
@@ -1452,13 +1448,13 @@ const PolicyTimeline = () => {
                             </Box>
                           </Box>
                         </Box>
-                        
+
                         <Box>
                           <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
                             Alternate Methods Used:
                           </Typography>
                           <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
-                            <Chip 
+                            <Chip
                               avatar={<Avatar sx={{ bgcolor: 'transparent !important' }}><AccountBalanceIcon fontSize="small" /></Avatar>}
                               label="Bank Transfer"
                               size="small"
@@ -1469,7 +1465,7 @@ const PolicyTimeline = () => {
                       </Box>
                     </Box>
                   </Grid>
-                  
+
                   {/* Language Preferences */}
                   <Grid item xs={12} md={3}>
                     <Box sx={{ p: 3, bgcolor: alpha(theme.palette.primary.main, 0.04), borderRadius: 2, height: '100%' }}>
@@ -1479,20 +1475,20 @@ const PolicyTimeline = () => {
                           Language Preferences
                         </Typography>
                       </Box>
-                      
+
                       <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
                         <Box>
                           <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
                             Preferred Language:
                           </Typography>
                           <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                            <Box 
-                              sx={{ 
-                                display: 'flex', 
-                                alignItems: 'center', 
+                            <Box
+                              sx={{
+                                display: 'flex',
+                                alignItems: 'center',
                                 gap: 1,
-                                p: 1.5, 
-                                bgcolor: alpha(theme.palette.primary.main, 0.1), 
+                                p: 1.5,
+                                bgcolor: alpha(theme.palette.primary.main, 0.1),
                                 borderRadius: 2,
                                 border: '1px solid',
                                 borderColor: alpha(theme.palette.primary.main, 0.2)
@@ -1510,19 +1506,19 @@ const PolicyTimeline = () => {
                             </Box>
                           </Box>
                         </Box>
-                        
+
                         <Box>
                           <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
                             Alternative Languages:
                           </Typography>
                           <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
-                            <Chip 
+                            <Chip
                               label="🇬🇧 English"
                               size="small"
                               variant="outlined"
                               sx={{ borderRadius: 5, fontWeight: 'medium' }}
                             />
-                            <Chip 
+                            <Chip
                               label="🇮🇳 मराठी"
                               size="small"
                               variant="outlined"
@@ -1530,13 +1526,13 @@ const PolicyTimeline = () => {
                             />
                           </Box>
                         </Box>
-                        
+
                         <Box>
                           <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
                             Document Language:
                           </Typography>
                           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                            <Chip 
+                            <Chip
                               label="Hindi & English"
                               size="small"
                               color="primary"
@@ -1556,9 +1552,9 @@ const PolicyTimeline = () => {
         {/* Customer Payment Schedule */}
         <Grid item xs={12} sx={{ mb: 4 }}>
           <Grow in={loaded} timeout={850}>
-            <Card 
+            <Card
               elevation={0}
-              sx={{ 
+              sx={{
                 borderRadius: 3,
                 boxShadow: '0 8px 24px rgba(0,0,0,0.05)',
                 overflow: 'visible',
@@ -1575,7 +1571,7 @@ const PolicyTimeline = () => {
                   <Typography variant="h6" fontWeight="600">Customer Payment Schedule</Typography>
                 </Box>
                 <Divider sx={{ mb: 3 }} />
-                
+
                 <Grid container spacing={3}>
                   {/* Upcoming Payments */}
                   <Grid item xs={12} md={6}>
@@ -1586,13 +1582,13 @@ const PolicyTimeline = () => {
                           Upcoming Payments
                         </Typography>
                       </Box>
-                      
+
                       <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
                         {/* Next Payment */}
-                        <Box 
-                          sx={{ 
-                            p: 2, 
-                            bgcolor: alpha(theme.palette.success.main, 0.1), 
+                        <Box
+                          sx={{
+                            p: 2,
+                            bgcolor: alpha(theme.palette.success.main, 0.1),
                             borderRadius: 2,
                             border: '1px solid',
                             borderColor: alpha(theme.palette.success.main, 0.2)
@@ -1602,11 +1598,11 @@ const PolicyTimeline = () => {
                             <Typography variant="body2" sx={{ fontWeight: 'bold', color: 'success.main' }}>
                               Next Payment Due
                             </Typography>
-                            <Chip 
-                              label="7 days" 
-                              size="small" 
+                            <Chip
+                              label="7 days"
+                              size="small"
                               color="success"
-                              sx={{ fontWeight: 'medium', borderRadius: 5 }} 
+                              sx={{ fontWeight: 'medium', borderRadius: 5 }}
                             />
                           </Box>
                           <Typography variant="h6" sx={{ fontWeight: 'bold', mb: 1 }}>
@@ -1619,7 +1615,7 @@ const PolicyTimeline = () => {
                             Policy: Health Insurance Premium
                           </Typography>
                         </Box>
-                        
+
                         {/* Subsequent Payments */}
                         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
                           <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', p: 1.5, bgcolor: 'background.paper', borderRadius: 1, border: '1px solid', borderColor: 'divider' }}>
@@ -1631,14 +1627,14 @@ const PolicyTimeline = () => {
                                 Motor Insurance - Apr 20, 2024
                               </Typography>
                             </Box>
-                            <Chip 
-                              label="43 days" 
-                              size="small" 
+                            <Chip
+                              label="43 days"
+                              size="small"
                               variant="outlined"
-                              sx={{ fontWeight: 'medium', borderRadius: 5 }} 
+                              sx={{ fontWeight: 'medium', borderRadius: 5 }}
                             />
                           </Box>
-                          
+
                           <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', p: 1.5, bgcolor: 'background.paper', borderRadius: 1, border: '1px solid', borderColor: 'divider' }}>
                             <Box>
                               <Typography variant="body2" sx={{ fontWeight: 'medium' }}>
@@ -1648,18 +1644,18 @@ const PolicyTimeline = () => {
                                 Life Insurance - Jun 10, 2024
                               </Typography>
                             </Box>
-                            <Chip 
-                              label="94 days" 
-                              size="small" 
+                            <Chip
+                              label="94 days"
+                              size="small"
                               variant="outlined"
-                              sx={{ fontWeight: 'medium', borderRadius: 5 }} 
+                              sx={{ fontWeight: 'medium', borderRadius: 5 }}
                             />
                           </Box>
                         </Box>
                       </Box>
                     </Box>
                   </Grid>
-                  
+
                   {/* Payment History & Patterns */}
                   <Grid item xs={12} md={6}>
                     <Box sx={{ p: 3, bgcolor: alpha(theme.palette.primary.main, 0.04), borderRadius: 2, height: '100%' }}>
@@ -1669,7 +1665,7 @@ const PolicyTimeline = () => {
                           Payment Patterns & History
                         </Typography>
                       </Box>
-                      
+
                       <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
                         {/* Payment Statistics */}
                         <Box>
@@ -1699,7 +1695,7 @@ const PolicyTimeline = () => {
                             </Grid>
                           </Grid>
                         </Box>
-                        
+
                         {/* Payment Behavior */}
                         <Box>
                           <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
@@ -1708,32 +1704,32 @@ const PolicyTimeline = () => {
                           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
                             <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                               <Typography variant="body2">Average Payment Timing</Typography>
-                              <Chip 
-                                label="5 days early" 
-                                size="small" 
+                              <Chip
+                                label="5 days early"
+                                size="small"
                                 color="success"
                                 variant="outlined"
-                                sx={{ fontWeight: 'medium', borderRadius: 5 }} 
+                                sx={{ fontWeight: 'medium', borderRadius: 5 }}
                               />
                             </Box>
                             <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                               <Typography variant="body2">Preferred Payment Method</Typography>
-                              <Chip 
-                                label="Auto-debit" 
-                                size="small" 
+                              <Chip
+                                label="Auto-debit"
+                                size="small"
                                 color="primary"
                                 variant="outlined"
-                                sx={{ fontWeight: 'medium', borderRadius: 5 }} 
+                                sx={{ fontWeight: 'medium', borderRadius: 5 }}
                               />
                             </Box>
                             <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                               <Typography variant="body2">Late Payment History</Typography>
-                              <Chip 
-                                label="1 instance" 
-                                size="small" 
+                              <Chip
+                                label="1 instance"
+                                size="small"
                                 color="warning"
                                 variant="outlined"
-                                sx={{ fontWeight: 'medium', borderRadius: 5 }} 
+                                sx={{ fontWeight: 'medium', borderRadius: 5 }}
                               />
                             </Box>
                           </Box>
@@ -1746,7 +1742,7 @@ const PolicyTimeline = () => {
             </Card>
           </Grow>
         </Grid>
-        
+
         {/* Search and Filter */}
         <Grow in={loaded} timeout={600}>
           <Card sx={{ mb: 4, boxShadow: '0 8px 24px rgba(0,0,0,0.05)', borderRadius: 3 }}>
@@ -1774,15 +1770,15 @@ const PolicyTimeline = () => {
                   }
                 }}
               />
-              
+
               <Box sx={{ mt: 2, display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-                <Chip 
-                  label="All Events" 
+                <Chip
+                  label="All Events"
                   color={filterType === 'all' ? 'primary' : 'default'}
                   clickable
                   onClick={() => handleFilterTypeChange('all')}
                   variant={filterType === 'all' ? 'filled' : 'outlined'}
-                  sx={{ 
+                  sx={{
                     fontWeight: 500,
                     boxShadow: filterType === 'all' ? '0 2px 5px rgba(0,0,0,0.08)' : 'none',
                     transition: 'all 0.2s',
@@ -1792,14 +1788,14 @@ const PolicyTimeline = () => {
                     }
                   }}
                 />
-                <Chip 
-                  label="Creation" 
+                <Chip
+                  label="Creation"
                   icon={<CreateIcon />}
                   color={filterType === 'creation' ? 'success' : 'default'}
                   clickable
                   onClick={() => handleFilterTypeChange('creation')}
                   variant={filterType === 'creation' ? 'filled' : 'outlined'}
-                  sx={{ 
+                  sx={{
                     fontWeight: 500,
                     boxShadow: filterType === 'creation' ? '0 2px 5px rgba(0,0,0,0.08)' : 'none',
                     transition: 'all 0.2s',
@@ -1809,14 +1805,14 @@ const PolicyTimeline = () => {
                     }
                   }}
                 />
-                <Chip 
-                  label="Renewal" 
+                <Chip
+                  label="Renewal"
                   icon={<AutorenewIcon />}
                   color={filterType === 'renewal' ? 'primary' : 'default'}
                   clickable
                   onClick={() => handleFilterTypeChange('renewal')}
                   variant={filterType === 'renewal' ? 'filled' : 'outlined'}
-                  sx={{ 
+                  sx={{
                     fontWeight: 500,
                     boxShadow: filterType === 'renewal' ? '0 2px 5px rgba(0,0,0,0.08)' : 'none',
                     transition: 'all 0.2s',
@@ -1826,14 +1822,14 @@ const PolicyTimeline = () => {
                     }
                   }}
                 />
-                <Chip 
-                  label="Modification" 
+                <Chip
+                  label="Modification"
                   icon={<DescriptionIcon />}
                   color={filterType === 'modification' ? 'info' : 'default'}
                   clickable
                   onClick={() => handleFilterTypeChange('modification')}
                   variant={filterType === 'modification' ? 'filled' : 'outlined'}
-                  sx={{ 
+                  sx={{
                     fontWeight: 500,
                     boxShadow: filterType === 'modification' ? '0 2px 5px rgba(0,0,0,0.08)' : 'none',
                     transition: 'all 0.2s',
@@ -1843,14 +1839,14 @@ const PolicyTimeline = () => {
                     }
                   }}
                 />
-                <Chip 
-                  label="Claim" 
+                <Chip
+                  label="Claim"
                   icon={<WarningIcon />}
                   color={filterType === 'claim' ? 'warning' : 'default'}
                   clickable
                   onClick={() => handleFilterTypeChange('claim')}
                   variant={filterType === 'claim' ? 'filled' : 'outlined'}
-                  sx={{ 
+                  sx={{
                     fontWeight: 500,
                     boxShadow: filterType === 'claim' ? '0 2px 5px rgba(0,0,0,0.08)' : 'none',
                     transition: 'all 0.2s',
@@ -1860,14 +1856,14 @@ const PolicyTimeline = () => {
                     }
                   }}
                 />
-                <Chip 
-                  label="Payment" 
+                <Chip
+                  label="Payment"
                   icon={<PaymentIcon />}
                   color={filterType === 'payment' ? 'secondary' : 'default'}
                   clickable
                   onClick={() => handleFilterTypeChange('payment')}
                   variant={filterType === 'payment' ? 'filled' : 'outlined'}
-                  sx={{ 
+                  sx={{
                     fontWeight: 500,
                     boxShadow: filterType === 'payment' ? '0 2px 5px rgba(0,0,0,0.08)' : 'none',
                     transition: 'all 0.2s',
@@ -1877,14 +1873,14 @@ const PolicyTimeline = () => {
                     }
                   }}
                 />
-                <Chip 
-                  label="Communication" 
+                <Chip
+                  label="Communication"
                   icon={<PhoneIcon />}
                   color={filterType === 'communication' ? 'info' : 'default'}
                   clickable
                   onClick={() => handleFilterTypeChange('communication')}
                   variant={filterType === 'communication' ? 'filled' : 'outlined'}
-                  sx={{ 
+                  sx={{
                     fontWeight: 500,
                     boxShadow: filterType === 'communication' ? '0 2px 5px rgba(0,0,0,0.08)' : 'none',
                     transition: 'all 0.2s',
@@ -1898,7 +1894,7 @@ const PolicyTimeline = () => {
             </CardContent>
           </Card>
         </Grow>
-        
+
         {/* Policy Information Summary */}
         {currentPolicy && (
           <Grow in={loaded} timeout={800}>
@@ -1942,18 +1938,18 @@ const PolicyTimeline = () => {
             </Card>
           </Grow>
         )}
-        
+
         {/* Timeline */}
         <Grow in={loaded} timeout={1000}>
           <Grid container spacing={3}>
             {/* Timeline Section */}
             <Grid item xs={12} lg={8}>
-              <Paper 
-                sx={{ 
-                  p: { xs: 2, sm: 3 }, 
-                  boxShadow: '0 8px 24px rgba(0,0,0,0.05)', 
-                  borderRadius: 3, 
-                  mb: 4 
+              <Paper
+                sx={{
+                  p: { xs: 2, sm: 3 },
+                  boxShadow: '0 8px 24px rgba(0,0,0,0.05)',
+                  borderRadius: 3,
+                  mb: 4
                 }}
               >
                 <Typography variant="h5" fontWeight="600" gutterBottom>
@@ -1962,13 +1958,13 @@ const PolicyTimeline = () => {
                 <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
                   Complete timeline of policy events, communications, and changes
                 </Typography>
-                
+
                 {filteredEvents.length === 0 ? (
-                  <Box sx={{ 
-                    py: 5, 
-                    display: 'flex', 
+                  <Box sx={{
+                    py: 5,
+                    display: 'flex',
                     flexDirection: 'column',
-                    alignItems: 'center', 
+                    alignItems: 'center',
                     bgcolor: theme => theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)',
                     borderRadius: 2
                   }}>
@@ -1976,8 +1972,8 @@ const PolicyTimeline = () => {
                     <Typography variant="body1" color="text.secondary">
                       No events found matching your criteria
                     </Typography>
-                    <Button 
-                      variant="outlined" 
+                    <Button
+                      variant="outlined"
                       sx={{ mt: 2, borderRadius: 2 }}
                       onClick={() => {
                         setFilterType('all');
@@ -2091,7 +2087,7 @@ const PolicyTimeline = () => {
                                           {key.charAt(0).toUpperCase() + key.slice(1).replace(/([A-Z])/g, ' $1')}:
                                         </Typography>
                                         <Typography variant="body2" fontWeight="500">
-                                          {typeof value === 'number' && key.toLowerCase().includes('premium') 
+                                          {typeof value === 'number' && key.toLowerCase().includes('premium')
                                             ? `₹${value.toLocaleString()}`
                                             : value.toString()}
                                         </Typography>
