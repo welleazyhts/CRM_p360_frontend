@@ -346,6 +346,96 @@ const LeadAnalytics = () => {
 
   const sparklineData = analyticsData.trends.map(t => ({ value: t.leads }));
 
+  const handleExportReport = () => {
+    // Helper to escape CSV fields
+    const escapeCsv = (str) => {
+      if (str === null || str === undefined) return '';
+      const stringValue = String(str);
+      if (stringValue.includes(',') || stringValue.includes('"') || stringValue.includes('\n')) {
+        return `"${stringValue.replace(/"/g, '""')}"`;
+      }
+      return stringValue;
+    };
+
+    // 1. Prepare Data
+    const rows = [];
+
+    // --- Overview Section ---
+    rows.push(['LEAD ANALYTICS REPORT']);
+    rows.push([`Generated on: ${new Date().toLocaleString()}`]);
+    rows.push([`Time Range: ${displayDateRange}`]);
+    rows.push([]); // Empty line
+
+    rows.push(['OVERVIEW METRICS']);
+    rows.push(['Metric', 'Value', 'Change vs Last Period']);
+    rows.push(['Total Leads', analyticsData.overview.totalLeads, '12.5%']);
+    rows.push(['New Leads', analyticsData.overview.newLeads, '-']);
+    rows.push(['Qualified Leads', analyticsData.overview.qualifiedLeads, '-']);
+    rows.push(['Closed Won', analyticsData.overview.closedWon, '-']);
+    rows.push(['Closed Lost', analyticsData.overview.closedLost, '-']);
+    rows.push(['Conversion Rate', `${analyticsData.overview.conversionRate}%`, '5.2%']);
+    rows.push(['Avg Deal Value', `₹${analyticsData.overview.averageDealValue}`, '-2.1%']);
+    rows.push(['Total Pipeline Value', `₹${analyticsData.overview.totalPipelineValue}`, '8.7%']);
+    rows.push(['Avg Response Time', `${analyticsData.overview.responseTime} hours`, '-']);
+    rows.push(['Follow-up Rate', `${analyticsData.overview.followUpRate}%`, '-']);
+    rows.push([]);
+
+    // --- Monthly Trends ---
+    rows.push(['MONTHLY TRENDS']);
+    rows.push(['Month', 'New Leads', 'Qualified Leads', 'Closed Deals', 'Deal Value']);
+    analyticsData.trends.forEach(item => {
+      rows.push([
+        item.month,
+        item.leads,
+        item.qualified,
+        item.closed,
+        item.value
+      ]);
+    });
+    rows.push([]);
+
+    // --- Sources ---
+    rows.push(['LEAD SOURCES']);
+    rows.push(['Source', 'Count', 'Percentage']);
+    analyticsData.sources.forEach(item => {
+      rows.push([
+        item.name,
+        item.count,
+        `${item.value}%`
+      ]);
+    });
+    rows.push([]);
+
+    // --- Team Performance ---
+    rows.push(['TEAM PERFORMANCE']);
+    rows.push(['Name', 'Leads Assigned', 'Closed Deals', 'Conversion Rate', 'Revenue Generated']);
+    analyticsData.teamPerformance.forEach(item => {
+      rows.push([
+        item.name,
+        item.leads,
+        item.closed,
+        `${item.conversion}%`,
+        item.value
+      ]);
+    });
+
+    // 2. Convert to CSV String
+    const csvContent = rows
+      .map(e => e.map(escapeCsv).join(','))
+      .join('\n');
+
+    // 3. Trigger Download
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.setAttribute('href', url);
+    link.setAttribute('download', `Lead_Analytics_Report_${new Date().toISOString().split('T')[0]}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   return (
     <Box sx={{ p: 3, backgroundColor: alpha(theme.palette.primary.main, 0.02), minHeight: '100vh' }}>
       {/* Enhanced Header */}
@@ -369,18 +459,9 @@ const LeadAnalytics = () => {
               variant="outlined"
               startIcon={<FileDownloadIcon />}
               sx={{ borderRadius: 2 }}
+              onClick={handleExportReport}
             >
               Export Report
-            </Button>
-            <Button
-              variant="contained"
-              startIcon={<PersonAddIcon />}
-              sx={{
-                borderRadius: 2,
-                background: `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.primary.dark} 100%)`
-              }}
-            >
-              Add Lead
             </Button>
           </Box>
         </Box>
@@ -607,16 +688,16 @@ const LeadAnalytics = () => {
                 <AreaChart data={analyticsData.trends}>
                   <defs>
                     <linearGradient id="colorLeads" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor={theme.palette.primary.main} stopOpacity={0.3}/>
-                      <stop offset="95%" stopColor={theme.palette.primary.main} stopOpacity={0}/>
+                      <stop offset="5%" stopColor={theme.palette.primary.main} stopOpacity={0.3} />
+                      <stop offset="95%" stopColor={theme.palette.primary.main} stopOpacity={0} />
                     </linearGradient>
                     <linearGradient id="colorClosed" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor={theme.palette.success.main} stopOpacity={0.3}/>
-                      <stop offset="95%" stopColor={theme.palette.success.main} stopOpacity={0}/>
+                      <stop offset="5%" stopColor={theme.palette.success.main} stopOpacity={0.3} />
+                      <stop offset="95%" stopColor={theme.palette.success.main} stopOpacity={0} />
                     </linearGradient>
                     <linearGradient id="colorQualified" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor={theme.palette.warning.main} stopOpacity={0.3}/>
-                      <stop offset="95%" stopColor={theme.palette.warning.main} stopOpacity={0}/>
+                      <stop offset="5%" stopColor={theme.palette.warning.main} stopOpacity={0.3} />
+                      <stop offset="95%" stopColor={theme.palette.warning.main} stopOpacity={0} />
                     </linearGradient>
                   </defs>
                   <CartesianGrid strokeDasharray="3 3" stroke={alpha(theme.palette.divider, 0.3)} />
@@ -783,12 +864,12 @@ const LeadAnalytics = () => {
                         sx={{
                           backgroundColor: alpha(
                             member.conversion > 70 ? theme.palette.success.main :
-                            member.conversion > 60 ? theme.palette.warning.main :
-                            theme.palette.error.main, 0.1
+                              member.conversion > 60 ? theme.palette.warning.main :
+                                theme.palette.error.main, 0.1
                           ),
                           color: member.conversion > 70 ? theme.palette.success.main :
-                                 member.conversion > 60 ? theme.palette.warning.main :
-                                 theme.palette.error.main,
+                            member.conversion > 60 ? theme.palette.warning.main :
+                              theme.palette.error.main,
                           fontWeight: 600
                         }}
                       />

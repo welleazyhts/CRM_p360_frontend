@@ -29,6 +29,114 @@ export const PAYMENT_TYPE = {
   OTHER: 'other'
 };
 
+// Stateful Mock Data
+let mockLinks = [
+  {
+    id: 'PAY-001',
+    linkId: 'LINK-ABC123',
+    shortUrl: 'https://pay.veriright.com/abc123',
+    amount: 15000,
+    currency: 'INR',
+    description: 'Car Insurance Premium - Honda City',
+    customerName: 'Rajesh Kumar',
+    customerEmail: 'rajesh.kumar@email.com',
+    customerPhone: '+91-9876543210',
+    policyNumber: 'POL-2024-001',
+    leadId: 'LEAD-001',
+    paymentType: PAYMENT_TYPE.PREMIUM,
+    provider: PAYMENT_PROVIDERS.RAZORPAY,
+    status: PAYMENT_STATUS.PAID,
+    paidAmount: 15000,
+    paidAt: '2025-01-15T10:30:00',
+    expiryDate: '2025-01-25T23:59:59',
+    createdAt: '2025-01-10T09:00:00',
+    createdBy: 'Agent A',
+    transactionId: 'TXN-ABC123XYZ'
+  },
+  {
+    id: 'PAY-002',
+    linkId: 'LINK-DEF456',
+    shortUrl: 'https://pay.veriright.com/def456',
+    amount: 8500,
+    currency: 'INR',
+    description: 'Two Wheeler Insurance Renewal',
+    customerName: 'Priya Sharma',
+    customerEmail: 'priya.s@email.com',
+    customerPhone: '+91-9876543211',
+    policyNumber: 'POL-2024-002',
+    leadId: 'LEAD-002',
+    paymentType: PAYMENT_TYPE.RENEWAL,
+    provider: PAYMENT_PROVIDERS.PAYU,
+    status: PAYMENT_STATUS.PENDING,
+    expiryDate: '2025-01-28T23:59:59',
+    createdAt: '2025-01-16T14:20:00',
+    createdBy: 'Agent B',
+    sentVia: ['sms', 'whatsapp'],
+    lastReminderSent: '2025-01-17T10:00:00'
+  },
+  {
+    id: 'PAY-003',
+    linkId: 'LINK-GHI789',
+    shortUrl: 'https://pay.veriright.com/ghi789',
+    amount: 25000,
+    currency: 'INR',
+    description: 'Commercial Vehicle Insurance',
+    customerName: 'Amit Patel',
+    customerEmail: 'amit.p@email.com',
+    customerPhone: '+91-9876543212',
+    policyNumber: null,
+    leadId: 'LEAD-003',
+    paymentType: PAYMENT_TYPE.PREMIUM,
+    provider: PAYMENT_PROVIDERS.RAZORPAY,
+    status: PAYMENT_STATUS.EXPIRED,
+    expiryDate: '2025-01-12T23:59:59',
+    createdAt: '2025-01-05T11:00:00',
+    createdBy: 'Agent C'
+  },
+  {
+    id: 'PAY-004',
+    linkId: 'LINK-JKL012',
+    shortUrl: 'https://pay.veriright.com/jkl012',
+    amount: 5000,
+    currency: 'INR',
+    description: 'Vehicle Inspection Fee',
+    customerName: 'Sneha Reddy',
+    customerEmail: 'sneha.r@email.com',
+    customerPhone: '+91-9876543213',
+    policyNumber: 'POL-2024-004',
+    leadId: 'LEAD-004',
+    paymentType: PAYMENT_TYPE.INSPECTION,
+    provider: PAYMENT_PROVIDERS.PHONEPE,
+    status: PAYMENT_STATUS.FAILED,
+    failureReason: 'Insufficient funds',
+    expiryDate: '2025-01-30T23:59:59',
+    createdAt: '2025-01-17T16:45:00',
+    createdBy: 'Agent A'
+  },
+  {
+    id: 'PAY-005',
+    linkId: 'LINK-MNO345',
+    shortUrl: 'https://pay.veriright.com/mno345',
+    amount: 12000,
+    currency: 'INR',
+    description: 'Policy Endorsement - NCB Transfer',
+    customerName: 'Vikram Singh',
+    customerEmail: 'vikram.s@email.com',
+    customerPhone: '+91-9876543214',
+    policyNumber: 'POL-2024-005',
+    leadId: 'LEAD-005',
+    paymentType: PAYMENT_TYPE.ENDORSEMENT,
+    provider: PAYMENT_PROVIDERS.RAZORPAY,
+    status: PAYMENT_STATUS.PENDING,
+    expiryDate: '2025-01-22T23:59:59',
+    createdAt: '2025-01-15T13:15:00',
+    createdBy: 'Agent B',
+    partialPayment: true,
+    paidAmount: 6000,
+    remainingAmount: 6000
+  }
+];
+
 const paymentLinkService = {
   /**
    * Create a new payment link
@@ -42,12 +150,12 @@ const paymentLinkService = {
       // return response.data;
 
       // Mock implementation for frontend
-      const mockLink = {
+      const newMockLink = {
         id: `PAY-${Date.now()}`,
         linkId: `LINK-${Math.random().toString(36).substr(2, 9).toUpperCase()}`,
         shortUrl: `https://pay.veriright.com/${Math.random().toString(36).substr(2, 6)}`,
         longUrl: `https://payment.veriright.com/pay?id=${Date.now()}&token=${Math.random().toString(36).substr(2, 20)}`,
-        amount: paymentData.amount,
+        amount: parseFloat(paymentData.amount),
         currency: paymentData.currency || 'INR',
         description: paymentData.description,
         customerName: paymentData.customerName,
@@ -69,12 +177,15 @@ const paymentLinkService = {
         reminderDays: paymentData.reminderDays || 3
       };
 
+      // Push to shared state
+      mockLinks = [newMockLink, ...mockLinks];
+
       // Simulate API delay
       await new Promise(resolve => setTimeout(resolve, 500));
 
       return {
         success: true,
-        data: mockLink,
+        data: newMockLink,
         message: 'Payment link created successfully'
       };
     } catch (error) {
@@ -92,115 +203,7 @@ const paymentLinkService = {
     try {
       // In production: const response = await api.get('/api/payments/links', { params: filters });
 
-      // Mock data
-      const mockLinks = [
-        {
-          id: 'PAY-001',
-          linkId: 'LINK-ABC123',
-          shortUrl: 'https://pay.veriright.com/abc123',
-          amount: 15000,
-          currency: 'INR',
-          description: 'Car Insurance Premium - Honda City',
-          customerName: 'Rajesh Kumar',
-          customerEmail: 'rajesh.kumar@email.com',
-          customerPhone: '+91-9876543210',
-          policyNumber: 'POL-2024-001',
-          leadId: 'LEAD-001',
-          paymentType: PAYMENT_TYPE.PREMIUM,
-          provider: PAYMENT_PROVIDERS.RAZORPAY,
-          status: PAYMENT_STATUS.PAID,
-          paidAmount: 15000,
-          paidAt: '2025-01-15T10:30:00',
-          expiryDate: '2025-01-25T23:59:59',
-          createdAt: '2025-01-10T09:00:00',
-          createdBy: 'Agent A',
-          transactionId: 'TXN-ABC123XYZ'
-        },
-        {
-          id: 'PAY-002',
-          linkId: 'LINK-DEF456',
-          shortUrl: 'https://pay.veriright.com/def456',
-          amount: 8500,
-          currency: 'INR',
-          description: 'Two Wheeler Insurance Renewal',
-          customerName: 'Priya Sharma',
-          customerEmail: 'priya.s@email.com',
-          customerPhone: '+91-9876543211',
-          policyNumber: 'POL-2024-002',
-          leadId: 'LEAD-002',
-          paymentType: PAYMENT_TYPE.RENEWAL,
-          provider: PAYMENT_PROVIDERS.PAYU,
-          status: PAYMENT_STATUS.PENDING,
-          expiryDate: '2025-01-28T23:59:59',
-          createdAt: '2025-01-16T14:20:00',
-          createdBy: 'Agent B',
-          sentVia: ['sms', 'whatsapp'],
-          lastReminderSent: '2025-01-17T10:00:00'
-        },
-        {
-          id: 'PAY-003',
-          linkId: 'LINK-GHI789',
-          shortUrl: 'https://pay.veriright.com/ghi789',
-          amount: 25000,
-          currency: 'INR',
-          description: 'Commercial Vehicle Insurance',
-          customerName: 'Amit Patel',
-          customerEmail: 'amit.p@email.com',
-          customerPhone: '+91-9876543212',
-          policyNumber: null,
-          leadId: 'LEAD-003',
-          paymentType: PAYMENT_TYPE.PREMIUM,
-          provider: PAYMENT_PROVIDERS.RAZORPAY,
-          status: PAYMENT_STATUS.EXPIRED,
-          expiryDate: '2025-01-12T23:59:59',
-          createdAt: '2025-01-05T11:00:00',
-          createdBy: 'Agent C'
-        },
-        {
-          id: 'PAY-004',
-          linkId: 'LINK-JKL012',
-          shortUrl: 'https://pay.veriright.com/jkl012',
-          amount: 5000,
-          currency: 'INR',
-          description: 'Vehicle Inspection Fee',
-          customerName: 'Sneha Reddy',
-          customerEmail: 'sneha.r@email.com',
-          customerPhone: '+91-9876543213',
-          policyNumber: 'POL-2024-004',
-          leadId: 'LEAD-004',
-          paymentType: PAYMENT_TYPE.INSPECTION,
-          provider: PAYMENT_PROVIDERS.PHONEPE,
-          status: PAYMENT_STATUS.FAILED,
-          failureReason: 'Insufficient funds',
-          expiryDate: '2025-01-30T23:59:59',
-          createdAt: '2025-01-17T16:45:00',
-          createdBy: 'Agent A'
-        },
-        {
-          id: 'PAY-005',
-          linkId: 'LINK-MNO345',
-          shortUrl: 'https://pay.veriright.com/mno345',
-          amount: 12000,
-          currency: 'INR',
-          description: 'Policy Endorsement - NCB Transfer',
-          customerName: 'Vikram Singh',
-          customerEmail: 'vikram.s@email.com',
-          customerPhone: '+91-9876543214',
-          policyNumber: 'POL-2024-005',
-          leadId: 'LEAD-005',
-          paymentType: PAYMENT_TYPE.ENDORSEMENT,
-          provider: PAYMENT_PROVIDERS.RAZORPAY,
-          status: PAYMENT_STATUS.PENDING,
-          expiryDate: '2025-01-22T23:59:59',
-          createdAt: '2025-01-15T13:15:00',
-          createdBy: 'Agent B',
-          partialPayment: true,
-          paidAmount: 6000,
-          remainingAmount: 6000
-        }
-      ];
-
-      // Apply filters
+      // Apply filters on shared mockLinks
       let filteredLinks = [...mockLinks];
 
       if (filters.status) {
@@ -225,7 +228,7 @@ const paymentLinkService = {
           link.customerName.toLowerCase().includes(searchLower) ||
           link.customerPhone.includes(searchLower) ||
           link.linkId.toLowerCase().includes(searchLower) ||
-          link.policyNumber?.toLowerCase().includes(searchLower)
+          (link.policyNumber && link.policyNumber.toLowerCase().includes(searchLower))
         );
       }
 
@@ -251,8 +254,7 @@ const paymentLinkService = {
     try {
       // In production: const response = await api.get(`/api/payments/links/${linkId}`);
 
-      const response = await this.getPaymentLinks({});
-      const link = response.data.find(l => l.linkId === linkId || l.id === linkId);
+      const link = mockLinks.find(l => l.linkId === linkId || l.id === linkId);
 
       if (!link) {
         throw new Error('Payment link not found');
@@ -279,6 +281,22 @@ const paymentLinkService = {
       // In production: const response = await api.post(`/api/payments/links/${linkId}/send`, channels);
 
       await new Promise(resolve => setTimeout(resolve, 800));
+
+      // Update mock data
+      const linkIndex = mockLinks.findIndex(l => l.linkId === linkId || l.id === linkId);
+      if (linkIndex !== -1) {
+        const updatedLink = { ...mockLinks[linkIndex] };
+
+        // Ensure sentVia is an array
+        const sentVia = updatedLink.sentVia || [];
+
+        if (channels.sms && !sentVia.includes('sms')) sentVia.push('sms');
+        if (channels.email && !sentVia.includes('email')) sentVia.push('email');
+        if (channels.whatsapp && !sentVia.includes('whatsapp')) sentVia.push('whatsapp');
+
+        updatedLink.sentVia = sentVia;
+        mockLinks[linkIndex] = updatedLink;
+      }
 
       return {
         success: true,
@@ -307,6 +325,19 @@ const paymentLinkService = {
 
       await new Promise(resolve => setTimeout(resolve, 500));
 
+      // Update mock data
+      const linkIndex = mockLinks.findIndex(l => l.linkId === linkId || l.id === linkId);
+      if (linkIndex !== -1) {
+        mockLinks[linkIndex] = {
+          ...mockLinks[linkIndex],
+          status: PAYMENT_STATUS.CANCELLED,
+          cancellationReason: reason,
+          cancelledAt: new Date().toISOString()
+        };
+      } else {
+        throw new Error('Payment link not found');
+      }
+
       return {
         success: true,
         message: 'Payment link cancelled successfully'
@@ -320,17 +351,33 @@ const paymentLinkService = {
   /**
    * Resend reminder for pending payment
    * @param {String} linkId - Payment link ID
+   * @param {Object} channels - Channels to send {sms, email, whatsapp}
    * @returns {Promise<Object>} Reminder status
    */
-  async sendReminder(linkId) {
+  async sendReminder(linkId, channels) {
     try {
-      // In production: const response = await api.post(`/api/payments/links/${linkId}/reminder`);
+      // In production: const response = await api.post(`/api/payments/links/${linkId}/reminder`, channels);
 
       await new Promise(resolve => setTimeout(resolve, 600));
 
+      // Update mock data
+      const linkIndex = mockLinks.findIndex(l => l.linkId === linkId || l.id === linkId);
+      if (linkIndex !== -1) {
+        // Update last reminder sent time
+        mockLinks[linkIndex] = {
+          ...mockLinks[linkIndex],
+          lastReminderSent: new Date().toISOString()
+        };
+      }
+
       return {
         success: true,
-        message: 'Payment reminder sent successfully'
+        message: 'Payment reminder sent successfully',
+        channels: {
+          sms: channels?.sms ? 'sent' : 'not_requested',
+          email: channels?.email ? 'sent' : 'not_requested',
+          whatsapp: channels?.whatsapp ? 'sent' : 'not_requested'
+        }
       };
     } catch (error) {
       console.error('Error sending reminder:', error);
@@ -347,16 +394,34 @@ const paymentLinkService = {
     try {
       // In production: const response = await api.get('/api/payments/stats', { params: filters });
 
+      // Calculate stats from shared mockLinks
+      const totalLinks = mockLinks.length;
+      const pendingLinks = mockLinks.filter(l => l.status === PAYMENT_STATUS.PENDING).length;
+      const paidLinks = mockLinks.filter(l => l.status === PAYMENT_STATUS.PAID).length;
+      const expiredLinks = mockLinks.filter(l => l.status === PAYMENT_STATUS.EXPIRED).length;
+      const failedLinks = mockLinks.filter(l => l.status === PAYMENT_STATUS.FAILED).length;
+      const cancelledLinks = mockLinks.filter(l => l.status === PAYMENT_STATUS.CANCELLED).length;
+
+      const totalAmount = mockLinks.reduce((sum, link) => sum + (parseFloat(link.amount) || 0), 0);
+      const paidAmount = mockLinks
+        .filter(l => l.status === PAYMENT_STATUS.PAID)
+        .reduce((sum, link) => sum + (link.paidAmount || parseFloat(link.amount) || 0), 0);
+      const pendingAmount = mockLinks
+        .filter(l => l.status === PAYMENT_STATUS.PENDING)
+        .reduce((sum, link) => sum + (parseFloat(link.amount) || 0), 0);
+
+      const conversionRate = totalLinks > 0 ? ((paidLinks / totalLinks) * 100).toFixed(1) : 0;
+
       const mockStats = {
-        totalLinks: 45,
-        pendingLinks: 18,
-        paidLinks: 22,
-        expiredLinks: 3,
-        failedLinks: 2,
-        totalAmount: 785000,
-        paidAmount: 520000,
-        pendingAmount: 235000,
-        conversionRate: 48.9,
+        totalLinks,
+        pendingLinks,
+        paidLinks,
+        expiredLinks,
+        failedLinks: failedLinks + cancelledLinks,
+        totalAmount,
+        paidAmount,
+        pendingAmount,
+        conversionRate,
         avgPaymentTime: '2.3 days',
         topPaymentMethod: PAYMENT_PROVIDERS.RAZORPAY,
         recentPayments: [
@@ -389,17 +454,34 @@ const paymentLinkService = {
 
       await new Promise(resolve => setTimeout(resolve, 1000));
 
-      return {
-        success: true,
-        data: {
-          linkId,
+      // Update mock status to paid for demo
+      const linkIndex = mockLinks.findIndex(l => l.linkId === linkId || l.id === linkId);
+      if (linkIndex !== -1) {
+        const paidAmount = mockLinks[linkIndex].amount;
+        mockLinks[linkIndex] = {
+          ...mockLinks[linkIndex],
           status: PAYMENT_STATUS.PAID,
-          transactionId: `TXN-${Date.now()}`,
-          paidAmount: 15000,
+          paidAmount: paidAmount,
           paidAt: new Date().toISOString(),
-          paymentMethod: 'UPI',
-          bankReference: 'REF123456'
-        }
+          transactionId: `TXN-${Date.now()}`
+        };
+
+        return {
+          success: true,
+          data: {
+            linkId,
+            status: PAYMENT_STATUS.PAID,
+            transactionId: mockLinks[linkIndex].transactionId,
+            paidAmount: paidAmount,
+            paidAt: mockLinks[linkIndex].paidAt,
+            paymentMethod: 'UPI'
+          }
+        };
+      }
+
+      return {
+        success: false,
+        message: 'Payment link not found'
       };
     } catch (error) {
       console.error('Error verifying payment:', error);

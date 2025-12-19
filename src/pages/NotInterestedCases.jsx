@@ -4,7 +4,8 @@ import {
   Table, TableBody, TableCell, TableContainer, TableHead,
   TableRow, TablePagination, Chip, IconButton,
   Card, CardContent, Grow, alpha, Button, Checkbox, Tooltip,
-  Menu, MenuItem, FormControl, InputLabel, Select, Divider
+  Menu, MenuItem, FormControl, InputLabel, Select, Divider,
+  Dialog, DialogTitle, DialogContent, DialogActions, Snackbar, Alert
 } from '@mui/material';
 import {
   Search as SearchIcon,
@@ -35,6 +36,15 @@ const NotInterestedCases = () => {
   const [agentFilter, setAgentFilter] = useState('all');
   const [policyStatusFilter, setPolicyStatusFilter] = useState('all');
   const [priorityFilter, setPriorityFilter] = useState('all');
+
+  // Action States
+  const [openCallDialog, setOpenCallDialog] = useState(false);
+  const [openEditDialog, setOpenEditDialog] = useState(false);
+  const [openCommentDialog, setOpenCommentDialog] = useState(false);
+  const [actionCase, setActionCase] = useState(null);
+  const [editFormData, setEditFormData] = useState({ priority: '', status: '', reason: '' });
+  const [commentText, setCommentText] = useState('');
+  const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
 
   // Mock data for Not Interested cases
   const mockNotInterestedCases = [
@@ -231,6 +241,95 @@ const NotInterestedCases = () => {
     }
   };
 
+  // --- Action Handlers ---
+
+  const handleCallClick = (caseItem) => {
+    setActionCase(caseItem);
+    setOpenCallDialog(true);
+  };
+
+  const handleEditClick = (caseItem) => {
+    setActionCase(caseItem);
+    setEditFormData({
+      priority: caseItem.priority,
+      status: caseItem.status,
+      reason: caseItem.reason || ''
+    });
+    setOpenEditDialog(true);
+  };
+
+  const handleCommentClick = (caseItem) => {
+    setActionCase(caseItem);
+    setCommentText('');
+    setOpenCommentDialog(true);
+  };
+
+  const handleCloseDialogs = () => {
+    setOpenCallDialog(false);
+    setOpenEditDialog(false);
+    setOpenCommentDialog(false);
+    setActionCase(null);
+  };
+
+  const handleConfirmCall = () => {
+    if (!actionCase) return;
+
+    // Simulate call logic
+    setSnackbar({
+      open: true,
+      message: `Calling ${actionCase.customerName} (${actionCase.customerMobile})...`,
+      severity: 'success'
+    });
+
+    // Update call count locally
+    const updatedCases = cases.map(c =>
+      c.id === actionCase.id ? { ...c, callCount: (c.callCount || 0) + 1, lastAction: new Date().toISOString().split('T')[0] } : c
+    );
+    setCases(updatedCases);
+    handleCloseDialogs();
+  };
+
+  const handleSaveEdit = () => {
+    if (!actionCase) return;
+
+    const updatedCases = cases.map(c =>
+      c.id === actionCase.id ? {
+        ...c,
+        priority: editFormData.priority,
+        status: editFormData.status,
+        reason: editFormData.reason,
+        lastAction: new Date().toISOString().split('T')[0]
+      } : c
+    );
+    setCases(updatedCases);
+
+    setSnackbar({
+      open: true,
+      message: 'Case details updated successfully',
+      severity: 'success'
+    });
+    handleCloseDialogs();
+  };
+
+  const handleSaveComment = () => {
+    if (!actionCase) return;
+    if (!commentText.trim()) {
+      setSnackbar({ open: true, message: 'Please enter a comment', severity: 'warning' });
+      return;
+    }
+
+    setSnackbar({
+      open: true,
+      message: 'Comment added successfully',
+      severity: 'success'
+    });
+    handleCloseDialogs();
+  };
+
+  const handleCloseSnackbar = () => {
+    setSnackbar({ ...snackbar, open: false });
+  };
+
   return (
     <Box sx={{ p: 3 }}>
       {/* Header */}
@@ -361,7 +460,10 @@ const NotInterestedCases = () => {
                         }
                       }}
                     >
-                      <TableCell sx={{ textAlign: 'center', width: 80 }}>
+                      <TableCell
+                        sx={{ textAlign: 'center', width: 80 }}
+                        onClick={(e) => e.stopPropagation()} // Fix: Prevent row click
+                      >
                         <Checkbox
                           checked={selectedCases.includes(caseItem.id)}
                           onChange={(e) => {
@@ -383,8 +485,7 @@ const NotInterestedCases = () => {
                               size="small"
                               onClick={(e) => {
                                 e.stopPropagation();
-                                // Call functionality would go here
-                                console.log('Call case:', caseItem.id);
+                                handleCallClick(caseItem);
                               }}
                               sx={{
                                 color: theme.palette.success.main,
@@ -421,8 +522,7 @@ const NotInterestedCases = () => {
                               size="small"
                               onClick={(e) => {
                                 e.stopPropagation();
-                                // Quick edit functionality would go here
-                                console.log('Quick edit case:', caseItem.id);
+                                handleEditClick(caseItem);
                               }}
                               sx={{
                                 color: 'info.main',
@@ -439,8 +539,7 @@ const NotInterestedCases = () => {
                               size="small"
                               onClick={(e) => {
                                 e.stopPropagation();
-                                // Add comment functionality would go here
-                                console.log('Add comment to case:', caseItem.id);
+                                handleCommentClick(caseItem);
                               }}
                               sx={{
                                 color: 'secondary.main',
@@ -678,6 +777,114 @@ const NotInterestedCases = () => {
           </Button>
         </Box>
       </Menu>
+
+      {/* --- Action Dialogs --- */}
+
+      {/* Call Dialog */}
+      <Dialog open={openCallDialog} onClose={handleCloseDialogs} maxWidth="xs" fullWidth>
+        <DialogTitle>Call Customer</DialogTitle>
+        <DialogContent>
+          <Box sx={{ textAlign: 'center', py: 2 }}>
+            <CallIcon sx={{ fontSize: 48, color: 'success.main', mb: 2 }} />
+            <Typography variant="h6">{actionCase?.customerName}</Typography>
+            <Typography variant="body1" color="text.secondary" sx={{ mt: 1, mb: 3 }}>
+              {actionCase?.customerMobile}
+            </Typography>
+            <Typography variant="caption" color="text.secondary">
+              Clicking "Start Call" will initiate a call via your configured softphone.
+            </Typography>
+          </Box>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseDialogs}>Cancel</Button>
+          <Button variant="contained" color="success" onClick={handleConfirmCall} startIcon={<CallIcon />}>
+            Start Call
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Edit Dialog */}
+      <Dialog open={openEditDialog} onClose={handleCloseDialogs} maxWidth="sm" fullWidth>
+        <DialogTitle>Quick Edit Case</DialogTitle>
+        <DialogContent>
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3, pt: 1 }}>
+            <FormControl fullWidth>
+              <InputLabel>Priority</InputLabel>
+              <Select
+                value={editFormData.priority}
+                label="Priority"
+                onChange={(e) => setEditFormData({ ...editFormData, priority: e.target.value })}
+              >
+                <MenuItem value="High">High</MenuItem>
+                <MenuItem value="Medium">Medium</MenuItem>
+                <MenuItem value="Low">Low</MenuItem>
+              </Select>
+            </FormControl>
+            <FormControl fullWidth>
+              <InputLabel>Status</InputLabel>
+              <Select
+                value={editFormData.status}
+                label="Status"
+                onChange={(e) => setEditFormData({ ...editFormData, status: e.target.value })}
+              >
+                <MenuItem value="Not Interested">Not Interested</MenuItem>
+                <MenuItem value="Deferred">Deferred</MenuItem>
+                <MenuItem value="Callback Requested">Callback Requested</MenuItem>
+              </Select>
+            </FormControl>
+            <TextField
+              label="Reason / Notes"
+              multiline
+              rows={3}
+              value={editFormData.reason}
+              onChange={(e) => setEditFormData({ ...editFormData, reason: e.target.value })}
+              fullWidth
+            />
+          </Box>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseDialogs}>Cancel</Button>
+          <Button variant="contained" onClick={handleSaveEdit}>
+            Save Changes
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Comment Dialog */}
+      <Dialog open={openCommentDialog} onClose={handleCloseDialogs} maxWidth="sm" fullWidth>
+        <DialogTitle>Add Comment</DialogTitle>
+        <DialogContent>
+          <TextField
+            autoFocus
+            margin="dense"
+            label="Comment"
+            fullWidth
+            multiline
+            rows={4}
+            value={commentText}
+            onChange={(e) => setCommentText(e.target.value)}
+            placeholder="Enter your comment here..."
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseDialogs}>Cancel</Button>
+          <Button variant="contained" onClick={handleSaveComment}>
+            Add Comment
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Snackbar */}
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={4000}
+        onClose={handleCloseSnackbar}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      >
+        <Alert onClose={handleCloseSnackbar} severity={snackbar.severity} variant="filled">
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
     </Box>
   );
 };

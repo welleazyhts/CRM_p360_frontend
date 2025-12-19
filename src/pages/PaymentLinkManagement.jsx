@@ -30,7 +30,10 @@ import {
   Tab,
   Tooltip,
   LinearProgress,
-  Divider
+  Divider,
+  Checkbox,
+  FormGroup,
+  FormControlLabel
 } from '@mui/material';
 import {
   Add as AddIcon,
@@ -63,6 +66,7 @@ const PaymentLinkManagement = () => {
   const [createDialog, setCreateDialog] = useState(false);
   const [viewDialog, setViewDialog] = useState(false);
   const [sendDialog, setSendDialog] = useState(false);
+  const [reminderDialog, setReminderDialog] = useState(false);
   const [selectedLink, setSelectedLink] = useState(null);
   const [stats, setStats] = useState(null);
 
@@ -91,9 +95,10 @@ const PaymentLinkManagement = () => {
   });
 
   useEffect(() => {
+    setPage(0); // Reset to first page on filter/search change
     loadPaymentLinks();
     loadStats();
-  }, [statusFilter, searchTerm]);
+  }, [statusFilter, searchTerm, tabValue]);
 
   const loadPaymentLinks = async () => {
     setLoading(true);
@@ -135,6 +140,7 @@ const PaymentLinkManagement = () => {
 
       if (response.success) {
         setCreateDialog(false);
+        setSearchTerm(''); // Ensure search term is cleared
         loadPaymentLinks();
         loadStats();
         // Reset form
@@ -178,9 +184,22 @@ const PaymentLinkManagement = () => {
     }
   };
 
-  const handleSendReminder = async (linkId) => {
+  const handleOpenReminderDialog = (link) => {
+    setSelectedLink(link);
+    // Determine default channels based on customer info presence
+    setSendChannels({
+      sms: !!link.customerPhone,
+      email: !!link.customerEmail,
+      whatsapp: !!link.customerPhone
+    });
+    setReminderDialog(true);
+  };
+
+  const handleSendReminder = async () => {
     try {
-      await paymentLinkService.sendReminder(linkId);
+      await paymentLinkService.sendReminder(selectedLink.linkId, sendChannels);
+      setReminderDialog(false);
+      setSendChannels({ sms: false, email: false, whatsapp: false });
       loadPaymentLinks();
     } catch (error) {
       console.error('Error sending reminder:', error);
@@ -328,6 +347,7 @@ const PaymentLinkManagement = () => {
               <TextField
                 fullWidth
                 size="small"
+                autoComplete="off"
                 placeholder="Search by customer name, phone, link ID, or policy number..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
@@ -471,6 +491,12 @@ const PaymentLinkManagement = () => {
                                   color="primary"
                                   onClick={() => {
                                     setSelectedLink(link);
+                                    // Pre-check channels based on available info
+                                    setSendChannels({
+                                      sms: !!link.customerPhone,
+                                      email: !!link.customerEmail,
+                                      whatsapp: !!link.customerPhone
+                                    });
                                     setSendDialog(true);
                                   }}
                                 >
@@ -481,7 +507,7 @@ const PaymentLinkManagement = () => {
                                 <IconButton
                                   size="small"
                                   color="warning"
-                                  onClick={() => handleSendReminder(link.linkId)}
+                                  onClick={() => handleOpenReminderDialog(link)}
                                 >
                                   <ReminderIcon fontSize="small" />
                                 </IconButton>
@@ -721,35 +747,38 @@ const PaymentLinkManagement = () => {
             <Typography variant="body2" gutterBottom>
               Select channels to send payment link:
             </Typography>
-            <Box display="flex" flexDirection="column" gap={2} mt={2}>
-              <Box display="flex" alignItems="center" gap={1}>
-                <IconButton
-                  color={sendChannels.sms ? 'primary' : 'default'}
-                  onClick={() => setSendChannels({ ...sendChannels, sms: !sendChannels.sms })}
-                >
-                  <SmsIcon />
-                </IconButton>
-                <Typography>SMS</Typography>
-              </Box>
-              <Box display="flex" alignItems="center" gap={1}>
-                <IconButton
-                  color={sendChannels.email ? 'primary' : 'default'}
-                  onClick={() => setSendChannels({ ...sendChannels, email: !sendChannels.email })}
-                >
-                  <EmailIcon />
-                </IconButton>
-                <Typography>Email</Typography>
-              </Box>
-              <Box display="flex" alignItems="center" gap={1}>
-                <IconButton
-                  color={sendChannels.whatsapp ? 'success' : 'default'}
-                  onClick={() => setSendChannels({ ...sendChannels, whatsapp: !sendChannels.whatsapp })}
-                >
-                  <WhatsAppIcon />
-                </IconButton>
-                <Typography>WhatsApp</Typography>
-              </Box>
-            </Box>
+            <FormGroup sx={{ mt: 2 }}>
+              <FormControlLabel
+                control={
+                  <Checkbox
+                    checked={sendChannels.sms}
+                    onChange={(e) => setSendChannels({ ...sendChannels, sms: e.target.checked })}
+                    disabled={!selectedLink?.customerPhone}
+                  />
+                }
+                label="SMS"
+              />
+              <FormControlLabel
+                control={
+                  <Checkbox
+                    checked={sendChannels.email}
+                    onChange={(e) => setSendChannels({ ...sendChannels, email: e.target.checked })}
+                    disabled={!selectedLink?.customerEmail}
+                  />
+                }
+                label="Email"
+              />
+              <FormControlLabel
+                control={
+                  <Checkbox
+                    checked={sendChannels.whatsapp}
+                    onChange={(e) => setSendChannels({ ...sendChannels, whatsapp: e.target.checked })}
+                    disabled={!selectedLink?.customerPhone}
+                  />
+                }
+                label="WhatsApp"
+              />
+            </FormGroup>
           </Box>
         </DialogContent>
         <DialogActions>
@@ -759,12 +788,66 @@ const PaymentLinkManagement = () => {
             onClick={handleSendLink}
             disabled={!sendChannels.sms && !sendChannels.email && !sendChannels.whatsapp}
           >
-            Send
+            Send Link
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Send Reminder Dialog */}
+      <Dialog open={reminderDialog} onClose={() => setReminderDialog(false)} maxWidth="xs" fullWidth>
+        <DialogTitle>Send Payment Reminder</DialogTitle>
+        <DialogContent>
+          <Box sx={{ mt: 2 }}>
+            <Typography variant="body2" gutterBottom>
+              Select channels to send payment reminder:
+            </Typography>
+            <FormGroup sx={{ mt: 2 }}>
+              <FormControlLabel
+                control={
+                  <Checkbox
+                    checked={sendChannels.sms}
+                    onChange={(e) => setSendChannels({ ...sendChannels, sms: e.target.checked })}
+                    disabled={!selectedLink?.customerPhone}
+                  />
+                }
+                label="SMS"
+              />
+              <FormControlLabel
+                control={
+                  <Checkbox
+                    checked={sendChannels.email}
+                    onChange={(e) => setSendChannels({ ...sendChannels, email: e.target.checked })}
+                    disabled={!selectedLink?.customerEmail}
+                  />
+                }
+                label="Email"
+              />
+              <FormControlLabel
+                control={
+                  <Checkbox
+                    checked={sendChannels.whatsapp}
+                    onChange={(e) => setSendChannels({ ...sendChannels, whatsapp: e.target.checked })}
+                    disabled={!selectedLink?.customerPhone}
+                  />
+                }
+                label="WhatsApp"
+              />
+            </FormGroup>
+          </Box>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setReminderDialog(false)}>Cancel</Button>
+          <Button
+            variant="contained"
+            color="warning"
+            onClick={handleSendReminder}
+            disabled={!sendChannels.sms && !sendChannels.email && !sendChannels.whatsapp}
+          >
+            Send Reminder
           </Button>
         </DialogActions>
       </Dialog>
     </Box>
   );
 };
-
 export default PaymentLinkManagement;

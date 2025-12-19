@@ -306,7 +306,7 @@ const ReminderManagement = () => {
 
   const filteredReminders = reminders.filter(reminder => {
     const matchesSearch = reminder.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         reminder.leadName.toLowerCase().includes(searchTerm.toLowerCase());
+      reminder.leadName.toLowerCase().includes(searchTerm.toLowerCase());
 
     let matchesTab = true;
     if (tabValue === 1) matchesTab = reminder.status === REMINDER_STATUS.PENDING;
@@ -326,6 +326,13 @@ const ReminderManagement = () => {
       const today = new Date();
       return dueDate.toDateString() === today.toDateString();
     }).length
+  };
+
+  const handleSendNotification = (reminder, channel) => {
+    // In a real app, this would call an API
+    const message = `Sending ${channel} notification for reminder: ${reminder.title}`;
+    console.log(message);
+    alert(message + "\n\n(Notification sent successfully!)");
   };
 
   return (
@@ -500,13 +507,34 @@ const ReminderManagement = () => {
                       <TableCell>
                         <Box display="flex" gap={0.5}>
                           {reminder.notifyVia.includes('email') && (
-                            <Tooltip title="Email"><EmailIcon fontSize="small" color="primary" /></Tooltip>
+                            <Tooltip title="Send via Email">
+                              <IconButton
+                                size="small"
+                                onClick={() => handleSendNotification(reminder, 'Email')}
+                              >
+                                <EmailIcon fontSize="small" color="primary" />
+                              </IconButton>
+                            </Tooltip>
                           )}
                           {reminder.notifyVia.includes('sms') && (
-                            <Tooltip title="SMS"><SmsIcon fontSize="small" color="primary" /></Tooltip>
+                            <Tooltip title="Send via SMS">
+                              <IconButton
+                                size="small"
+                                onClick={() => handleSendNotification(reminder, 'SMS')}
+                              >
+                                <SmsIcon fontSize="small" color="secondary" />
+                              </IconButton>
+                            </Tooltip>
                           )}
                           {reminder.notifyVia.includes('whatsapp') && (
-                            <Tooltip title="WhatsApp"><WhatsAppIcon fontSize="small" color="success" /></Tooltip>
+                            <Tooltip title="Send via WhatsApp">
+                              <IconButton
+                                size="small"
+                                onClick={() => handleSendNotification(reminder, 'WhatsApp')}
+                              >
+                                <WhatsAppIcon fontSize="small" color="success" />
+                              </IconButton>
+                            </Tooltip>
                           )}
                         </Box>
                       </TableCell>
