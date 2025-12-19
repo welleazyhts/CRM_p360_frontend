@@ -131,7 +131,7 @@ const WhatsAppBotManagement = () => {
       status: newExecutive.botEnabled ? 'active' : 'inactive',
       lastActive: new Date().toISOString(),
       messagesHandled: 0,
-      responseTime: 'N/A'
+      responseTime: 'N/A' 
     };
     setExecutives([...executives, executive]);
     setNewExecutive({

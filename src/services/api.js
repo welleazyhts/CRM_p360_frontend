@@ -30,7 +30,10 @@ const getAuthToken = () => {
 /**
  * Create a default API client with real HTTP requests
  */
-const api = {
+/**
+ * Create a default API client with real HTTP requests
+ */
+const realApi = {
   get: async (endpoint, config = {}) => {
     const url = getApiUrl(endpoint);
     const { params, ...restConfig } = config;
@@ -67,8 +70,6 @@ const api = {
     return { data };
   },
 
-
-
   post: async (endpoint, data, config = {}) => {
     const url = getApiUrl(endpoint);
 
@@ -92,8 +93,6 @@ const api = {
     return { data: responseData };
   },
 
-
-
   put: async (endpoint, data, config = {}) => {
     const url = getApiUrl(endpoint);
 
@@ -116,8 +115,6 @@ const api = {
     const responseData = await response.json();
     return { data: responseData };
   },
-
-
 
   patch: async (endpoint, data, config = {}) => {
     const url = getApiUrl(endpoint);
@@ -166,6 +163,159 @@ const api = {
     return { data: responseData };
   }
 };
+
+/**
+ * Mock API Client for Development
+ */
+const mockClient = {
+  get: async (endpoint, config = {}) => {
+    console.log(`[MOCK API] GET ${endpoint}`, config);
+    await new Promise(resolve => setTimeout(resolve, 500)); // Simulate network delay
+
+    // Routing logic for mocks
+    if (endpoint.includes('/leads/dashboard-stats/')) {
+      return {
+        data: {
+          total_leads: 124,
+          new_today: 12,
+          active: 45,
+          converted: 67,
+          conversion_rate: 15.5
+        }
+      };
+    }
+
+    if (endpoint.includes('/leads/available-users/')) {
+      return {
+        data: [
+          { id: 1, name: 'Alice Johnson', email: 'alice@example.com' },
+          { id: 2, name: 'Bob Smith', email: 'bob@example.com' },
+          { id: 3, name: 'Charlie Brown', email: 'charlie@example.com' }
+        ]
+      };
+    }
+
+    if (endpoint.includes('/leads/sources/')) {
+      return {
+        data: [
+          { value: 'website', label: 'Website' },
+          { value: 'referral', label: 'Referral' },
+          { value: 'social_media', label: 'Social Media' },
+          { value: 'cold_call', label: 'Cold Call' }
+        ]
+      };
+    }
+
+    if (endpoint.includes('/leads/statuses/')) {
+      return {
+        data: [
+          { value: 'new', label: 'New', color: 'info' },
+          { value: 'contacted', label: 'Contacted', color: 'primary' },
+          { value: 'qualified', label: 'Qualified', color: 'success' },
+          { value: 'lost', label: 'Lost', color: 'error' },
+          { value: 'closed_won', label: 'Closed Won', color: 'success' }
+        ]
+      };
+    }
+
+    if (endpoint.includes('/leads/priorities/')) {
+      return {
+        data: [
+          { value: 'low', label: 'Low', color: 'success' },
+          { value: 'medium', label: 'Medium', color: 'warning' },
+          { value: 'high', label: 'High', color: 'error' }
+        ]
+      };
+    }
+
+    if (endpoint.match(/\/leads\/\d+\//) || endpoint.match(/\/leads\/LD\d+\//)) {
+      return {
+        data: {
+          id: 'LD20250001',
+          first_name: 'John',
+          last_name: 'Doe',
+          email: 'john.doe@example.com',
+          phone: '555-1234',
+          company: 'Acme Corp',
+          position: 'CEO',
+          status: 'New',
+          priority: 'High',
+          assigned_to: { id: 1, name: 'Alice Johnson' },
+          source: 'Website',
+          notes: 'Interested in premium plan.',
+          created_at: new Date().toISOString()
+        }
+      };
+    }
+
+    if (endpoint.includes('/leads/')) {
+      return {
+        data: {
+          results: [
+            {
+              id: 'LD20250001',
+              first_name: 'John',
+              last_name: 'Doe',
+              email: 'john.doe@example.com',
+              phone: '555-1234',
+              company: 'Acme Corp',
+              status: 'New',
+              priority: 'High',
+              assigned_to: 'Alice Johnson',
+              source: 'Website',
+              created_at: '2025-01-15T10:00:00Z'
+            },
+            {
+              id: 'LD20250002',
+              first_name: 'Jane',
+              last_name: 'Smith',
+              email: 'jane.smith@example.com',
+              phone: '555-5678',
+              company: 'Globex Inc',
+              status: 'Contacted',
+              priority: 'Medium',
+              assigned_to: 'Bob Smith',
+              source: 'Referral',
+              created_at: '2025-01-16T14:30:00Z'
+            }
+          ],
+          count: 2,
+          total_pages: 1,
+          current_page: 1
+        }
+      };
+    }
+
+    // Default catch-all mock response
+    return { data: {} };
+  },
+
+  post: async (endpoint, data, config = {}) => {
+    console.log(`[MOCK API] POST ${endpoint}`, data);
+    await new Promise(resolve => setTimeout(resolve, 500));
+    return { data: { ...data, id: 'MOCK_ID_' + Date.now(), success: true } };
+  },
+
+  put: async (endpoint, data, config = {}) => {
+    console.log(`[MOCK API] PUT ${endpoint}`, data);
+    await new Promise(resolve => setTimeout(resolve, 500));
+    return { data: { ...data, success: true } };
+  },
+
+  patch: async (endpoint, data, config = {}) => {
+    console.log(`[MOCK API] PATCH ${endpoint}`, data);
+    await new Promise(resolve => setTimeout(resolve, 500));
+    return { data: { ...data, success: true } };
+  },
+
+  delete: async (endpoint, config = {}) => {
+    console.log(`[MOCK API] DELETE ${endpoint}`);
+    await new Promise(resolve => setTimeout(resolve, 500));
+    return { data: { success: true } };
+  }
+};
+
+const api = process.env.REACT_APP_USE_MOCKS === 'true' ? mockClient : realApi;
 
 
 // Provider configuration endpoints

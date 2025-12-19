@@ -55,7 +55,7 @@ export const AuthProvider = ({ children }) => {
           // Renewals Module Only
           'dashboard', 'upload', 'cases', 'closed-cases', 'policy-timeline', 'logs',
           // Personal Pages
-          'profile'
+          'profile' 
         ]
       },
       'priya@client.com': {
@@ -137,7 +137,7 @@ export const AuthProvider = ({ children }) => {
         'renewal-email-manager', 'renewal-whatsapp-manager', 'profile'
       ]
     };
-  };
+  }; 
 
   useEffect(() => {
     // Check for existing session

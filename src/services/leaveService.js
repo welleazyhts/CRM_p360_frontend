@@ -382,7 +382,7 @@ const createRegularization = async (regularizationData) => {
         await simulateDelay();
 
         const newRegularization = {
-            id: Date.now(),
+            id: Date.now(), 
             employee: regularizationData.employee || 'Current User',
             employeeId: regularizationData.employeeId || 'EMP001',
             date: regularizationData.date,
@@ -423,7 +423,7 @@ const updateRegularizationStatus = async (regularizationId, status, remarks = ''
         // Mock implementation
         await simulateDelay();
 
-        return {
+        return {  
             id: regularizationId,
             status,
             remarks,
