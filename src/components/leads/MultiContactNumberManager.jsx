@@ -261,6 +261,31 @@ const MultiContactNumberManager = ({ leadId, initialNumbers = [], onUpdate }) =>
     return colors[status] || 'default';
   };
 
+  // Handle SMS click
+  const handleSMS = (phone) => {
+    if (!phone) return;
+    const cleanPhone = phone.replace(/[\s-]/g, '');
+    window.open(`sms:${cleanPhone}`, '_blank');
+  };
+
+  // Handle WhatsApp click
+  const handleWhatsApp = (phone) => {
+    if (!phone) return;
+    // Remove all non-numeric characters first
+    let cleanPhone = phone.replace(/\D/g, '');
+
+    // If it starts with 0, replace with 91
+    if (cleanPhone.startsWith('0')) {
+      cleanPhone = '91' + cleanPhone.substring(1);
+    }
+    // If it doesn't start with 91 (and is 10 digits), add 91
+    else if (cleanPhone.length === 10) {
+      cleanPhone = '91' + cleanPhone;
+    }
+
+    window.open(`https://wa.me/${cleanPhone}`, '_blank');
+  };
+
   return (
     <Box>
       <Card>
@@ -354,12 +379,20 @@ const MultiContactNumberManager = ({ leadId, initialNumbers = [], onUpdate }) =>
                         </IconButton>
                       </Tooltip>
                       <Tooltip title="SMS">
-                        <IconButton size="small" color="primary">
+                        <IconButton
+                          size="small"
+                          color="primary"
+                          onClick={() => handleSMS(number.phone)}
+                        >
                           <SmsIcon fontSize="small" />
                         </IconButton>
                       </Tooltip>
                       <Tooltip title="WhatsApp">
-                        <IconButton size="small" color="success">
+                        <IconButton
+                          size="small"
+                          color="success"
+                          onClick={() => handleWhatsApp(number.phone)}
+                        >
                           <WhatsAppIcon fontSize="small" />
                         </IconButton>
                       </Tooltip>

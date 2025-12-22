@@ -1131,7 +1131,7 @@ const QuoteManagement = () => {
     <Card sx={{ borderRadius: 3 }}>
       <CardContent sx={{ p: 4 }}>
         <Typography variant="h5" fontWeight="700" gutterBottom sx={{ mb: 3 }}>
-          Create New Quote
+          {selectedQuote ? 'Edit Quote' : 'Create New Quote'}
         </Typography>
 
         <Stepper activeStep={0} sx={{ mb: 4 }}>
@@ -1430,7 +1430,7 @@ const QuoteManagement = () => {
                 startIcon={selectedQuote ? <EditIcon /> : <AddIcon />}
                 onClick={handleSubmit}
               >
-                {selectedQuote ? 'Update Quote' : 'Create Quote'}
+                {selectedQuote ? 'Update Quote' : 'Submit Quote'}
               </Button>
             </Stack>
           </Grid>
@@ -1526,7 +1526,29 @@ const QuoteManagement = () => {
           variant="contained"
           size="large"
           startIcon={<AddIcon />}
-          onClick={() => setCurrentTab(1)}
+          onClick={() => {
+            setSelectedQuote(null);
+            setFormData({
+              customerName: '',
+              customerEmail: '',
+              customerPhone: '',
+              leadId: '',
+              productType: '',
+              productPlan: '',
+              coverageAmount: '',
+              premium: '',
+              sumInsured: '',
+              tenure: '1',
+              quoteAmount: '',
+              validityPeriod: '30',
+              remarks: '',
+              ageOfInsured: '',
+              medicalHistory: '',
+              vehicleDetails: '',
+              previousInsurance: ''
+            });
+            setCurrentTab(1);
+          }}
         >
           New Quote
         </Button>

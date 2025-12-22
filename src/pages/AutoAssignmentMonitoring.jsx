@@ -52,14 +52,54 @@ const AutoAssignmentMonitoring = () => {
   const [filterAgent, setFilterAgent] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
 
+  // Mock data for demonstration
+  const MOCK_STATS = {
+    total: 1250,
+    byStrategy: {
+      'ROUND_ROBIN': 450,
+      'LOAD_BALANCED': 320,
+      'SKILL_BASED': 280,
+      'PERFORMANCE_BASED': 150,
+      'GEOGRAPHIC': 50
+    },
+    byAgent: {
+      'AGT-001': 145,
+      'AGT-002': 132,
+      'AGT-003': 120,
+      'AGT-004': 98,
+      'AGT-005': 85
+    }
+  };
+
   // Calculate statistics
-  const stats = useMemo(() => getAssignmentStats(), [assignmentHistory]);
+  const stats = useMemo(() => {
+    const realStats = getAssignmentStats();
+    // Return mock data if no real data exists
+    if (!realStats || !realStats.total || realStats.total === 0) {
+      return MOCK_STATS;
+    }
+    return realStats;
+  }, [assignmentHistory]);
   const agentWorkloads = useMemo(() => getAllAgentWorkloads([]), [agents]);
   const availableAgents = useMemo(() => getAvailableAgentsList([]), [agents, config.maxCapacity]);
 
+  const MOCK_HISTORY = [
+    { id: 'HIST-001', entityId: 'LEAD-2024-001', entityType: 'Lead', agentId: 'AGT-001', agentName: 'Sarah Johnson', strategy: 'ROUND_ROBIN', reason: 'Next in rotation', assignedAt: new Date(Date.now() - 1000 * 60 * 30).toISOString() },
+    { id: 'HIST-002', entityId: 'CASE-2024-089', entityType: 'Case', agentId: 'AGT-003', agentName: 'Mike Wilson', strategy: 'SKILL_BASED', reason: 'Best skill match: Support', assignedAt: new Date(Date.now() - 1000 * 60 * 60).toISOString() },
+    { id: 'HIST-003', entityId: 'LEAD-2024-002', entityType: 'Lead', agentId: 'AGT-002', agentName: 'John Doe', strategy: 'LOAD_BALANCED', reason: 'Lowest utilization (45%)', assignedAt: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString() },
+    { id: 'HIST-004', entityId: 'TASK-2024-567', entityType: 'Task', agentId: 'AGT-001', agentName: 'Sarah Johnson', strategy: 'PERFORMANCE_BASED', reason: 'Top performer for high value', assignedAt: new Date(Date.now() - 1000 * 60 * 60 * 4).toISOString() },
+    { id: 'HIST-005', entityId: 'LEAD-2024-003', entityType: 'Lead', agentId: 'AGT-004', agentName: 'Emily Davis', strategy: 'GEOGRAPHIC', reason: 'Region match: North', assignedAt: new Date(Date.now() - 1000 * 60 * 60 * 5).toISOString() },
+    { id: 'HIST-006', entityId: 'CASE-2024-090', entityType: 'Case', agentId: 'AGT-003', agentName: 'Mike Wilson', strategy: 'ROUND_ROBIN', reason: 'Next in rotation', assignedAt: new Date(Date.now() - 1000 * 60 * 60 * 24).toISOString() },
+    { id: 'HIST-007', entityId: 'LEAD-2024-004', entityType: 'Lead', agentId: 'AGT-005', agentName: 'David Brown', strategy: 'LOAD_BALANCED', reason: 'Lowest utilization (20%)', assignedAt: new Date(Date.now() - 1000 * 60 * 60 * 26).toISOString() },
+    { id: 'HIST-008', entityId: 'LEAD-2024-005', entityType: 'Lead', agentId: 'AGT-001', agentName: 'Sarah Johnson', strategy: 'SKILL_BASED', reason: 'Best skill match: Sales', assignedAt: new Date(Date.now() - 1000 * 60 * 60 * 28).toISOString() }
+  ];
+
   // Filter assignment history
   const filteredHistory = useMemo(() => {
-    let filtered = assignmentHistory;
+    // Use mock history if real history is empty
+    let filtered = (assignmentHistory && assignmentHistory.length > 0)
+      ? assignmentHistory
+      : MOCK_HISTORY;
 
     if (filterStrategy !== 'all') {
       filtered = filtered.filter(h => h.strategy === filterStrategy);
@@ -350,7 +390,7 @@ const AutoAssignmentMonitoring = () => {
                           size="small"
                           color={
                             agent.performanceTier === 'top' ? 'success' :
-                            agent.performanceTier === 'high' ? 'primary' : 'default'
+                              agent.performanceTier === 'high' ? 'primary' : 'default'
                           }
                         />
                       </TableCell>

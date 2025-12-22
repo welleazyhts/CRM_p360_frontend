@@ -148,6 +148,31 @@ const DocumentCollectionTracker = ({ leadId, initialDocuments = [], onUpdate }) 
     setRequestChannel('email');
   };
 
+  const handleViewDocument = (doc) => {
+    if (doc.file) {
+      const fileUrl = URL.createObjectURL(doc.file);
+      window.open(fileUrl, '_blank');
+    } else if (doc.url) {
+      window.open(doc.url, '_blank');
+    } else {
+      alert(`Viewing document: ${doc.fileName}`);
+    }
+  };
+
+  const handleDownloadDocument = (doc) => {
+    if (doc.file) {
+      const fileUrl = URL.createObjectURL(doc.file);
+      const link = document.createElement('a');
+      link.href = fileUrl;
+      link.download = doc.fileName;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } else {
+      alert(`Downloading document: ${doc.fileName}`);
+    }
+  };
+
   const getStatusIcon = (status) => {
     const icons = {
       [DOCUMENT_STATUS.PENDING]: <PendingIcon />,
@@ -322,12 +347,18 @@ const DocumentCollectionTracker = ({ leadId, initialDocuments = [], onUpdate }) 
                   <ListItemSecondaryAction>
                     <Box display="flex" gap={0.5}>
                       <Tooltip title="View">
-                        <IconButton size="small">
+                        <IconButton
+                          size="small"
+                          onClick={() => handleViewDocument(doc)}
+                        >
                           <ViewIcon fontSize="small" />
                         </IconButton>
                       </Tooltip>
                       <Tooltip title="Download">
-                        <IconButton size="small">
+                        <IconButton
+                          size="small"
+                          onClick={() => handleDownloadDocument(doc)}
+                        >
                           <DownloadIcon fontSize="small" />
                         </IconButton>
                       </Tooltip>

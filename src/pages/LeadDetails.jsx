@@ -1965,7 +1965,7 @@ Document Reference: ${doc.id}
             <Box>
               <MultiContactNumberManager
                 leadId={leadId}
-                initialContacts={lead?.contacts || []}
+                initialNumbers={lead?.contacts || []}
                 onUpdate={(contacts) => {
                   console.log('Contacts updated:', contacts);
                   setLead({ ...lead, contacts });

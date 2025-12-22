@@ -2413,7 +2413,7 @@ const Billing = () => {
               </Grid>
 
               {/* Description */}
-              <Box sx={{ mt: 3, p: 2, bgcolor: 'grey.50', borderRadius: 2 }}>
+              <Box sx={{ mt: 3, p: 2, bgcolor: alpha(theme.palette.text.primary, 0.04), borderRadius: 2 }}>
                 <Typography variant="subtitle2" color="text.secondary" gutterBottom>
                   Description
                 </Typography>

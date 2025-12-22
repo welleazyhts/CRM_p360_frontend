@@ -62,7 +62,6 @@ const CallRecording = () => {
       return call;
     }));
   };
-
   const handleBargeIn = async (callId) => {
     try {
       await CallRecordingService.bargeIntoCall(callId);
