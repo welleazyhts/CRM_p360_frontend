@@ -9,6 +9,7 @@ import {
 } from '@mui/material';
 import FlowBuilder from '../components/whatsapp/FlowBuilder';
 import TemplateManager from '../components/whatsapp/TemplateManager';
+import whatsappReportService from '../services/whatsappReportService';
 import {
   WhatsApp as WhatsAppIcon,
   Add as AddIcon,
@@ -56,6 +57,8 @@ const WhatsappFlow = () => {
   const [selectedFlowForEdit, setSelectedFlowForEdit] = useState(null);
   const [templateManagerOpen, setTemplateManagerOpen] = useState(false);
   const [analyticsDialogOpen, setAnalyticsDialogOpen] = useState(false);
+  const [reportLoading, setReportLoading] = useState(false);
+  const [reportMessage, setReportMessage] = useState(null);
 
   const [newFlow, setNewFlow] = useState({
     name: '',
@@ -653,6 +656,56 @@ const WhatsappFlow = () => {
     }
   };
 
+  // Report Generation Functions
+  const handleGeneratePDF = async () => {
+    setReportLoading(true);
+    setReportMessage(null);
+    try {
+      const result = whatsappReportService.generatePDFReport(flows);
+      if (result.success) {
+        setReportMessage({ type: 'success', text: result.message });
+      } else {
+        setReportMessage({ type: 'error', text: result.message || 'Failed to generate PDF report' });
+      }
+      setTimeout(() => setReportMessage(null), 5000);
+    } catch (error) {
+      setReportMessage({ type: 'error', text: 'Failed to generate PDF report' });
+      console.error('PDF generation error:', error);
+    } finally {
+      setReportLoading(false);
+    }
+  };
+
+  const handleExportExcel = async () => {
+    setReportLoading(true);
+    setReportMessage(null);
+    try {
+      const result = whatsappReportService.exportToExcel(flows);
+      setReportMessage({ type: result.success ? 'success' : 'error', text: result.message });
+      setTimeout(() => setReportMessage(null), 5000);
+    } catch (error) {
+      setReportMessage({ type: 'error', text: 'Failed to export to Excel' });
+      console.error('Excel export error:', error);
+    } finally {
+      setReportLoading(false);
+    }
+  };
+
+  const handleCRMSync = async () => {
+    setReportLoading(true);
+    setReportMessage(null);
+    try {
+      const result = await whatsappReportService.syncWithCRM(flows);
+      setReportMessage({ type: result.success ? 'success' : 'error', text: result.message });
+      setTimeout(() => setReportMessage(null), 5000);
+    } catch (error) {
+      setReportMessage({ type: 'error', text: 'Failed to sync with CRM' });
+      console.error('CRM sync error:', error);
+    } finally {
+      setReportLoading(false);
+    }
+  };
+
   // Additional tab components
   const TemplatesTab = () => (
     <Box>
@@ -715,7 +768,7 @@ const WhatsappFlow = () => {
             </CardContent>
           </Card>
         </Grid>
-                  
+
         <Grid item xs={12} md={4}>
           <Card>
             <CardContent>
@@ -1235,6 +1288,11 @@ const WhatsappFlow = () => {
       <Card>
         <CardContent>
           <Typography variant="h6" gutterBottom>Downloadable Reports</Typography>
+          {reportMessage && (
+            <Alert severity={reportMessage.type} sx={{ mb: 2 }} onClose={() => setReportMessage(null)}>
+              {reportMessage.text}
+            </Alert>
+          )}
           <Grid container spacing={2}>
             <Grid item xs={12} sm={6} md={3}>
               <Button
@@ -1259,7 +1317,8 @@ const WhatsappFlow = () => {
                 fullWidth
                 variant="outlined"
                 startIcon={<AnalyticsIcon />}
-                onClick={() => console.log('Generating PDF report...')}
+                onClick={handleGeneratePDF}
+                disabled={reportLoading}
               >
                 PDF Report
               </Button>
@@ -1269,7 +1328,8 @@ const WhatsappFlow = () => {
                 fullWidth
                 variant="outlined"
                 startIcon={<AnalyticsIcon />}
-                onClick={() => console.log('Exporting to Excel...')}
+                onClick={handleExportExcel}
+                disabled={reportLoading}
               >
                 Excel Export
               </Button>
@@ -1279,9 +1339,10 @@ const WhatsappFlow = () => {
                 fullWidth
                 variant="outlined"
                 startIcon={<SendIcon />}
-                onClick={() => console.log('Syncing with CRM...')}
+                onClick={handleCRMSync}
+                disabled={reportLoading}
               >
-                CRM Sync
+                {reportLoading ? 'Syncing...' : 'CRM Sync'}
               </Button>
             </Grid>
           </Grid>
@@ -1578,6 +1639,11 @@ const WhatsappFlow = () => {
                 <Card>
                   <CardContent>
                     <Typography variant="h6" gutterBottom>Downloadable Reports</Typography>
+                    {reportMessage && (
+                      <Alert severity={reportMessage.type} sx={{ mb: 2 }} onClose={() => setReportMessage(null)}>
+                        {reportMessage.text}
+                      </Alert>
+                    )}
                     <Grid container spacing={2}>
                       <Grid item xs={12} sm={6} md={3}>
                         <Button
@@ -1602,7 +1668,8 @@ const WhatsappFlow = () => {
                           fullWidth
                           variant="outlined"
                           startIcon={<AnalyticsIcon />}
-                          onClick={() => console.log('Generating PDF report...')}
+                          onClick={handleGeneratePDF}
+                          disabled={reportLoading}
                         >
                           PDF Report
                         </Button>
@@ -1612,7 +1679,8 @@ const WhatsappFlow = () => {
                           fullWidth
                           variant="outlined"
                           startIcon={<AnalyticsIcon />}
-                          onClick={() => console.log('Exporting to Excel...')}
+                          onClick={handleExportExcel}
+                          disabled={reportLoading}
                         >
                           Excel Export
                         </Button>
@@ -1622,9 +1690,10 @@ const WhatsappFlow = () => {
                           fullWidth
                           variant="outlined"
                           startIcon={<SendIcon />}
-                          onClick={() => console.log('Syncing with CRM...')}
+                          onClick={handleCRMSync}
+                          disabled={reportLoading}
                         >
-                          CRM Sync
+                          {reportLoading ? 'Syncing...' : 'CRM Sync'}
                         </Button>
                       </Grid>
                     </Grid>

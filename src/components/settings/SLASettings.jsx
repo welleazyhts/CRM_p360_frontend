@@ -60,6 +60,25 @@ const SLASettings = () => {
   const [editingTemplate, setEditingTemplate] = useState(null);
   const [successMessage, setSuccessMessage] = useState('');
 
+  // Provide safe defaults if slaConfig is undefined
+  const safeSlaConfig = slaConfig || {
+    enabled: false,
+    templates: {},
+    notifications: {
+      enabled: false,
+      warning: 25,
+      critical: 10,
+      breach: true
+    },
+    escalation: {
+      enabled: false,
+      levels: []
+    },
+    autoAssignment: {
+      enabled: false
+    }
+  };
+
   const entityTypes = ['lead', 'case', 'task', 'email', 'claim'];
 
   const handleEditTemplate = (entityType, slaType, template) => {
@@ -132,19 +151,19 @@ const SLASettings = () => {
             <FormControlLabel
               control={
                 <Switch
-                  checked={slaConfig.enabled}
+                  checked={safeSlaConfig.enabled}
                   onChange={(e) => updateSLAConfig({ enabled: e.target.checked })}
                   color="primary"
                 />
               }
-              label={slaConfig.enabled ? 'Enabled' : 'Disabled'}
+              label={safeSlaConfig.enabled ? 'Enabled' : 'Disabled'}
             />
           </Box>
 
           <Divider sx={{ my: 2 }} />
 
-          <Alert severity={slaConfig.enabled ? 'info' : 'warning'} sx={{ mt: 2 }}>
-            {slaConfig.enabled
+          <Alert severity={safeSlaConfig.enabled ? 'info' : 'warning'} sx={{ mt: 2 }}>
+            {safeSlaConfig.enabled
               ? 'SLA tracking is active. All new leads, cases, and tasks will be monitored against configured SLAs.'
               : 'SLA tracking is disabled. No SLA monitoring will occur until re-enabled.'}
           </Alert>
@@ -196,8 +215,8 @@ const SLASettings = () => {
                         </TableRow>
                       </TableHead>
                       <TableBody>
-                        {slaConfig.templates[entityType] &&
-                          Object.entries(slaConfig.templates[entityType]).map(([slaType, config]) => (
+                        {safeSlaConfig.templates[entityType] &&
+                          Object.entries(safeSlaConfig.templates[entityType]).map(([slaType, config]) => (
                             <TableRow key={slaType} hover>
                               <TableCell>
                                 <Typography variant="body2" fontWeight="500" sx={{ textTransform: 'capitalize' }}>
@@ -215,8 +234,8 @@ const SLASettings = () => {
                                     config.hours
                                       ? `${config.hours} hours`
                                       : config.days
-                                      ? `${config.days} days`
-                                      : `${config.minutes} minutes`
+                                        ? `${config.days} days`
+                                        : `${config.minutes} minutes`
                                   }
                                   size="small"
                                   color="primary"
@@ -256,11 +275,11 @@ const SLASettings = () => {
                   <FormControlLabel
                     control={
                       <Switch
-                        checked={slaConfig.notifications.enabled}
+                        checked={safeSlaConfig.notifications.enabled}
                         onChange={(e) =>
                           updateSLAConfig({
                             notifications: {
-                              ...slaConfig.notifications,
+                              ...safeSlaConfig.notifications,
                               enabled: e.target.checked
                             }
                           })
@@ -280,11 +299,11 @@ const SLASettings = () => {
                   </Typography>
                   <Box sx={{ px: 2, mt: 2 }}>
                     <Slider
-                      value={slaConfig.notifications.warning}
+                      value={safeSlaConfig.notifications.warning}
                       onChange={(e, value) =>
                         updateSLAConfig({
                           notifications: {
-                            ...slaConfig.notifications,
+                            ...safeSlaConfig.notifications,
                             warning: value
                           }
                         })
@@ -294,7 +313,7 @@ const SLASettings = () => {
                       step={5}
                       marks
                       valueLabelDisplay="on"
-                      disabled={!slaConfig.notifications.enabled}
+                      disabled={!safeSlaConfig.notifications.enabled}
                     />
                   </Box>
                 </Grid>
@@ -308,11 +327,11 @@ const SLASettings = () => {
                   </Typography>
                   <Box sx={{ px: 2, mt: 2 }}>
                     <Slider
-                      value={slaConfig.notifications.critical}
+                      value={safeSlaConfig.notifications.critical}
                       onChange={(e, value) =>
                         updateSLAConfig({
                           notifications: {
-                            ...slaConfig.notifications,
+                            ...safeSlaConfig.notifications,
                             critical: value
                           }
                         })
@@ -322,7 +341,7 @@ const SLASettings = () => {
                       step={5}
                       marks
                       valueLabelDisplay="on"
-                      disabled={!slaConfig.notifications.enabled}
+                      disabled={!safeSlaConfig.notifications.enabled}
                       color="error"
                     />
                   </Box>
@@ -332,16 +351,16 @@ const SLASettings = () => {
                   <FormControlLabel
                     control={
                       <Switch
-                        checked={slaConfig.notifications.breach}
+                        checked={safeSlaConfig.notifications.breach}
                         onChange={(e) =>
                           updateSLAConfig({
                             notifications: {
-                              ...slaConfig.notifications,
+                              ...safeSlaConfig.notifications,
                               breach: e.target.checked
                             }
                           })
                         }
-                        disabled={!slaConfig.notifications.enabled}
+                        disabled={!safeSlaConfig.notifications.enabled}
                       />
                     }
                     label="Notify on SLA Breach"
@@ -364,11 +383,11 @@ const SLASettings = () => {
               <FormControlLabel
                 control={
                   <Switch
-                    checked={slaConfig.escalation.enabled}
+                    checked={safeSlaConfig.escalation.enabled}
                     onChange={(e) =>
                       updateSLAConfig({
                         escalation: {
-                          ...slaConfig.escalation,
+                          ...safeSlaConfig.escalation,
                           enabled: e.target.checked
                         }
                       })
@@ -389,7 +408,7 @@ const SLASettings = () => {
                     </TableRow>
                   </TableHead>
                   <TableBody>
-                    {slaConfig.escalation.levels.map((level, index) => (
+                    {safeSlaConfig.escalation.levels.map((level, index) => (
                       <TableRow key={index}>
                         <TableCell>
                           <Chip
@@ -436,11 +455,11 @@ const SLASettings = () => {
                       <FormControlLabel
                         control={
                           <Switch
-                            checked={slaConfig.autoAssignment?.enabled}
+                            checked={safeSlaConfig.autoAssignment?.enabled}
                             onChange={(e) =>
                               updateSLAConfig({
                                 autoAssignment: {
-                                  ...slaConfig.autoAssignment,
+                                  ...safeSlaConfig.autoAssignment,
                                   enabled: e.target.checked
                                 }
                               })

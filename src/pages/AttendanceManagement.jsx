@@ -34,7 +34,8 @@ import {
   useTheme,
   alpha,
   Tabs,
-  Tab
+  Tab,
+  Divider
 } from '@mui/material';
 import {
   Add as AddIcon,
@@ -48,7 +49,8 @@ import {
   LocationOn as LocationOnIcon,
   Phone as PhoneIcon,
   Computer as ComputerIcon,
-  Tablet as TabletIcon
+  Tablet as TabletIcon,
+  AccessTime as AccessTimeIcon
 } from '@mui/icons-material';
 
 
@@ -67,6 +69,7 @@ const AttendanceManagement = () => {
   const [loading, setLoading] = useState(false);
   const [openDialog, setOpenDialog] = useState(false);
   const [editingAttendance, setEditingAttendance] = useState(null);
+  const [viewMode, setViewMode] = useState(false);
 
   // Form state
   const [formData, setFormData] = useState({
@@ -164,7 +167,8 @@ const AttendanceManagement = () => {
   };
 
   // Handle dialog operations
-  const handleOpenDialog = (attendance = null) => {
+  const handleOpenDialog = (attendance = null, isView = false) => {
+    setViewMode(isView);
     if (attendance) {
       setEditingAttendance(attendance);
       setFormData({
@@ -210,18 +214,18 @@ const AttendanceManagement = () => {
 
   const handleSaveAttendance = () => {
     setLoading(true);
-    
+
     setTimeout(() => {
       if (editingAttendance) {
         // Update existing attendance
         const updatedData = attendanceData.map(record =>
           record.id === editingAttendance.id
             ? {
-                ...record,
-                ...formData,
-                totalHours: calculateTotalHours(formData.checkIn, formData.checkOut, formData.breakStart, formData.breakEnd),
-                updatedAt: new Date().toISOString()
-              }
+              ...record,
+              ...formData,
+              totalHours: calculateTotalHours(formData.checkIn, formData.checkOut, formData.breakStart, formData.breakEnd),
+              updatedAt: new Date().toISOString()
+            }
             : record
         );
         setAttendanceData(updatedData);
@@ -241,7 +245,7 @@ const AttendanceManagement = () => {
         setAttendanceData([...attendanceData, newAttendance]);
         setSnackbar({ open: true, message: 'Attendance record added successfully!', severity: 'success' });
       }
-      
+
       setLoading(false);
       handleCloseDialog();
     }, 1000);
@@ -250,18 +254,18 @@ const AttendanceManagement = () => {
   // Calculate total hours
   const calculateTotalHours = (checkIn, checkOut, breakStart, breakEnd) => {
     if (!checkIn || !checkOut) return 0;
-    
+
     const checkInTime = new Date(`2000-01-01T${checkIn}`);
     const checkOutTime = new Date(`2000-01-01T${checkOut}`);
     const breakStartTime = breakStart ? new Date(`2000-01-01T${breakStart}`) : null;
     const breakEndTime = breakEnd ? new Date(`2000-01-01T${breakEnd}`) : null;
-    
+
     let totalMs = checkOutTime - checkInTime;
-    
+
     if (breakStartTime && breakEndTime) {
       totalMs -= (breakEndTime - breakStartTime);
     }
-    
+
     return Math.round((totalMs / (1000 * 60 * 60)) * 100) / 100;
   };
 
@@ -585,12 +589,12 @@ const AttendanceManagement = () => {
                           <TableCell align="center">
                             <Box sx={{ display: 'flex', gap: 1, justifyContent: 'center' }}>
                               <Tooltip title="View Details">
-                                <IconButton size="small" onClick={() => handleOpenDialog(record)}>
+                                <IconButton size="small" onClick={() => handleOpenDialog(record, true)}>
                                   <ViewIcon />
                                 </IconButton>
                               </Tooltip>
                               <Tooltip title="Edit Attendance">
-                                <IconButton size="small" onClick={() => handleOpenDialog(record)}>
+                                <IconButton size="small" onClick={() => handleOpenDialog(record, false)}>
                                   <EditIcon />
                                 </IconButton>
                               </Tooltip>
@@ -665,8 +669,8 @@ const AttendanceManagement = () => {
                               width: `${percentage}%`,
                               height: '100%',
                               bgcolor: percentage >= 80 ? theme.palette.success.main :
-                                      percentage >= 60 ? theme.palette.warning.main :
-                                      theme.palette.error.main,
+                                percentage >= 60 ? theme.palette.warning.main :
+                                  theme.palette.error.main,
                               borderRadius: 1,
                               transition: 'width 0.3s ease'
                             }}
@@ -822,141 +826,248 @@ const AttendanceManagement = () => {
       {/* Add/Edit Attendance Dialog */}
       <Dialog open={openDialog} onClose={handleCloseDialog} maxWidth="md" fullWidth>
         <DialogTitle>
-          {editingAttendance ? 'Edit Attendance' : 'Add Attendance Record'}
+          {viewMode ? 'Attendance Details' : (editingAttendance ? 'Edit Attendance' : 'Add Attendance Record')}
         </DialogTitle>
         <DialogContent>
-          <Grid container spacing={2} sx={{ mt: 1 }}>
-            <Grid item xs={12} sm={6}>
-              <FormControl fullWidth>
-                <InputLabel>Employee</InputLabel>
-                <Select
-                  value={formData.employeeId}
-                  label="Employee"
-                  onChange={(e) => handleEmployeeChange(e.target.value)}
-                >
-                  {employees.map(employee => (
-                    <MenuItem key={employee.id} value={employee.id}>
-                      {employee.name} ({employee.department})
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
+          {viewMode ? (
+            <Box sx={{ mt: 2 }}>
+              <Grid container spacing={3}>
+                <Grid item xs={12}>
+                  <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                    <Avatar sx={{ mr: 2, width: 56, height: 56, bgcolor: theme.palette.primary.main }}>
+                      {formData.employeeName.split(' ')[0]?.[0]}{formData.employeeName.split(' ')[1]?.[0]}
+                    </Avatar>
+                    <Box>
+                      <Typography variant="h6">{formData.employeeName}</Typography>
+                      <Typography variant="body2" color="text.secondary">
+                        {formData.employeeId} • {formData.department} • {formData.position}
+                      </Typography>
+                    </Box>
+                    <Chip
+                      label={formData.status}
+                      color={formData.status === 'Present' ? 'success' : formData.status === 'Absent' ? 'error' : 'warning'}
+                      sx={{ ml: 'auto' }}
+                    />
+                  </Box>
+                  <Divider sx={{ mb: 2 }} />
+                </Grid>
+
+                <Grid item xs={6} md={3}>
+                  <Typography variant="caption" color="text.secondary">Date</Typography>
+                  <Typography variant="body1">{new Date(formData.date).toLocaleDateString()}</Typography>
+                </Grid>
+                <Grid item xs={6} md={3}>
+                  <Typography variant="caption" color="text.secondary">Total Hours</Typography>
+                  <Typography variant="body1" fontWeight="600">{calculateTotalHours(formData.checkIn, formData.checkOut, formData.breakStart, formData.breakEnd)}h</Typography>
+                </Grid>
+                <Grid item xs={6} md={3}>
+                  <Typography variant="caption" color="text.secondary">Location</Typography>
+                  <Typography variant="body1">{formData.location}</Typography>
+                </Grid>
+                <Grid item xs={6} md={3}>
+                  <Typography variant="caption" color="text.secondary">Device</Typography>
+                  <Typography variant="body1">{formData.device}</Typography>
+                </Grid>
+
+                <Grid item xs={12}>
+                  <Box sx={{ bgcolor: alpha(theme.palette.primary.main, 0.05), p: 2, borderRadius: 1 }}>
+                    <Grid container spacing={2}>
+                      <Grid item xs={6} sm={3}>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                          <CheckInIcon color="success" fontSize="small" />
+                          <Box>
+                            <Typography variant="caption" color="text.secondary">Check In</Typography>
+                            <Typography variant="body2" fontWeight="600">{formData.checkIn || 'N/A'}</Typography>
+                          </Box>
+                        </Box>
+                      </Grid>
+                      <Grid item xs={6} sm={3}>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                          <CheckOutIcon color="error" fontSize="small" />
+                          <Box>
+                            <Typography variant="caption" color="text.secondary">Check Out</Typography>
+                            <Typography variant="body2" fontWeight="600">{formData.checkOut || 'N/A'}</Typography>
+                          </Box>
+                        </Box>
+                      </Grid>
+                      <Grid item xs={6} sm={3}>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                          <AccessTimeIcon color="action" fontSize="small" />
+                          <Box>
+                            <Typography variant="caption" color="text.secondary">Break Start</Typography>
+                            <Typography variant="body2">{formData.breakStart || 'N/A'}</Typography>
+                          </Box>
+                        </Box>
+                      </Grid>
+                      <Grid item xs={6} sm={3}>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                          <AccessTimeIcon color="action" fontSize="small" />
+                          <Box>
+                            <Typography variant="caption" color="text.secondary">Break End</Typography>
+                            <Typography variant="body2">{formData.breakEnd || 'N/A'}</Typography>
+                          </Box>
+                        </Box>
+                      </Grid>
+                    </Grid>
+                  </Box>
+                </Grid>
+
+                {formData.notes && (
+                  <Grid item xs={12}>
+                    <Typography variant="caption" color="text.secondary">Notes</Typography>
+                    <Typography variant="body2" sx={{ bgcolor: 'grey.50', p: 1.5, borderRadius: 1, mt: 0.5 }}>
+                      {formData.notes}
+                    </Typography>
+                  </Grid>
+                )}
+              </Grid>
+            </Box>
+          ) : (
+            <Grid container spacing={2} sx={{ mt: 1 }}>
+              <Grid item xs={12} sm={6}>
+                <FormControl fullWidth>
+                  <InputLabel>Employee</InputLabel>
+                  <Select
+                    value={formData.employeeId}
+                    label="Employee"
+                    disabled={viewMode}
+                    onChange={(e) => handleEmployeeChange(e.target.value)}
+                  >
+                    {employees.map(employee => (
+                      <MenuItem key={employee.id} value={employee.id}>
+                        {employee.name} ({employee.department})
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  fullWidth
+                  label="Date"
+                  type="date"
+                  disabled={viewMode}
+                  value={formData.date}
+                  onChange={(e) => setFormData({ ...formData, date: e.target.value })}
+                  InputLabelProps={{ shrink: true }}
+                />
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  fullWidth
+                  label="Check In Time"
+                  type="time"
+                  disabled={viewMode}
+                  value={formData.checkIn}
+                  onChange={(e) => setFormData({ ...formData, checkIn: e.target.value })}
+                  InputLabelProps={{ shrink: true }}
+                />
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  fullWidth
+                  label="Check Out Time"
+                  type="time"
+                  disabled={viewMode}
+                  value={formData.checkOut}
+                  onChange={(e) => setFormData({ ...formData, checkOut: e.target.value })}
+                  InputLabelProps={{ shrink: true }}
+                />
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  fullWidth
+                  label="Break Start"
+                  type="time"
+                  disabled={viewMode}
+                  value={formData.breakStart}
+                  onChange={(e) => setFormData({ ...formData, breakStart: e.target.value })}
+                  InputLabelProps={{ shrink: true }}
+                />
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  fullWidth
+                  label="Break End"
+                  type="time"
+                  disabled={viewMode}
+                  value={formData.breakEnd}
+                  onChange={(e) => setFormData({ ...formData, breakEnd: e.target.value })}
+                  InputLabelProps={{ shrink: true }}
+                />
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <FormControl fullWidth>
+                  <InputLabel>Status</InputLabel>
+                  <Select
+                    value={formData.status}
+                    label="Status"
+                    disabled={viewMode}
+                    onChange={(e) => setFormData({ ...formData, status: e.target.value })}
+                  >
+                    {statusOptions.map(status => (
+                      <MenuItem key={status} value={status}>{status}</MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <FormControl fullWidth>
+                  <InputLabel>Location</InputLabel>
+                  <Select
+                    value={formData.location}
+                    label="Location"
+                    disabled={viewMode}
+                    onChange={(e) => setFormData({ ...formData, location: e.target.value })}
+                  >
+                    {locationOptions.map(location => (
+                      <MenuItem key={location} value={location}>{location}</MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <FormControl fullWidth>
+                  <InputLabel>Device</InputLabel>
+                  <Select
+                    value={formData.device}
+                    label="Device"
+                    disabled={viewMode}
+                    onChange={(e) => setFormData({ ...formData, device: e.target.value })}
+                  >
+                    {deviceOptions.map(device => (
+                      <MenuItem key={device} value={device}>{device}</MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+              </Grid>
+              <Grid item xs={12}>
+                <TextField
+                  fullWidth
+                  label="Notes"
+                  multiline
+                  rows={3}
+                  disabled={viewMode}
+                  value={formData.notes}
+                  onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+                  placeholder="Additional notes about attendance..."
+                />
+              </Grid>
             </Grid>
-            <Grid item xs={12} sm={6}>
-              <TextField
-                fullWidth
-                label="Date"
-                type="date"
-                value={formData.date}
-                onChange={(e) => setFormData({ ...formData, date: e.target.value })}
-                InputLabelProps={{ shrink: true }}
-              />
-            </Grid>
-            <Grid item xs={12} sm={6}>
-              <TextField
-                fullWidth
-                label="Check In Time"
-                type="time"
-                value={formData.checkIn}
-                onChange={(e) => setFormData({ ...formData, checkIn: e.target.value })}
-                InputLabelProps={{ shrink: true }}
-              />
-            </Grid>
-            <Grid item xs={12} sm={6}>
-              <TextField
-                fullWidth
-                label="Check Out Time"
-                type="time"
-                value={formData.checkOut}
-                onChange={(e) => setFormData({ ...formData, checkOut: e.target.value })}
-                InputLabelProps={{ shrink: true }}
-              />
-            </Grid>
-            <Grid item xs={12} sm={6}>
-              <TextField
-                fullWidth
-                label="Break Start"
-                type="time"
-                value={formData.breakStart}
-                onChange={(e) => setFormData({ ...formData, breakStart: e.target.value })}
-                InputLabelProps={{ shrink: true }}
-              />
-            </Grid>
-            <Grid item xs={12} sm={6}>
-              <TextField
-                fullWidth
-                label="Break End"
-                type="time"
-                value={formData.breakEnd}
-                onChange={(e) => setFormData({ ...formData, breakEnd: e.target.value })}
-                InputLabelProps={{ shrink: true }}
-              />
-            </Grid>
-            <Grid item xs={12} sm={6}>
-              <FormControl fullWidth>
-                <InputLabel>Status</InputLabel>
-                <Select
-                  value={formData.status}
-                  label="Status"
-                  onChange={(e) => setFormData({ ...formData, status: e.target.value })}
-                >
-                  {statusOptions.map(status => (
-                    <MenuItem key={status} value={status}>{status}</MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-            </Grid>
-            <Grid item xs={12} sm={6}>
-              <FormControl fullWidth>
-                <InputLabel>Location</InputLabel>
-                <Select
-                  value={formData.location}
-                  label="Location"
-                  onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-                >
-                  {locationOptions.map(location => (
-                    <MenuItem key={location} value={location}>{location}</MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-            </Grid>
-            <Grid item xs={12} sm={6}>
-              <FormControl fullWidth>
-                <InputLabel>Device</InputLabel>
-                <Select
-                  value={formData.device}
-                  label="Device"
-                  onChange={(e) => setFormData({ ...formData, device: e.target.value })}
-                >
-                  {deviceOptions.map(device => (
-                    <MenuItem key={device} value={device}>{device}</MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-            </Grid>
-            <Grid item xs={12}>
-              <TextField
-                fullWidth
-                label="Notes"
-                multiline
-                rows={3}
-                value={formData.notes}
-                onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-                placeholder="Additional notes about attendance..."
-              />
-            </Grid>
-          </Grid>
+          )}
         </DialogContent>
         <DialogActions>
-          <Button onClick={handleCloseDialog}>Cancel</Button>
-          <Button
-            onClick={handleSaveAttendance}
-            variant="contained"
-            disabled={loading}
-            startIcon={loading ? <CircularProgress size={20} /> : null}
-          >
-            {loading ? 'Saving...' : (editingAttendance ? 'Update' : 'Save')}
-          </Button>
+          <Button onClick={handleCloseDialog}>{viewMode ? 'Close' : 'Cancel'}</Button>
+          {!viewMode && (
+            <Button
+              onClick={handleSaveAttendance}
+              variant="contained"
+              disabled={loading}
+              startIcon={loading ? <CircularProgress size={20} /> : null}
+            >
+              {loading ? 'Saving...' : (editingAttendance ? 'Update' : 'Save')}
+            </Button>
+          )}
         </DialogActions>
       </Dialog>
 

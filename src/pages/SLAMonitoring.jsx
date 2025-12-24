@@ -55,7 +55,6 @@ const SLAMonitoring = () => {
     metrics,
     violations,
     approaching,
-    getComplianceByEntityType,
     exportSLAData,
     error // Destructure error from context
   } = useSLA();
@@ -73,6 +72,24 @@ const SLAMonitoring = () => {
   const [retryLeads, setRetryLeads] = useState([]);
   const [autoRetryEnabled, setAutoRetryEnabled] = useState(true);
   const [retryInterval, setRetryInterval] = useState(24); // hours
+
+  // Function to get compliance metrics by entity type
+  const getComplianceByEntityType = (entityType) => {
+    const typeTrackings = slaTrackings.filter(t => t.entityType === entityType);
+    const total = typeTrackings.length;
+    const active = typeTrackings.filter(t => t.status === 'active').length;
+    const met = typeTrackings.filter(t => t.status === 'met').length;
+    const breached = typeTrackings.filter(t => t.breached || t.status === 'breached').length;
+    const complianceRate = total > 0 ? ((met / total) * 100).toFixed(1) : 0;
+
+    return {
+      total,
+      active,
+      met,
+      breached,
+      complianceRate: parseFloat(complianceRate)
+    };
+  };
 
   // Initialize retry leads data
   useEffect(() => {

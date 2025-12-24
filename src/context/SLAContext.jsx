@@ -21,6 +21,64 @@ export const SLAProvider = ({ children }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
+  // SLA Configuration State
+  const [slaConfig, setSlaConfig] = useState(() => {
+    const saved = localStorage.getItem('slaConfig');
+    if (saved) {
+      try {
+        return JSON.parse(saved);
+      } catch (e) {
+        console.error('Error parsing saved SLA config:', e);
+      }
+    }
+    // Default configuration
+    return {
+      enabled: true,
+      templates: {
+        lead: {
+          firstResponse: { hours: 2, description: 'Time to first response for new leads' },
+          followUp: { hours: 24, description: 'Time between follow-ups' },
+          resolution: { days: 7, description: 'Time to resolve lead inquiry' }
+        },
+        case: {
+          firstResponse: { hours: 4, description: 'Time to first response for cases' },
+          resolution: { days: 5, description: 'Time to resolve case' },
+          escalation: { hours: 48, description: 'Time before escalation' }
+        },
+        task: {
+          completion: { days: 3, description: 'Time to complete task' },
+          overdue: { hours: 24, description: 'Time before marking overdue' }
+        },
+        email: {
+          response: { hours: 8, description: 'Time to respond to emails' },
+          resolution: { days: 2, description: 'Time to resolve email inquiry' }
+        },
+        claim: {
+          acknowledgment: { hours: 24, description: 'Time to acknowledge claim' },
+          processing: { days: 10, description: 'Time to process claim' },
+          resolution: { days: 30, description: 'Time to resolve claim' }
+        }
+      },
+      notifications: {
+        enabled: true,
+        warning: 25,
+        critical: 10,
+        breach: true
+      },
+      escalation: {
+        enabled: true,
+        levels: [
+          { threshold: 25, action: 'notify_manager', description: 'Notify manager when 25% time remains' },
+          { threshold: 10, action: 'escalate_to_senior', description: 'Escalate to senior when 10% time remains' },
+          { threshold: -24, action: 'critical_escalation', description: 'Critical escalation 24h after breach' }
+        ]
+      },
+      autoAssignment: {
+        enabled: false
+      }
+    };
+  });
+
   /**
    * Fetch all templates
    */
@@ -483,10 +541,70 @@ export const SLAProvider = ({ children }) => {
     }
   }, [fetchPolicies]);
 
+  /**
+   * Update SLA Configuration
+   */
+  const updateSLAConfig = useCallback((updates) => {
+    setSlaConfig(prev => {
+      const newConfig = { ...prev, ...updates };
+      localStorage.setItem('slaConfig', JSON.stringify(newConfig));
+      return newConfig;
+    });
+  }, []);
+
+  /**
+   * Update SLA Templates
+   */
+  const updateSLATemplates = useCallback((entityType, slaType, config) => {
+    setSlaConfig(prev => {
+      const newConfig = {
+        ...prev,
+        templates: {
+          ...prev.templates,
+          [entityType]: {
+            ...prev.templates[entityType],
+            [slaType]: config
+          }
+        }
+      };
+      localStorage.setItem('slaConfig', JSON.stringify(newConfig));
+      return newConfig;
+    });
+  }, []);
+
+  /**
+   * Clear all SLA trackings
+   */
+  const clearAllSLATrackings = useCallback(() => {
+    setDashboardData(prev => ({
+      ...prev,
+      trackings: [],
+      policies: [],
+      violations: [],
+      approaching: [],
+      metrics: { total: 0, active: 0, complianceRate: 100, met: 0, breachRate: 0 }
+    }));
+  }, []);
+
   // Derive helper data for potential missing backend structure
+  // IMPORTANT: These must be declared before exportSLAData which uses them
   const slaTrackings = dashboardData?.trackings || dashboardData?.policies || [];
   const metrics = dashboardData?.metrics || dashboardData?.stats || { total: 0, active: 0, complianceRate: 100 };
   const approaching = dashboardData?.approaching || dashboardData?.atRisk || [];
+
+  /**
+   * Export SLA Data
+   */
+  const exportSLAData = useCallback(() => {
+    return {
+      config: slaConfig,
+      trackings: slaTrackings,
+      violations: dashboardData?.violations || [],
+      metrics,
+      approaching,
+      exportedAt: new Date().toISOString()
+    };
+  }, [slaConfig, slaTrackings, dashboardData, metrics, approaching]);
 
   const value = {
     // State
@@ -497,6 +615,7 @@ export const SLAProvider = ({ children }) => {
     dashboardData,
     loading,
     error,
+    slaConfig,
 
     // Derived State for Monitoring Dashboard
     slaTrackings,
@@ -537,7 +656,13 @@ export const SLAProvider = ({ children }) => {
     bulkToggleTemplates,
     bulkPausePolicies,
     bulkResumePolicies,
-    bulkCompletePolicies
+    bulkCompletePolicies,
+
+    // SLA Config operations
+    updateSLAConfig,
+    updateSLATemplates,
+    clearAllSLATrackings,
+    exportSLAData
   };
 
   return <SLAContext.Provider value={value}>{children}</SLAContext.Provider>;
