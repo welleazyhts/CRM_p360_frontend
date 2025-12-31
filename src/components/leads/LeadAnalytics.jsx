@@ -69,6 +69,7 @@ import {
   PolarRadiusAxis,
   Radar
 } from 'recharts';
+import { useTranslation } from 'react-i18next';
 
 // Mock analytics data
 const mockAnalyticsData = {
@@ -135,6 +136,7 @@ const mockAnalyticsData = {
 
 const LeadAnalytics = () => {
   const theme = useTheme();
+  const { t } = useTranslation();
   const [timeRange, setTimeRange] = useState('6months');
   const [selectedMetric, setSelectedMetric] = useState('leads');
   const [analyticsData, setAnalyticsData] = useState(mockAnalyticsData);
@@ -142,20 +144,20 @@ const LeadAnalytics = () => {
   const [customDateDialog, setCustomDateDialog] = useState(false);
   const [customStartDate, setCustomStartDate] = useState('');
   const [customEndDate, setCustomEndDate] = useState('');
-  const [displayDateRange, setDisplayDateRange] = useState('Last 6 Months');
+  const [displayDateRange, setDisplayDateRange] = useState(t('leads.analytics.timeRangeOptions.last6Months'));
 
   const timeRangeOptions = [
-    { value: '1month', label: 'Last Month' },
-    { value: '3months', label: 'Last 3 Months' },
-    { value: '6months', label: 'Last 6 Months' },
-    { value: '1year', label: 'Last Year' },
-    { value: 'custom', label: 'Custom Date Range' }
+    { value: '1month', label: t('leads.analytics.timeRangeOptions.lastMonth') },
+    { value: '3months', label: t('leads.analytics.timeRangeOptions.last3Months') },
+    { value: '6months', label: t('leads.analytics.timeRangeOptions.last6Months') },
+    { value: '1year', label: t('leads.analytics.timeRangeOptions.lastYear') },
+    { value: 'custom', label: t('leads.analytics.timeRangeOptions.customDateRange') }
   ];
 
   const metricOptions = [
-    { value: 'leads', label: 'Lead Count' },
-    { value: 'closed', label: 'Closed Deals' },
-    { value: 'value', label: 'Deal Value' }
+    { value: 'leads', label: t('leads.analytics.metricOptions.leadCount') },
+    { value: 'closed', label: t('leads.analytics.metricOptions.closedDeals') },
+    { value: 'value', label: t('leads.analytics.metricOptions.dealValue') }
   ];
 
   const handleRefresh = () => {
@@ -266,7 +268,7 @@ const LeadAnalytics = () => {
                 }}
               />
               <Typography variant="caption" color="text.secondary">
-                vs last period
+                {t('leads.analytics.vsLastPeriod')}
               </Typography>
             </Box>
           )}
@@ -443,14 +445,14 @@ const LeadAnalytics = () => {
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
           <Box>
             <Typography variant="h4" fontWeight="700" gutterBottom>
-              Lead Analytics Dashboard
+              {t('leads.analytics.title')}
             </Typography>
             <Typography variant="body2" color="text.secondary">
-              Last updated: {lastUpdated.toLocaleTimeString()}
+              {t('leads.analytics.lastUpdated')}: {lastUpdated.toLocaleTimeString()}
             </Typography>
           </Box>
           <Box sx={{ display: 'flex', gap: 2 }}>
-            <MuiTooltip title="Refresh data">
+            <MuiTooltip title={t('leads.analytics.refreshData')}>
               <IconButton onClick={handleRefresh} sx={{ backgroundColor: 'background.paper' }}>
                 <RefreshIcon />
               </IconButton>
@@ -461,7 +463,7 @@ const LeadAnalytics = () => {
               sx={{ borderRadius: 2 }}
               onClick={handleExportReport}
             >
-              Export Report
+              {t('leads.analytics.exportReport')}
             </Button>
           </Box>
         </Box>
@@ -469,10 +471,10 @@ const LeadAnalytics = () => {
         {/* Filters */}
         <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
           <FormControl size="small" sx={{ minWidth: 220 }}>
-            <InputLabel>Time Range</InputLabel>
+            <InputLabel>{t('leads.analytics.timeRange')}</InputLabel>
             <Select
               value={timeRange}
-              label="Time Range"
+              label={t('leads.analytics.timeRange')}
               onChange={(e) => handleTimeRangeChange(e.target.value)}
               sx={{ backgroundColor: 'background.paper', borderRadius: 2 }}
             >
@@ -486,9 +488,9 @@ const LeadAnalytics = () => {
           {timeRange === 'custom' && (
             <Chip
               label={displayDateRange}
-              onDelete={() => {
+              onClick={() => {
                 setTimeRange('6months');
-                setDisplayDateRange('Last 6 Months');
+                setDisplayDateRange(t('leads.analytics.timeRangeOptions.last6Months'));
               }}
               sx={{
                 backgroundColor: alpha(theme.palette.primary.main, 0.1),
@@ -498,10 +500,10 @@ const LeadAnalytics = () => {
             />
           )}
           <FormControl size="small" sx={{ minWidth: 180 }}>
-            <InputLabel>Metric</InputLabel>
+            <InputLabel>{t('leads.analytics.metric')}</InputLabel>
             <Select
               value={selectedMetric}
-              label="Metric"
+              label={t('leads.analytics.metric')}
               onChange={(e) => setSelectedMetric(e.target.value)}
               sx={{ backgroundColor: 'background.paper', borderRadius: 2 }}
             >
@@ -524,7 +526,7 @@ const LeadAnalytics = () => {
       >
         <DialogTitle>
           <Typography variant="h6" fontWeight="600">
-            Select Custom Date Range
+            {t('leads.analytics.customDateDialog.title')}
           </Typography>
         </DialogTitle>
         <DialogContent>
@@ -556,7 +558,7 @@ const LeadAnalytics = () => {
         </DialogContent>
         <DialogActions>
           <Button onClick={handleCustomDateCancel}>
-            Cancel
+            {t('leads.analytics.customDateDialog.cancel')}
           </Button>
           <Button
             onClick={handleCustomDateApply}
@@ -566,7 +568,7 @@ const LeadAnalytics = () => {
               background: `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.primary.dark} 100%)`
             }}
           >
-            Apply
+            {t('leads.analytics.customDateDialog.apply')}
           </Button>
         </DialogActions>
       </Dialog>
@@ -575,46 +577,46 @@ const LeadAnalytics = () => {
       <Grid container spacing={3} sx={{ mb: 4 }}>
         <Grid item xs={12} sm={6} md={3}>
           <EnhancedStatCard
-            title="Total Leads"
+            title={t('leads.analytics.kpis.totalLeads')}
             value={analyticsData.overview.totalLeads}
             change={12.5}
             icon={<PeopleIcon />}
             color={theme.palette.primary.main}
-            subtitle={`${analyticsData.overview.newLeads} new this month`}
+            subtitle={`${analyticsData.overview.newLeads} ${t('leads.analytics.kpis.newThisMonth')}`}
             sparklineData={sparklineData}
           />
         </Grid>
         <Grid item xs={12} sm={6} md={3}>
           <EnhancedStatCard
-            title="Conversion Rate"
+            title={t('leads.analytics.kpis.conversionRate')}
             value={analyticsData.overview.conversionRate}
             change={5.2}
             icon={<CheckCircleIcon />}
             color={theme.palette.success.main}
             format="percentage"
-            subtitle="Qualified to closed"
+            subtitle={t('leads.analytics.kpis.qualifiedToClosed')}
           />
         </Grid>
         <Grid item xs={12} sm={6} md={3}>
           <EnhancedStatCard
-            title="Avg Deal Value"
+            title={t('leads.analytics.kpis.avgDealValue')}
             value={analyticsData.overview.averageDealValue}
             change={-2.1}
             icon={<AttachMoneyIcon />}
             color={theme.palette.warning.main}
             format="currency"
-            subtitle="Per closed deal"
+            subtitle={t('leads.analytics.kpis.perClosedDeal')}
           />
         </Grid>
         <Grid item xs={12} sm={6} md={3}>
           <EnhancedStatCard
-            title="Pipeline Value"
+            title={t('leads.analytics.kpis.pipelineValue')}
             value={analyticsData.overview.totalPipelineValue}
             change={8.7}
             icon={<TrendingUpIcon />}
             color={theme.palette.secondary.main}
             format="currency"
-            subtitle="Total active pipeline"
+            subtitle={t('leads.analytics.kpis.totalActivePipeline')}
           />
         </Grid>
       </Grid>
@@ -624,7 +626,7 @@ const LeadAnalytics = () => {
         <Grid item xs={12} sm={6} md={3}>
           <Card>
             <CardContent>
-              <Typography variant="body2" color="text.secondary">Avg Response Time</Typography>
+              <Typography variant="body2" color="text.secondary">{t('leads.analytics.kpis.avgResponseTime')}</Typography>
               <Typography variant="h5" fontWeight="600">{analyticsData.overview.responseTime}h</Typography>
               <LinearProgress
                 variant="determinate"
@@ -637,7 +639,7 @@ const LeadAnalytics = () => {
         <Grid item xs={12} sm={6} md={3}>
           <Card>
             <CardContent>
-              <Typography variant="body2" color="text.secondary">Follow-up Rate</Typography>
+              <Typography variant="body2" color="text.secondary">{t('leads.analytics.kpis.followUpRate')}</Typography>
               <Typography variant="h5" fontWeight="600">{analyticsData.overview.followUpRate}%</Typography>
               <LinearProgress
                 variant="determinate"
@@ -651,18 +653,18 @@ const LeadAnalytics = () => {
         <Grid item xs={12} sm={6} md={3}>
           <Card>
             <CardContent>
-              <Typography variant="body2" color="text.secondary">Closed Won</Typography>
+              <Typography variant="body2" color="text.secondary">{t('leads.analytics.kpis.closedWon')}</Typography>
               <Typography variant="h5" fontWeight="600" color="success.main">{analyticsData.overview.closedWon}</Typography>
-              <Typography variant="caption" color="text.secondary">This period</Typography>
+              <Typography variant="caption" color="text.secondary">{t('leads.analytics.kpis.thisPeriod')}</Typography>
             </CardContent>
           </Card>
         </Grid>
         <Grid item xs={12} sm={6} md={3}>
           <Card>
             <CardContent>
-              <Typography variant="body2" color="text.secondary">Qualified Leads</Typography>
+              <Typography variant="body2" color="text.secondary">{t('leads.analytics.kpis.qualifiedLeads')}</Typography>
               <Typography variant="h5" fontWeight="600" color="primary.main">{analyticsData.overview.qualifiedLeads}</Typography>
-              <Typography variant="caption" color="text.secondary">Ready to convert</Typography>
+              <Typography variant="caption" color="text.secondary">{t('leads.analytics.kpis.readyToConvert')}</Typography>
             </CardContent>
           </Card>
         </Grid>
@@ -676,12 +678,12 @@ const LeadAnalytics = () => {
             <CardContent>
               <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
                 <Typography variant="h6" fontWeight="600">
-                  Lead Performance Trends
+                  {t('leads.analytics.charts.leadPerformanceTrends')}
                 </Typography>
                 <Box sx={{ display: 'flex', gap: 1 }}>
-                  <Chip label="Leads" size="small" sx={{ backgroundColor: alpha(theme.palette.primary.main, 0.1) }} />
-                  <Chip label="Closed" size="small" sx={{ backgroundColor: alpha(theme.palette.success.main, 0.1) }} />
-                  <Chip label="Qualified" size="small" sx={{ backgroundColor: alpha(theme.palette.warning.main, 0.1) }} />
+                  <Chip label={t('leads.analytics.charts.leads')} size="small" sx={{ backgroundColor: alpha(theme.palette.primary.main, 0.1) }} />
+                  <Chip label={t('leads.analytics.charts.closed')} size="small" sx={{ backgroundColor: alpha(theme.palette.success.main, 0.1) }} />
+                  <Chip label={t('leads.analytics.charts.qualified')} size="small" sx={{ backgroundColor: alpha(theme.palette.warning.main, 0.1) }} />
                 </Box>
               </Box>
               <ResponsiveContainer width="100%" height={350}>
@@ -743,7 +745,7 @@ const LeadAnalytics = () => {
           <Card sx={{ height: '100%' }}>
             <CardContent>
               <Typography variant="h6" fontWeight="600" gutterBottom>
-                Lead Sources Distribution
+                {t('leads.analytics.charts.leadSourcesDistribution')}
               </Typography>
               <ResponsiveContainer width="100%" height={300}>
                 <PieChart>
@@ -786,7 +788,7 @@ const LeadAnalytics = () => {
           <Card>
             <CardContent>
               <Typography variant="h6" fontWeight="600" gutterBottom>
-                Lead Status Pipeline
+                {t('leads.analytics.charts.leadStatusPipeline')}
               </Typography>
               <ResponsiveContainer width="100%" height={300}>
                 <BarChart data={analyticsData.statusDistribution} layout="vertical">
@@ -810,15 +812,15 @@ const LeadAnalytics = () => {
           <Card>
             <CardContent>
               <Typography variant="h6" fontWeight="600" gutterBottom>
-                Channel Performance
+                {t('leads.analytics.charts.channelPerformance')}
               </Typography>
               <ResponsiveContainer width="100%" height={300}>
                 <RadarChart data={analyticsData.channelPerformance}>
                   <PolarGrid stroke={alpha(theme.palette.divider, 0.3)} />
                   <PolarAngleAxis dataKey="channel" />
                   <PolarRadiusAxis angle={90} domain={[0, 100]} />
-                  <Radar name="Success Rate" dataKey="success" stroke={theme.palette.primary.main} fill={theme.palette.primary.main} fillOpacity={0.3} />
-                  <Radar name="Efficiency" dataKey="efficiency" stroke={theme.palette.success.main} fill={theme.palette.success.main} fillOpacity={0.3} />
+                  <Radar name={t('leads.analytics.charts.successRate')} dataKey="success" stroke={theme.palette.primary.main} fill={theme.palette.primary.main} fillOpacity={0.3} />
+                  <Radar name={t('leads.analytics.charts.efficiency')} dataKey="efficiency" stroke={theme.palette.success.main} fill={theme.palette.success.main} fillOpacity={0.3} />
                   <Legend />
                   <Tooltip />
                 </RadarChart>
@@ -835,7 +837,7 @@ const LeadAnalytics = () => {
           <Card>
             <CardContent>
               <Typography variant="h6" fontWeight="600" gutterBottom>
-                Top Performers
+                {t('leads.analytics.charts.topPerformers')}
               </Typography>
               <Box sx={{ mt: 2 }}>
                 {analyticsData.teamPerformance.map((member, index) => (
@@ -854,7 +856,7 @@ const LeadAnalytics = () => {
                         <Box>
                           <Typography variant="subtitle2" fontWeight="600">{member.name}</Typography>
                           <Typography variant="caption" color="text.secondary">
-                            {member.leads} leads • {member.closed} closed
+                            {member.leads} {t('leads.analytics.charts.leadsLowercase')} • {member.closed} {t('leads.analytics.charts.closedLowercase')}
                           </Typography>
                         </Box>
                       </Box>
@@ -906,7 +908,7 @@ const LeadAnalytics = () => {
                 <CardContent>
                   <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
                     <Typography variant="h6" fontWeight="600">
-                      Recent Activities
+                      {t('leads.analytics.charts.recentActivities')}
                     </Typography>
                     <Badge badgeContent={4} color="primary">
                       <NotificationsIcon />
@@ -927,7 +929,7 @@ const LeadAnalytics = () => {
               <Card>
                 <CardContent>
                   <Typography variant="h6" fontWeight="600" gutterBottom>
-                    Hot Leads 🔥
+                    {t('leads.analytics.charts.hotLeads')} 🔥
                   </Typography>
                   <Box sx={{ mt: 2 }}>
                     {analyticsData.topLeads.map((lead, index) => (

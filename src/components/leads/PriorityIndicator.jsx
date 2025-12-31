@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   Box,
   Typography,
@@ -26,6 +27,7 @@ import {
 } from '@mui/icons-material';
 
 const PriorityIndicator = ({ priority = 'Warm', compact = false, showStats = false, leadData = {} }) => {
+  const { t } = useTranslation();
   const theme = useTheme();
 
   // Priority configuration
@@ -85,7 +87,7 @@ const PriorityIndicator = ({ priority = 'Warm', compact = false, showStats = fal
     >
       <Chip
         icon={<PriorityIcon />}
-        label={priority}
+        label={t(`leads.priorities.${priority}`) || priority}
         sx={{
           bgcolor: config.bgColor,
           color: config.color,

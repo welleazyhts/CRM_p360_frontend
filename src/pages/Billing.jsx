@@ -2516,7 +2516,7 @@ const Billing = () => {
 
       {/* Snackbar for notifications */}
       <Snackbar
-        open={snackbar.open}
+        open={snackbar.open}                                                                                                                                                             
         autoHideDuration={4000}
         onClose={() => setSnackbar(prev => ({ ...prev, open: false }))}
         anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}

@@ -5,7 +5,7 @@ import {
   Paper, IconButton, Chip, Dialog, DialogTitle, DialogContent,
   DialogActions, FormControl, InputLabel, Select, MenuItem,
   InputAdornment, Tooltip, Avatar, Menu, Fade, alpha, useTheme, Snackbar, Alert,
-  Stack, Divider
+  Stack, Divider, CircularProgress
 } from '@mui/material';
 import {
   Add as AddIcon, Edit as EditIcon, Delete as DeleteIcon,
@@ -20,11 +20,18 @@ import BulkUpload from '../components/common/BulkUpload';
 import FailedRecordsViewer from '../components/common/FailedRecordsViewer';
 import { useDedupe } from '../context/DedupeContext';
 import CrossSellUpSellIntelligence from '../components/intelligence/CrossSellUpSellIntelligence';
+import * as contactDatabaseService from '../services/contactDatabaseService';
 
 const ContactDatabase = () => {
   const theme = useTheme();
-  const { contacts, addContact, updateContact, deleteContact } = useCustomerManagement();
+  // const { contacts, addContact, updateContact, deleteContact } = useCustomerManagement(); // Replaced with API
   const { checkDuplicate } = useDedupe();
+
+  // API State
+  const [contacts, setContacts] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+
   const [filteredContacts, setFilteredContacts] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterDialogOpen, setFilterDialogOpen] = useState(false);
@@ -58,6 +65,27 @@ const ContactDatabase = () => {
     assignedTo: '',
     notes: ''
   });
+
+  // Fetch contacts on component mount
+  useEffect(() => {
+    fetchContactsData();
+  }, []);
+
+  // Fetch contacts from API
+  const fetchContactsData = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const data = await contactDatabaseService.fetchContacts();
+      setContacts(Array.isArray(data) ? data : []);
+    } catch (err) {
+      console.error('Error fetching contacts:', err);
+      setError(err.message || 'Failed to load contacts');
+      setSnackbar({ open: true, message: 'Failed to load contacts', severity: 'error' });
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // Apply filters
   useEffect(() => {
@@ -123,13 +151,24 @@ const ContactDatabase = () => {
     setAnchorEl(null);
   };
 
-  const handleDeleteConfirm = () => {
-    deleteContact(selectedContact.id);
-    setDeleteDialogOpen(false);
-    setSelectedContact(null);
+  const handleDeleteConfirm = async () => {
+    try {
+      setLoading(true);
+      await contactDatabaseService.deleteContact(selectedContact.id);
+      setSnackbar({ open: true, message: 'Contact deleted successfully!', severity: 'success' });
+      setDeleteDialogOpen(false);
+      setSelectedContact(null);
+      // Refresh contacts list
+      await fetchContactsData();
+    } catch (err) {
+      console.error('Error deleting contact:', err);
+      setSnackbar({ open: true, message: err.message || 'Failed to delete contact', severity: 'error' });
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleSaveContact = () => {
+  const handleSaveContact = async () => {
     // Real-time duplicate check for new contacts
     if (!selectedContact) {
       const dedupeCheck = checkDuplicate(formData, contacts, 'contacts');
@@ -146,16 +185,26 @@ const ContactDatabase = () => {
       }
     }
 
-    if (selectedContact) {
-      // Update existing contact
-      updateContact(selectedContact.id, formData);
-      setSnackbar({ open: true, message: 'Contact updated successfully!', severity: 'success' });
-    } else {
-      // Add new contact
-      addContact(formData);
-      setSnackbar({ open: true, message: 'Contact added successfully!', severity: 'success' });
+    try {
+      setLoading(true);
+      if (selectedContact) {
+        // Update existing contact via API
+        await contactDatabaseService.updateContact(selectedContact.id, formData);
+        setSnackbar({ open: true, message: 'Contact updated successfully!', severity: 'success' });
+      } else {
+        // Add new contact via API
+        await contactDatabaseService.addContact(formData);
+        setSnackbar({ open: true, message: 'Contact added successfully!', severity: 'success' });
+      }
+      setContactDialogOpen(false);
+      // Refresh contacts list
+      await fetchContactsData();
+    } catch (err) {
+      console.error('Error saving contact:', err);
+      setSnackbar({ open: true, message: err.message || 'Failed to save contact', severity: 'error' });
+    } finally {
+      setLoading(false);
     }
-    setContactDialogOpen(false);
   };
 
   const getStatusColor = (status) => {
@@ -208,7 +257,8 @@ const ContactDatabase = () => {
             <Button
               variant="outlined"
               startIcon={<RefreshIcon />}
-              onClick={() => setSearchTerm('')}
+              onClick={fetchContactsData}
+              disabled={loading}
             >
               Refresh
             </Button>
@@ -315,101 +365,117 @@ const ContactDatabase = () => {
           </Grid>
         </Paper>
 
+        {/* Error State */}
+        {error && (
+          <Alert severity="error" sx={{ mb: 3 }}>
+            {error}
+          </Alert>
+        )}
+
+        {/* Loading State */}
+        {loading && (
+          <Box sx={{ display: 'flex', justifyContent: 'center', my: 4 }}>
+            <CircularProgress />
+          </Box>
+        )}
+
         {/* Contacts Table */}
-        <TableContainer component={Paper}>
-          <Table>
-            <TableHead>
-              <TableRow sx={{
-                backgroundColor: theme.palette.grey.main,
-                '&:hover': {
+        {!loading && (
+          <TableContainer component={Paper}>
+            <Table>
+              <TableHead>
+                <TableRow sx={{
                   backgroundColor: theme.palette.grey.main,
-                }
-              }}>
-                <TableCell>Contact</TableCell>
-                <TableCell>Company</TableCell>
-                <TableCell>Contact Info</TableCell>
-                <TableCell>Source</TableCell>
-                <TableCell>Status</TableCell>
-                <TableCell>Assigned To</TableCell>
-                <TableCell>Last Contact</TableCell>
-                <TableCell align="center">Actions</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {filteredContacts.map((contact) => (
-                <TableRow key={contact.id} hover>
-                  <TableCell>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                      <Avatar sx={{ bgcolor: theme.palette.primary.main }}>
-                        {contact.name?.charAt(0) || '?'}
-                      </Avatar>
-                      <Box>
-                        <Typography variant="subtitle2" fontWeight="600">
-                          {contact.name}
-                        </Typography>
-                        <Typography variant="caption" color="text.secondary">
-                          {contact.designation}
-                        </Typography>
+                  '&:hover': {
+                    backgroundColor: theme.palette.grey.main,
+                  }
+                }}>
+                  <TableCell>Contact</TableCell>
+                  <TableCell>Company</TableCell>
+                  <TableCell>Contact Info</TableCell>
+                  <TableCell>Source</TableCell>
+                  <TableCell>Status</TableCell>
+                  <TableCell>Assigned To</TableCell>
+                  <TableCell>Last Contact</TableCell>
+                  <TableCell align="center">Actions</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {filteredContacts.map((contact) => (
+                  <TableRow key={contact.id} hover>
+                    <TableCell>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        <Avatar sx={{ bgcolor: theme.palette.primary.main }}>
+                          {contact.name?.charAt(0) || '?'}
+                        </Avatar>
+                        <Box>
+                          <Typography variant="subtitle2" fontWeight="600">
+                            {contact.name}
+                          </Typography>
+                          <Typography variant="caption" color="text.secondary">
+                            {contact.designation}
+                          </Typography>
+                        </Box>
                       </Box>
-                    </Box>
-                  </TableCell>
-                  <TableCell>{contact.company}</TableCell>
-                  <TableCell>
-                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                        <EmailIcon fontSize="small" color="action" />
-                        <Typography variant="body2">{contact.email}</Typography>
+                    </TableCell>
+                    <TableCell>{contact.company}</TableCell>
+                    <TableCell>
+                      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                          <EmailIcon fontSize="small" color="action" />
+                          <Typography variant="body2">{contact.email}</Typography>
+                        </Box>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                          <PhoneIcon fontSize="small" color="action" />
+                          <Typography variant="body2">{contact.phone}</Typography>
+                        </Box>
                       </Box>
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                        <PhoneIcon fontSize="small" color="action" />
-                        <Typography variant="body2">{contact.phone}</Typography>
-                      </Box>
-                    </Box>
-                  </TableCell>
-                  <TableCell>
-                    <Chip label={contact.source} size="small" variant="outlined" />
-                  </TableCell>
-                  <TableCell>
-                    <Chip
-                      label={contact.status}
-                      size="small"
-                      color={getStatusColor(contact.status)}
-                    />
-                  </TableCell>
-                  <TableCell>{contact.assignedTo}</TableCell>
-                  <TableCell>{new Date(contact.lastContact).toLocaleDateString()}</TableCell>
-                  <TableCell align="center">
-                    <Box sx={{ display: 'flex', gap: 1, justifyContent: 'center' }}>
-                      <Tooltip title="Call Contact">
+                    </TableCell>
+                    <TableCell>
+                      <Chip label={contact.source} size="small" variant="outlined" />
+                    </TableCell>
+                    <TableCell>
+                      <Chip
+                        label={contact.status}
+                        size="small"
+                        color={getStatusColor(contact.status)}
+                      />
+                    </TableCell>
+                    <TableCell>{contact.assignedTo}</TableCell>
+                    <TableCell>{new Date(contact.lastContact).toLocaleDateString()}</TableCell>
+                    <TableCell align="center">
+                      <Box sx={{ display: 'flex', gap: 1, justifyContent: 'center' }}>
+                        <Tooltip title="Call Contact">
+                          <IconButton
+                            size="small"
+                            onClick={() => {
+                              setSelectedCallContact(contact);
+                              setCallDialogOpen(true);
+                            }}
+                            sx={{
+                              color: theme.palette.success.main,
+                              '&:hover': {
+                                bgcolor: alpha(theme.palette.success.main, 0.1)
+                              }
+                            }}
+                          >
+                            <CallIcon />
+                          </IconButton>
+                        </Tooltip>
                         <IconButton
                           size="small"
-                          onClick={() => {
-                            setSelectedCallContact(contact);
-                            setCallDialogOpen(true);
-                          }}
-                          sx={{
-                            color: theme.palette.success.main,
-                            '&:hover': {
-                              bgcolor: alpha(theme.palette.success.main, 0.1)
-                            }
-                          }}
+                          onClick={(e) => handleMenuOpen(e, contact)}
                         >
-                          <CallIcon />
+                          <MoreVertIcon />
                         </IconButton>
-                      </Tooltip>
-                      <IconButton
-                        size="small"
-                        onClick={(e) => handleMenuOpen(e, contact)}
-                      >
-                        <MoreVertIcon />
-                      </IconButton>
-                    </Box>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </TableContainer>
+                      </Box>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </TableContainer>
+        )}
 
         {/* Action Menu */}
         <Menu
@@ -606,7 +672,7 @@ const ContactDatabase = () => {
               Apply
             </Button>
           </DialogActions>
-        </Dialog>  
+        </Dialog>
 
         {/* Delete Confirmation Dialog */}
         <Dialog open={deleteDialogOpen} onClose={() => setDeleteDialogOpen(false)}>
@@ -643,21 +709,34 @@ const ContactDatabase = () => {
             'Assigned To': 'assignedTo',
             'Notes': 'notes'
           }}
-          onUploadComplete={(validRecords, failedRecords) => {
-            // Add uploaded contacts
-            validRecords.forEach(record => {
-              addContact(record.record);
-            });
+          onUploadComplete={async (validRecords, failedRecords) => {
+            try {
+              setLoading(true);
+              // Use bulk upload API
+              // Note: The API expects a file, so we'll need to handle this differently
+              // For now, we'll add contacts individually
+              for (const record of validRecords) {
+                await contactDatabaseService.addContact(record.record);
+              }
 
-            setBulkUploadOpen(false);
-            setSnackbar({
-              open: true,
-              message: `${validRecords.length} contacts uploaded successfully! ${failedRecords.length > 0 ? `${failedRecords.length} records failed.` : ''}`,
-              severity: 'success'
-            });
+              setBulkUploadOpen(false);
+              setSnackbar({
+                open: true,
+                message: `${validRecords.length} contacts uploaded successfully! ${failedRecords.length > 0 ? `${failedRecords.length} records failed.` : ''}`,
+                severity: 'success'
+              });
 
-            if (failedRecords.length > 0) {
-              setShowUploadHistory(true);
+              if (failedRecords.length > 0) {
+                setShowUploadHistory(true);
+              }
+
+              // Refresh contacts list
+              await fetchContactsData();
+            } catch (err) {
+              console.error('Error uploading contacts:', err);
+              setSnackbar({ open: true, message: 'Failed to upload some contacts', severity: 'error' });
+            } finally {
+              setLoading(false);
             }
           }}
           allowOverride={true}

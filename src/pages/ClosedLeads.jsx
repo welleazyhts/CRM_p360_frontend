@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import leadService from '../services/leadService';
+import { useTranslation } from 'react-i18next';
 import {
   Box, Typography, Card, CardContent, Grid, TextField, MenuItem,
   Table, TableBody, TableCell, TableContainer, TableHead, TableRow,
@@ -19,6 +20,35 @@ import { useNavigate } from 'react-router-dom';
 const ClosedLeads = () => {
   const theme = useTheme();
   const navigate = useNavigate();
+  const { t } = useTranslation();
+
+  const getResultKey = (result) => {
+    if (!result) return '';
+    const lowerResult = result.toLowerCase().trim();
+    const map = {
+      'policy issued': 'policyIssued',
+      'not interested': 'notInterested',
+      'high premium': 'highPremium',
+      'bought from competitor': 'boughtFromCompetitor',
+      'invalid lead': 'invalidLead'
+    };
+    return map[lowerResult] || result;
+  };
+
+  const getPolicyTypeKey = (policyType) => {
+    if (!policyType) return '';
+    const lowerType = policyType.toLowerCase().trim();
+    const map = {
+      'health insurance': 'healthInsurance',
+      'life insurance': 'lifeInsurance',
+      'motor insurance': 'motorInsurance',
+      'vehicle insurance': 'vehicleInsurance',
+      'home insurance': 'homeInsurance',
+      'travel insurance': 'travelInsurance'
+    };
+    return map[lowerType] || policyType;
+  };
+
   const [leads, setLeads] = useState([]);
   const [filteredLeads, setFilteredLeads] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
@@ -36,10 +66,10 @@ const ClosedLeads = () => {
 
   const resultOptions = ['Policy Issued', 'Not Interested', 'High Premium', 'Bought from Competitor', 'Invalid Lead'];
   const dateRangeOptions = [
-    { value: 'all', label: 'All Time' },
-    { value: 'last7', label: 'Last 7 Days' },
-    { value: 'last30', label: 'Last 30 Days' },
-    { value: 'last90', label: 'Last 90 Days' }
+    { value: 'all', label: t('leads.closed.dateRanges.allTime') },
+    { value: 'last7', label: t('leads.closed.dateRanges.last7Days') },
+    { value: 'last30', label: t('leads.closed.dateRanges.last30Days') },
+    { value: 'last90', label: t('leads.closed.dateRanges.last90Days') }
   ];
 
   useEffect(() => {
@@ -165,7 +195,7 @@ const ClosedLeads = () => {
         document.body.removeChild(link);
         window.URL.revokeObjectURL(url);
 
-        setSnackbar({ open: true, message: 'Data exported successfully!', severity: 'success' });
+        setSnackbar({ open: true, message: t('leads.closed.messages.exportSuccess'), severity: 'success' });
       } else {
         // Fallback: client-side CSV generation
         const csvContent = generateCSV(filteredLeads);
@@ -179,11 +209,11 @@ const ClosedLeads = () => {
         document.body.removeChild(link);
         window.URL.revokeObjectURL(url);
 
-        setSnackbar({ open: true, message: 'Data exported successfully!', severity: 'success' });
+        setSnackbar({ open: true, message: t('leads.closed.messages.exportSuccess'), severity: 'success' });
       }
     } catch (error) {
       console.error('Error exporting data:', error);
-      setSnackbar({ open: true, message: 'Failed to export data', severity: 'error' });
+      setSnackbar({ open: true, message: t('leads.closed.messages.exportFailed'), severity: 'error' });
     } finally {
       setLoading(false);
     }
@@ -210,13 +240,13 @@ const ClosedLeads = () => {
         document.body.removeChild(link);
         window.URL.revokeObjectURL(url);
 
-        setSnackbar({ open: true, message: 'Report generated successfully!', severity: 'success' });
+        setSnackbar({ open: true, message: t('leads.closed.messages.reportSuccess'), severity: 'success' });
       } else {
-        setSnackbar({ open: true, message: 'Report generation not available. Please try export instead.', severity: 'warning' });
+        setSnackbar({ open: true, message: t('leads.closed.messages.reportNotAvailable'), severity: 'warning' });
       }
     } catch (error) {
       console.error('Error generating report:', error);
-      setSnackbar({ open: true, message: 'Failed to generate report', severity: 'error' });
+      setSnackbar({ open: true, message: t('leads.closed.messages.reportFailed'), severity: 'error' });
     } finally {
       setLoading(false);
     }
@@ -231,7 +261,7 @@ const ClosedLeads = () => {
       setHistoryDialogOpen(true);
     } catch (error) {
       console.error('Error fetching lead history:', error);
-      setSnackbar({ open: true, message: 'Failed to fetch lead history', severity: 'error' });
+      setSnackbar({ open: true, message: t('leads.closed.messages.historyFailed'), severity: 'error' });
     } finally {
       setLoading(false);
     }
@@ -252,13 +282,13 @@ const ClosedLeads = () => {
         document.body.removeChild(link);
         window.URL.revokeObjectURL(url);
 
-        setSnackbar({ open: true, message: 'Documents downloaded successfully!', severity: 'success' });
+        setSnackbar({ open: true, message: t('leads.closed.messages.documentsSuccess'), severity: 'success' });
       } else {
-        setSnackbar({ open: true, message: 'No documents available for this lead', severity: 'warning' });
+        setSnackbar({ open: true, message: t('leads.closed.messages.documentsNotAvailable'), severity: 'warning' });
       }
     } catch (error) {
       console.error('Error downloading documents:', error);
-      setSnackbar({ open: true, message: 'Failed to download documents', severity: 'error' });
+      setSnackbar({ open: true, message: t('leads.closed.messages.documentsFailed'), severity: 'error' });
     } finally {
       setLoading(false);
     }
@@ -329,7 +359,7 @@ const ClosedLeads = () => {
       <Grid container spacing={2} alignItems="center" sx={{ mb: 3 }}>
         <Grid item xs={12} sm={6}>
           <Typography variant="h4" fontWeight="600">
-            Closed Leads
+            {t('leads.closed.title')}
           </Typography>
         </Grid>
         <Grid item xs={12} sm={6} sx={{ textAlign: 'right' }}>
@@ -340,7 +370,7 @@ const ClosedLeads = () => {
             disabled={loading}
             sx={{ mr: 1 }}
           >
-            Export Data
+            {t('leads.closed.exportData')}
           </Button>
           <Button
             variant="outlined"
@@ -348,7 +378,7 @@ const ClosedLeads = () => {
             onClick={handleGenerateReport}
             disabled={loading}
           >
-            Generate Report
+            {t('leads.closed.generateReport')}
           </Button>
         </Grid>
       </Grid>
@@ -360,7 +390,7 @@ const ClosedLeads = () => {
             <Grid item xs={12} sm={3}>
               <TextField
                 fullWidth
-                placeholder="Search closed leads..."
+                placeholder={t('leads.closed.searchPlaceholder')}
                 value={searchTerm}
                 onChange={handleSearch}
                 InputProps={{
@@ -372,16 +402,16 @@ const ClosedLeads = () => {
               <TextField
                 fullWidth
                 select
-                label="Filter by Result"
+                label={t('leads.closed.filterByResult')}
                 value={filterResult}
                 onChange={handleFilterChange}
                 InputProps={{
                   startAdornment: <FilterIcon sx={{ color: 'text.secondary', mr: 1 }} />
                 }}
               >
-                <MenuItem value="All">All Results</MenuItem>
+                <MenuItem value="All">{t('leads.closed.allResults')}</MenuItem>
                 {resultOptions.map(result => (
-                  <MenuItem key={result} value={result}>{result}</MenuItem>
+                  <MenuItem key={result} value={result}>{t(`leads.closed.results.${getResultKey(result)}`)}</MenuItem>
                 ))}
               </TextField>
             </Grid>
@@ -389,7 +419,7 @@ const ClosedLeads = () => {
               <TextField
                 fullWidth
                 select
-                label="Date Range"
+                label={t('leads.closed.dateRange')}
                 value={selectedDateRange}
                 onChange={(e) => setSelectedDateRange(e.target.value)}
               >
@@ -407,7 +437,7 @@ const ClosedLeads = () => {
                 onClick={() => handleSort('closedDate')}
                 fullWidth
               >
-                Sort by {sortField === 'closedDate' ? (sortOrder === 'asc' ? '↑' : '↓') : ''}
+                {t('leads.closed.sortBy')} {sortField === 'closedDate' ? (sortOrder === 'asc' ? '↑' : '↓') : ''}
               </Button>
             </Grid>
           </Grid>
@@ -420,14 +450,14 @@ const ClosedLeads = () => {
           <Table>
             <TableHead>
               <TableRow>
-                <TableCell>Lead Details</TableCell>
-                <TableCell>Contact</TableCell>
-                <TableCell>Result</TableCell>
-                <TableCell>Policy Details</TableCell>
-                <TableCell>Premium</TableCell>
-                <TableCell>Closed Date</TableCell>
-                <TableCell>Closed By</TableCell>
-                <TableCell align="center">Actions</TableCell>
+                <TableCell>{t('leads.closed.table.leadDetails')}</TableCell>
+                <TableCell>{t('leads.closed.table.contact')}</TableCell>
+                <TableCell>{t('leads.closed.table.result')}</TableCell>
+                <TableCell>{t('leads.closed.table.policyDetails')}</TableCell>
+                <TableCell>{t('leads.closed.table.premium')}</TableCell>
+                <TableCell>{t('leads.closed.table.closedDate')}</TableCell>
+                <TableCell>{t('leads.closed.table.closedBy')}</TableCell>
+                <TableCell align="center">{t('leads.closed.table.actions')}</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
@@ -453,7 +483,7 @@ const ClosedLeads = () => {
                   </TableCell>
                   <TableCell>
                     <Chip
-                      label={lead.result}
+                      label={t(`leads.closed.results.${getResultKey(lead.result)}`)}
                       size="small"
                       sx={{
                         backgroundColor: alpha(getResultColor(lead.result), 0.1),
@@ -464,7 +494,7 @@ const ClosedLeads = () => {
                   </TableCell>
                   <TableCell>
                     <Box sx={{ display: 'flex', flexDirection: 'column' }}>
-                      <Typography variant="body2">{lead.policyType}</Typography>
+                      <Typography variant="body2">{lead.policyType ? t(`leads.details.values.policyTypes.${getPolicyTypeKey(lead.policyType)}`) : '-'}</Typography>
                       <Typography variant="caption" color="text.secondary">
                         {lead.policyNumber}
                       </Typography>
@@ -479,7 +509,7 @@ const ClosedLeads = () => {
                   <TableCell>{lead.closedBy}</TableCell>
                   <TableCell>
                     <Stack direction="row" spacing={1} justifyContent="center">
-                      <Tooltip title="Call Lead">
+                      <Tooltip title={t('leads.closed.actions.callLead')}>
                         <IconButton
                           size="small"
                           onClick={() => {
@@ -496,7 +526,7 @@ const ClosedLeads = () => {
                           <CallIcon />
                         </IconButton>
                       </Tooltip>
-                      <Tooltip title="View Details">
+                      <Tooltip title={t('leads.closed.actions.viewDetails')}>
                         <IconButton
                           size="small"
                           onClick={() => navigate(`/lead-management/${lead.id}`)}
@@ -504,7 +534,7 @@ const ClosedLeads = () => {
                           <VisibilityIcon />
                         </IconButton>
                       </Tooltip>
-                      <Tooltip title="View History">
+                      <Tooltip title={t('leads.closed.actions.viewHistory')}>
                         <IconButton
                           size="small"
                           onClick={() => handleViewHistory(lead)}
@@ -513,7 +543,7 @@ const ClosedLeads = () => {
                           <HistoryIcon />
                         </IconButton>
                       </Tooltip>
-                      <Tooltip title="Download Documents">
+                      <Tooltip title={t('leads.closed.actions.downloadDocuments')}>
                         <IconButton
                           size="small"
                           onClick={() => handleDownloadDocuments(lead)}
@@ -542,7 +572,7 @@ const ClosedLeads = () => {
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
             <CallIcon color="success" />
             <Typography variant="h6" fontWeight="600">
-              Contact Lead
+              {t('leads.closed.dialogs.call.title')}
             </Typography>
           </Box>
         </DialogTitle>
@@ -550,7 +580,7 @@ const ClosedLeads = () => {
           <Stack spacing={3} sx={{ mt: 2 }}>
             <Box>
               <Typography variant="caption" color="text.secondary" fontWeight="600">
-                Lead ID
+                {t('leads.closed.dialogs.call.leadId')}
               </Typography>
               <Typography variant="body1" fontWeight="600" color="primary">
                 LD{new Date().getFullYear()}{String(selectedCallLead?.id || 0).padStart(6, '0')}
@@ -559,7 +589,7 @@ const ClosedLeads = () => {
 
             <Box>
               <Typography variant="caption" color="text.secondary" fontWeight="600">
-                Lead Name
+                {t('leads.closed.dialogs.call.leadName')}
               </Typography>
               <Typography variant="body1" fontWeight="600">
                 {selectedCallLead?.firstName} {selectedCallLead?.lastName}
@@ -568,11 +598,11 @@ const ClosedLeads = () => {
 
             <Box>
               <Typography variant="caption" color="text.secondary" fontWeight="600">
-                Result
+                {t('leads.closed.dialogs.call.result')}
               </Typography>
               <Box sx={{ mt: 0.5 }}>
                 <Chip
-                  label={selectedCallLead?.result}
+                  label={selectedCallLead?.result ? t(`leads.closed.results.${getResultKey(selectedCallLead.result)}`) : '-'}
                   size="small"
                   sx={{
                     backgroundColor: alpha(getResultColor(selectedCallLead?.result), 0.1),
@@ -585,30 +615,30 @@ const ClosedLeads = () => {
 
             <Box>
               <Typography variant="caption" color="text.secondary" fontWeight="600">
-                Policy Details
+                {t('leads.closed.dialogs.call.policyDetails')}
               </Typography>
-              <Typography variant="body1">{selectedCallLead?.policyType}</Typography>
+              <Typography variant="body1">{selectedCallLead?.policyType ? t(`leads.details.values.policyTypes.${getPolicyTypeKey(selectedCallLead.policyType)}`) : '-'}</Typography>
               {selectedCallLead?.policyNumber && (
                 <Typography variant="body2" color="text.secondary">
-                  Policy #: {selectedCallLead?.policyNumber}
+                  {t('leads.closed.dialogs.call.policyNumber')}: {selectedCallLead?.policyNumber}
                 </Typography>
               )}
               {selectedCallLead?.premium && (
                 <Typography variant="body2" color="primary" fontWeight="600">
-                  Premium: ₹{selectedCallLead?.premium?.toLocaleString()}
+                  {t('leads.closed.dialogs.call.premium')}: ₹{selectedCallLead?.premium?.toLocaleString()}
                 </Typography>
               )}
             </Box>
 
             <Box>
               <Typography variant="caption" color="text.secondary" fontWeight="600">
-                Closure Details
+                {t('leads.closed.dialogs.call.closureDetails')}
               </Typography>
               <Typography variant="body2">
-                Closed By: {selectedCallLead?.closedBy}
+                {t('leads.closed.dialogs.call.closedBy')}: {selectedCallLead?.closedBy}
               </Typography>
               <Typography variant="body2" color="text.secondary">
-                Closed On: {selectedCallLead?.closedDate}
+                {t('leads.closed.dialogs.call.closedOn')}: {selectedCallLead?.closedDate}
               </Typography>
               {selectedCallLead?.remarks && (
                 <Typography variant="body2" color="text.secondary" sx={{ mt: 1, fontStyle: 'italic' }}>
@@ -621,7 +651,7 @@ const ClosedLeads = () => {
 
             <Box>
               <Typography variant="caption" color="text.secondary" fontWeight="600" gutterBottom>
-                Phone Number
+                {t('leads.closed.dialogs.call.phoneNumber')}
               </Typography>
               <Box sx={{
                 display: 'flex',
@@ -645,21 +675,21 @@ const ClosedLeads = () => {
                     }
                   }}
                 >
-                  Dial
+                  {t('leads.closed.dialogs.call.dial')}
                 </Button>
               </Box>
             </Box>
 
             <Box>
               <Typography variant="caption" color="text.secondary" fontWeight="600">
-                Email
+                {t('leads.closed.dialogs.call.email')}
               </Typography>
               <Typography variant="body1">{selectedCallLead?.email}</Typography>
             </Box>
           </Stack>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setCallDialogOpen(false)}>Close</Button>
+          <Button onClick={() => setCallDialogOpen(false)}>{t('common.close')}</Button>
         </DialogActions>
       </Dialog>
 
@@ -674,7 +704,7 @@ const ClosedLeads = () => {
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
             <HistoryIcon color="info" />
             <Typography variant="h6" fontWeight="600">
-              Lead History
+              {t('leads.closed.dialogs.history.title')}
             </Typography>
           </Box>
         </DialogTitle>
@@ -683,7 +713,7 @@ const ClosedLeads = () => {
             {/* Lead Info */}
             <Box>
               <Typography variant="caption" color="text.secondary" fontWeight="600">
-                Lead Details
+                {t('leads.closed.dialogs.history.leadDetails')}
               </Typography>
               <Typography variant="body1" fontWeight="600">
                 {selectedHistoryLead?.firstName} {selectedHistoryLead?.lastName}
@@ -698,7 +728,7 @@ const ClosedLeads = () => {
             {/* Activity List */}
             <Box>
               <Typography variant="subtitle2" fontWeight="600" gutterBottom>
-                Activity Timeline
+                {t('leads.closed.dialogs.history.activityTimeline')}
               </Typography>
               <List sx={{ width: '100%' }}>
                 {leadHistory.map((activity, index) => (
@@ -741,7 +771,7 @@ const ClosedLeads = () => {
                             {activity.description}
                           </Typography>
                           <Typography variant="caption" color="text.secondary">
-                            By: {activity.user}
+                            {t('leads.closed.dialogs.history.by')}: {activity.user}
                           </Typography>
                         </>
                       }
@@ -753,7 +783,7 @@ const ClosedLeads = () => {
           </Stack>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setHistoryDialogOpen(false)}>Close</Button>
+          <Button onClick={() => setHistoryDialogOpen(false)}>{t('common.close')}</Button>
         </DialogActions>
       </Dialog>
 

@@ -14,7 +14,7 @@ const AIAgent = () => {
     const userMsg = { id: Date.now(), type: 'user', text: q };
     setMessages(prev => [...prev, userMsg]);
     setQuery('');
-
+      
     // Simple AI response without cross-resource lookup
     const aiText = 'I can help you with general questions, but cross-resource data lookup has been disabled.';
     const aiMsg = { id: Date.now()+1, type: 'ai', text: aiText };

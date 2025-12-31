@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import leadService from '../services/leadService';
+import { useTranslation } from 'react-i18next';
 import {
   Box, Card, CardContent, Typography, Button, Grid, Table, TableBody,
   TableCell, TableContainer, TableHead, TableRow, IconButton, Chip, Stack,
@@ -19,6 +20,38 @@ import { useNavigate } from 'react-router-dom';
 const LostLeads = () => {
   const theme = useTheme();
   const navigate = useNavigate();
+  const { t } = useTranslation();
+
+  const getReasonKey = (reason) => {
+    if (!reason) return '';
+    const lowerReason = reason.toLowerCase().trim();
+    const map = {
+      'high premium': 'highPremium',
+      'not interested': 'notInterested',
+      'bought from competitor': 'boughtFromCompetitor',
+      'invalid contact': 'invalidContact',
+      'budget constraints': 'budgetConstraints',
+      'coverage not sufficient': 'coverageNotSufficient',
+      'already insured': 'alreadyInsured',
+      'switched provider': 'switchedProvider'
+    };
+    return map[lowerReason] || reason;
+  };
+
+  const getPolicyTypeKey = (policyType) => {
+    if (!policyType) return '';
+    const lowerType = policyType.toLowerCase().trim();
+    const map = {
+      'health insurance': 'healthInsurance',
+      'life insurance': 'lifeInsurance',
+      'motor insurance': 'motorInsurance',
+      'vehicle insurance': 'vehicleInsurance',
+      'home insurance': 'homeInsurance',
+      'travel insurance': 'travelInsurance'
+    };
+    return map[lowerType] || policyType;
+  };
+
   const [leads, setLeads] = useState([]);
   const [filteredLeads, setFilteredLeads] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
@@ -40,10 +73,10 @@ const LostLeads = () => {
   ];
 
   const dateRangeOptions = [
-    { value: 'all', label: 'All Time' },
-    { value: 'last7', label: 'Last 7 Days' },
-    { value: 'last30', label: 'Last 30 Days' },
-    { value: 'last90', label: 'Last 90 Days' }
+    { value: 'all', label: t('leads.lost.dateRanges.allTime') },
+    { value: 'last7', label: t('leads.lost.dateRanges.last7Days') },
+    { value: 'last30', label: t('leads.lost.dateRanges.last30Days') },
+    { value: 'last90', label: t('leads.lost.dateRanges.last90Days') }
   ];
 
   useEffect(() => {
@@ -167,7 +200,7 @@ const LostLeads = () => {
         document.body.removeChild(link);
         window.URL.revokeObjectURL(url);
 
-        setSnackbar({ open: true, message: 'Data exported successfully!', severity: 'success' });
+        setSnackbar({ open: true, message: t('leads.lost.messages.exportSuccess'), severity: 'success' });
       } else {
         // Fallback: client-side CSV generation
         const csvContent = generateCSV(filteredLeads);
@@ -181,11 +214,11 @@ const LostLeads = () => {
         document.body.removeChild(link);
         window.URL.revokeObjectURL(url);
 
-        setSnackbar({ open: true, message: 'Data exported successfully!', severity: 'success' });
+        setSnackbar({ open: true, message: t('leads.lost.messages.exportSuccess'), severity: 'success' });
       }
     } catch (error) {
       console.error('Error exporting data:', error);
-      setSnackbar({ open: true, message: 'Failed to export data', severity: 'error' });
+      setSnackbar({ open: true, message: t('leads.lost.messages.exportFailed'), severity: 'error' });
     } finally {
       setLoading(false);
     }
@@ -212,20 +245,20 @@ const LostLeads = () => {
         document.body.removeChild(link);
         window.URL.revokeObjectURL(url);
 
-        setSnackbar({ open: true, message: 'Report generated successfully!', severity: 'success' });
+        setSnackbar({ open: true, message: t('leads.lost.messages.reportSuccess'), severity: 'success' });
       } else {
-        setSnackbar({ open: true, message: 'Report generation not available. Please try export instead.', severity: 'warning' });
+        setSnackbar({ open: true, message: t('leads.lost.messages.reportNotAvailable'), severity: 'warning' });
       }
     } catch (error) {
       console.error('Error generating report:', error);
-      setSnackbar({ open: true, message: 'Failed to generate report', severity: 'error' });
+      setSnackbar({ open: true, message: t('leads.lost.messages.reportFailed'), severity: 'error' });
     } finally {
       setLoading(false);
     }
   };
 
   const handleReopen = async (lead) => {
-    if (window.confirm(`Are you sure you want to reopen the lead for ${lead.firstName} ${lead.lastName}?`)) {
+    if (window.confirm(t('leads.lost.dialogs.reopen.confirm', { name: `${lead.firstName} ${lead.lastName}` }))) {
       try {
         setLoading(true);
         const result = await leadService.reopenLead(lead.id);
@@ -233,13 +266,13 @@ const LostLeads = () => {
         if (result.success) {
           // Remove from current list
           setLeads(prevLeads => prevLeads.filter(l => l.id !== lead.id));
-          setSnackbar({ open: true, message: 'Lead reopened successfully and moved to active leads!', severity: 'success' });
+          setSnackbar({ open: true, message: t('leads.lost.messages.reopenSuccess'), severity: 'success' });
         } else {
-          setSnackbar({ open: true, message: 'Failed to reopen lead', severity: 'error' });
+          setSnackbar({ open: true, message: t('leads.lost.messages.reopenFailed'), severity: 'error' });
         }
       } catch (error) {
         console.error('Error reopening lead:', error);
-        setSnackbar({ open: true, message: 'Failed to reopen lead', severity: 'error' });
+        setSnackbar({ open: true, message: t('leads.lost.messages.reopenFailed'), severity: 'error' });
       } finally {
         setLoading(false);
       }
@@ -255,7 +288,7 @@ const LostLeads = () => {
       setHistoryDialogOpen(true);
     } catch (error) {
       console.error('Error fetching lead history:', error);
-      setSnackbar({ open: true, message: 'Failed to fetch lead history', severity: 'error' });
+      setSnackbar({ open: true, message: t('leads.lost.messages.historyFailed'), severity: 'error' });
     } finally {
       setLoading(false);
     }
@@ -335,10 +368,10 @@ const LostLeads = () => {
       <Grid container spacing={2} alignItems="center" sx={{ mb: 3 }}>
         <Grid item xs={12} sm={6}>
           <Typography variant="h4" fontWeight="600">
-            Lost Leads
+            {t('leads.lost.title')}
           </Typography>
           <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
-            Leads that were closed as lost or not converted
+            {t('leads.lost.subtitle')}
           </Typography>
         </Grid>
         <Grid item xs={12} sm={6} sx={{ textAlign: 'right' }}>
@@ -349,7 +382,7 @@ const LostLeads = () => {
             disabled={loading}
             sx={{ mr: 1 }}
           >
-            Export Data
+            {t('leads.lost.exportData')}
           </Button>
           <Button
             variant="outlined"
@@ -357,7 +390,7 @@ const LostLeads = () => {
             onClick={handleGenerateReport}
             disabled={loading}
           >
-            Generate Report
+            {t('leads.lost.generateReport')}
           </Button>
         </Grid>
       </Grid>
@@ -367,7 +400,7 @@ const LostLeads = () => {
         <Grid item xs={12} sm={6} md={3}>
           <Card sx={{ background: `linear-gradient(135deg, ${alpha(theme.palette.error.main, 0.1)} 0%, ${alpha(theme.palette.error.dark, 0.05)} 100%)` }}>
             <CardContent>
-              <Typography variant="body2" color="text.secondary">Total Lost Leads</Typography>
+              <Typography variant="body2" color="text.secondary">{t('leads.lost.stats.totalLostLeads')}</Typography>
               <Typography variant="h4" fontWeight="600" color="error.main">
                 {totalLostLeads}
               </Typography>
@@ -377,7 +410,7 @@ const LostLeads = () => {
         <Grid item xs={12} sm={6} md={3}>
           <Card sx={{ background: `linear-gradient(135deg, ${alpha(theme.palette.warning.main, 0.1)} 0%, ${alpha(theme.palette.warning.dark, 0.05)} 100%)` }}>
             <CardContent>
-              <Typography variant="body2" color="text.secondary">Lost Revenue</Typography>
+              <Typography variant="body2" color="text.secondary">{t('leads.lost.stats.lostRevenue')}</Typography>
               <Typography variant="h4" fontWeight="600" color="warning.main">
                 ₹{lostRevenue.toLocaleString()}
               </Typography>
@@ -387,7 +420,7 @@ const LostLeads = () => {
         <Grid item xs={12} sm={6} md={3}>
           <Card sx={{ background: `linear-gradient(135deg, ${alpha(theme.palette.info.main, 0.1)} 0%, ${alpha(theme.palette.info.dark, 0.05)} 100%)` }}>
             <CardContent>
-              <Typography variant="body2" color="text.secondary">Average Premium</Typography>
+              <Typography variant="body2" color="text.secondary">{t('leads.lost.stats.averagePremium')}</Typography>
               <Typography variant="h4" fontWeight="600" color="info.main">
                 ₹{avgPremium.toLocaleString()}
               </Typography>
@@ -397,7 +430,7 @@ const LostLeads = () => {
         <Grid item xs={12} sm={6} md={3}>
           <Card sx={{ background: `linear-gradient(135deg, ${alpha(theme.palette.success.main, 0.1)} 0%, ${alpha(theme.palette.success.dark, 0.05)} 100%)` }}>
             <CardContent>
-              <Typography variant="body2" color="text.secondary">This Month</Typography>
+              <Typography variant="body2" color="text.secondary">{t('leads.lost.stats.thisMonth')}</Typography>
               <Typography variant="h4" fontWeight="600" color="success.main">
                 {thisMonthCount}
               </Typography>
@@ -413,7 +446,7 @@ const LostLeads = () => {
             <Grid item xs={12} sm={3}>
               <TextField
                 fullWidth
-                placeholder="Search lost leads..."
+                placeholder={t('leads.lost.searchPlaceholder')}
                 value={searchTerm}
                 onChange={handleSearch}
                 InputProps={{
@@ -425,16 +458,16 @@ const LostLeads = () => {
               <TextField
                 fullWidth
                 select
-                label="Filter by Reason"
+                label={t('leads.lost.filterByReason')}
                 value={filterReason}
                 onChange={handleFilterChange}
                 InputProps={{
                   startAdornment: <FilterIcon sx={{ color: 'text.secondary', mr: 1 }} />
                 }}
               >
-                <MenuItem value="All">All Reasons</MenuItem>
+                <MenuItem value="All">{t('leads.lost.allReasons')}</MenuItem>
                 {lostReasonOptions.map(reason => (
-                  <MenuItem key={reason} value={reason}>{reason}</MenuItem>
+                  <MenuItem key={reason} value={reason}>{t(`leads.lost.reasons.${getReasonKey(reason)}`)}</MenuItem>
                 ))}
               </TextField>
             </Grid>
@@ -442,7 +475,7 @@ const LostLeads = () => {
               <TextField
                 fullWidth
                 select
-                label="Date Range"
+                label={t('leads.lost.dateRange')}
                 value={selectedDateRange}
                 onChange={(e) => setSelectedDateRange(e.target.value)}
               >
@@ -460,7 +493,7 @@ const LostLeads = () => {
                 onClick={() => handleSort('closedDate')}
                 fullWidth
               >
-                Sort by Date {sortField === 'closedDate' ? (sortOrder === 'asc' ? '↑' : '↓') : ''}
+                {t('leads.lost.sortByDate')} {sortField === 'closedDate' ? (sortOrder === 'asc' ? '↑' : '↓') : ''}
               </Button>
             </Grid>
           </Grid>
@@ -473,14 +506,14 @@ const LostLeads = () => {
           <Table>
             <TableHead>
               <TableRow>
-                <TableCell>Lead Details</TableCell>
-                <TableCell>Contact</TableCell>
-                <TableCell>Lost Reason</TableCell>
-                <TableCell>Policy Type</TableCell>
-                <TableCell>Quoted Premium</TableCell>
-                <TableCell>Closed Date</TableCell>
-                <TableCell>Closed By</TableCell>
-                <TableCell align="center">Actions</TableCell>
+                <TableCell>{t('leads.lost.table.leadDetails')}</TableCell>
+                <TableCell>{t('leads.lost.table.contact')}</TableCell>
+                <TableCell>{t('leads.lost.table.lostReason')}</TableCell>
+                <TableCell>{t('leads.lost.table.policyType')}</TableCell>
+                <TableCell>{t('leads.lost.table.quotedPremium')}</TableCell>
+                <TableCell>{t('leads.lost.table.closedDate')}</TableCell>
+                <TableCell>{t('leads.lost.table.closedBy')}</TableCell>
+                <TableCell align="center">{t('leads.lost.table.actions')}</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
@@ -506,7 +539,7 @@ const LostLeads = () => {
                   </TableCell>
                   <TableCell>
                     <Chip
-                      label={lead.lostReason}
+                      label={t(`leads.lost.reasons.${getReasonKey(lead.lostReason)}`)}
                       size="small"
                       sx={{
                         backgroundColor: alpha(getReasonColor(lead.lostReason), 0.1),
@@ -516,9 +549,9 @@ const LostLeads = () => {
                     />
                   </TableCell>
                   <TableCell>
-                    <Typography variant="body2">{lead.policyType}</Typography>
+                    <Typography variant="body2">{lead.policyType ? t(`leads.details.values.policyTypes.${getPolicyTypeKey(lead.policyType)}`) : '-'}</Typography>
                     <Typography variant="caption" color="text.secondary">
-                      Source: {lead.source}
+                      {t('leads.lost.table.source')}: {lead.source}
                     </Typography>
                   </TableCell>
                   <TableCell>
@@ -530,7 +563,7 @@ const LostLeads = () => {
                   <TableCell>{lead.closedBy}</TableCell>
                   <TableCell>
                     <Stack direction="row" spacing={1} justifyContent="center">
-                      <Tooltip title="Reopen Lead">
+                      <Tooltip title={t('leads.lost.actions.reopenLead')}>
                         <IconButton
                           size="small"
                           onClick={() => handleReopen(lead)}
@@ -544,7 +577,7 @@ const LostLeads = () => {
                           <RestoreIcon />
                         </IconButton>
                       </Tooltip>
-                      <Tooltip title="Call Lead">
+                      <Tooltip title={t('leads.lost.actions.callLead')}>
                         <IconButton
                           size="small"
                           onClick={() => {
@@ -561,7 +594,7 @@ const LostLeads = () => {
                           <CallIcon />
                         </IconButton>
                       </Tooltip>
-                      <Tooltip title="View Details">
+                      <Tooltip title={t('leads.lost.actions.viewDetails')}>
                         <IconButton
                           size="small"
                           onClick={() => navigate(`/lead-management/${lead.id}`)}
@@ -569,7 +602,7 @@ const LostLeads = () => {
                           <VisibilityIcon />
                         </IconButton>
                       </Tooltip>
-                      <Tooltip title="View History">
+                      <Tooltip title={t('leads.lost.actions.viewHistory')}>
                         <IconButton
                           size="small"
                           onClick={() => handleViewHistory(lead)}
@@ -598,7 +631,7 @@ const LostLeads = () => {
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
             <CallIcon color="info" />
             <Typography variant="h6" fontWeight="600">
-              Contact Lost Lead
+              {t('leads.lost.dialogs.call.title')}
             </Typography>
           </Box>
         </DialogTitle>
@@ -606,7 +639,7 @@ const LostLeads = () => {
           <Stack spacing={3} sx={{ mt: 2 }}>
             <Box>
               <Typography variant="caption" color="text.secondary" fontWeight="600">
-                Lead ID
+                {t('leads.lost.dialogs.call.leadId')}
               </Typography>
               <Typography variant="body1" fontWeight="600" color="primary">
                 LD{new Date().getFullYear()}{String(selectedCallLead?.id || 0).padStart(6, '0')}
@@ -615,7 +648,7 @@ const LostLeads = () => {
 
             <Box>
               <Typography variant="caption" color="text.secondary" fontWeight="600">
-                Lead Name
+                {t('leads.lost.dialogs.call.leadName')}
               </Typography>
               <Typography variant="body1" fontWeight="600">
                 {selectedCallLead?.firstName} {selectedCallLead?.lastName}
@@ -624,11 +657,11 @@ const LostLeads = () => {
 
             <Box>
               <Typography variant="caption" color="text.secondary" fontWeight="600">
-                Lost Reason
+                {t('leads.lost.dialogs.call.lostReason')}
               </Typography>
               <Box sx={{ mt: 0.5 }}>
                 <Chip
-                  label={selectedCallLead?.lostReason}
+                  label={selectedCallLead?.lostReason ? t(`leads.lost.reasons.${getReasonKey(selectedCallLead.lostReason)}`) : '-'}
                   size="small"
                   sx={{
                     backgroundColor: alpha(getReasonColor(selectedCallLead?.lostReason), 0.1),
@@ -641,23 +674,23 @@ const LostLeads = () => {
 
             <Box>
               <Typography variant="caption" color="text.secondary" fontWeight="600">
-                Policy Details
+                {t('leads.lost.dialogs.call.policyDetails')}
               </Typography>
-              <Typography variant="body1">{selectedCallLead?.policyType}</Typography>
+              <Typography variant="body1">{selectedCallLead?.policyType ? t(`leads.details.values.policyTypes.${getPolicyTypeKey(selectedCallLead.policyType)}`) : '-'}</Typography>
               <Typography variant="body2" color="warning.main" fontWeight="600">
-                Quoted Premium: ₹{selectedCallLead?.quotedPremium?.toLocaleString()}
+                {t('leads.lost.dialogs.call.quotedPremium')}: ₹{selectedCallLead?.quotedPremium?.toLocaleString()}
               </Typography>
             </Box>
 
             <Box>
               <Typography variant="caption" color="text.secondary" fontWeight="600">
-                Closure Details
+                {t('leads.lost.dialogs.call.closureDetails')}
               </Typography>
               <Typography variant="body2">
-                Closed By: {selectedCallLead?.closedBy}
+                {t('leads.lost.dialogs.call.closedBy')}: {selectedCallLead?.closedBy}
               </Typography>
               <Typography variant="body2" color="text.secondary">
-                Closed On: {selectedCallLead?.closedDate}
+                {t('leads.lost.dialogs.call.closedOn')}: {selectedCallLead?.closedDate}
               </Typography>
               {selectedCallLead?.remarks && (
                 <Typography variant="body2" color="text.secondary" sx={{ mt: 1, fontStyle: 'italic' }}>
@@ -670,7 +703,7 @@ const LostLeads = () => {
 
             <Box>
               <Typography variant="caption" color="text.secondary" fontWeight="600" gutterBottom>
-                Phone Number
+                {t('leads.lost.dialogs.call.phoneNumber')}
               </Typography>
               <Box sx={{
                 display: 'flex',
@@ -694,23 +727,23 @@ const LostLeads = () => {
                     }
                   }}
                 >
-                  Dial
+                  {t('leads.lost.dialogs.call.dial')}
                 </Button>
               </Box>
             </Box>
 
             <Box>
               <Typography variant="caption" color="text.secondary" fontWeight="600">
-                Email
+                {t('leads.lost.dialogs.call.email')}
               </Typography>
               <Typography variant="body1">{selectedCallLead?.email}</Typography>
             </Box>
           </Stack>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setCallDialogOpen(false)}>Close</Button>
+          <Button onClick={() => setCallDialogOpen(false)}>{t('common.close')}</Button>
           <Button variant="contained" color="success" onClick={() => handleReopen(selectedCallLead)}>
-            Reopen Lead
+            {t('leads.lost.dialogs.call.reopenLead')}
           </Button>
         </DialogActions>
       </Dialog>
@@ -726,7 +759,7 @@ const LostLeads = () => {
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
             <HistoryIcon color="warning" />
             <Typography variant="h6" fontWeight="600">
-              Lead History
+              {t('leads.lost.dialogs.history.title')}
             </Typography>
           </Box>
         </DialogTitle>
@@ -735,7 +768,7 @@ const LostLeads = () => {
             {/* Lead Info */}
             <Box>
               <Typography variant="caption" color="text.secondary" fontWeight="600">
-                Lead Details
+                {t('leads.lost.dialogs.history.leadDetails')}
               </Typography>
               <Typography variant="body1" fontWeight="600">
                 {selectedHistoryLead?.firstName} {selectedHistoryLead?.lastName}
@@ -750,7 +783,7 @@ const LostLeads = () => {
             {/* Activity List */}
             <Box>
               <Typography variant="subtitle2" fontWeight="600" gutterBottom>
-                Activity Timeline
+                {t('leads.lost.dialogs.history.activityTimeline')}
               </Typography>
               <List sx={{ width: '100%' }}>
                 {leadHistory.map((activity) => (
@@ -793,7 +826,7 @@ const LostLeads = () => {
                             {activity.description}
                           </Typography>
                           <Typography variant="caption" color="text.secondary">
-                            By: {activity.user}
+                            {t('leads.lost.dialogs.history.by')}: {activity.user}
                           </Typography>
                         </>
                       }
@@ -805,7 +838,7 @@ const LostLeads = () => {
           </Stack>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setHistoryDialogOpen(false)}>Close</Button>
+          <Button onClick={() => setHistoryDialogOpen(false)}>{t('common.close')}</Button>
         </DialogActions>
       </Dialog>
 

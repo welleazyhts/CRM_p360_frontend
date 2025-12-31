@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   Dialog,
   DialogTitle,
@@ -54,6 +55,7 @@ const BulkUpload = ({
   allowOverride = true
 }) => {
   const theme = useTheme();
+  const { t } = useTranslation();
   const { batchCheckDuplicates, addUploadRecord } = useDedupe();
 
   // State
@@ -68,7 +70,11 @@ const BulkUpload = ({
   const [showValidDetails, setShowValidDetails] = useState(true);
   const [showFailedDetails, setShowFailedDetails] = useState(true);
 
-  const steps = ['Upload File', 'Review & Validate', 'Confirm Upload'];
+  const steps = [
+    t('upload.steps.upload'),
+    t('upload.steps.review'),
+    t('upload.steps.confirm')
+  ];
 
   // Handle file selection
   const handleFileSelect = (event) => {
@@ -118,7 +124,7 @@ const BulkUpload = ({
           console.log('📄 Data without header:', dataWithoutHeader);
 
           if (rawData.length === 0) {
-            alert('The uploaded file appears to be empty. Please ensure:\n\n1. The file contains data\n2. Data starts from row 1 (headers) and row 2 (first data row)\n3. The file is a valid CSV or Excel file\n\nCheck the console (F12) for more details.');
+            alert(t('upload.errors.emptyFile'));
             setParsing(false);
             return;
           }
@@ -167,7 +173,7 @@ const BulkUpload = ({
         setActiveStep(1);
       } catch (error) {
         console.error('❌ Parse Error:', error);
-        alert('Failed to parse file: ' + error.message + '\n\nPlease ensure you are uploading a valid CSV or Excel file.');
+        alert(t('upload.errors.parseError'));
       } finally {
         setParsing(false);
       }
@@ -284,7 +290,7 @@ const BulkUpload = ({
         totalRecords: parsedData.length,
         validRecords: validRecords.length,
         failedRecords: failedRecords.length,
-        uploadedBy: 'Current User', // Should be replaced with actual user
+        uploadedBy: t('common.currentUser'), // Using a localized placeholder
         status: 'completed',
         failedRecords: failedRecords
       });
@@ -309,7 +315,7 @@ const BulkUpload = ({
         handleClose();
       }, 1000);
     } catch (error) {
-      alert('Upload failed: ' + error.message);
+      alert(t('upload.errors.uploadFailed', { error: error.message }));
     }
   };
 
@@ -390,7 +396,7 @@ const BulkUpload = ({
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
           <UploadIcon color="primary" />
           <Typography variant="h6" fontWeight="600">
-            {title}
+            {t('upload.title', { source: t(`leads.${source}`) || source })}
           </Typography>
         </Box>
         <IconButton onClick={handleClose} size="small">
@@ -413,10 +419,10 @@ const BulkUpload = ({
           <Box sx={{ textAlign: 'center', py: 4 }}>
             <FileIcon sx={{ fontSize: 80, color: theme.palette.primary.main, mb: 2 }} />
             <Typography variant="h6" gutterBottom>
-              Upload CSV or Excel File
+              {t('upload.uploadCsvExcel')}
             </Typography>
             <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-              Select a file containing your {source} data to upload
+              {t('upload.selectFileContent', { source: t(`leads.${source}`) || source })}
             </Typography>
 
             <Button
@@ -426,7 +432,7 @@ const BulkUpload = ({
               size="large"
               disabled={parsing}
             >
-              Choose File
+              {t('upload.chooseFile')}
               <input
                 type="file"
                 hidden
@@ -439,7 +445,7 @@ const BulkUpload = ({
 
             {file && (
               <Alert severity="info" sx={{ mt: 3, textAlign: 'left' }}>
-                <strong>Selected File:</strong> {file.name} ({(file.size / 1024).toFixed(2)} KB)
+                <strong>{t('upload.selectedFile', { name: '' })}</strong> {file.name} ({(file.size / 1024).toFixed(2)} KB)
               </Alert>
             )}
 
@@ -449,7 +455,7 @@ const BulkUpload = ({
                 startIcon={<DownloadIcon />}
                 onClick={downloadTemplate}
               >
-                Download Template
+                {t('upload.downloadTemplate')}
               </Button>
             </Box>
           </Box>
@@ -469,7 +475,7 @@ const BulkUpload = ({
                 }}
               >
                 <Typography variant="subtitle2" color="text.secondary">
-                  Total Records
+                  {t('upload.summary.total')}
                 </Typography>
                 <Typography variant="h4" fontWeight="600">
                   {parsedData.length}
@@ -485,7 +491,7 @@ const BulkUpload = ({
                 }}
               >
                 <Typography variant="subtitle2" color="text.secondary">
-                  Valid Records
+                  {t('upload.summary.valid')}
                 </Typography>
                 <Typography variant="h4" fontWeight="600" color="success.main">
                   {validRecords.length}
@@ -501,7 +507,7 @@ const BulkUpload = ({
                 }}
               >
                 <Typography variant="subtitle2" color="text.secondary">
-                  Failed Records
+                  {t('upload.summary.failed')}
                 </Typography>
                 <Typography variant="h4" fontWeight="600" color="error.main">
                   {failedRecords.length}
@@ -512,11 +518,11 @@ const BulkUpload = ({
             {/* Warning if no records found */}
             {parsedData.length === 0 && (
               <Alert severity="error" sx={{ mb: 3 }}>
-                <strong>No records found in the uploaded file!</strong>
+                <strong>{t('upload.noRecordsFound')}</strong>
                 <br />
-                Please ensure your file contains data and the first row has column headers.
+                {t('upload.ensureData')}
                 <br />
-                Check the browser console (F12) for detailed parsing information.
+                {t('upload.checkConsole')}
               </Alert>
             )}
 
@@ -525,12 +531,12 @@ const BulkUpload = ({
               <>
                 <Tabs value={tabValue} onChange={(e, newValue) => setTabValue(newValue)} sx={{ mb: 2 }}>
                   <Tab
-                    label={`Valid Records (${validRecords.length})`}
+                    label={t('upload.validTab', { count: validRecords.length })}
                     icon={<CheckCircleIcon />}
                     iconPosition="start"
                   />
                   <Tab
-                    label={`Failed Records (${failedRecords.length})`}
+                    label={t('upload.failedTab', { count: failedRecords.length })}
                     icon={<ErrorIcon />}
                     iconPosition="start"
                   />
@@ -543,14 +549,14 @@ const BulkUpload = ({
                       <>
                         <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
                           <Typography variant="subtitle2">
-                            These records will be uploaded
+                            {t('upload.validContent')}
                           </Typography>
                           <Button
                             size="small"
                             onClick={() => setShowValidDetails(!showValidDetails)}
                             endIcon={showValidDetails ? <ExpandLessIcon /> : <ExpandMoreIcon />}
                           >
-                            {showValidDetails ? 'Hide' : 'Show'} Details
+                            {showValidDetails ? t('common.hide') : t('common.show')} {t('common.details')}
                           </Button>
                         </Box>
 
@@ -559,7 +565,7 @@ const BulkUpload = ({
                             <Table size="small" stickyHeader>
                               <TableHead>
                                 <TableRow>
-                                  <TableCell>Row #</TableCell>
+                                  <TableCell>{t('upload.rowNumber')}</TableCell>
                                   {validRecords.length > 0 &&
                                     getPreviewFields(validRecords[0].record).map((field) => (
                                       <TableCell key={field}>{field}</TableCell>
@@ -583,7 +589,7 @@ const BulkUpload = ({
                         </Collapse>
                       </>
                     ) : (
-                      <Alert severity="warning">No valid records found</Alert>
+                      <Alert severity="warning">{t('upload.noValidRecords')}</Alert>
                     )}
                   </Box>
                 )}
@@ -595,7 +601,7 @@ const BulkUpload = ({
                       <>
                         <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
                           <Typography variant="subtitle2">
-                            These records have errors and will not be uploaded
+                            {t('upload.failedContent')}
                           </Typography>
                           <Box>
                             <Button
@@ -604,14 +610,14 @@ const BulkUpload = ({
                               onClick={downloadFailedRecords}
                               sx={{ mr: 1 }}
                             >
-                              Export
+                              {t('common.export')}
                             </Button>
                             <Button
                               size="small"
                               onClick={() => setShowFailedDetails(!showFailedDetails)}
                               endIcon={showFailedDetails ? <ExpandLessIcon /> : <ExpandMoreIcon />}
                             >
-                              {showFailedDetails ? 'Hide' : 'Show'} Details
+                              {showFailedDetails ? t('common.hide') : t('common.show')} {t('common.details')}
                             </Button>
                           </Box>
                         </Box>
@@ -621,9 +627,9 @@ const BulkUpload = ({
                             <Table size="small" stickyHeader>
                               <TableHead>
                                 <TableRow>
-                                  <TableCell>Row #</TableCell>
-                                  <TableCell>Type</TableCell>
-                                  <TableCell>Reason</TableCell>
+                                  <TableCell>{t('upload.rowNumber')}</TableCell>
+                                  <TableCell>{t('upload.type')}</TableCell>
+                                  <TableCell>{t('upload.reason')}</TableCell>
                                   {failedRecords.length > 0 &&
                                     getPreviewFields(failedRecords[0].record).map((field) => (
                                       <TableCell key={field}>{field}</TableCell>
@@ -636,7 +642,7 @@ const BulkUpload = ({
                                     <TableCell>{item.rowNumber}</TableCell>
                                     <TableCell>
                                       <Chip
-                                        label={item.type}
+                                        label={t(`upload.types.${item.type}`) || item.type}
                                         size="small"
                                         color={item.type === 'duplicate' ? 'warning' : 'error'}
                                       />
@@ -661,7 +667,7 @@ const BulkUpload = ({
                         </Collapse>
                       </>
                     ) : (
-                      <Alert severity="success">All records are valid!</Alert>
+                      <Alert severity="success">{t('upload.allRecordsValid')}</Alert>
                     )}
                   </Box>
                 )}
@@ -678,21 +684,21 @@ const BulkUpload = ({
                 <>
                   <UploadIcon sx={{ fontSize: 80, color: theme.palette.primary.main, mb: 2 }} />
                   <Typography variant="h6" gutterBottom>
-                    Uploading Records...
+                    {t('upload.uploading')}
                   </Typography>
                   <LinearProgress variant="determinate" value={uploadProgress} sx={{ mt: 2 }} />
                   <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-                    {uploadProgress}% Complete
+                    {uploadProgress}% {t('common.loading')}
                   </Typography>
                 </>
               ) : (
                 <>
                   <CheckCircleIcon sx={{ fontSize: 80, color: theme.palette.success.main, mb: 2 }} />
                   <Typography variant="h6" gutterBottom>
-                    Upload Complete!
+                    {t('upload.complete')}
                   </Typography>
                   <Typography variant="body2" color="text.secondary">
-                    {validRecords.length} records uploaded successfully
+                    {t('upload.successMessage', { count: validRecords.length })}
                   </Typography>
                 </>
               )}
@@ -703,30 +709,30 @@ const BulkUpload = ({
 
       <DialogActions>
         {activeStep === 0 && (
-          <Button onClick={handleClose}>Cancel</Button>
+          <Button onClick={handleClose}>{t('common.cancel')}</Button>
         )}
 
         {activeStep === 1 && (
           <>
-            <Button onClick={() => setActiveStep(0)}>Back</Button>
+            <Button onClick={() => setActiveStep(0)}>{t('common.back')}</Button>
             <Button
               variant="contained"
               onClick={handleUpload}
               disabled={validRecords.length === 0}
               startIcon={<UploadIcon />}
             >
-              Upload {validRecords.length} Record{validRecords.length !== 1 ? 's' : ''}
+              {t('leads.bulk.upload')} {validRecords.length}
             </Button>
           </>
         )}
 
         {activeStep === 2 && uploadProgress === 100 && (
           <Button variant="contained" onClick={handleClose}>
-            Done
+            {t('common.done')}
           </Button>
         )}
       </DialogActions>
-    </Dialog>
+    </Dialog >
   );
 };
 

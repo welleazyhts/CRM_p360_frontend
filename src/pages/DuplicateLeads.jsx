@@ -40,10 +40,37 @@ import {
   Info as InfoIcon
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 
 const DuplicateLeads = () => {
   const theme = useTheme();
   const navigate = useNavigate();
+  const { t } = useTranslation();
+
+  const getDuplicateTypeKey = (type) => {
+    if (!type) return '';
+    const lowerType = type.toLowerCase().trim();
+    const map = {
+      'all': 'all',
+      'phone number': 'phoneNumber',
+      'email': 'email',
+      'both (phone & email)': 'both'
+    };
+    return map[lowerType] || type;
+  };
+
+  const getStatusKey = (status) => {
+    if (!status) return '';
+    const lowerStatus = status.toLowerCase().trim();
+    const map = {
+      'all': 'all',
+      'pending': 'pending',
+      'resolved': 'resolved',
+      'ignored': 'ignored'
+    };
+    return map[lowerStatus] || status;
+  };
+
   const [duplicateGroups, setDuplicateGroups] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterType, setFilterType] = useState('All');
@@ -204,12 +231,12 @@ const DuplicateLeads = () => {
   };
 
   const handleMergeLeads = (groupId) => {
-    alert(`Merging duplicate leads for group ${groupId}. This will combine all duplicate records into one master record.`);
+    alert(t('leads.duplicate.messages.mergeAlert', { groupId }));
     // TODO: Implement merge logic
   };
 
   const handleDeleteDuplicate = (groupId, leadId) => {
-    alert(`Deleting lead ${leadId} from duplicate group ${groupId}`);
+    alert(t('leads.duplicate.messages.deleteAlert', { groupId, leadId }));
     // TODO: Implement delete logic
   };
 
@@ -259,10 +286,10 @@ const DuplicateLeads = () => {
       <Grid container spacing={2} alignItems="center" sx={{ mb: 3 }}>
         <Grid item xs={12} sm={6}>
           <Typography variant="h4" fontWeight="600">
-            Duplicate Leads
+            {t('leads.duplicate.title')}
           </Typography>
           <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
-            Manage duplicate leads identified during data upload
+            {t('leads.duplicate.subtitle')}
           </Typography>
         </Grid>
         <Grid item xs={12} sm={6} sx={{ textAlign: 'right' }}>
@@ -271,7 +298,7 @@ const DuplicateLeads = () => {
             startIcon={<DownloadIcon />}
             sx={{ mr: 1 }}
           >
-            Export Report
+            {t('leads.duplicate.exportReport')}
           </Button>
         </Grid>
       </Grid>
@@ -281,7 +308,7 @@ const DuplicateLeads = () => {
         <Grid item xs={12} sm={6} md={3}>
           <Card sx={{ background: `linear-gradient(135deg, ${alpha(theme.palette.warning.main, 0.1)} 0%, ${alpha(theme.palette.warning.dark, 0.05)} 100%)` }}>
             <CardContent>
-              <Typography variant="body2" color="text.secondary">Total Groups</Typography>
+              <Typography variant="body2" color="text.secondary">{t('leads.duplicate.stats.totalGroups')}</Typography>
               <Typography variant="h4" fontWeight="600" color="warning.main">
                 {duplicateGroups.length}
               </Typography>
@@ -291,7 +318,7 @@ const DuplicateLeads = () => {
         <Grid item xs={12} sm={6} md={3}>
           <Card sx={{ background: `linear-gradient(135deg, ${alpha(theme.palette.error.main, 0.1)} 0%, ${alpha(theme.palette.error.dark, 0.05)} 100%)` }}>
             <CardContent>
-              <Typography variant="body2" color="text.secondary">Duplicate Records</Typography>
+              <Typography variant="body2" color="text.secondary">{t('leads.duplicate.stats.duplicateRecords')}</Typography>
               <Typography variant="h4" fontWeight="600" color="error.main">
                 {duplicateGroups.reduce((sum, group) => sum + group.count, 0)}
               </Typography>
@@ -301,7 +328,7 @@ const DuplicateLeads = () => {
         <Grid item xs={12} sm={6} md={3}>
           <Card sx={{ background: `linear-gradient(135deg, ${alpha(theme.palette.warning.main, 0.1)} 0%, ${alpha(theme.palette.warning.dark, 0.05)} 100%)` }}>
             <CardContent>
-              <Typography variant="body2" color="text.secondary">Pending Resolution</Typography>
+              <Typography variant="body2" color="text.secondary">{t('leads.duplicate.stats.pendingResolution')}</Typography>
               <Typography variant="h4" fontWeight="600" color="warning.main">
                 {duplicateGroups.filter(g => g.status === 'Pending').length}
               </Typography>
@@ -311,7 +338,7 @@ const DuplicateLeads = () => {
         <Grid item xs={12} sm={6} md={3}>
           <Card sx={{ background: `linear-gradient(135deg, ${alpha(theme.palette.success.main, 0.1)} 0%, ${alpha(theme.palette.success.dark, 0.05)} 100%)` }}>
             <CardContent>
-              <Typography variant="body2" color="text.secondary">Resolved</Typography>
+              <Typography variant="body2" color="text.secondary">{t('leads.duplicate.stats.resolved')}</Typography>
               <Typography variant="h4" fontWeight="600" color="success.main">
                 {duplicateGroups.filter(g => g.status === 'Resolved').length}
               </Typography>
@@ -327,8 +354,7 @@ const DuplicateLeads = () => {
             <InfoIcon sx={{ color: 'info.main', mt: 0.5 }} />
             <Box>
               <Typography variant="body2" color="info.dark">
-                <strong>Duplicate Detection:</strong> Leads are grouped by matching phone numbers and/or email addresses.
-                Review each group carefully before merging or deleting records.
+                <strong>{t('leads.duplicate.infoTitle')}</strong> {t('leads.duplicate.infoNote')}
               </Typography>
             </Box>
           </Stack>
@@ -342,7 +368,7 @@ const DuplicateLeads = () => {
             <Grid item xs={12} sm={4}>
               <TextField
                 fullWidth
-                placeholder="Search by phone, email, or batch..."
+                placeholder={t('leads.duplicate.searchPlaceholder')}
                 value={searchTerm}
                 onChange={handleSearch}
                 InputProps={{
@@ -354,7 +380,7 @@ const DuplicateLeads = () => {
               <TextField
                 fullWidth
                 select
-                label="Duplicate Type"
+                label={t('leads.duplicate.duplicateType')}
                 value={filterType}
                 onChange={handleFilterChange}
                 InputProps={{
@@ -363,7 +389,7 @@ const DuplicateLeads = () => {
               >
                 {duplicateTypeOptions.map((option) => (
                   <MenuItem key={option} value={option}>
-                    {option}
+                    {t(`leads.duplicate.types.${getDuplicateTypeKey(option)}`)}
                   </MenuItem>
                 ))}
               </TextField>
@@ -372,16 +398,16 @@ const DuplicateLeads = () => {
               <TextField
                 fullWidth
                 select
-                label="Sort By"
+                label={t('leads.duplicate.sortBy')}
                 value={sortField}
                 onChange={(e) => setSortField(e.target.value)}
                 InputProps={{
                   startAdornment: <SortIcon sx={{ color: 'text.secondary', mr: 1 }} />
                 }}
               >
-                <MenuItem value="detectedDate">Detection Date</MenuItem>
-                <MenuItem value="count">Number of Duplicates</MenuItem>
-                <MenuItem value="status">Status</MenuItem>
+                <MenuItem value="detectedDate">{t('leads.duplicate.sortOptions.detectedDate')}</MenuItem>
+                <MenuItem value="count">{t('leads.duplicate.sortOptions.count')}</MenuItem>
+                <MenuItem value="status">{t('leads.duplicate.sortOptions.status')}</MenuItem>
               </TextField>
             </Grid>
           </Grid>
@@ -394,13 +420,13 @@ const DuplicateLeads = () => {
           <Table>
             <TableHead>
               <TableRow sx={{ bgcolor: alpha(theme.palette.primary.main, 0.05) }}>
-                <TableCell><strong>Duplicate Type</strong></TableCell>
-                <TableCell><strong>Match Field</strong></TableCell>
-                <TableCell><strong>Count</strong></TableCell>
-                <TableCell><strong>Upload Batch</strong></TableCell>
-                <TableCell><strong>Detected Date</strong></TableCell>
-                <TableCell><strong>Status</strong></TableCell>
-                <TableCell align="center"><strong>Actions</strong></TableCell>
+                <TableCell><strong>{t('leads.duplicate.table.duplicateType')}</strong></TableCell>
+                <TableCell><strong>{t('leads.duplicate.table.matchField')}</strong></TableCell>
+                <TableCell><strong>{t('leads.duplicate.table.count')}</strong></TableCell>
+                <TableCell><strong>{t('leads.duplicate.table.uploadBatch')}</strong></TableCell>
+                <TableCell><strong>{t('leads.duplicate.table.detectedDate')}</strong></TableCell>
+                <TableCell><strong>{t('leads.duplicate.table.status')}</strong></TableCell>
+                <TableCell align="center"><strong>{t('leads.duplicate.table.actions')}</strong></TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
@@ -409,7 +435,7 @@ const DuplicateLeads = () => {
                   <TableCell colSpan={7} align="center" sx={{ py: 5 }}>
                     <DuplicateIcon sx={{ fontSize: 60, color: 'text.disabled', mb: 2 }} />
                     <Typography variant="body1" color="text.secondary">
-                      No duplicate leads found
+                      {t('leads.duplicate.table.noDuplicates')}
                     </Typography>
                   </TableCell>
                 </TableRow>
@@ -424,7 +450,7 @@ const DuplicateLeads = () => {
                   >
                     <TableCell>
                       <Chip
-                        label={group.duplicateType}
+                        label={t(`leads.duplicate.types.${getDuplicateTypeKey(group.duplicateType)}`)}
                         size="small"
                         sx={{
                           bgcolor: alpha(getDuplicateTypeColor(group.duplicateType), 0.1),
@@ -440,7 +466,7 @@ const DuplicateLeads = () => {
                     </TableCell>
                     <TableCell>
                       <Chip
-                        label={`${group.count} leads`}
+                        label={`${group.count} ${t('leads.duplicate.table.leads')}`}
                         size="small"
                         color="error"
                         variant="outlined"
@@ -458,7 +484,7 @@ const DuplicateLeads = () => {
                     </TableCell>
                     <TableCell>
                       <Chip
-                        label={group.status}
+                        label={t(`leads.duplicate.statuses.${getStatusKey(group.status)}`)}
                         size="small"
                         sx={{
                           bgcolor: alpha(getStatusColor(group.status), 0.1),
@@ -469,7 +495,7 @@ const DuplicateLeads = () => {
                     </TableCell>
                     <TableCell align="center">
                       <Stack direction="row" spacing={1} justifyContent="center">
-                        <Tooltip title="View Details">
+                        <Tooltip title={t('leads.duplicate.actions.viewDetails')}>
                           <IconButton
                             size="small"
                             color="primary"
@@ -480,7 +506,7 @@ const DuplicateLeads = () => {
                         </Tooltip>
                         {group.status === 'Pending' && (
                           <>
-                            <Tooltip title="Merge Leads">
+                            <Tooltip title={t('leads.duplicate.actions.mergeLeads')}>
                               <IconButton
                                 size="small"
                                 color="success"
@@ -489,7 +515,7 @@ const DuplicateLeads = () => {
                                 <MergeIcon fontSize="small" />
                               </IconButton>
                             </Tooltip>
-                            <Tooltip title="Mark as Resolved">
+                            <Tooltip title={t('leads.duplicate.actions.markAsResolved')}>
                               <IconButton
                                 size="small"
                                 color="info"
@@ -523,7 +549,7 @@ const DuplicateLeads = () => {
               <Stack direction="row" spacing={2} alignItems="center">
                 <DuplicateIcon color="primary" />
                 <Box>
-                  <Typography variant="h6">Duplicate Group Details</Typography>
+                  <Typography variant="h6">{t('leads.duplicate.dialog.title')}</Typography>
                   <Typography variant="body2" color="text.secondary">
                     {selectedGroup.duplicateType} - {selectedGroup.matchField}
                   </Typography>
@@ -532,20 +558,20 @@ const DuplicateLeads = () => {
             </DialogTitle>
             <DialogContent dividers>
               <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 2 }}>
-                Found {selectedGroup.count} duplicate records:
+                {t('leads.duplicate.dialog.found', { count: selectedGroup.count })}
               </Typography>
 
               <TableContainer component={Paper} variant="outlined">
                 <Table size="small">
                   <TableHead>
                     <TableRow sx={{ bgcolor: alpha(theme.palette.primary.main, 0.05) }}>
-                      <TableCell><strong>Lead ID</strong></TableCell>
-                      <TableCell><strong>Name</strong></TableCell>
-                      <TableCell><strong>Phone</strong></TableCell>
-                      <TableCell><strong>Email</strong></TableCell>
-                      <TableCell><strong>Policy Type</strong></TableCell>
-                      <TableCell><strong>Status</strong></TableCell>
-                      <TableCell><strong>Upload Date</strong></TableCell>
+                      <TableCell><strong>{t('leads.duplicate.dialog.table.leadId')}</strong></TableCell>
+                      <TableCell><strong>{t('leads.duplicate.dialog.table.name')}</strong></TableCell>
+                      <TableCell><strong>{t('leads.duplicate.dialog.table.phone')}</strong></TableCell>
+                      <TableCell><strong>{t('leads.duplicate.dialog.table.email')}</strong></TableCell>
+                      <TableCell><strong>{t('leads.duplicate.dialog.table.policyType')}</strong></TableCell>
+                      <TableCell><strong>{t('leads.duplicate.dialog.table.status')}</strong></TableCell>
+                      <TableCell><strong>{t('leads.duplicate.dialog.table.uploadDate')}</strong></TableCell>
                     </TableRow>
                   </TableHead>
                   <TableBody>
@@ -569,19 +595,19 @@ const DuplicateLeads = () => {
               </TableContainer>
             </DialogContent>
             <DialogActions>
-              <Button onClick={handleCloseDialog}>Cancel</Button>
+              <Button onClick={handleCloseDialog}>{t('leads.duplicate.dialog.buttons.cancel')}</Button>
               <Button
                 onClick={() => handleIgnore(selectedGroup.id)}
                 color="warning"
               >
-                Ignore
+                {t('leads.duplicate.dialog.buttons.ignore')}
               </Button>
               <Button
                 onClick={() => handleMergeLeads(selectedGroup.id)}
                 variant="contained"
                 startIcon={<MergeIcon />}
               >
-                Merge Leads
+                {t('leads.duplicate.dialog.buttons.mergeLeads')}
               </Button>
             </DialogActions>
           </>

@@ -8969,7 +8969,7 @@ const Settings = () => {
             <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
               Specify which fields must be present in uploaded data
             </Typography>
-
+            
             <Grid container spacing={2}>
               <Grid item xs={12} md={6}>
                 <FormControlLabel

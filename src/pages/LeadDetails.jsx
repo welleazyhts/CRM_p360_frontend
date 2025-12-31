@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useLeads } from '../context/LeadContext';
 import MultiContactNumberManager from '../components/leads/MultiContactNumberManager';
 import DocumentCollectionTracker from '../components/leads/DocumentCollectionTracker';
@@ -81,6 +82,7 @@ import {
 const LeadDetails = () => {
   const { leadId } = useParams();
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const theme = useTheme();
   const { convertLead, isLeadConverted } = useLeads();
   const [currentTab, setCurrentTab] = useState(0);
@@ -983,7 +985,7 @@ Document Reference: ${doc.id}
           onClick={() => navigate('/lead-management')}
           sx={{ mb: 2 }}
         >
-          Back to Lead Management
+          {t('leads.details.backToManagement')}
         </Button>
 
         <Card className="healthcare-card">
@@ -1007,11 +1009,11 @@ Document Reference: ${doc.id}
                   {lead.firstName} {lead.lastName}
                 </Typography>
                 <Typography variant="body1" color="text.secondary" gutterBottom>
-                  Lead ID: {generateLeadId(lead.id)}
+                  {t('leads.details.leadId')}: {generateLeadId(lead.id)}
                 </Typography>
                 <Stack direction="row" spacing={2} alignItems="center" flexWrap="wrap">
                   <Chip
-                    label={lead.status}
+                    label={t(`leads.details.values.leadStatuses.${lead.status?.replace(/ /g, '') || 'New'}`) || lead.status}
                     size="small"
                     sx={{
                       backgroundColor: alpha(getStatusColor(lead.status), 0.1),
@@ -1021,7 +1023,7 @@ Document Reference: ${doc.id}
                     }}
                   />
                   <Chip
-                    label={lead.priority}
+                    label={t(`leads.details.values.priorities.${lead.priority?.toLowerCase()}`) || lead.priority}
                     size="small"
                     sx={{
                       backgroundColor: alpha(getPriorityColor(lead.priority), 0.1),
@@ -1031,7 +1033,7 @@ Document Reference: ${doc.id}
                     }}
                   />
                   <Typography variant="body2" color="text.secondary">
-                    Created: {lead.createdAt}
+                    {t('leads.details.created')}: {lead.createdAt}
                   </Typography>
                 </Stack>
               </Grid>
@@ -1045,7 +1047,7 @@ Document Reference: ${doc.id}
                       background: `linear-gradient(135deg, ${theme.palette.info.main} 0%, ${theme.palette.info.dark} 100%)`,
                     }}
                   >
-                    Call Customer
+                    {t('leads.details.callCustomer')}
                   </Button>
                   <Button
                     variant="contained"
@@ -1055,7 +1057,7 @@ Document Reference: ${doc.id}
                       background: `linear-gradient(135deg, ${theme.palette.success.main} 0%, ${theme.palette.success.dark} 100%)`,
                     }}
                   >
-                    Send Payment Link
+                    {t('leads.details.sendPaymentLink')}
                   </Button>
                   <Button
                     variant="contained"
@@ -1065,7 +1067,7 @@ Document Reference: ${doc.id}
                       background: `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.primary.dark} 100%)`,
                     }}
                   >
-                    Share Quote
+                    {t('leads.details.shareQuote')}
                   </Button>
                   {lead.status !== 'Closed Won' && !isLeadConverted(parseInt(leadId)) && (
                     <Button
@@ -1076,7 +1078,7 @@ Document Reference: ${doc.id}
                         background: `linear-gradient(135deg, ${theme.palette.warning.main} 0%, ${theme.palette.warning.dark} 100%)`,
                       }}
                     >
-                      Convert to Customer
+                      {t('leads.details.convertToCustomer')}
                     </Button>
                   )}
                   <Button
@@ -1084,7 +1086,7 @@ Document Reference: ${doc.id}
                     startIcon={<EditIcon />}
                     onClick={() => navigate(`/lead-management?editLead=${leadId}`)}
                   >
-                    Edit Lead
+                    {t('leads.details.editLead')}
                   </Button>
                 </Stack>
               </Grid>
@@ -1097,16 +1099,16 @@ Document Reference: ${doc.id}
       <Card className="healthcare-card">
         <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
           <Tabs value={currentTab} onChange={(e, newValue) => setCurrentTab(newValue)}>
-            <Tab label="Overview" />
-            <Tab label="Policy & Nominee" />
-            <Tab label="Policy History" />
-            <Tab label="Activities" />
-            <Tab label="Contact Numbers" />
-            <Tab label="Documents" />
-            <Tab label="Vehicle Documents" />
-            <Tab label="Insurance Documents" />
-            <Tab label="KYC Documents" />
-            <Tab label="Customer Feedback" />
+            <Tab label={t('leads.details.tabs.overview')} />
+            <Tab label={t('leads.details.tabs.policyNominee')} />
+            <Tab label={t('leads.details.tabs.policyHistory')} />
+            <Tab label={t('leads.details.tabs.activities')} />
+            <Tab label={t('leads.details.tabs.contactNumbers')} />
+            <Tab label={t('leads.details.tabs.documents')} />
+            <Tab label={t('leads.details.tabs.vehicleDocuments')} />
+            <Tab label={t('leads.details.tabs.insuranceDocuments')} />
+            <Tab label={t('leads.details.tabs.kycDocuments')} />
+            <Tab label={t('leads.details.tabs.customerFeedback')} />
           </Tabs>
         </Box>
 
@@ -1120,28 +1122,28 @@ Document Reference: ${doc.id}
                   <CardContent>
                     <Typography variant="h6" fontWeight="600" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                       <PersonIcon color="primary" />
-                      Contact Information
+                      {t('leads.details.sections.contactInfo')}
                     </Typography>
                     <Divider sx={{ my: 2 }} />
                     <Stack spacing={2}>
                       <Box>
-                        <Typography variant="caption" color="text.secondary">Email</Typography>
+                        <Typography variant="caption" color="text.secondary">{t('leads.details.fields.email')}</Typography>
                         <Typography variant="body1">{lead.email}</Typography>
                       </Box>
                       <Box>
-                        <Typography variant="caption" color="text.secondary">Phone</Typography>
+                        <Typography variant="caption" color="text.secondary">{t('leads.details.fields.phone')}</Typography>
                         <Typography variant="body1">{lead.phone}</Typography>
                       </Box>
                       <Box>
-                        <Typography variant="caption" color="text.secondary">Alternate Phone</Typography>
-                        <Typography variant="body1">{lead.alternatePhone || 'Not Provided'}</Typography>
+                        <Typography variant="caption" color="text.secondary">{t('leads.details.fields.alternatePhone')}</Typography>
+                        <Typography variant="body1">{lead.alternatePhone || t('leads.details.values.notProvided')}</Typography>
                       </Box>
                       <Box>
-                        <Typography variant="caption" color="text.secondary">Company</Typography>
+                        <Typography variant="caption" color="text.secondary">{t('leads.details.fields.company')}</Typography>
                         <Typography variant="body1">{lead.company}</Typography>
                       </Box>
                       <Box>
-                        <Typography variant="caption" color="text.secondary">Position</Typography>
+                        <Typography variant="caption" color="text.secondary">{t('leads.details.fields.position')}</Typography>
                         <Typography variant="body1">{lead.position}</Typography>
                       </Box>
                     </Stack>
@@ -1155,31 +1157,31 @@ Document Reference: ${doc.id}
                   <CardContent>
                     <Typography variant="h6" fontWeight="600" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                       <BusinessIcon color="primary" />
-                      Lead Details
+                      {t('leads.details.sections.leadDetails')}
                     </Typography>
                     <Divider sx={{ my: 2 }} />
                     <Stack spacing={2}>
                       <Box>
-                        <Typography variant="caption" color="text.secondary">Source</Typography>
-                        <Typography variant="body1">{lead.source}</Typography>
+                        <Typography variant="caption" color="text.secondary">{t('leads.details.fields.source')}</Typography>
+                        <Typography variant="body1">{t(`leads.details.values.sources.${lead.source}`) || lead.source}</Typography>
                       </Box>
                       <Box>
-                        <Typography variant="caption" color="text.secondary">Assigned To</Typography>
-                        <Typography variant="body1">{lead.assignedTo || 'Unassigned'}</Typography>
+                        <Typography variant="caption" color="text.secondary">{t('leads.details.fields.assignedTo')}</Typography>
+                        <Typography variant="body1">{lead.assignedTo || t('leads.details.values.unassigned')}</Typography>
                       </Box>
                       <Box>
-                        <Typography variant="caption" color="text.secondary">Value</Typography>
+                        <Typography variant="caption" color="text.secondary">{t('leads.details.fields.value')}</Typography>
                         <Typography variant="body1" fontWeight="600" color="primary">
                           ${lead.value?.toLocaleString() || '0'}
                         </Typography>
                       </Box>
                       <Box>
-                        <Typography variant="caption" color="text.secondary">Expected Close Date</Typography>
-                        <Typography variant="body1">{lead.expectedCloseDate || 'Not set'}</Typography>
+                        <Typography variant="caption" color="text.secondary">{t('leads.details.fields.expectedCloseDate')}</Typography>
+                        <Typography variant="body1">{lead.expectedCloseDate || t('leads.details.values.notSet')}</Typography>
                       </Box>
                       <Box>
-                        <Typography variant="caption" color="text.secondary">Last Contact</Typography>
-                        <Typography variant="body1">{lead.lastContactDate || 'Never'}</Typography>
+                        <Typography variant="caption" color="text.secondary">{t('leads.details.fields.lastContact')}</Typography>
+                        <Typography variant="body1">{lead.lastContactDate || t('leads.details.values.never')}</Typography>
                       </Box>
                     </Stack>
                   </CardContent>
@@ -1192,27 +1194,27 @@ Document Reference: ${doc.id}
                   <CardContent>
                     <Typography variant="h6" fontWeight="600" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                       <InsuranceDocIcon color="primary" />
-                      Insurance Details
+                      {t('leads.details.sections.insuranceDetails')}
                     </Typography>
                     <Divider sx={{ my: 2 }} />
                     <Grid container spacing={3}>
                       <Grid item xs={12} sm={4}>
                         <Box>
-                          <Typography variant="caption" color="text.secondary">Product</Typography>
-                          <Typography variant="body1">{lead.product || 'Not Assigned'}</Typography>
+                          <Typography variant="caption" color="text.secondary">{t('leads.details.fields.product')}</Typography>
+                          <Typography variant="body1">{lead.product || t('leads.details.values.notAssigned')}</Typography>
                         </Box>
                       </Grid>
                       <Grid item xs={12} sm={4}>
                         <Box>
-                          <Typography variant="caption" color="text.secondary">Sub Product</Typography>
-                          <Typography variant="body1">{lead.subProduct || 'Not Assigned'}</Typography>
+                          <Typography variant="caption" color="text.secondary">{t('leads.details.fields.subProduct')}</Typography>
+                          <Typography variant="body1">{t(`leads.subProducts.${lead.subProduct}`) || lead.subProduct || t('leads.details.values.notAssigned')}</Typography>
                         </Box>
                       </Grid>
                       <Grid item xs={12} sm={4}>
                         <Box>
-                          <Typography variant="caption" color="text.secondary">Policy Expiry Date</Typography>
+                          <Typography variant="caption" color="text.secondary">{t('leads.details.fields.policyExpiryDate')}</Typography>
                           <Typography variant="body1" fontWeight="600" color="error.main">
-                            {policyDetails?.policyExpiryDate || 'Not Set'}
+                            {policyDetails?.policyExpiryDate || t('leads.details.values.notSet')}
                           </Typography>
                         </Box>
                       </Grid>
@@ -1220,14 +1222,14 @@ Document Reference: ${doc.id}
                         <>
                           <Grid item xs={12} sm={4}>
                             <Box>
-                              <Typography variant="caption" color="text.secondary">Vehicle Reg. Number</Typography>
-                              <Typography variant="body1">{lead.vehicleRegistrationNumber || 'N/A'}</Typography>
+                              <Typography variant="caption" color="text.secondary">{t('leads.details.fields.vehicleRegNumber')}</Typography>
+                              <Typography variant="body1">{lead.vehicleRegistrationNumber || t('leads.details.values.na')}</Typography>
                             </Box>
                           </Grid>
                           <Grid item xs={12} sm={4}>
                             <Box>
-                              <Typography variant="caption" color="text.secondary">Vehicle Type</Typography>
-                              <Typography variant="body1">{lead.vehicleType || 'N/A'}</Typography>
+                              <Typography variant="caption" color="text.secondary">{t('leads.details.fields.vehicleType')}</Typography>
+                              <Typography variant="body1">{t(`leads.details.values.vehicleTypes.${lead.vehicleType}`) || lead.vehicleType || t('leads.details.values.na')}</Typography>
                             </Box>
                           </Grid>
                         </>
@@ -1243,11 +1245,11 @@ Document Reference: ${doc.id}
                   <CardContent>
                     <Typography variant="h6" fontWeight="600" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                       <NoteIcon color="primary" />
-                      Lead Notes
+                      {t('leads.details.sections.leadNotes')}
                     </Typography>
                     <Divider sx={{ my: 2 }} />
                     <Typography variant="body2" color="text.secondary">
-                      {lead.notes || 'No notes available'}
+                      {lead.notes || t('leads.details.values.noNotes')}
                     </Typography>
                   </CardContent>
                 </Card>
@@ -1264,7 +1266,7 @@ Document Reference: ${doc.id}
                   <CardContent>
                     <Typography variant="h6" fontWeight="600" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                       <DocumentIcon color="primary" />
-                      Policy Details
+                      {t('leads.details.sections.policyDetails')}
                     </Typography>
                     <Divider sx={{ my: 2 }} />
                     <Grid container spacing={2}>
@@ -1272,20 +1274,20 @@ Document Reference: ${doc.id}
                       <Grid item xs={12}>
                         <Box mb={2}>
                           <Box>
-                            <Typography variant="caption" color="text.secondary">Policy Number</Typography>
+                            <Typography variant="caption" color="text.secondary">{t('leads.details.fields.policyNumber')}</Typography>
                             <Typography variant="body1" fontWeight="600">{policyDetails?.policyNumber}</Typography>
                           </Box>
                         </Box>
                         <Box mb={2} display="flex" gap={2} alignItems="center">
                           <Box>
-                            <Typography variant="caption" color="text.secondary">Policy Type</Typography>
-                            <Typography variant="body1">{policyDetails?.policyType}</Typography>
+                            <Typography variant="caption" color="text.secondary">{t('leads.details.fields.policyType')}</Typography>
+                            <Typography variant="body1">{t(`leads.details.values.policyTypes.${policyDetails?.policyType}`) || policyDetails?.policyType}</Typography>
                           </Box>
                           <Box>
-                            <Typography variant="caption" color="text.secondary">Policy Status</Typography>
+                            <Typography variant="caption" color="text.secondary">{t('leads.details.fields.policyStatus')}</Typography>
                             <Box>
                               <Chip
-                                label={policyDetails?.policyStatus}
+                                label={t(`leads.details.values.policyStatuses.${policyDetails?.policyStatus}`) || policyDetails?.policyStatus}
                                 size="small"
                                 color={policyDetails?.policyStatus === 'Active' ? 'success' : 'warning'}
                                 sx={{ fontWeight: 600 }}
@@ -1302,7 +1304,7 @@ Document Reference: ${doc.id}
                       {/* Premium Details */}
                       <Grid item xs={12} sm={6}>
                         <Box sx={{ p: 1, bgcolor: alpha(theme.palette.primary.main, 0.03), borderRadius: 1 }}>
-                          <Typography variant="caption" color="text.secondary">IDV</Typography>
+                          <Typography variant="caption" color="text.secondary">{t('leads.details.fields.idv')}</Typography>
                           <Typography variant="body1" fontWeight="600" color="primary">
                             ₹{policyDetails?.idv?.toLocaleString()}
                           </Typography>
@@ -1311,7 +1313,7 @@ Document Reference: ${doc.id}
 
                       <Grid item xs={12} sm={6}>
                         <Box sx={{ p: 1, bgcolor: alpha(theme.palette.success.main, 0.03), borderRadius: 1 }}>
-                          <Typography variant="caption" color="text.secondary">Final Premium</Typography>
+                          <Typography variant="caption" color="text.secondary">{t('leads.details.fields.finalPremium')}</Typography>
                           <Typography variant="body1" color="success.main" fontWeight="600">
                             ₹{policyDetails?.finalPremium?.toLocaleString()}
                           </Typography>
@@ -1320,43 +1322,43 @@ Document Reference: ${doc.id}
 
                       <Grid item xs={12} sm={6}>
                         <Box sx={{ p: 1, bgcolor: 'background.default', borderRadius: 1 }}>
-                          <Typography variant="caption" color="text.secondary">OD Premium</Typography>
+                          <Typography variant="caption" color="text.secondary">{t('leads.details.fields.odPremium')}</Typography>
                           <Typography variant="body1">₹{policyDetails?.odPremium?.toLocaleString()}</Typography>
                         </Box>
                       </Grid>
 
                       <Grid item xs={12} sm={6}>
                         <Box sx={{ p: 1, bgcolor: 'background.default', borderRadius: 1 }}>
-                          <Typography variant="caption" color="text.secondary">Liability Premium</Typography>
+                          <Typography variant="caption" color="text.secondary">{t('leads.details.fields.liabilityPremium')}</Typography>
                           <Typography variant="body1">₹{policyDetails?.liabilityPremium?.toLocaleString()}</Typography>
                         </Box>
                       </Grid>
 
                       <Grid item xs={12} sm={6}>
                         <Box sx={{ p: 1, bgcolor: 'background.default', borderRadius: 1 }}>
-                          <Typography variant="caption" color="text.secondary">Total Add-on Premium</Typography>
+                          <Typography variant="caption" color="text.secondary">{t('leads.details.fields.addOnPremium')}</Typography>
                           <Typography variant="body1">₹{policyDetails?.addOnPremium?.toLocaleString()}</Typography>
                         </Box>
                       </Grid>
 
                       <Grid item xs={12} sm={6}>
                         <Box sx={{ p: 1, bgcolor: 'background.default', borderRadius: 1 }}>
-                          <Typography variant="caption" color="text.secondary">Net Premium</Typography>
+                          <Typography variant="caption" color="text.secondary">{t('leads.details.fields.netPremium')}</Typography>
                           <Typography variant="body1">₹{policyDetails?.netPremium?.toLocaleString()}</Typography>
                         </Box>
                       </Grid>
 
                       <Grid item xs={12} sm={6}>
                         <Box sx={{ p: 1, bgcolor: 'background.default', borderRadius: 1 }}>
-                          <Typography variant="caption" color="text.secondary">GST</Typography>
+                          <Typography variant="caption" color="text.secondary">{t('leads.details.fields.gst')}</Typography>
                           <Typography variant="body1">₹{policyDetails?.gst?.toLocaleString()}</Typography>
                         </Box>
                       </Grid>
 
                       <Grid item xs={12} sm={6}>
                         <Box sx={{ p: 1, bgcolor: 'background.default', borderRadius: 1 }}>
-                          <Typography variant="caption" color="text.secondary">Reference ID</Typography>
-                          <Typography variant="body1">{policyDetails?.referenceId || 'N/A'}</Typography>
+                          <Typography variant="caption" color="text.secondary">{t('leads.details.fields.referenceId')}</Typography>
+                          <Typography variant="body1">{policyDetails?.referenceId || t('leads.details.values.na')}</Typography>
                         </Box>
                       </Grid>
 
@@ -1367,20 +1369,20 @@ Document Reference: ${doc.id}
                       {/* Policy Period Details */}
                       <Grid item xs={12}>
                         <Box mb={1}>
-                          <Typography variant="caption" color="text.secondary">Payment Frequency</Typography>
-                          <Typography variant="body1">{policyDetails?.paymentFrequency}</Typography>
+                          <Typography variant="caption" color="text.secondary">{t('leads.details.fields.paymentFrequency')}</Typography>
+                          <Typography variant="body1">{t(`leads.details.values.paymentFrequencies.${policyDetails?.paymentFrequency}`) || policyDetails?.paymentFrequency}</Typography>
                         </Box>
                       </Grid>
                     </Grid>
                     <Stack spacing={2}>
                       <Box>
-                        <Typography variant="caption" color="text.secondary">Policy Period</Typography>
+                        <Typography variant="caption" color="text.secondary">{t('leads.details.fields.policyPeriod')}</Typography>
                         <Typography variant="body1">
-                          {policyDetails?.policyStartDate} to {policyDetails?.policyEndDate}
+                          {policyDetails?.policyStartDate} {t('leads.details.values.to')} {policyDetails?.policyEndDate}
                         </Typography>
                       </Box>
                       <Box>
-                        <Typography variant="caption" color="text.secondary">Next Payment Due</Typography>
+                        <Typography variant="caption" color="text.secondary">{t('leads.details.fields.nextPaymentDue')}</Typography>
                         <Typography variant="body1" color="warning.main" fontWeight="600">
                           {policyDetails?.nextPaymentDue}
                         </Typography>
@@ -1396,36 +1398,36 @@ Document Reference: ${doc.id}
                   <CardContent>
                     <Typography variant="h6" fontWeight="600" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                       <PersonIcon color="primary" />
-                      Nominee Details
+                      {t('leads.details.sections.nomineeDetails')}
                     </Typography>
                     <Divider sx={{ my: 2 }} />
                     <Stack spacing={2}>
                       <Box>
-                        <Typography variant="caption" color="text.secondary">Nominee Name</Typography>
+                        <Typography variant="caption" color="text.secondary">{t('leads.details.fields.nomineeName')}</Typography>
                         <Typography variant="body1" fontWeight="600">{nomineeDetails?.nomineeName}</Typography>
                       </Box>
                       <Box>
-                        <Typography variant="caption" color="text.secondary">Relationship</Typography>
-                        <Typography variant="body1">{nomineeDetails?.relationship}</Typography>
+                        <Typography variant="caption" color="text.secondary">{t('leads.details.fields.relationship')}</Typography>
+                        <Typography variant="body1">{t(`leads.details.values.relationships.${nomineeDetails?.relationship}`) || nomineeDetails?.relationship}</Typography>
                       </Box>
                       <Box>
-                        <Typography variant="caption" color="text.secondary">Date of Birth</Typography>
+                        <Typography variant="caption" color="text.secondary">{t('leads.details.fields.dob')}</Typography>
                         <Typography variant="body1">{nomineeDetails?.dateOfBirth}</Typography>
                       </Box>
                       <Box>
-                        <Typography variant="caption" color="text.secondary">Contact Number</Typography>
+                        <Typography variant="caption" color="text.secondary">{t('leads.details.fields.contactNumber')}</Typography>
                         <Typography variant="body1">{nomineeDetails?.contactNumber}</Typography>
                       </Box>
                       <Box>
-                        <Typography variant="caption" color="text.secondary">Email</Typography>
+                        <Typography variant="caption" color="text.secondary">{t('leads.details.fields.email')}</Typography>
                         <Typography variant="body1">{nomineeDetails?.email}</Typography>
                       </Box>
                       <Box>
-                        <Typography variant="caption" color="text.secondary">Address</Typography>
+                        <Typography variant="caption" color="text.secondary">{t('leads.details.fields.address')}</Typography>
                         <Typography variant="body2">{nomineeDetails?.address}</Typography>
                       </Box>
                       <Box>
-                        <Typography variant="caption" color="text.secondary">Nominee Percentage</Typography>
+                        <Typography variant="caption" color="text.secondary">{t('leads.details.fields.nomineePercentage')}</Typography>
                         <Typography variant="body1" fontWeight="600" color="primary">
                           {nomineeDetails?.nomineePercentage}%
                         </Typography>
@@ -1441,7 +1443,7 @@ Document Reference: ${doc.id}
           {currentTab === 2 && (
             <Box>
               <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-                <Typography variant="h6">Policy History</Typography>
+                <Typography variant="h6">{t('leads.details.sections.policyHistory')}</Typography>
                 <Box>
                   <Button
                     variant="outlined"
@@ -1449,7 +1451,7 @@ Document Reference: ${doc.id}
                     size="small"
                     sx={{ mr: 1 }}
                   >
-                    Export
+                    {t('common.export')}
                   </Button>
                 </Box>
               </Box>
@@ -1458,15 +1460,15 @@ Document Reference: ${doc.id}
                 <Table>
                   <TableHead>
                     <TableRow>
-                      <TableCell>Policy Number</TableCell>
-                      <TableCell>Type</TableCell>
-                      <TableCell>Period</TableCell>
-                      <TableCell>Vehicle Details</TableCell>
-                      <TableCell align="right">Premium</TableCell>
-                      <TableCell>NCB</TableCell>
-                      <TableCell>Claims</TableCell>
-                      <TableCell>Status</TableCell>
-                      <TableCell align="center">Actions</TableCell>
+                      <TableCell>{t('leads.details.table.policyNumber')}</TableCell>
+                      <TableCell>{t('leads.details.table.policyType')}</TableCell>
+                      <TableCell>{t('leads.details.table.period')}</TableCell>
+                      <TableCell>{t('leads.details.table.vehicleDetails')}</TableCell>
+                      <TableCell align="right">{t('leads.details.table.premium')}</TableCell>
+                      <TableCell>{t('leads.details.table.ncb')}</TableCell>
+                      <TableCell>{t('leads.details.table.claims')}</TableCell>
+                      <TableCell>{t('leads.details.table.status')}</TableCell>
+                      <TableCell align="center">{t('leads.details.table.actions')}</TableCell>
                     </TableRow>
                   </TableHead>
                   <TableBody>
@@ -1477,7 +1479,7 @@ Document Reference: ${doc.id}
                             {policy.policyNumber}
                           </Typography>
                         </TableCell>
-                        <TableCell>{policy.type}</TableCell>
+                        <TableCell>{t(`leads.details.values.policyTypes.${policy.type}`) || policy.type}</TableCell>
                         <TableCell>
                           <Typography variant="body2">
                             {new Date(policy.startDate).toLocaleDateString()} -
@@ -1502,7 +1504,7 @@ Document Reference: ${doc.id}
                         </TableCell>
                         <TableCell>
                           <Chip
-                            label={policy.status}
+                            label={t(`leads.details.values.policyStatuses.${policy.status}`) || policy.status}
                             size="small"
                             color={policy.status === 'Active' ? 'success' : 'default'}
                             sx={{
@@ -1517,12 +1519,12 @@ Document Reference: ${doc.id}
                           />
                         </TableCell>
                         <TableCell align="center">
-                          <Tooltip title="View Details">
+                          <Tooltip title={t('common.view')}>
                             <IconButton size="small" onClick={() => handleViewPolicyDetails(policy)}>
                               <VisibilityIcon fontSize="small" />
                             </IconButton>
                           </Tooltip>
-                          <Tooltip title="Download Policy">
+                          <Tooltip title={t('common.download')}>
                             <IconButton size="small" onClick={() => handleDownloadPolicy(policy)}>
                               <DownloadIcon fontSize="small" />
                             </IconButton>
@@ -1539,16 +1541,16 @@ Document Reference: ${doc.id}
           {/* Activities Tab */}
           {currentTab === 3 && (
             <Box>
-              <Typography variant="h6" fontWeight="600" gutterBottom>Activities</Typography>
+              <Typography variant="h6" fontWeight="600" gutterBottom>{t('leads.details.sections.activities')}</Typography>
 
               {/* Activities Sub-tabs */}
               <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 3 }}>
                 <Tabs value={activitiesSubTab} onChange={(e, newValue) => setActivitiesSubTab(newValue)}>
-                  <Tab label="Notes" />
-                  <Tab label="Tasks" />
-                  <Tab label="Call Logs" />
-                  <Tab label="Claims" />
-                  <Tab label="Timeline" />
+                  <Tab label={t('leads.details.tabs.overview')} />
+                  <Tab label={t('leads.details.tabs.tasks')} />
+                  <Tab label={t('leads.details.tabs.callLog')} />
+                  <Tab label={t('leads.details.tabs.claims')} />
+                  <Tab label={t('leads.details.tabs.timeline')} />
                 </Tabs>
               </Box>
 
@@ -1559,10 +1561,10 @@ Document Reference: ${doc.id}
                     <Table>
                       <TableHead>
                         <TableRow>
-                          <TableCell>Date</TableCell>
-                          <TableCell>User</TableCell>
-                          <TableCell>Content</TableCell>
-                          <TableCell>Created At</TableCell>
+                          <TableCell>{t('leads.details.table.date')}</TableCell>
+                          <TableCell>{t('leads.details.table.user')}</TableCell>
+                          <TableCell>{t('leads.details.table.content')}</TableCell>
+                          <TableCell>{t('leads.details.table.createdAt')}</TableCell>
                         </TableRow>
                       </TableHead>
                       <TableBody>
@@ -1589,20 +1591,20 @@ Document Reference: ${doc.id}
                       startIcon={<AddIcon />}
                       onClick={() => setAddTaskDialog(true)}
                     >
-                      Add Task
+                      {t('leads.details.tasks.add')}
                     </Button>
                   </Box>
                   <TableContainer>
                     <Table>
                       <TableHead>
                         <TableRow>
-                          <TableCell>Task</TableCell>
-                          <TableCell>Due Date</TableCell>
-                          <TableCell>Priority</TableCell>
-                          <TableCell>Assigned To</TableCell>
-                          <TableCell>Status</TableCell>
-                          <TableCell>Created At</TableCell>
-                          <TableCell align="center">Actions</TableCell>
+                          <TableCell>{t('leads.details.table.task')}</TableCell>
+                          <TableCell>{t('leads.details.table.dueDate')}</TableCell>
+                          <TableCell>{t('leads.details.table.priority')}</TableCell>
+                          <TableCell>{t('leads.details.table.assignedTo')}</TableCell>
+                          <TableCell>{t('leads.details.table.status')}</TableCell>
+                          <TableCell>{t('leads.details.table.createdAt')}</TableCell>
+                          <TableCell align="center">{t('leads.details.table.actions')}</TableCell>
                         </TableRow>
                       </TableHead>
                       <TableBody>
@@ -1612,7 +1614,7 @@ Document Reference: ${doc.id}
                             <TableCell>{task.dueDate}</TableCell>
                             <TableCell>
                               <Chip
-                                label={task.priority}
+                                label={t(`leads.details.values.priorities.${task.priority.toLowerCase()}`) || task.priority}
                                 size="small"
                                 sx={{
                                   backgroundColor: alpha(getPriorityColor(task.priority), 0.1),
@@ -1623,14 +1625,14 @@ Document Reference: ${doc.id}
                             <TableCell>{task.assignedTo}</TableCell>
                             <TableCell>
                               <Chip
-                                label={task.status}
+                                label={t(`leads.details.values.callStatuses.${task.status.toLowerCase()}`) || task.status}
                                 size="small"
                                 color={task.status === 'Completed' ? 'success' : 'warning'}
                               />
                             </TableCell>
                             <TableCell>{task.createdAt}</TableCell>
                             <TableCell align="center">
-                              <Tooltip title="Delete">
+                              <Tooltip title={t('common.delete')}>
                                 <IconButton size="small" onClick={() => handleDeleteTask(task.id)}>
                                   <DeleteIcon />
                                 </IconButton>
@@ -1648,13 +1650,13 @@ Document Reference: ${doc.id}
               {activitiesSubTab === 2 && (
                 <Box>
                   <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-                    <Typography variant="h6" fontWeight="600">📞 Call Log Management</Typography>
+                    <Typography variant="h6" fontWeight="600">📞 {t('leads.details.callLog.title')}</Typography>
                     <Button
                       variant="contained"
                       startIcon={<AddIcon />}
                       onClick={() => setAddCallLogDialog(true)}
                     >
-                      Add Call Log
+                      {t('leads.details.callLog.addLog')}
                     </Button>
                   </Box>
 
@@ -1665,7 +1667,7 @@ Document Reference: ${doc.id}
                         <Grid item xs={12} md={3}>
                           <TextField
                             fullWidth
-                            placeholder="Search calls..."
+                            placeholder={t('leads.details.callLog.searchPlaceholder')}
                             value={callLogSearchTerm}
                             onChange={(e) => setCallLogSearchTerm(e.target.value)}
                             InputProps={{
@@ -1675,42 +1677,42 @@ Document Reference: ${doc.id}
                         </Grid>
                         <Grid item xs={12} md={2}>
                           <FormControl fullWidth>
-                            <InputLabel>Call Type</InputLabel>
+                            <InputLabel>{t('leads.details.callLog.type')}</InputLabel>
                             <Select
                               value={callLogTypeFilter}
                               onChange={(e) => setCallLogTypeFilter(e.target.value)}
-                              label="Call Type"
+                              label={t('leads.details.callLog.type')}
                             >
-                              <MenuItem value="All">All Types</MenuItem>
-                              <MenuItem value="Inbound">Inbound</MenuItem>
-                              <MenuItem value="Outbound">Outbound</MenuItem>
+                              <MenuItem value="All">{t('leads.details.callLog.allTypes')}</MenuItem>
+                              <MenuItem value="Inbound">{t('leads.details.callLog.inbound')}</MenuItem>
+                              <MenuItem value="Outbound">{t('leads.details.callLog.outbound')}</MenuItem>
                             </Select>
                           </FormControl>
                         </Grid>
                         <Grid item xs={12} md={2}>
                           <FormControl fullWidth>
-                            <InputLabel>Status</InputLabel>
+                            <InputLabel>{t('leads.details.callLog.status')}</InputLabel>
                             <Select
                               value={callLogStatusFilter}
                               onChange={(e) => setCallLogStatusFilter(e.target.value)}
-                              label="Status"
+                              label={t('leads.details.callLog.status')}
                             >
-                              <MenuItem value="All">All Status</MenuItem>
-                              <MenuItem value="Completed">Completed</MenuItem>
-                              <MenuItem value="Missed">Missed</MenuItem>
-                              <MenuItem value="No Answer">No Answer</MenuItem>
+                              <MenuItem value="All">{t('leads.details.callLog.allStatus')}</MenuItem>
+                              <MenuItem value="Completed">{t('leads.details.callLog.completed')}</MenuItem>
+                              <MenuItem value="Missed">{t('leads.details.callLog.missed')}</MenuItem>
+                              <MenuItem value="No Answer">{t('leads.details.callLog.noAnswer')}</MenuItem>
                             </Select>
                           </FormControl>
                         </Grid>
                         <Grid item xs={12} md={2}>
                           <FormControl fullWidth>
-                            <InputLabel>Agent</InputLabel>
+                            <InputLabel>{t('leads.details.callLog.agent')}</InputLabel>
                             <Select
                               value={callLogAgentFilter}
                               onChange={(e) => setCallLogAgentFilter(e.target.value)}
-                              label="Agent"
+                              label={t('leads.details.callLog.agent')}
                             >
-                              <MenuItem value="All">All Agents</MenuItem>
+                              <MenuItem value="All">{t('leads.details.callLog.allAgents')}</MenuItem>
                               <MenuItem value="Sarah Johnson">Sarah Johnson</MenuItem>
                               <MenuItem value="Mike Wilson">Mike Wilson</MenuItem>
                             </Select>
@@ -1719,7 +1721,7 @@ Document Reference: ${doc.id}
                         <Grid item xs={12} md={2}>
                           <TextField
                             fullWidth
-                            label="Date"
+                            label={t('leads.details.callLog.date')}
                             type="date"
                             value={callLogDateFilter}
                             onChange={(e) => setCallLogDateFilter(e.target.value)}
@@ -1733,7 +1735,7 @@ Document Reference: ${doc.id}
                             startIcon={<FilterIcon />}
                             onClick={handleResetCallLogFilters}
                           >
-                            Reset
+                            {t('leads.details.callLog.reset')}
                           </Button>
                         </Grid>
                       </Grid>
@@ -1744,14 +1746,14 @@ Document Reference: ${doc.id}
                     <Table>
                       <TableHead>
                         <TableRow>
-                          <TableCell>Call ID</TableCell>
-                          <TableCell>Customer Name</TableCell>
-                          <TableCell>Agent Name</TableCell>
-                          <TableCell>Call Type</TableCell>
-                          <TableCell>Duration</TableCell>
-                          <TableCell>Disposition</TableCell>
-                          <TableCell>Date & Time</TableCell>
-                          <TableCell align="center">Actions</TableCell>
+                          <TableCell>{t('leads.details.table.callId')}</TableCell>
+                          <TableCell>{t('leads.details.table.customerName')}</TableCell>
+                          <TableCell>{t('leads.details.table.agentName')}</TableCell>
+                          <TableCell>{t('leads.details.table.callType')}</TableCell>
+                          <TableCell>{t('leads.details.table.duration')}</TableCell>
+                          <TableCell>{t('leads.details.table.disposition')}</TableCell>
+                          <TableCell>{t('leads.details.table.dateTime')}</TableCell>
+                          <TableCell align="center">{t('leads.details.table.actions')}</TableCell>
                         </TableRow>
                       </TableHead>
                       <TableBody>
@@ -1773,7 +1775,7 @@ Document Reference: ${doc.id}
                             <TableCell>{log.agentName}</TableCell>
                             <TableCell>
                               <Chip
-                                label={log.type}
+                                label={t(`leads.details.values.callTypes.${log.type.toLowerCase()}`) || log.type}
                                 size="small"
                                 variant="outlined"
                                 color={log.type === 'Inbound' ? 'success' : 'primary'}
@@ -1788,7 +1790,7 @@ Document Reference: ${doc.id}
                             <TableCell>
                               <Box>
                                 <Chip
-                                  label={log.disposition}
+                                  label={t(`leads.details.values.dispositions.${log.disposition.replace(/ /g, '').charAt(0).toLowerCase() + log.disposition.replace(/ /g, '').slice(1)}`) || log.disposition}
                                   size="small"
                                   color={
                                     log.disposition === 'Interested' ? 'success' :
@@ -1812,7 +1814,7 @@ Document Reference: ${doc.id}
                               <Typography variant="caption" color="text.secondary">{log.time}</Typography>
                             </TableCell>
                             <TableCell align="center">
-                              <Tooltip title="View Details">
+                              <Tooltip title={t('common.view')}>
                                 <IconButton size="small" onClick={() => handleViewCallDetails(log)}>
                                   <VisibilityIcon />
                                 </IconButton>
@@ -1835,19 +1837,19 @@ Document Reference: ${doc.id}
                       startIcon={<AddIcon />}
                       onClick={() => setAddClaimDialog(true)}
                     >
-                      Add Claim
+                      {t('leads.details.feedback.add')}
                     </Button>
                   </Box>
                   <TableContainer>
                     <Table>
                       <TableHead>
                         <TableRow>
-                          <TableCell>Claim Number</TableCell>
-                          <TableCell>Date</TableCell>
-                          <TableCell>Amount</TableCell>
-                          <TableCell>Description</TableCell>
-                          <TableCell>Status</TableCell>
-                          <TableCell align="center">Actions</TableCell>
+                          <TableCell>{t('leads.details.table.claimNumber')}</TableCell>
+                          <TableCell>{t('leads.details.table.date')}</TableCell>
+                          <TableCell>{t('leads.details.table.amount')}</TableCell>
+                          <TableCell>{t('leads.details.table.description')}</TableCell>
+                          <TableCell>{t('leads.details.table.status')}</TableCell>
+                          <TableCell align="center">{t('leads.details.table.actions')}</TableCell>
                         </TableRow>
                       </TableHead>
                       <TableBody>
@@ -1863,7 +1865,7 @@ Document Reference: ${doc.id}
                             <TableCell>{claim.description}</TableCell>
                             <TableCell>
                               <Chip
-                                label={claim.status}
+                                label={t(`leads.details.values.claimStatuses.${claim.status.replace(/ /g, '').charAt(0).toLowerCase() + claim.status.replace(/ /g, '').slice(1)}`) || claim.status}
                                 size="small"
                                 sx={{
                                   backgroundColor: alpha(getStatusColor(claim.status), 0.1),
@@ -1872,7 +1874,7 @@ Document Reference: ${doc.id}
                               />
                             </TableCell>
                             <TableCell align="center">
-                              <Tooltip title="Delete">
+                              <Tooltip title={t('common.delete')}>
                                 <IconButton size="small" onClick={() => handleDeleteClaim(claim.id)}>
                                   <DeleteIcon />
                                 </IconButton>
@@ -1890,9 +1892,9 @@ Document Reference: ${doc.id}
               {activitiesSubTab === 4 && (
                 <Box>
                   <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-                    <Typography variant="h6" fontWeight="600">Activity Timeline</Typography>
+                    <Typography variant="h6" fontWeight="600">{t('leads.details.sections.activities')} {t('leads.details.activities.timeline')}</Typography>
                     <Typography variant="body2" color="text.secondary">
-                      Showing all activities
+                      {t('leads.details.activities.showingAll')}
                     </Typography>
                   </Box>
                   <Stack spacing={2}>
@@ -2000,18 +2002,18 @@ Document Reference: ${doc.id}
                     setUploadDocumentDialog(true);
                   }}
                 >
-                  Upload Document
+                  {t('leads.details.documents.upload')}
                 </Button>
               </Box>
               <TableContainer>
                 <Table>
                   <TableHead>
                     <TableRow>
-                      <TableCell>Document Type</TableCell>
-                      <TableCell>Upload Date</TableCell>
-                      <TableCell>Size</TableCell>
-                      <TableCell>Status</TableCell>
-                      <TableCell align="center">Actions</TableCell>
+                      <TableCell>{t('leads.details.table.docType')}</TableCell>
+                      <TableCell>{t('leads.details.table.uploadDate')}</TableCell>
+                      <TableCell>{t('leads.details.table.size')}</TableCell>
+                      <TableCell>{t('leads.details.table.status')}</TableCell>
+                      <TableCell align="center">{t('leads.details.table.actions')}</TableCell>
                     </TableRow>
                   </TableHead>
                   <TableBody>
@@ -2027,7 +2029,7 @@ Document Reference: ${doc.id}
                         <TableCell>{doc.size}</TableCell>
                         <TableCell>
                           <Chip
-                            label={doc.status}
+                            label={t(`leads.details.values.fileStatuses.${doc.status.toLowerCase()}`) || doc.status}
                             size="small"
                             sx={{
                               backgroundColor: alpha(getStatusColor(doc.status), 0.1),
@@ -2036,17 +2038,17 @@ Document Reference: ${doc.id}
                           />
                         </TableCell>
                         <TableCell align="center">
-                          <Tooltip title="View">
+                          <Tooltip title={t('common.view')}>
                             <IconButton size="small" onClick={() => handleViewDocument(doc, 'Vehicle Document')}>
                               <VisibilityIcon />
                             </IconButton>
                           </Tooltip>
-                          <Tooltip title="Download">
+                          <Tooltip title={t('common.download')}>
                             <IconButton size="small" onClick={() => handleDownloadDocument(doc, 'Vehicle Document')}>
                               <DownloadIcon />
                             </IconButton>
                           </Tooltip>
-                          <Tooltip title="Delete">
+                          <Tooltip title={t('common.delete')}>
                             <IconButton size="small" onClick={() => handleDeleteVehicleDoc(doc.id)}>
                               <DeleteIcon />
                             </IconButton>
@@ -2072,18 +2074,18 @@ Document Reference: ${doc.id}
                     setUploadDocumentDialog(true);
                   }}
                 >
-                  Upload Document
+                  {t('leads.details.documents.upload')}
                 </Button>
               </Box>
               <TableContainer>
                 <Table>
                   <TableHead>
                     <TableRow>
-                      <TableCell>Document Name</TableCell>
-                      <TableCell>Upload Date</TableCell>
-                      <TableCell>Size</TableCell>
-                      <TableCell>Status</TableCell>
-                      <TableCell align="center">Actions</TableCell>
+                      <TableCell>{t('leads.details.table.fileName')}</TableCell>
+                      <TableCell>{t('leads.details.table.uploadDate')}</TableCell>
+                      <TableCell>{t('leads.details.table.size')}</TableCell>
+                      <TableCell>{t('leads.details.table.status')}</TableCell>
+                      <TableCell align="center">{t('leads.details.table.actions')}</TableCell>
                     </TableRow>
                   </TableHead>
                   <TableBody>
@@ -2099,7 +2101,7 @@ Document Reference: ${doc.id}
                         <TableCell>{doc.size}</TableCell>
                         <TableCell>
                           <Chip
-                            label={doc.status}
+                            label={t(`leads.details.values.fileStatuses.${doc.status.toLowerCase()}`) || doc.status}
                             size="small"
                             sx={{
                               backgroundColor: alpha(getStatusColor(doc.status), 0.1),
@@ -2108,17 +2110,17 @@ Document Reference: ${doc.id}
                           />
                         </TableCell>
                         <TableCell align="center">
-                          <Tooltip title="View">
+                          <Tooltip title={t('common.view')}>
                             <IconButton size="small" onClick={() => handleViewDocument(doc, 'Insurance Document')}>
                               <VisibilityIcon />
                             </IconButton>
                           </Tooltip>
-                          <Tooltip title="Download">
+                          <Tooltip title={t('common.download')}>
                             <IconButton size="small" onClick={() => handleDownloadDocument(doc, 'Insurance Document')}>
                               <DownloadIcon />
                             </IconButton>
                           </Tooltip>
-                          <Tooltip title="Delete">
+                          <Tooltip title={t('common.delete')}>
                             <IconButton size="small" onClick={() => handleDeleteInsuranceDoc(doc.id)}>
                               <DeleteIcon />
                             </IconButton>
@@ -2135,7 +2137,7 @@ Document Reference: ${doc.id}
           {currentTab === 8 && (
             <Box>
               <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-                <Typography variant="h6" fontWeight="600">KYC Documents Management</Typography>
+                <Typography variant="h6" fontWeight="600">{t('leads.details.documents.kycTitle')}</Typography>
                 <Button
                   variant="contained"
                   startIcon={<UploadIcon />}
@@ -2144,7 +2146,7 @@ Document Reference: ${doc.id}
                     background: `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.primary.dark} 100%)`,
                   }}
                 >
-                  Upload Files
+                  {t('leads.details.documents.uploadFiles')}
                 </Button>
               </Box>
 
@@ -2165,28 +2167,28 @@ Document Reference: ${doc.id}
                     </Grid>
                     <Grid item xs={12} md={3}>
                       <FormControl fullWidth>
-                        <InputLabel>Status</InputLabel>
+                        <InputLabel>{t('leads.details.documents.status')}</InputLabel>
                         <Select
                           value={fileStatusFilter}
-                          label="Status"
+                          label={t('leads.details.documents.status')}
                           onChange={(e) => setFileStatusFilter(e.target.value)}
                         >
-                          <MenuItem value="All">All Status</MenuItem>
-                          <MenuItem value="Pending">Pending</MenuItem>
-                          <MenuItem value="Verified">Verified</MenuItem>
-                          <MenuItem value="Rejected">Rejected</MenuItem>
+                          <MenuItem value="All">{t('leads.details.callLog.allStatus')}</MenuItem>
+                          <MenuItem value="Pending">{t('leads.details.values.fileStatuses.pending')}</MenuItem>
+                          <MenuItem value="Verified">{t('leads.details.values.fileStatuses.verified')}</MenuItem>
+                          <MenuItem value="Rejected">{t('leads.details.values.fileStatuses.rejected')}</MenuItem>
                         </Select>
                       </FormControl>
                     </Grid>
                     <Grid item xs={12} md={3}>
                       <FormControl fullWidth>
-                        <InputLabel>Document Type</InputLabel>
+                        <InputLabel>{t('leads.details.documents.type')}</InputLabel>
                         <Select
                           value={fileTypeFilter}
-                          label="Document Type"
+                          label={t('leads.details.documents.type')}
                           onChange={(e) => setFileTypeFilter(e.target.value)}
                         >
-                          <MenuItem value="All">All Types</MenuItem>
+                          <MenuItem value="All">{t('leads.details.callLog.allTypes')}</MenuItem>
                           {fileDocumentTypes.map(type => (
                             <MenuItem key={type} value={type}>{type}</MenuItem>
                           ))}
@@ -2204,7 +2206,7 @@ Document Reference: ${doc.id}
                           setFileTypeFilter('All');
                         }}
                       >
-                        Reset
+                        {t('leads.details.callLog.reset')}
                       </Button>
                     </Grid>
                   </Grid>
@@ -2216,12 +2218,12 @@ Document Reference: ${doc.id}
                 <Table>
                   <TableHead>
                     <TableRow>
-                      <TableCell>Document Type</TableCell>
-                      <TableCell>File Name</TableCell>
-                      <TableCell>Uploaded On</TableCell>
-                      <TableCell>Size</TableCell>
-                      <TableCell>Status</TableCell>
-                      <TableCell align="center">Actions</TableCell>
+                      <TableCell>{t('leads.details.table.docType')}</TableCell>
+                      <TableCell>{t('leads.details.table.fileName')}</TableCell>
+                      <TableCell>{t('leads.details.table.uploadedOn')}</TableCell>
+                      <TableCell>{t('leads.details.table.size')}</TableCell>
+                      <TableCell>{t('leads.details.table.status')}</TableCell>
+                      <TableCell align="center">{t('leads.details.table.actions')}</TableCell>
                     </TableRow>
                   </TableHead>
                   <TableBody>
@@ -2264,19 +2266,19 @@ Document Reference: ${doc.id}
                                 })()
                               }}
                             >
-                              <MenuItem value="Pending">Pending</MenuItem>
-                              <MenuItem value="Verified">Verified</MenuItem>
-                              <MenuItem value="Rejected">Rejected</MenuItem>
+                              <MenuItem value="Pending">{t('leads.details.values.fileStatuses.pending')}</MenuItem>
+                              <MenuItem value="Verified">{t('leads.details.values.fileStatuses.verified')}</MenuItem>
+                              <MenuItem value="Rejected">{t('leads.details.values.fileStatuses.rejected')}</MenuItem>
                             </Select>
                           </FormControl>
                         </TableCell>
                         <TableCell align="center">
-                          <Tooltip title="View">
+                          <Tooltip title={t('common.view')}>
                             <IconButton size="small" onClick={() => handleViewDocument(file, 'KYC Document')}>
                               <VisibilityIcon />
                             </IconButton>
                           </Tooltip>
-                          <Tooltip title="Download">
+                          <Tooltip title={t('common.download')}>
                             <IconButton size="small" onClick={() => handleDownloadDocument(file, 'KYC Document')}>
                               <DownloadIcon />
                             </IconButton>
@@ -2292,12 +2294,12 @@ Document Reference: ${doc.id}
                 <Paper sx={{ p: 3, textAlign: 'center', mt: 2 }}>
                   <FileIcon sx={{ fontSize: 48, color: 'text.secondary', mb: 2 }} />
                   <Typography variant="h6" color="text.secondary" gutterBottom>
-                    No Files Found
+                    {t('leads.details.documents.noFiles')}
                   </Typography>
-                  <Typography variant="body2" color="text.secondary">
+                  <Typography variant="body1" color="text.secondary">
                     {uploadedFiles.length === 0
-                      ? 'No files have been uploaded yet. Click "Upload Files" to get started.'
-                      : 'No files match your current search criteria.'}
+                      ? t('leads.details.documents.noFilesDesc')
+                      : t('leads.details.documents.noMatchDesc')}
                   </Typography>
                 </Paper>
               )}
@@ -2308,13 +2310,13 @@ Document Reference: ${doc.id}
           {currentTab === 9 && (
             <Box>
               <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-                <Typography variant="h6" fontWeight="600">Customer Feedback</Typography>
+                <Typography variant="h6" fontWeight="600">{t('leads.details.feedback.title')}</Typography>
                 <Button
                   variant="contained"
                   startIcon={<AddIcon />}
                   onClick={() => setFeedbackDialog(true)}
                 >
-                  Add Feedback
+                  {t('leads.details.feedback.add')}
                 </Button>
               </Box>
 
@@ -2325,7 +2327,7 @@ Document Reference: ${doc.id}
                       <Grid item xs={12} md={6}>
                         <Box sx={{ mb: 3 }}>
                           <Typography variant="subtitle2" color="text.secondary" gutterBottom>
-                            Overall Rating
+                            {t('leads.details.feedback.rating')}
                           </Typography>
                           <Stack direction="row" spacing={1} alignItems="center">
                             {[1, 2, 3, 4, 5].map((star) => (
@@ -2344,7 +2346,7 @@ Document Reference: ${doc.id}
 
                         <Box sx={{ mb: 3 }}>
                           <Typography variant="subtitle2" color="text.secondary" gutterBottom>
-                            Recommendation Score (NPS)
+                            {t('leads.details.feedback.nps')}
                           </Typography>
                           <Typography variant="h6">
                             {customerFeedback.recommendationScore}/10
@@ -2353,7 +2355,7 @@ Document Reference: ${doc.id}
 
                         <Box sx={{ mb: 3 }}>
                           <Typography variant="subtitle2" color="text.secondary" gutterBottom>
-                            Feedback Date
+                            {t('leads.details.feedback.date')}
                           </Typography>
                           <Typography variant="body1">
                             {customerFeedback.feedbackDate}
@@ -2364,7 +2366,7 @@ Document Reference: ${doc.id}
                       <Grid item xs={12} md={6}>
                         <Box sx={{ mb: 3 }}>
                           <Typography variant="subtitle2" color="text.secondary" gutterBottom>
-                            General Feedback
+                            {t('leads.details.feedback.general')}
                           </Typography>
                           <Typography variant="body1">
                             {customerFeedback.feedback}
@@ -2375,7 +2377,7 @@ Document Reference: ${doc.id}
                       <Grid item xs={12} md={6}>
                         <Box sx={{ mb: 3 }}>
                           <Typography variant="subtitle2" color="text.secondary" gutterBottom>
-                            Areas of Satisfaction
+                            {t('leads.details.feedback.satisfaction')}
                           </Typography>
                           <Stack spacing={1}>
                             {customerFeedback.satisfactionAreas.map((area, index) => (
@@ -2394,7 +2396,7 @@ Document Reference: ${doc.id}
                       <Grid item xs={12} md={6}>
                         <Box sx={{ mb: 3 }}>
                           <Typography variant="subtitle2" color="text.secondary" gutterBottom>
-                            Areas for Improvement
+                            {t('leads.details.feedback.improvement')}
                           </Typography>
                           <Stack spacing={1}>
                             {customerFeedback.improvementAreas.map((area, index) => (
@@ -2413,7 +2415,7 @@ Document Reference: ${doc.id}
                         <Grid item xs={12}>
                           <Box>
                             <Typography variant="subtitle2" color="text.secondary" gutterBottom>
-                              Additional Comments
+                              {t('leads.details.feedback.additionalComments')}
                             </Typography>
                             <Typography variant="body1">
                               {customerFeedback.additionalComments}
@@ -2428,10 +2430,10 @@ Document Reference: ${doc.id}
                 <Paper sx={{ p: 3, textAlign: 'center' }}>
                   <FeedbackIcon sx={{ fontSize: 48, color: 'text.secondary', mb: 2 }} />
                   <Typography variant="h6" color="text.secondary" gutterBottom>
-                    No Feedback Recorded
+                    {t('leads.details.feedback.noFeedback')}
                   </Typography>
                   <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                    Click the button above to add customer feedback
+                    {t('leads.details.feedback.noFeedbackDesc')}
                   </Typography>
                 </Paper>
               )}
@@ -2442,13 +2444,13 @@ Document Reference: ${doc.id}
 
       {/* Add Task Dialog */}
       <Dialog open={addTaskDialog} onClose={() => setAddTaskDialog(false)} maxWidth="sm" fullWidth>
-        <DialogTitle>Add New Task</DialogTitle>
+        <DialogTitle>{t('leads.details.dialogs.addTask.title')}</DialogTitle>
         <DialogContent>
           <Grid container spacing={2} sx={{ mt: 1 }}>
             <Grid item xs={12}>
               <TextField
                 fullWidth
-                label="Task Description"
+                label={t('leads.details.dialogs.addTask.taskDescription')}
                 value={taskForm.task}
                 onChange={(e) => setTaskForm({ ...taskForm, task: e.target.value })}
               />
@@ -2456,7 +2458,7 @@ Document Reference: ${doc.id}
             <Grid item xs={12} sm={6}>
               <TextField
                 fullWidth
-                label="Due Date"
+                label={t('leads.details.dialogs.addTask.dueDate')}
                 type="date"
                 value={taskForm.dueDate}
                 onChange={(e) => setTaskForm({ ...taskForm, dueDate: e.target.value })}
@@ -2465,25 +2467,25 @@ Document Reference: ${doc.id}
             </Grid>
             <Grid item xs={12} sm={6}>
               <FormControl fullWidth>
-                <InputLabel>Priority</InputLabel>
+                <InputLabel>{t('leads.details.dialogs.addTask.priority')}</InputLabel>
                 <Select
                   value={taskForm.priority}
-                  label="Priority"
+                  label={t('leads.details.dialogs.addTask.priority')}
                   onChange={(e) => setTaskForm({ ...taskForm, priority: e.target.value })}
                 >
-                  <MenuItem value="Low">Low</MenuItem>
-                  <MenuItem value="Medium">Medium</MenuItem>
-                  <MenuItem value="High">High</MenuItem>
-                  <MenuItem value="Urgent">Urgent</MenuItem>
+                  <MenuItem value="Low">{t('leads.details.values.priorities.low')}</MenuItem>
+                  <MenuItem value="Medium">{t('leads.details.values.priorities.medium')}</MenuItem>
+                  <MenuItem value="High">{t('leads.details.values.priorities.high')}</MenuItem>
+                  <MenuItem value="Urgent">{t('leads.details.values.priorities.urgent')}</MenuItem>
                 </Select>
               </FormControl>
             </Grid>
             <Grid item xs={12}>
               <FormControl fullWidth>
-                <InputLabel>Assign To</InputLabel>
+                <InputLabel>{t('leads.details.dialogs.addTask.assignTo')}</InputLabel>
                 <Select
                   value={taskForm.assignedTo}
-                  label="Assign To"
+                  label={t('leads.details.dialogs.addTask.assignTo')}
                   onChange={(e) => setTaskForm({ ...taskForm, assignedTo: e.target.value })}
                 >
                   {users.map(user => (
@@ -2495,8 +2497,8 @@ Document Reference: ${doc.id}
           </Grid>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setAddTaskDialog(false)}>Cancel</Button>
-          <Button onClick={handleAddTask} variant="contained">Add Task</Button>
+          <Button onClick={() => setAddTaskDialog(false)}>{t('common.cancel')}</Button>
+          <Button onClick={handleAddTask} variant="contained">{t('leads.details.dialogs.addTask.addTask')}</Button>
         </DialogActions>
       </Dialog>
 
@@ -2505,71 +2507,71 @@ Document Reference: ${doc.id}
         <DialogTitle>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
             <CallIcon color="primary" />
-            <Typography variant="h6" fontWeight="600">Add Call Log</Typography>
+            <Typography variant="h6" fontWeight="600">{t('leads.details.dialogs.addCallLog.title')}</Typography>
           </Box>
         </DialogTitle>
         <DialogContent>
           <Grid container spacing={2} sx={{ mt: 1 }}>
             <Grid item xs={12} sm={6}>
               <FormControl fullWidth>
-                <InputLabel>Call Type</InputLabel>
+                <InputLabel>{t('leads.details.dialogs.addCallLog.type')}</InputLabel>
                 <Select
                   value={callLogForm.type}
-                  label="Call Type"
+                  label={t('leads.details.dialogs.addCallLog.type')}
                   onChange={(e) => setCallLogForm({ ...callLogForm, type: e.target.value })}
                 >
-                  <MenuItem value="Inbound">📞 Inbound</MenuItem>
-                  <MenuItem value="Outbound">📱 Outbound</MenuItem>
+                  <MenuItem value="Inbound">📞 {t('leads.details.values.callTypes.inbound')}</MenuItem>
+                  <MenuItem value="Outbound">📱 {t('leads.details.values.callTypes.outbound')}</MenuItem>
                 </Select>
               </FormControl>
             </Grid>
             <Grid item xs={12} sm={6}>
               <TextField
                 fullWidth
-                label="Duration"
-                placeholder="e.g., 15 min"
+                label={t('leads.details.dialogs.addCallLog.duration')}
+                placeholder={t('leads.details.dialogs.addCallLog.durationPlaceholder')}
                 value={callLogForm.duration}
                 onChange={(e) => setCallLogForm({ ...callLogForm, duration: e.target.value })}
               />
             </Grid>
             <Grid item xs={12}>
               <FormControl fullWidth>
-                <InputLabel>Call Status</InputLabel>
+                <InputLabel>{t('leads.details.dialogs.addCallLog.status')}</InputLabel>
                 <Select
                   value={callLogForm.status}
-                  label="Call Status"
+                  label={t('leads.details.dialogs.addCallLog.status')}
                   onChange={(e) => setCallLogForm({ ...callLogForm, status: e.target.value })}
                 >
-                  <MenuItem value="Completed">✅ Completed</MenuItem>
-                  <MenuItem value="Missed">❌ Missed</MenuItem>
-                  <MenuItem value="No Answer">⏰ No Answer</MenuItem>
-                  <MenuItem value="Busy">📵 Busy</MenuItem>
+                  <MenuItem value="Completed">✅ {t('leads.details.values.callStatuses.completed')}</MenuItem>
+                  <MenuItem value="Missed">❌ {t('leads.details.values.callStatuses.missed')}</MenuItem>
+                  <MenuItem value="No Answer">⏰ {t('leads.details.values.callStatuses.noAnswer')}</MenuItem>
+                  <MenuItem value="Busy">📵 {t('leads.details.values.callStatuses.busy')}</MenuItem>
                 </Select>
               </FormControl>
             </Grid>
 
             <Grid item xs={12} sm={6}>
               <FormControl fullWidth>
-                <InputLabel>Disposition</InputLabel>
+                <InputLabel>{t('leads.details.dialogs.addCallLog.disposition')}</InputLabel>
                 <Select
                   value={callLogForm.disposition || ''}
-                  label="Disposition"
+                  label={t('leads.details.dialogs.addCallLog.disposition')}
                   onChange={(e) => setCallLogForm({ ...callLogForm, disposition: e.target.value })}
                 >
-                  <MenuItem value="Interested">✅ Interested</MenuItem>
-                  <MenuItem value="Not Interested">❌ Not Interested</MenuItem>
-                  <MenuItem value="Call Back">📞 Call Back</MenuItem>
-                  <MenuItem value="Not Reachable">📵 Not Reachable</MenuItem>
-                  <MenuItem value="Converted">🎉 Converted</MenuItem>
-                  <MenuItem value="DNC">🚫 DNC</MenuItem>
+                  <MenuItem value="Interested">✅ {t('leads.details.values.dispositions.interested')}</MenuItem>
+                  <MenuItem value="Not Interested">❌ {t('leads.details.values.dispositions.notInterested')}</MenuItem>
+                  <MenuItem value="Call Back">📞 {t('leads.details.values.dispositions.callBack')}</MenuItem>
+                  <MenuItem value="Not Reachable">📵 {t('leads.details.values.dispositions.notReachable')}</MenuItem>
+                  <MenuItem value="Converted">🎉 {t('leads.details.values.dispositions.converted')}</MenuItem>
+                  <MenuItem value="DNC">🚫 {t('leads.details.values.dispositions.dnc')}</MenuItem>
                 </Select>
               </FormControl>
             </Grid>
             <Grid item xs={12} sm={6}>
               <TextField
                 fullWidth
-                label="Sub-Disposition"
-                placeholder="e.g., Needs Quote, Specific Time"
+                label={t('leads.details.dialogs.addCallLog.subDisposition')}
+                placeholder={t('leads.details.dialogs.addCallLog.subDispositionPlaceholder')}
                 value={callLogForm.subDisposition || ''}
                 onChange={(e) => setCallLogForm({ ...callLogForm, subDisposition: e.target.value })}
               />
@@ -2577,20 +2579,20 @@ Document Reference: ${doc.id}
             <Grid item xs={12}>
               <TextField
                 fullWidth
-                label="Call Notes & Summary"
+                label={t('leads.details.dialogs.addCallLog.notes')}
                 multiline
                 rows={4}
                 value={callLogForm.notes}
                 onChange={(e) => setCallLogForm({ ...callLogForm, notes: e.target.value })}
-                placeholder="Enter detailed notes about the call conversation, customer queries, and outcomes..."
+                placeholder={t('leads.details.dialogs.addCallLog.placeholderNotes')}
               />
             </Grid>
 
           </Grid>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setAddCallLogDialog(false)}>Cancel</Button>
-          <Button onClick={handleAddCallLog} variant="contained">Add Call Log</Button>
+          <Button onClick={() => setAddCallLogDialog(false)}>{t('common.cancel')}</Button>
+          <Button onClick={handleAddCallLog} variant="contained">{t('leads.details.dialogs.addCallLog.addLog')}</Button>
         </DialogActions>
       </Dialog>
 
@@ -2599,7 +2601,7 @@ Document Reference: ${doc.id}
         <DialogTitle>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
             <CallIcon color="primary" />
-            <Typography variant="h6" fontWeight="600">Call Details</Typography>
+            <Typography variant="h6" fontWeight="600">{t('leads.details.dialogs.callDetails.title')}</Typography>
           </Box>
         </DialogTitle>
         <DialogContent>
@@ -2610,25 +2612,25 @@ Document Reference: ${doc.id}
                 <Card variant="outlined">
                   <CardContent>
                     <Typography variant="h6" fontWeight="600" gutterBottom>
-                      📋 Call Information
+                      📋 {t('leads.details.dialogs.callDetails.callInfo')}
                     </Typography>
                     <Stack spacing={2}>
                       <Box>
-                        <Typography variant="caption" color="text.secondary">Call ID</Typography>
+                        <Typography variant="caption" color="text.secondary">{t('leads.details.table.callId')}</Typography>
                         <Typography variant="body1" fontWeight="600">
                           CALL-{new Date().getFullYear()}-{String(selectedCallLog.id).padStart(4, '0')}
                         </Typography>
                       </Box>
                       <Box>
-                        <Typography variant="caption" color="text.secondary">Date & Time</Typography>
+                        <Typography variant="caption" color="text.secondary">{t('leads.details.table.dateTime')}</Typography>
                         <Typography variant="body1">{selectedCallLog.date} at {selectedCallLog.time}</Typography>
                       </Box>
                       <Box>
-                        <Typography variant="caption" color="text.secondary">Duration</Typography>
+                        <Typography variant="caption" color="text.secondary">{t('leads.details.table.duration')}</Typography>
                         <Typography variant="body1" fontWeight="600">{selectedCallLog.duration}</Typography>
                       </Box>
                       <Box>
-                        <Typography variant="caption" color="text.secondary">Call Type</Typography>
+                        <Typography variant="caption" color="text.secondary">{t('leads.details.table.callType')}</Typography>
                         <Chip
                           label={selectedCallLog.type}
                           size="small"
@@ -2636,7 +2638,7 @@ Document Reference: ${doc.id}
                         />
                       </Box>
                       <Box>
-                        <Typography variant="caption" color="text.secondary">Status</Typography>
+                        <Typography variant="caption" color="text.secondary">{t('leads.details.table.status')}</Typography>
                         <Chip
                           label={selectedCallLog.status}
                           size="small"
@@ -2653,23 +2655,23 @@ Document Reference: ${doc.id}
                 <Card variant="outlined">
                   <CardContent>
                     <Typography variant="h6" fontWeight="600" gutterBottom>
-                      👥 Participants
+                      👥 {t('leads.details.dialogs.callDetails.participants')}
                     </Typography>
                     <Stack spacing={2}>
                       <Box>
-                        <Typography variant="caption" color="text.secondary">Customer</Typography>
+                        <Typography variant="caption" color="text.secondary">{t('leads.details.table.customerName')}</Typography>
                         <Typography variant="body1" fontWeight="600">
                           {lead.firstName} {lead.lastName}
                         </Typography>
                         <Typography variant="body2" color="text.secondary">{lead.phone}</Typography>
                       </Box>
                       <Box>
-                        <Typography variant="caption" color="text.secondary">Agent</Typography>
+                        <Typography variant="caption" color="text.secondary">{t('leads.details.table.agentName')}</Typography>
                         <Typography variant="body1" fontWeight="600">{selectedCallLog.agentName}</Typography>
                       </Box>
                       {selectedCallLog.callRating && (
                         <Box>
-                          <Typography variant="caption" color="text.secondary">Call Rating</Typography>
+                          <Typography variant="caption" color="text.secondary">{t('leads.details.feedback.rating')}</Typography>
                           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                             {[1, 2, 3, 4, 5].map((star) => (
                               <StarIcon
@@ -2694,14 +2696,14 @@ Document Reference: ${doc.id}
                 <Card variant="outlined">
                   <CardContent>
                     <Typography variant="h6" fontWeight="600" gutterBottom>
-                      📝 Call Summary
+                      📝 {t('leads.details.dialogs.callDetails.summary')}
                     </Typography>
                     <Typography variant="body1" sx={{ mb: 2 }}>
                       {selectedCallLog.callSummary}
                     </Typography>
                     <Divider sx={{ my: 2 }} />
                     <Typography variant="subtitle2" fontWeight="600" gutterBottom>
-                      Detailed Notes:
+                      {t('leads.details.dialogs.addCallLog.notes')}:
                     </Typography>
                     <Typography variant="body2" color="text.secondary">
                       {selectedCallLog.notes}
@@ -2715,14 +2717,14 @@ Document Reference: ${doc.id}
           )}
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setCallDetailsDialog(false)}>Close</Button>
+          <Button onClick={() => setCallDetailsDialog(false)}>{t('common.close')}</Button>
           {selectedCallLog?.followUpRequired && (
             <Button
               variant="contained"
               startIcon={<AddIcon />}
               onClick={() => setFollowUpDialog(true)}
             >
-              Schedule Follow-up
+              {t('leads.details.dialogs.callDetails.scheduleFollowUp')}
             </Button>
           )}
         </DialogActions>
@@ -2730,14 +2732,14 @@ Document Reference: ${doc.id}
 
       {/* Add Claim Dialog */}
       <Dialog open={addClaimDialog} onClose={() => setAddClaimDialog(false)} maxWidth="md" fullWidth>
-        <DialogTitle>Add Claim</DialogTitle>
+        <DialogTitle>{t('leads.details.dialogs.addClaim.title')}</DialogTitle>
         <DialogContent>
           <Grid container spacing={2} sx={{ mt: 1 }}>
             {/* Auto-populated Customer Information */}
             <Grid item xs={12} sm={4}>
               <TextField
                 fullWidth
-                label="Customer Name"
+                label={t('leads.details.dialogs.addClaim.customerName')}
                 value={lead?.firstName + ' ' + lead?.lastName}
                 InputProps={{ readOnly: true }}
                 disabled
@@ -2746,7 +2748,7 @@ Document Reference: ${doc.id}
             <Grid item xs={12} sm={4}>
               <TextField
                 fullWidth
-                label="Mobile Number"
+                label={t('leads.details.dialogs.addClaim.mobile')}
                 value={lead?.phone}
                 InputProps={{ readOnly: true }}
                 disabled
@@ -2755,7 +2757,7 @@ Document Reference: ${doc.id}
             <Grid item xs={12} sm={4}>
               <TextField
                 fullWidth
-                label="Email ID"
+                label={t('leads.details.dialogs.addClaim.email')}
                 value={lead?.email}
                 InputProps={{ readOnly: true }}
                 disabled
@@ -2767,7 +2769,7 @@ Document Reference: ${doc.id}
               <TextField
                 fullWidth
                 required
-                label="Insurance Company Name"
+                label={t('leads.details.dialogs.addClaim.insuranceCompany')}
                 value={claimForm.insuranceCompany}
                 onChange={(e) => setClaimForm({ ...claimForm, insuranceCompany: e.target.value })}
               />
@@ -2776,7 +2778,7 @@ Document Reference: ${doc.id}
               <TextField
                 fullWidth
                 required
-                label="Policy Number"
+                label={t('leads.details.dialogs.addClaim.policyNumber')}
                 value={claimForm.policyNumber}
                 onChange={(e) => setClaimForm({ ...claimForm, policyNumber: e.target.value })}
               />
@@ -2786,7 +2788,7 @@ Document Reference: ${doc.id}
               <TextField
                 fullWidth
                 required
-                label="Expiry Date"
+                label={t('leads.details.dialogs.addClaim.expiryDate')}
                 type="date"
                 value={claimForm.expiryDate}
                 onChange={(e) => setClaimForm({ ...claimForm, expiryDate: e.target.value })}
@@ -2797,25 +2799,25 @@ Document Reference: ${doc.id}
               <TextField
                 fullWidth
                 required
-                label="Claim Number"
+                label={t('leads.details.dialogs.addClaim.claimNumber')}
                 value={claimForm.claimNumber}
                 onChange={(e) => setClaimForm({ ...claimForm, claimNumber: e.target.value })}
               />
             </Grid>
             <Grid item xs={12} sm={4}>
               <FormControl fullWidth required>
-                <InputLabel>Claim Status</InputLabel>
+                <InputLabel>{t('leads.details.dialogs.addClaim.status')}</InputLabel>
                 <Select
                   value={claimForm.claimStatus}
-                  label="Claim Status"
+                  label={t('leads.details.dialogs.addClaim.status')}
                   onChange={(e) => setClaimForm({ ...claimForm, claimStatus: e.target.value })}
                 >
-                  <MenuItem value="Pending">Pending</MenuItem>
-                  <MenuItem value="In Progress">In Progress</MenuItem>
-                  <MenuItem value="Document Pending">Document Pending</MenuItem>
-                  <MenuItem value="Approved">Approved</MenuItem>
-                  <MenuItem value="Settled">Settled</MenuItem>
-                  <MenuItem value="Rejected">Rejected</MenuItem>
+                  <MenuItem value="Pending">{t('leads.details.values.claimStatuses.pending')}</MenuItem>
+                  <MenuItem value="In Progress">{t('leads.details.values.claimStatuses.inProgress')}</MenuItem>
+                  <MenuItem value="Document Pending">{t('leads.details.values.claimStatuses.docPending')}</MenuItem>
+                  <MenuItem value="Approved">{t('leads.details.values.claimStatuses.approved')}</MenuItem>
+                  <MenuItem value="Settled">{t('leads.details.values.claimStatuses.settled')}</MenuItem>
+                  <MenuItem value="Rejected">{t('leads.details.values.claimStatuses.rejected')}</MenuItem>
                 </Select>
               </FormControl>
             </Grid>
@@ -2823,19 +2825,19 @@ Document Reference: ${doc.id}
             <Grid item xs={12}>
               <TextField
                 fullWidth
-                label="Remarks"
+                label={t('leads.details.dialogs.addClaim.remarks')}
                 multiline
                 rows={3}
                 value={claimForm.remarks}
                 onChange={(e) => setClaimForm({ ...claimForm, remarks: e.target.value })}
-                placeholder="Enter any additional notes or remarks about the claim"
+                placeholder={t('leads.details.dialogs.addClaim.remarksPlaceholder')}
               />
             </Grid>
           </Grid>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setAddClaimDialog(false)}>Cancel</Button>
-          <Button onClick={handleAddClaim} variant="contained">Add Claim</Button>
+          <Button onClick={() => setAddClaimDialog(false)}>{t('common.cancel')}</Button>
+          <Button onClick={handleAddClaim} variant="contained">{t('leads.details.dialogs.addClaim.addClaim')}</Button>
         </DialogActions>
       </Dialog>
 
@@ -2844,17 +2846,17 @@ Document Reference: ${doc.id}
         <DialogTitle>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
             <UploadIcon color="primary" />
-            <Typography variant="h6" fontWeight="600">Upload Documents</Typography>
+            <Typography variant="h6" fontWeight="600">{t('leads.details.dialogs.uploadDocs.title')}</Typography>
           </Box>
         </DialogTitle>
         <DialogContent>
           <Grid container spacing={2} sx={{ mt: 1 }}>
             <Grid item xs={12}>
               <FormControl fullWidth>
-                <InputLabel>Document Type</InputLabel>
+                <InputLabel>{t('leads.details.dialogs.uploadDocs.docType')}</InputLabel>
                 <Select
                   value={fileUploadForm.documentType}
-                  label="Document Type"
+                  label={t('leads.details.dialogs.uploadDocs.docType')}
                   onChange={(e) => setFileUploadForm({ ...fileUploadForm, documentType: e.target.value })}
                 >
                   {fileDocumentTypes.map((type) => (
@@ -2879,7 +2881,7 @@ Document Reference: ${doc.id}
                   }
                 }}
               >
-                Choose Files (Multiple Selection Allowed)
+                {t('leads.details.dialogs.uploadDocs.chooseFiles')}
                 <input
                   type="file"
                   hidden
@@ -2891,7 +2893,7 @@ Document Reference: ${doc.id}
               {fileUploadForm.files.length > 0 && (
                 <Box sx={{ mt: 2 }}>
                   <Typography variant="subtitle2" gutterBottom>
-                    Selected Files ({fileUploadForm.files.length}):
+                    {t('leads.details.dialogs.uploadDocs.selectedFiles', { count: fileUploadForm.files.length })}
                   </Typography>
                   {fileUploadForm.files.map((file, index) => (
                     <Box key={index} sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
@@ -2906,43 +2908,45 @@ Document Reference: ${doc.id}
             </Grid>
             <Grid item xs={12}>
               <FormControl fullWidth>
-                <InputLabel>Initial Status</InputLabel>
+                <InputLabel>{t('leads.details.dialogs.uploadDocs.initialStatus')}</InputLabel>
                 <Select
                   value={fileUploadForm.status}
-                  label="Initial Status"
+                  label={t('leads.details.dialogs.uploadDocs.initialStatus')}
                   onChange={(e) => setFileUploadForm({ ...fileUploadForm, status: e.target.value })}
                 >
-                  <MenuItem value="Pending">Pending</MenuItem>
-                  <MenuItem value="Verified">Verified</MenuItem>
+                  <MenuItem value="Pending">{t('leads.details.values.fileStatuses.pending')}</MenuItem>
+                  <MenuItem value="Verified">{t('leads.details.values.fileStatuses.verified')}</MenuItem>
                 </Select>
               </FormControl>
             </Grid>
           </Grid>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setFileUploadDialog(false)}>Cancel</Button>
+          <Button onClick={() => setFileUploadDialog(false)}>{t('common.cancel')}</Button>
           <Button
             onClick={handleFileUpload}
             variant="contained"
             disabled={fileUploadForm.files.length === 0}
           >
-            Upload Files
+            {t('leads.details.dialogs.uploadDocs.uploadFiles')}
           </Button>
         </DialogActions>
       </Dialog>
 
       {/* Upload Document Dialog */}
       <Dialog open={uploadDocumentDialog} onClose={() => setUploadDocumentDialog(false)} maxWidth="sm" fullWidth>
-        <DialogTitle>Upload {documentType === 'vehicle' ? 'Vehicle' : 'Insurance'} Document</DialogTitle>
+        <DialogTitle>
+          {t('leads.details.dialogs.uploadDocs.title')} - {documentType === 'vehicle' ? t('leads.details.documents.vehicleTitle') : t('leads.details.documents.insuranceTitle')}
+        </DialogTitle>
         <DialogContent>
           <Grid container spacing={2} sx={{ mt: 1 }}>
             <Grid item xs={12}>
               {documentType === 'vehicle' ? (
                 <FormControl fullWidth>
-                  <InputLabel>Document Type</InputLabel>
+                  <InputLabel>{t('leads.details.dialogs.uploadDocs.docType')}</InputLabel>
                   <Select
                     value={documentForm.documentName}
-                    label="Document Type"
+                    label={t('leads.details.dialogs.uploadDocs.docType')}
                     onChange={(e) => setDocumentForm({ ...documentForm, documentName: e.target.value })}
                   >
                     {vehicleDocumentTypes.map((type) => (
@@ -2953,7 +2957,7 @@ Document Reference: ${doc.id}
               ) : (
                 <TextField
                   fullWidth
-                  label="Document Name"
+                  label={t('leads.details.documents.name')}
                   value={documentForm.documentName}
                   onChange={(e) => setDocumentForm({ ...documentForm, documentName: e.target.value })}
                 />
@@ -2966,7 +2970,7 @@ Document Reference: ${doc.id}
                 fullWidth
                 startIcon={<UploadIcon />}
               >
-                Choose File
+                {t('leads.details.dialogs.uploadDocs.chooseFiles')}
                 <input
                   type="file"
                   hidden
@@ -2975,15 +2979,15 @@ Document Reference: ${doc.id}
               </Button>
               {documentForm.file && (
                 <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
-                  Selected: {documentForm.file.name}
+                  {t('leads.details.dialogs.uploadDocs.selectedFiles', { count: 1 })}: {documentForm.file.name}
                 </Typography>
               )}
             </Grid>
           </Grid>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setUploadDocumentDialog(false)}>Cancel</Button>
-          <Button onClick={handleUploadDocument} variant="contained">Upload</Button>
+          <Button onClick={() => setUploadDocumentDialog(false)}>{t('common.cancel')}</Button>
+          <Button onClick={handleUploadDocument} variant="contained">{t('leads.details.dialogs.uploadDocs.uploadFiles')}</Button>
         </DialogActions>
       </Dialog>
 
@@ -2992,14 +2996,14 @@ Document Reference: ${doc.id}
         <DialogTitle>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
             <CallIcon color="success" />
-            <Typography variant="h6" fontWeight="600">Contact Customer</Typography>
+            <Typography variant="h6" fontWeight="600">{t('leads.details.dialogs.contactCustomer.title')}</Typography>
           </Box>
         </DialogTitle>
         <DialogContent>
           <Stack spacing={3} sx={{ mt: 2 }}>
             {/* Lead ID */}
             <Box>
-              <Typography variant="caption" color="text.secondary" fontWeight="600">Lead ID</Typography>
+              <Typography variant="caption" color="text.secondary" fontWeight="600">{t('leads.details.contactLead.labels.leadId')}</Typography>
               <Typography variant="body1" fontWeight="600" color="primary">
                 {generateLeadId(lead.id)}
               </Typography>
@@ -3007,7 +3011,7 @@ Document Reference: ${doc.id}
 
             {/* Customer Name */}
             <Box>
-              <Typography variant="caption" color="text.secondary" fontWeight="600">Customer Name</Typography>
+              <Typography variant="caption" color="text.secondary" fontWeight="600">{t('leads.details.table.customerName')}</Typography>
               <Typography variant="body1" fontWeight="600">
                 {lead.firstName} {lead.lastName}
               </Typography>
@@ -3015,9 +3019,9 @@ Document Reference: ${doc.id}
 
             {/* Policy Type */}
             <Box>
-              <Typography variant="caption" color="text.secondary" fontWeight="600">Policy Type</Typography>
+              <Typography variant="caption" color="text.secondary" fontWeight="600">{t('leads.details.fields.policyType')}</Typography>
               <Typography variant="body1">
-                {policyDetails?.policyType || 'Not Assigned'}
+                {policyDetails?.policyType || t('leads.details.values.notAssigned')}
               </Typography>
             </Box>
 
@@ -3026,8 +3030,9 @@ Document Reference: ${doc.id}
             {/* Main Phone Number */}
             <Box>
               <Typography variant="caption" color="text.secondary" fontWeight="600" gutterBottom>
-                Main Phone Number
+                {t('leads.details.dialogs.contactCustomer.mainPhone')}
               </Typography>
+              Point is, I should also translate these.
               <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mt: 1 }}>
                 <Typography variant="h6" fontWeight="600">
                   {lead.phone}
@@ -3042,7 +3047,7 @@ Document Reference: ${doc.id}
                     background: `linear-gradient(135deg, ${theme.palette.success.main} 0%, ${theme.palette.success.dark} 100%)`,
                   }}
                 >
-                  Dial
+                  {t('leads.details.dialogs.contactCustomer.dial')}
                 </Button>
               </Box>
             </Box>
@@ -3051,7 +3056,7 @@ Document Reference: ${doc.id}
             {lead.alternatePhone && (
               <Box>
                 <Typography variant="caption" color="text.secondary" fontWeight="600" gutterBottom>
-                  Alternate Phone Number
+                  {t('leads.details.dialogs.contactCustomer.alternatePhone')}
                 </Typography>
                 <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mt: 1 }}>
                   <Typography variant="h6" fontWeight="600">
@@ -3067,7 +3072,7 @@ Document Reference: ${doc.id}
                       background: `linear-gradient(135deg, ${theme.palette.success.main} 0%, ${theme.palette.success.dark} 100%)`,
                     }}
                   >
-                    Dial
+                    {t('leads.details.dialogs.contactCustomer.dial')}
                   </Button>
                 </Box>
               </Box>
@@ -3075,19 +3080,19 @@ Document Reference: ${doc.id}
           </Stack>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setCallDialog(false)}>Close</Button>
+          <Button onClick={() => setCallDialog(false)}>{t('common.close')}</Button>
         </DialogActions>
       </Dialog>
 
       {/* Customer Feedback Dialog */}
       <Dialog open={feedbackDialog} onClose={() => setFeedbackDialog(false)} maxWidth="md" fullWidth>
-        <DialogTitle>Add Customer Feedback</DialogTitle>
+        <DialogTitle>{t('leads.details.dialogs.addFeedback.title')}</DialogTitle>
         <DialogContent>
           <Grid container spacing={2} sx={{ mt: 1 }}>
             <Grid item xs={12} md={6}>
               <TextField
                 fullWidth
-                label="Rating (1-5)"
+                label={t('leads.details.feedback.rating')}
                 type="number"
                 InputProps={{ inputProps: { min: 1, max: 5 } }}
                 value={customerFeedback.rating}
@@ -3097,7 +3102,7 @@ Document Reference: ${doc.id}
             <Grid item xs={12} md={6}>
               <TextField
                 fullWidth
-                label="Recommendation Score (0-10)"
+                label={t('leads.details.feedback.nps')}
                 type="number"
                 InputProps={{ inputProps: { min: 0, max: 10 } }}
                 value={customerFeedback.recommendationScore}
@@ -3107,7 +3112,7 @@ Document Reference: ${doc.id}
             <Grid item xs={12}>
               <TextField
                 fullWidth
-                label="General Feedback"
+                label={t('leads.details.feedback.general')}
                 multiline
                 rows={4}
                 value={customerFeedback.feedback}
@@ -3117,29 +3122,29 @@ Document Reference: ${doc.id}
             <Grid item xs={12} md={6}>
               <TextField
                 fullWidth
-                label="Areas of Satisfaction"
+                label={t('leads.details.feedback.satisfaction')}
                 multiline
                 rows={3}
                 value={customerFeedback.satisfactionAreas.join('\n')}
                 onChange={(e) => setCustomerFeedback({ ...customerFeedback, satisfactionAreas: e.target.value.split('\n').filter(x => x) })}
-                placeholder="Enter each area on a new line"
+                placeholder={t('leads.details.feedback.placeholderNewLines')}
               />
             </Grid>
             <Grid item xs={12} md={6}>
               <TextField
                 fullWidth
-                label="Areas for Improvement"
+                label={t('leads.details.feedback.improvement')}
                 multiline
                 rows={3}
                 value={customerFeedback.improvementAreas.join('\n')}
                 onChange={(e) => setCustomerFeedback({ ...customerFeedback, improvementAreas: e.target.value.split('\n').filter(x => x) })}
-                placeholder="Enter each area on a new line"
+                placeholder={t('leads.details.feedback.placeholderNewLines')}
               />
             </Grid>
             <Grid item xs={12}>
               <TextField
                 fullWidth
-                label="Additional Comments"
+                label={t('leads.details.feedback.additionalComments')}
                 multiline
                 rows={2}
                 value={customerFeedback.additionalComments}
@@ -3149,8 +3154,8 @@ Document Reference: ${doc.id}
           </Grid>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setFeedbackDialog(false)}>Cancel</Button>
-          <Button onClick={handleAddFeedback} variant="contained">Save Feedback</Button>
+          <Button onClick={() => setFeedbackDialog(false)}>{t('common.cancel')}</Button>
+          <Button onClick={handleAddFeedback} variant="contained">{t('leads.details.dialogs.addFeedback.saveFeedback')}</Button>
         </DialogActions>
       </Dialog>
 
@@ -3159,85 +3164,85 @@ Document Reference: ${doc.id}
         <DialogTitle>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
             <CheckCircleIcon color="warning" />
-            <Typography variant="h6" fontWeight="600">Convert Lead to Customer</Typography>
+            <Typography variant="h6" fontWeight="600">{t('leads.details.dialogs.convertLead.title')}</Typography>
           </Box>
         </DialogTitle>
         <DialogContent>
           <Box sx={{ mb: 2, mt: 1 }}>
             <Typography variant="body2" color="text.secondary">
-              This will convert the lead to a customer and add an entry to the Customer Database. Please provide policy details below.
+              {t('leads.details.dialogs.convertLead.instruction')}
             </Typography>
           </Box>
           <Grid container spacing={2} sx={{ mt: 1 }}>
             <Grid item xs={12} sm={6}>
               <TextField
                 fullWidth
-                label="Product Type"
+                label={t('leads.details.dialogs.convertLead.productType')}
                 value={convertForm.productType}
                 onChange={(e) => setConvertForm({ ...convertForm, productType: e.target.value })}
-                placeholder={lead?.subProduct || 'e.g., Vehicle Insurance'}
-                helperText="Leave blank to use lead's product type"
+                placeholder={lead?.subProduct || t('leads.details.dialogs.convertLead.productTypePlaceholder')}
+                helperText={t('leads.details.dialogs.convertLead.productTypeHelper')}
               />
             </Grid>
             <Grid item xs={12} sm={6}>
               <TextField
                 fullWidth
-                label="Policy Number"
+                label={t('leads.details.dialogs.convertLead.policyNumber')}
                 value={convertForm.policyNumber}
                 onChange={(e) => setConvertForm({ ...convertForm, policyNumber: e.target.value })}
-                placeholder="Auto-generated if left blank"
+                placeholder={t('leads.details.dialogs.convertLead.policyNumberPlaceholder')}
               />
             </Grid>
             <Grid item xs={12} sm={6}>
               <TextField
                 fullWidth
-                label="Premium Amount (₹)"
+                label={t('leads.details.dialogs.convertLead.premiumAmount')}
                 type="number"
                 value={convertForm.premiumAmount}
                 onChange={(e) => setConvertForm({ ...convertForm, premiumAmount: e.target.value })}
-                placeholder="e.g., 45000"
+                placeholder={t('leads.details.dialogs.convertLead.premiumAmountPlaceholder')}
               />
             </Grid>
             <Grid item xs={12} sm={6}>
               <TextField
                 fullWidth
-                label="Customer Age"
+                label={t('leads.details.dialogs.convertLead.age')}
                 type="number"
                 value={convertForm.age}
                 onChange={(e) => setConvertForm({ ...convertForm, age: e.target.value })}
-                placeholder="e.g., 35"
+                placeholder={t('leads.details.dialogs.convertLead.agePlaceholder')}
               />
             </Grid>
             <Grid item xs={12} sm={6}>
               <FormControl fullWidth>
-                <InputLabel>Gender</InputLabel>
+                <InputLabel>{t('leads.details.dialogs.convertLead.gender')}</InputLabel>
                 <Select
                   value={convertForm.gender}
-                  label="Gender"
+                  label={t('leads.details.dialogs.convertLead.gender')}
                   onChange={(e) => setConvertForm({ ...convertForm, gender: e.target.value })}
                 >
-                  <MenuItem value="">Not Specified</MenuItem>
-                  <MenuItem value="Male">Male</MenuItem>
-                  <MenuItem value="Female">Female</MenuItem>
-                  <MenuItem value="Other">Other</MenuItem>
+                  <MenuItem value="">{t('leads.details.values.gender.notSpecified')}</MenuItem>
+                  <MenuItem value="Male">{t('leads.details.values.gender.male')}</MenuItem>
+                  <MenuItem value="Female">{t('leads.details.values.gender.female')}</MenuItem>
+                  <MenuItem value="Other">{t('leads.details.values.gender.other')}</MenuItem>
                 </Select>
               </FormControl>
             </Grid>
             <Grid item xs={12} sm={6}>
               <TextField
                 fullWidth
-                label="Policy Start Date"
+                label={t('leads.details.dialogs.convertLead.policyStartDate')}
                 type="date"
                 value={convertForm.policyStartDate}
                 onChange={(e) => setConvertForm({ ...convertForm, policyStartDate: e.target.value })}
                 InputLabelProps={{ shrink: true }}
-                helperText="Defaults to today if left blank"
+                helperText={t('leads.details.dialogs.convertLead.policyStartDateHelper')}
               />
             </Grid>
             <Grid item xs={12} sm={6}>
               <TextField
                 fullWidth
-                label="Policy End Date"
+                label={t('leads.details.dialogs.convertLead.policyEndDate')}
                 type="date"
                 value={convertForm.policyEndDate}
                 onChange={(e) => setConvertForm({ ...convertForm, policyEndDate: e.target.value })}
@@ -3247,7 +3252,7 @@ Document Reference: ${doc.id}
           </Grid>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setConvertDialog(false)}>Cancel</Button>
+          <Button onClick={() => setConvertDialog(false)}>{t('common.cancel')}</Button>
           <Button
             onClick={handleConvertLead}
             variant="contained"
@@ -3256,7 +3261,7 @@ Document Reference: ${doc.id}
               background: `linear-gradient(135deg, ${theme.palette.warning.main} 0%, ${theme.palette.warning.dark} 100%)`,
             }}
           >
-            Convert to Customer
+            {t('leads.details.dialogs.convertLead.convert')}
           </Button>
         </DialogActions>
       </Dialog>
@@ -3266,7 +3271,7 @@ Document Reference: ${doc.id}
         <DialogTitle>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
             <AccessTimeIcon color="primary" />
-            <Typography variant="h6" fontWeight="600">Schedule Follow-up</Typography>
+            <Typography variant="h6" fontWeight="600">{t('leads.details.dialogs.scheduleFollowup.title')}</Typography>
           </Box>
         </DialogTitle>
         <DialogContent>
@@ -3274,7 +3279,7 @@ Document Reference: ${doc.id}
             <Grid item xs={12} sm={6}>
               <TextField
                 fullWidth
-                label="Follow-up Date"
+                label={t('leads.details.dialogs.scheduleFollowup.date')}
                 type="date"
                 value={followUpForm.date}
                 onChange={(e) => setFollowUpForm({ ...followUpForm, date: e.target.value })}
@@ -3285,7 +3290,7 @@ Document Reference: ${doc.id}
             <Grid item xs={12} sm={6}>
               <TextField
                 fullWidth
-                label="Follow-up Time"
+                label={t('leads.details.dialogs.scheduleFollowup.time')}
                 type="time"
                 value={followUpForm.time}
                 onChange={(e) => setFollowUpForm({ ...followUpForm, time: e.target.value })}
@@ -3294,43 +3299,43 @@ Document Reference: ${doc.id}
             </Grid>
             <Grid item xs={12} sm={6}>
               <FormControl fullWidth>
-                <InputLabel>Follow-up Type</InputLabel>
+                <InputLabel>{t('leads.details.dialogs.scheduleFollowup.type')}</InputLabel>
                 <Select
                   value={followUpForm.type}
-                  label="Follow-up Type"
+                  label={t('leads.details.dialogs.scheduleFollowup.type')}
                   onChange={(e) => setFollowUpForm({ ...followUpForm, type: e.target.value })}
                 >
-                  <MenuItem value="Call">📞 Call</MenuItem>
-                  <MenuItem value="Email">📧 Email</MenuItem>
-                  <MenuItem value="Meeting">🤝 Meeting</MenuItem>
-                  <MenuItem value="WhatsApp">💬 WhatsApp</MenuItem>
+                  <MenuItem value="Call">📞 {t('leads.details.values.followupTypes.call')}</MenuItem>
+                  <MenuItem value="Email">📧 {t('leads.details.values.followupTypes.email')}</MenuItem>
+                  <MenuItem value="Meeting">🤝 {t('leads.details.values.followupTypes.meeting')}</MenuItem>
+                  <MenuItem value="WhatsApp">💬 {t('leads.details.values.followupTypes.whatsapp')}</MenuItem>
                 </Select>
               </FormControl>
             </Grid>
             <Grid item xs={12} sm={6}>
               <FormControl fullWidth>
-                <InputLabel>Priority</InputLabel>
+                <InputLabel>{t('leads.details.dialogs.addTask.priority')}</InputLabel>
                 <Select
                   value={followUpForm.priority}
-                  label="Priority"
+                  label={t('leads.details.dialogs.addTask.priority')}
                   onChange={(e) => setFollowUpForm({ ...followUpForm, priority: e.target.value })}
                 >
-                  <MenuItem value="Low">Low</MenuItem>
-                  <MenuItem value="Medium">Medium</MenuItem>
-                  <MenuItem value="High">High</MenuItem>
-                  <MenuItem value="Urgent">Urgent</MenuItem>
+                  <MenuItem value="Low">{t('leads.details.values.priorities.low')}</MenuItem>
+                  <MenuItem value="Medium">{t('leads.details.values.priorities.medium')}</MenuItem>
+                  <MenuItem value="High">{t('leads.details.values.priorities.high')}</MenuItem>
+                  <MenuItem value="Urgent">{t('leads.details.values.priorities.urgent')}</MenuItem>
                 </Select>
               </FormControl>
             </Grid>
             <Grid item xs={12}>
               <FormControl fullWidth>
-                <InputLabel>Assign To</InputLabel>
+                <InputLabel>{t('leads.details.dialogs.addTask.assignTo')}</InputLabel>
                 <Select
                   value={followUpForm.assignedTo}
-                  label="Assign To"
+                  label={t('leads.details.dialogs.addTask.assignTo')}
                   onChange={(e) => setFollowUpForm({ ...followUpForm, assignedTo: e.target.value })}
                 >
-                  <MenuItem value="">{lead?.assignedTo || 'Current Agent'}</MenuItem>
+                  <MenuItem value="">{lead?.assignedTo || t('common.currentUser')}</MenuItem>
                   {users.map(user => (
                     <MenuItem key={user.id} value={user.name}>{user.name}</MenuItem>
                   ))}
@@ -3340,38 +3345,38 @@ Document Reference: ${doc.id}
             <Grid item xs={12}>
               <TextField
                 fullWidth
-                label="Follow-up Notes"
+                label={t('leads.details.dialogs.scheduleFollowup.notes')}
                 multiline
                 rows={3}
                 value={followUpForm.notes}
                 onChange={(e) => setFollowUpForm({ ...followUpForm, notes: e.target.value })}
-                placeholder="Enter specific notes for the follow-up task..."
+                placeholder={t('leads.details.dialogs.scheduleFollowup.notesPlaceholder')}
               />
             </Grid>
           </Grid>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setFollowUpDialog(false)}>Cancel</Button>
+          <Button onClick={() => setFollowUpDialog(false)}>{t('common.cancel')}</Button>
           <Button
             onClick={handleScheduleFollowUp}
             variant="contained"
             disabled={!followUpForm.date}
             startIcon={<AccessTimeIcon />}
           >
-            Schedule Follow-up
+            {t('leads.details.dialogs.scheduleFollowup.schedule')}
           </Button>
         </DialogActions>
       </Dialog>
 
       {/* Payment Link Dialog */}
       <Dialog open={paymentLinkDialog} onClose={() => setPaymentLinkDialog(false)} maxWidth="sm" fullWidth>
-        <DialogTitle>Send Payment Link</DialogTitle>
+        <DialogTitle>{t('leads.details.dialogs.paymentLink.title')}</DialogTitle>
         <DialogContent>
           <Grid container spacing={2} sx={{ mt: 1 }}>
             <Grid item xs={12}>
               <TextField
                 fullWidth
-                label="Amount (₹)"
+                label={t('leads.details.dialogs.paymentLink.amount')}
                 type="number"
                 value={paymentLinkData.amount}
                 onChange={(e) => setPaymentLinkData({ ...paymentLinkData, amount: e.target.value })}
@@ -3384,31 +3389,31 @@ Document Reference: ${doc.id}
             <Grid item xs={12}>
               <TextField
                 fullWidth
-                label="Purpose"
+                label={t('leads.details.dialogs.paymentLink.purpose')}
                 value={paymentLinkData.purpose}
                 onChange={(e) => setPaymentLinkData({ ...paymentLinkData, purpose: e.target.value })}
-                placeholder="e.g., Policy Premium, Down Payment"
+                placeholder={t('leads.details.dialogs.paymentLink.purposePlaceholder')}
                 required
               />
             </Grid>
             <Grid item xs={12}>
               <FormControl fullWidth>
-                <InputLabel>Link Expires In</InputLabel>
+                <InputLabel>{t('leads.details.dialogs.paymentLink.expiresIn')}</InputLabel>
                 <Select
                   value={paymentLinkData.expiryDays}
-                  label="Link Expires In"
+                  label={t('leads.details.dialogs.paymentLink.expiresIn')}
                   onChange={(e) => setPaymentLinkData({ ...paymentLinkData, expiryDays: e.target.value })}
                 >
-                  <MenuItem value={1}>1 Day</MenuItem>
-                  <MenuItem value={3}>3 Days</MenuItem>
-                  <MenuItem value={7}>7 Days</MenuItem>
-                  <MenuItem value={15}>15 Days</MenuItem>
-                  <MenuItem value={30}>30 Days</MenuItem>
+                  <MenuItem value={1}>{t('leads.details.dialogs.paymentLink.days', { count: 1 })}</MenuItem>
+                  <MenuItem value={3}>{t('leads.details.dialogs.paymentLink.days', { count: 3 })}</MenuItem>
+                  <MenuItem value={7}>{t('leads.details.dialogs.paymentLink.days', { count: 7 })}</MenuItem>
+                  <MenuItem value={15}>{t('leads.details.dialogs.paymentLink.days', { count: 15 })}</MenuItem>
+                  <MenuItem value={30}>{t('leads.details.dialogs.paymentLink.days', { count: 30 })}</MenuItem>
                 </Select>
               </FormControl>
             </Grid>
             <Grid item xs={12}>
-              <Typography variant="subtitle2" gutterBottom>Send Via:</Typography>
+              <Typography variant="subtitle2" gutterBottom>{t('leads.details.dialogs.paymentLink.sendVia')}</Typography>
               <FormGroup row>
                 <FormControlLabel
                   control={
@@ -3420,7 +3425,7 @@ Document Reference: ${doc.id}
                       })}
                     />
                   }
-                  label={`Email (${lead?.email || 'N/A'})`}
+                  label={t('leads.details.dialogs.paymentLink.emailChannel', { email: lead?.email || 'N/A' })}
                 />
                 <FormControlLabel
                   control={
@@ -3432,7 +3437,7 @@ Document Reference: ${doc.id}
                       })}
                     />
                   }
-                  label={`SMS (${lead?.phone || 'N/A'})`}
+                  label={t('leads.details.dialogs.paymentLink.smsChannel', { phone: lead?.phone || 'N/A' })}
                 />
                 <FormControlLabel
                   control={
@@ -3444,30 +3449,34 @@ Document Reference: ${doc.id}
                       })}
                     />
                   }
-                  label={`WhatsApp (${lead?.phone || 'N/A'})`}
+                  label={t('leads.details.dialogs.paymentLink.whatsappChannel', { phone: lead?.phone || 'N/A' })}
                 />
               </FormGroup>
             </Grid>
             <Grid item xs={12}>
               <Alert severity="info">
-                The payment link will be sent to the customer's {
-                  [
-                    paymentLinkData.sendVia.email && 'email',
-                    paymentLinkData.sendVia.sms && 'phone (SMS)',
+                {t('leads.details.dialogs.paymentLink.sentToInstruction', {
+                  channels: [
+                    paymentLinkData.sendVia.email && t('leads.details.fields.email'),
+                    paymentLinkData.sendVia.sms && t('leads.details.dialogs.addCallLog.placeholderPhone'),
                     paymentLinkData.sendVia.whatsapp && 'WhatsApp'
-                  ].filter(Boolean).join(', ') || 'selected channels'
-                }.
+                  ].filter(Boolean).join(', ') || t('leads.details.dialogs.paymentLink.channelsPlaceholder')
+                })}
               </Alert>
             </Grid>
           </Grid>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setPaymentLinkDialog(false)}>Cancel</Button>
+          <Button onClick={() => setPaymentLinkDialog(false)}>{t('common.cancel')}</Button>
           <Button
             variant="contained"
             onClick={() => {
               // TODO: Implement payment link generation
-              alert(`Payment link of ₹${paymentLinkData.amount} for "${paymentLinkData.purpose}" will be sent to ${lead?.firstName} ${lead?.lastName}`);
+              alert(t('leads.details.dialogs.paymentLink.alertSuccess', {
+                amount: paymentLinkData.amount,
+                purpose: paymentLinkData.purpose,
+                name: `${lead?.firstName} ${lead?.lastName}`
+              }));
               setPaymentLinkDialog(false);
               // Reset form
               setPaymentLinkData({
@@ -3480,7 +3489,7 @@ Document Reference: ${doc.id}
             disabled={!paymentLinkData.amount || !paymentLinkData.purpose}
             startIcon={<SendIcon />}
           >
-            Generate & Send Link
+            {t('leads.details.dialogs.paymentLink.generate')}
           </Button>
         </DialogActions>
       </Dialog>
@@ -3493,7 +3502,7 @@ Document Reference: ${doc.id}
       >
         <DialogTitle sx={{ fontWeight: 600, display: 'flex', alignItems: 'center', gap: 1 }}>
           <InsuranceDocIcon color="primary" />
-          Policy Details
+          {t('leads.details.dialogs.policyView.title')}
         </DialogTitle>
         <DialogContent dividers>
           {selectedPolicy && (
@@ -3502,27 +3511,27 @@ Document Reference: ${doc.id}
               <Grid item xs={12}>
                 <Paper sx={{ p: 2, bgcolor: alpha(theme.palette.primary.main, 0.05) }}>
                   <Typography variant="subtitle1" fontWeight="600" gutterBottom color="primary">
-                    Policy Information
+                    {t('leads.details.dialogs.policyView.policyInfo')}
                   </Typography>
                   <Grid container spacing={2}>
                     <Grid item xs={6} md={3}>
-                      <Typography variant="caption" color="text.secondary">Policy Number</Typography>
+                      <Typography variant="caption" color="text.secondary">{t('leads.details.fields.policyNumber')}</Typography>
                       <Typography variant="body1" fontWeight="500">{selectedPolicy.policyNumber}</Typography>
                     </Grid>
                     <Grid item xs={6} md={3}>
-                      <Typography variant="caption" color="text.secondary">Policy Type</Typography>
-                      <Typography variant="body1">{selectedPolicy.type}</Typography>
+                      <Typography variant="caption" color="text.secondary">{t('leads.details.fields.policyType')}</Typography>
+                      <Typography variant="body1">{t(`leads.details.values.policyTypes.${selectedPolicy.type}`) || selectedPolicy.type}</Typography>
                     </Grid>
                     <Grid item xs={6} md={3}>
-                      <Typography variant="caption" color="text.secondary">Status</Typography>
+                      <Typography variant="caption" color="text.secondary">{t('leads.details.table.status')}</Typography>
                       <Chip
-                        label={selectedPolicy.status}
+                        label={t(`leads.details.values.policyStatuses.${selectedPolicy.status}`) || selectedPolicy.status}
                         size="small"
                         color={selectedPolicy.status === 'Active' ? 'success' : 'default'}
                       />
                     </Grid>
                     <Grid item xs={6} md={3}>
-                      <Typography variant="caption" color="text.secondary">Policy ID</Typography>
+                      <Typography variant="caption" color="text.secondary">{t('leads.details.contactLead.labels.leadId')}</Typography>
                       <Typography variant="body1">{selectedPolicy.id}</Typography>
                     </Grid>
                   </Grid>
@@ -3533,26 +3542,26 @@ Document Reference: ${doc.id}
               <Grid item xs={12} md={6}>
                 <Paper sx={{ p: 2, height: '100%' }}>
                   <Typography variant="subtitle1" fontWeight="600" gutterBottom>
-                    📅 Policy Period
+                    📅 {t('leads.details.dialogs.policyView.policyPeriod')}
                   </Typography>
                   <Stack spacing={1}>
                     <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                      <Typography variant="body2" color="text.secondary">Start Date:</Typography>
+                      <Typography variant="body2" color="text.secondary">{t('leads.details.sections.policyPeriod.labels.startDate')}:</Typography>
                       <Typography variant="body2" fontWeight="500">
                         {new Date(selectedPolicy.startDate).toLocaleDateString('en-IN', { day: '2-digit', month: 'long', year: 'numeric' })}
                       </Typography>
                     </Box>
                     <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                      <Typography variant="body2" color="text.secondary">End Date:</Typography>
+                      <Typography variant="body2" color="text.secondary">{t('leads.details.sections.policyPeriod.labels.expiryDate')}:</Typography>
                       <Typography variant="body2" fontWeight="500">
                         {new Date(selectedPolicy.endDate).toLocaleDateString('en-IN', { day: '2-digit', month: 'long', year: 'numeric' })}
                       </Typography>
                     </Box>
                     <Divider sx={{ my: 1 }} />
                     <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                      <Typography variant="body2" color="text.secondary">Duration:</Typography>
+                      <Typography variant="body2" color="text.secondary">{t('leads.details.dialogs.policyView.duration')}:</Typography>
                       <Typography variant="body2" fontWeight="500">
-                        {Math.ceil((new Date(selectedPolicy.endDate) - new Date(selectedPolicy.startDate)) / (1000 * 60 * 60 * 24))} days
+                        {Math.ceil((new Date(selectedPolicy.endDate) - new Date(selectedPolicy.startDate)) / (1000 * 60 * 60 * 24))} {t('leads.details.dialogs.paymentLink.days_plural', { count: Math.ceil((new Date(selectedPolicy.endDate) - new Date(selectedPolicy.startDate)) / (1000 * 60 * 60 * 24)) })}
                       </Typography>
                     </Box>
                   </Stack>
@@ -3563,16 +3572,16 @@ Document Reference: ${doc.id}
               <Grid item xs={12} md={6}>
                 <Paper sx={{ p: 2, height: '100%' }}>
                   <Typography variant="subtitle1" fontWeight="600" gutterBottom>
-                    🚗 Vehicle Details
+                    🚗 {t('leads.details.dialogs.policyView.vehicleDetails')}
                   </Typography>
                   <Stack spacing={1}>
                     <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                      <Typography variant="body2" color="text.secondary">Vehicle:</Typography>
+                      <Typography variant="body2" color="text.secondary">{t('leads.details.dialogs.policyView.vehicle')}:</Typography>
                       <Typography variant="body2" fontWeight="500">{selectedPolicy.vehicleDetails}</Typography>
                     </Box>
                     <Divider sx={{ my: 1 }} />
                     <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                      <Typography variant="body2" color="text.secondary">Registration:</Typography>
+                      <Typography variant="body2" color="text.secondary">{t('leads.details.dialogs.policyView.registration')}:</Typography>
                       <Typography variant="body2" fontWeight="500">{lead?.vehicleRegistrationNumber || 'N/A'}</Typography>
                     </Box>
                   </Stack>
@@ -3583,17 +3592,17 @@ Document Reference: ${doc.id}
               <Grid item xs={12} md={6}>
                 <Paper sx={{ p: 2, bgcolor: alpha(theme.palette.success.main, 0.05) }}>
                   <Typography variant="subtitle1" fontWeight="600" gutterBottom color="success.main">
-                    💰 Premium Details
+                    💰 {t('leads.details.dialogs.policyView.premiumDetails')}
                   </Typography>
                   <Stack spacing={1}>
                     <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                      <Typography variant="body2" color="text.secondary">Premium Amount:</Typography>
+                      <Typography variant="body2" color="text.secondary">{t('leads.details.dialogs.policyView.premiumAmount')}:</Typography>
                       <Typography variant="body1" fontWeight="600" color="success.main">
                         ₹{selectedPolicy.premium?.toLocaleString() || '0'}
                       </Typography>
                     </Box>
                     <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                      <Typography variant="body2" color="text.secondary">No Claim Bonus (NCB):</Typography>
+                      <Typography variant="body2" color="text.secondary">{t('leads.details.dialogs.policyView.ncb')}:</Typography>
                       <Typography variant="body2" fontWeight="500">{selectedPolicy.ncb}</Typography>
                     </Box>
                   </Stack>
@@ -3604,19 +3613,19 @@ Document Reference: ${doc.id}
               <Grid item xs={12} md={6}>
                 <Paper sx={{ p: 2, bgcolor: alpha(theme.palette.warning.main, 0.05) }}>
                   <Typography variant="subtitle1" fontWeight="600" gutterBottom color="warning.main">
-                    📋 Claims History
+                    📋 {t('leads.details.dialogs.policyView.claimsHistory')}
                   </Typography>
                   <Stack spacing={1}>
                     <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                      <Typography variant="body2" color="text.secondary">Total Claims:</Typography>
+                      <Typography variant="body2" color="text.secondary">{t('leads.details.dialogs.policyView.totalClaims')}:</Typography>
                       <Typography variant="body1" fontWeight="600">
                         {selectedPolicy.claims}
                       </Typography>
                     </Box>
                     <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                      <Typography variant="body2" color="text.secondary">Claims Status:</Typography>
+                      <Typography variant="body2" color="text.secondary">{t('leads.details.dialogs.policyView.claimsStatus')}:</Typography>
                       <Chip
-                        label={selectedPolicy.claims === 0 ? 'No Claims' : `${selectedPolicy.claims} Claim(s)`}
+                        label={selectedPolicy.claims === 0 ? t('leads.details.dialogs.policyView.noClaims') : t('leads.details.dialogs.policyView.claimsCount', { count: selectedPolicy.claims })}
                         size="small"
                         color={selectedPolicy.claims === 0 ? 'success' : 'warning'}
                       />
@@ -3629,23 +3638,23 @@ Document Reference: ${doc.id}
               <Grid item xs={12}>
                 <Paper sx={{ p: 2 }}>
                   <Typography variant="subtitle1" fontWeight="600" gutterBottom>
-                    👤 Insured Details
+                    👤 {t('leads.details.dialogs.policyView.insuredDetails')}
                   </Typography>
                   <Grid container spacing={2}>
                     <Grid item xs={6} md={3}>
-                      <Typography variant="caption" color="text.secondary">Name</Typography>
+                      <Typography variant="caption" color="text.secondary">{t('leads.details.table.customerName')}</Typography>
                       <Typography variant="body2" fontWeight="500">{lead?.firstName} {lead?.lastName}</Typography>
                     </Grid>
                     <Grid item xs={6} md={3}>
-                      <Typography variant="caption" color="text.secondary">Email</Typography>
+                      <Typography variant="caption" color="text.secondary">{t('leads.details.fields.email')}</Typography>
                       <Typography variant="body2">{lead?.email}</Typography>
                     </Grid>
                     <Grid item xs={6} md={3}>
-                      <Typography variant="caption" color="text.secondary">Phone</Typography>
+                      <Typography variant="caption" color="text.secondary">{t('leads.details.dialogs.addCallLog.placeholderPhone')}</Typography>
                       <Typography variant="body2">{lead?.phone}</Typography>
                     </Grid>
                     <Grid item xs={6} md={3}>
-                      <Typography variant="caption" color="text.secondary">Company</Typography>
+                      <Typography variant="caption" color="text.secondary">{t('leads.details.fields.company')}</Typography>
                       <Typography variant="body2">{lead?.company || 'N/A'}</Typography>
                     </Grid>
                   </Grid>
@@ -3655,7 +3664,7 @@ Document Reference: ${doc.id}
           )}
         </DialogContent>
         <DialogActions sx={{ p: 2 }}>
-          <Button onClick={() => setPolicyViewDialog(false)}>Close</Button>
+          <Button onClick={() => setPolicyViewDialog(false)}>{t('common.close')}</Button>
           <Button
             variant="contained"
             startIcon={<DownloadIcon />}
@@ -3665,7 +3674,7 @@ Document Reference: ${doc.id}
               }
             }}
           >
-            Download Policy
+            {t('leads.details.dialogs.policyView.download')}
 
           </Button>
         </DialogActions>
@@ -3674,10 +3683,10 @@ Document Reference: ${doc.id}
 
       {/* Call Number Selection Dialog */}
       <Dialog open={callNumberDialog} onClose={() => setCallNumberDialog(false)} maxWidth="xs" fullWidth>
-        <DialogTitle>Select Number to Call</DialogTitle>
+        <DialogTitle>{t('leads.details.dialogs.callNumber.title')}</DialogTitle>
         <DialogContent>
           <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-            Choose which number you would like to dial:
+            {t('leads.details.dialogs.callNumber.instruction')}
           </Typography>
           <Stack spacing={2}>
             <Button
@@ -3701,7 +3710,7 @@ Document Reference: ${doc.id}
               }}
             >
               <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', ml: 1 }}>
-                <Typography variant="body2" fontWeight={600}>Main Number</Typography>
+                <Typography variant="body2" fontWeight={600}>{t('leads.details.dialogs.callNumber.mainNumber')}</Typography>
                 <Typography variant="body2" color="text.secondary">{lead.phone}</Typography>
               </Box>
             </Button>
@@ -3727,7 +3736,7 @@ Document Reference: ${doc.id}
                 }}
               >
                 <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', ml: 1 }}>
-                  <Typography variant="body2" fontWeight={600}>Alternate Number</Typography>
+                  <Typography variant="body2" fontWeight={600}>{t('leads.details.dialogs.callNumber.alternateNumber')}</Typography>
                   <Typography variant="body2" color="text.secondary">{lead.alternatePhone}</Typography>
                 </Box>
               </Button>
@@ -3735,59 +3744,59 @@ Document Reference: ${doc.id}
           </Stack>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setCallNumberDialog(false)}>Cancel</Button>
+          <Button onClick={() => setCallNumberDialog(false)}>{t('common.cancel')}</Button>
         </DialogActions>
       </Dialog>
 
       {/* Post-Call Dialog */}
       <Dialog open={postCallDialog} onClose={() => setPostCallDialog(false)} maxWidth="sm" fullWidth>
-        <DialogTitle>Update Call Details</DialogTitle>
+        <DialogTitle>{t('leads.details.dialogs.postCall.title')}</DialogTitle>
         <DialogContent>
           <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-            Called: {selectedNumber}
+            {t('leads.details.dialogs.postCall.called', { number: selectedNumber })}
           </Typography>
           <Grid container spacing={2} sx={{ mt: 1 }}>
             <Grid item xs={12} sm={6}>
               <FormControl fullWidth>
-                <InputLabel>Status</InputLabel>
+                <InputLabel>{t('leads.details.table.status')}</InputLabel>
                 <Select
                   value={callLogData.status}
-                  label="Status"
+                  label={t('leads.details.table.status')}
                   onChange={(e) => setCallLogData({ ...callLogData, status: e.target.value })}
                 >
-                  <MenuItem value="New">New</MenuItem>
-                  <MenuItem value="Contacted">Contacted</MenuItem>
-                  <MenuItem value="Qualified">Qualified</MenuItem>
-                  <MenuItem value="Proposal">Proposal</MenuItem>
-                  <MenuItem value="Negotiation">Negotiation</MenuItem>
-                  <MenuItem value="Closed Won">Closed Won</MenuItem>
-                  <MenuItem value="Closed Lost">Closed Lost</MenuItem>
+                  <MenuItem value="New">{t('leads.details.values.leadStatuses.new')}</MenuItem>
+                  <MenuItem value="Contacted">{t('leads.details.values.leadStatuses.contacted')}</MenuItem>
+                  <MenuItem value="Qualified">{t('leads.details.values.leadStatuses.qualified')}</MenuItem>
+                  <MenuItem value="Proposal">{t('leads.details.values.leadStatuses.proposal')}</MenuItem>
+                  <MenuItem value="Negotiation">{t('leads.details.values.leadStatuses.negotiation')}</MenuItem>
+                  <MenuItem value="Closed Won">{t('leads.details.values.leadStatuses.closedWon')}</MenuItem>
+                  <MenuItem value="Closed Lost">{t('leads.details.values.leadStatuses.closedLost')}</MenuItem>
                 </Select>
               </FormControl>
             </Grid>
             <Grid item xs={12} sm={6}>
               <FormControl fullWidth>
-                <InputLabel>Sub-Status</InputLabel>
+                <InputLabel>{t('leads.details.dialogs.addCallLog.subDisposition')}</InputLabel>
                 <Select
                   value={callLogData.subStatus}
-                  label="Sub-Status"
+                  label={t('leads.details.dialogs.addCallLog.subDisposition')}
                   onChange={(e) => setCallLogData({ ...callLogData, subStatus: e.target.value })}
                 >
-                  <MenuItem value="Attempting Contact">Attempting Contact</MenuItem>
-                  <MenuItem value="Contact Made">Contact Made</MenuItem>
-                  <MenuItem value="Needs Analysis">Needs Analysis</MenuItem>
-                  <MenuItem value="Quote Sent">Quote Sent</MenuItem>
-                  <MenuItem value="Follow-up Required">Follow-up Required</MenuItem>
-                  <MenuItem value="Decision Pending">Decision Pending</MenuItem>
-                  <MenuItem value="Not Interested">Not Interested</MenuItem>
-                  <MenuItem value="No Response">No Response</MenuItem>
+                  <MenuItem value="Attempting Contact">{t('leads.details.values.dispositions.attemptingContact')}</MenuItem>
+                  <MenuItem value="Contact Made">{t('leads.details.values.dispositions.contactMade')}</MenuItem>
+                  <MenuItem value="Needs Analysis">{t('leads.details.values.dispositions.needsAnalysis')}</MenuItem>
+                  <MenuItem value="Quote Sent">{t('leads.details.values.dispositions.quoteSent')}</MenuItem>
+                  <MenuItem value="Follow-up Required">{t('leads.details.values.dispositions.followupRequired')}</MenuItem>
+                  <MenuItem value="Decision Pending">{t('leads.details.values.dispositions.decisionPending')}</MenuItem>
+                  <MenuItem value="Not Interested">{t('leads.details.values.dispositions.notInterested')}</MenuItem>
+                  <MenuItem value="No Response">{t('leads.details.values.dispositions.noResponse')}</MenuItem>
                 </Select>
               </FormControl>
             </Grid>
             <Grid item xs={12} sm={6}>
               <TextField
                 fullWidth
-                label="Follow-up Date"
+                label={t('leads.details.dialogs.scheduleFollowup.date')}
                 type="date"
                 value={callLogData.followUpDate}
                 onChange={(e) => setCallLogData({ ...callLogData, followUpDate: e.target.value })}
@@ -3797,7 +3806,7 @@ Document Reference: ${doc.id}
             <Grid item xs={12} sm={6}>
               <TextField
                 fullWidth
-                label="Follow-up Time"
+                label={t('leads.details.dialogs.scheduleFollowup.time')}
                 type="time"
                 value={callLogData.followUpTime}
                 onChange={(e) => setCallLogData({ ...callLogData, followUpTime: e.target.value })}
@@ -3807,12 +3816,12 @@ Document Reference: ${doc.id}
             <Grid item xs={12}>
               <TextField
                 fullWidth
-                label="Call Notes"
+                label={t('leads.details.dialogs.postCall.notes')}
                 multiline
                 rows={3}
                 value={callLogData.notes}
                 onChange={(e) => setCallLogData({ ...callLogData, notes: e.target.value })}
-                placeholder="Add any notes from the call..."
+                placeholder={t('leads.details.dialogs.postCall.notesPlaceholder')}
               />
             </Grid>
           </Grid>
@@ -3827,7 +3836,7 @@ Document Reference: ${doc.id}
               followUpTime: '',
               notes: ''
             });
-          }}>Cancel</Button>
+          }}>{t('common.cancel')}</Button>
           <Button
             variant="contained"
             onClick={() => {
@@ -3843,7 +3852,7 @@ Document Reference: ${doc.id}
                 notes: callLogData.notes
               };
               console.log('Call log saved:', callLog);
-              alert(`Call details saved successfully!${callLogData.followUpDate ? `\nFollow-up scheduled for ${callLogData.followUpDate} at ${callLogData.followUpTime}` : ''}`);
+              alert(`${t('leads.details.dialogs.postCall.alertSuccess')}${callLogData.followUpDate ? t('leads.details.dialogs.postCall.alertFollowup', { date: callLogData.followUpDate, time: callLogData.followUpTime }) : ''}`);
 
               // Update lead status if changed
               if (callLogData.status && callLogData.status !== lead.status) {
@@ -3860,7 +3869,7 @@ Document Reference: ${doc.id}
               });
             }}
           >
-            Save Call Details
+            {t('leads.details.dialogs.postCall.save')}
           </Button>
         </DialogActions>
       </Dialog>
@@ -3873,7 +3882,7 @@ Document Reference: ${doc.id}
       >
         <DialogTitle sx={{ fontWeight: 600, display: 'flex', alignItems: 'center', gap: 1 }}>
           <DocumentIcon color="primary" />
-          Document Details
+          {t('leads.details.dialogs.uploadDocs.title')}
         </DialogTitle>
         <DialogContent dividers>
           {selectedDocument && (
@@ -3882,19 +3891,19 @@ Document Reference: ${doc.id}
               <Grid item xs={12}>
                 <Paper sx={{ p: 2, bgcolor: alpha(theme.palette.primary.main, 0.05) }}>
                   <Typography variant="subtitle1" fontWeight="600" gutterBottom color="primary">
-                    Document Information
+                    {t('leads.details.dialogs.policyView.policyInfo')}
                   </Typography>
                   <Grid container spacing={2}>
                     <Grid item xs={12} sm={6}>
-                      <Typography variant="caption" color="text.secondary">Document Name</Typography>
+                      <Typography variant="caption" color="text.secondary">{t('leads.details.documents.fileName')}</Typography>
                       <Typography variant="body1" fontWeight="500">
                         {selectedDocument.documentName || selectedDocument.fileName || 'N/A'}
                       </Typography>
                     </Grid>
                     <Grid item xs={12} sm={6}>
-                      <Typography variant="caption" color="text.secondary">Document Type</Typography>
+                      <Typography variant="caption" color="text.secondary">{t('leads.details.documents.type')}</Typography>
                       <Typography variant="body1">
-                        {selectedDocument.documentType || selectedDocument.docType}
+                        {t(`leads.details.values.documentTypes.${selectedDocument.documentType || selectedDocument.docType}`) || selectedDocument.documentType || selectedDocument.docType}
                       </Typography>
                     </Grid>
                   </Grid>
@@ -3905,17 +3914,17 @@ Document Reference: ${doc.id}
               <Grid item xs={12}>
                 <Paper sx={{ p: 2 }}>
                   <Typography variant="subtitle1" fontWeight="600" gutterBottom>
-                    📁 File Details
+                    📁 {t('leads.details.dialogs.policyView.vehicleDetails')}
                   </Typography>
                   <Stack spacing={1}>
                     <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                      <Typography variant="body2" color="text.secondary">Upload Date:</Typography>
+                      <Typography variant="body2" color="text.secondary">{t('leads.details.documents.uploadedOn')}:</Typography>
                       <Typography variant="body2" fontWeight="500">
                         {selectedDocument.uploadDate || selectedDocument.uploadedOn || 'N/A'}
                       </Typography>
                     </Box>
                     <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                      <Typography variant="body2" color="text.secondary">File Size:</Typography>
+                      <Typography variant="body2" color="text.secondary">{t('leads.details.documents.size')}:</Typography>
                       <Typography variant="body2" fontWeight="500">
                         {selectedDocument.size || 'N/A'}
                       </Typography>
@@ -3943,11 +3952,11 @@ Document Reference: ${doc.id}
                       : alpha(theme.palette.warning.main, 0.05)
                 }}>
                   <Typography variant="subtitle1" fontWeight="600" gutterBottom>
-                    ✓ Verification Status
+                    ✓ {t('leads.details.dialogs.policyView.claimsStatus')}
                   </Typography>
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mt: 1 }}>
                     <Chip
-                      label={selectedDocument.status}
+                      label={t(`leads.details.values.fileStatuses.${selectedDocument.status.toLowerCase()}`) || selectedDocument.status}
                       size="medium"
                       color={
                         selectedDocument.status === 'Verified' ? 'success' :
@@ -3955,10 +3964,10 @@ Document Reference: ${doc.id}
                       }
                     />
                     <Typography variant="body2">
-                      {selectedDocument.status === 'Verified' && 'Document has been verified and approved.'}
-                      {selectedDocument.status === 'Pending' && 'Document is pending verification.'}
-                      {selectedDocument.status === 'Rejected' && 'Document has been rejected.'}
-                      {selectedDocument.status === 'Active' && 'Document is currently active.'}
+                      {selectedDocument.status === 'Verified' && t('leads.details.values.documentMessages.verified')}
+                      {selectedDocument.status === 'Pending' && t('leads.details.values.documentMessages.pending')}
+                      {selectedDocument.status === 'Rejected' && t('leads.details.values.documentMessages.rejected')}
+                      {selectedDocument.status === 'Active' && t('leads.details.values.documentMessages.active')}
                     </Typography>
                   </Box>
                 </Paper>
@@ -3968,15 +3977,15 @@ Document Reference: ${doc.id}
               <Grid item xs={12}>
                 <Paper sx={{ p: 2 }}>
                   <Typography variant="subtitle1" fontWeight="600" gutterBottom>
-                    👤 Associated Lead
+                    👤 {t('leads.details.dialogs.policyView.insuredDetails')}
                   </Typography>
                   <Grid container spacing={2}>
                     <Grid item xs={6}>
-                      <Typography variant="caption" color="text.secondary">Name</Typography>
+                      <Typography variant="caption" color="text.secondary">{t('leads.details.table.customerName')}</Typography>
                       <Typography variant="body2" fontWeight="500">{lead?.firstName} {lead?.lastName}</Typography>
                     </Grid>
                     <Grid item xs={6}>
-                      <Typography variant="caption" color="text.secondary">Phone</Typography>
+                      <Typography variant="caption" color="text.secondary">{t('leads.details.dialogs.addCallLog.placeholderPhone')}</Typography>
                       <Typography variant="body2">{lead?.phone}</Typography>
                     </Grid>
                   </Grid>
@@ -3986,7 +3995,7 @@ Document Reference: ${doc.id}
           )}
         </DialogContent>
         <DialogActions sx={{ p: 2 }}>
-          <Button onClick={() => setDocumentViewDialog(false)}>Close</Button>
+          <Button onClick={() => setDocumentViewDialog(false)}>{t('common.close')}</Button>
           <Button
             variant="contained"
             startIcon={<DownloadIcon />}
@@ -3997,7 +4006,7 @@ Document Reference: ${doc.id}
               }
             }}
           >
-            Download Document
+            {t('leads.details.dialogs.policyView.download')}
           </Button>
         </DialogActions>
       </Dialog>
@@ -4008,7 +4017,7 @@ Document Reference: ${doc.id}
           <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
               <MoneyIcon color="warning" />
-              <Typography variant="h6">Share Quote</Typography>
+              <Typography variant="h6">{t('leads.details.dialogs.shareQuote.title')}</Typography>
             </Box>
             <IconButton onClick={() => setShareQuoteDialogOpen(false)}>
               <CancelIcon />
@@ -4018,25 +4027,25 @@ Document Reference: ${doc.id}
         <DialogContent dividers>
           <Stack spacing={2}>
             <Typography variant="body2" color="text.secondary" gutterBottom>
-              Create and share a quote for <strong>{lead?.firstName} {lead?.lastName}</strong>.
+              {t('leads.details.dialogs.shareQuote.instruction', { name: `${lead?.firstName} ${lead?.lastName}` })}
             </Typography>
             <FormControl fullWidth>
-              <InputLabel>Quote Type</InputLabel>
+              <InputLabel>{t('leads.details.dialogs.shareQuote.type')}</InputLabel>
               <Select
                 value={quoteForm.quoteType}
-                label="Quote Type"
+                label={t('leads.details.dialogs.shareQuote.type')}
                 onChange={(e) => setQuoteForm({ ...quoteForm, quoteType: e.target.value })}
               >
-                <MenuItem value="standard">Standard Quote</MenuItem>
-                <MenuItem value="premium">Premium Quote</MenuItem>
-                <MenuItem value="custom">Custom Quote</MenuItem>
+                <MenuItem value="standard">{t('leads.details.values.quoteTypes.standard')}</MenuItem>
+                <MenuItem value="premium">{t('leads.details.values.quoteTypes.premium')}</MenuItem>
+                <MenuItem value="custom">{t('leads.details.values.quoteTypes.custom')}</MenuItem>
               </Select>
             </FormControl>
             <Grid container spacing={2}>
               <Grid item xs={6}>
                 <TextField
                   fullWidth
-                  label="Premium Amount (₹)"
+                  label={t('leads.details.dialogs.shareQuote.premium')}
                   type="number"
                   value={quoteForm.premium}
                   onChange={(e) => setQuoteForm({ ...quoteForm, premium: e.target.value })}
@@ -4045,7 +4054,7 @@ Document Reference: ${doc.id}
               <Grid item xs={6}>
                 <TextField
                   fullWidth
-                  label="Coverage Amount (₹)"
+                  label={t('leads.details.dialogs.shareQuote.coverage')}
                   type="number"
                   value={quoteForm.coverage}
                   onChange={(e) => setQuoteForm({ ...quoteForm, coverage: e.target.value })}
@@ -4054,7 +4063,7 @@ Document Reference: ${doc.id}
             </Grid>
             <TextField
               fullWidth
-              label="Valid Till"
+              label={t('leads.details.dialogs.shareQuote.validTill')}
               type="date"
               value={quoteForm.validTill}
               onChange={(e) => setQuoteForm({ ...quoteForm, validTill: e.target.value })}
@@ -4064,15 +4073,15 @@ Document Reference: ${doc.id}
               fullWidth
               multiline
               rows={3}
-              label="Additional Notes"
+              label={t('leads.details.dialogs.shareQuote.additionalNotes')}
               value={quoteForm.notes}
               onChange={(e) => setQuoteForm({ ...quoteForm, notes: e.target.value })}
-              placeholder="Any special terms or conditions..."
+              placeholder={t('leads.details.dialogs.shareQuote.notesPlaceholder')}
             />
           </Stack>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setShareQuoteDialogOpen(false)}>Cancel</Button>
+          <Button onClick={() => setShareQuoteDialogOpen(false)}>{t('common.cancel')}</Button>
           <Button
             variant="contained"
             color="warning"
@@ -4080,7 +4089,7 @@ Document Reference: ${doc.id}
             onClick={handleShareQuote}
             disabled={!quoteForm.premium || !quoteForm.coverage}
           >
-            Share Quote
+            {t('leads.details.dialogs.shareQuote.share')}
 
           </Button>
         </DialogActions>

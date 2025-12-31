@@ -53,7 +53,7 @@ let mockInboundTickets = [
 /* Public API */
 export const fetchContacts = async ({ useMocks = false } = {}) => {
   try {
-    const response = await api.get('/customers/contacts');
+    const response = await api.get('/contact_database/contacts/');
     if (Array.isArray(response.data) && response.data.length > 0) {
       return response.data;
     }
@@ -191,7 +191,7 @@ export const syncInboundToContact = async (ticketId) => {
 
 export const saveContacts = async (contacts) => {
   try {
-    const response = await api.put('/customers/contacts/bulk', contacts);
+    const response = await api.put('/contact_database/contacts/bulk/', contacts);
     if (response.data) {
       return response.data;
     }
@@ -220,7 +220,7 @@ export const saveCustomers = async (customers) => {
 /* Contact & Customer CRUD */
 export const addContact = async (contactData) => {
   try {
-    const response = await api.post('/customers/contacts', contactData);
+    const response = await api.post('/contact_database/contacts/', contactData);
     if (response.data) {
       return response.data;
     }
@@ -241,7 +241,7 @@ export const addContact = async (contactData) => {
 
 export const updateContact = async (contactId, updates) => {
   try {
-    const response = await api.put(`/customers/contacts/${contactId}`, updates);
+    const response = await api.put(`/contact_database/contacts/${contactId}/`, updates);
     if (response.data) {
       return response.data;
     }
@@ -257,7 +257,7 @@ export const updateContact = async (contactId, updates) => {
 
 export const deleteContact = async (contactId) => {
   try {
-    const response = await api.delete(`/customers/contacts/${contactId}`);
+    const response = await api.delete(`/contact_database/contacts/${contactId}/`);
     return response.data?.success || true;
   } catch (error) {
     console.error('Error deleting contact, using mock:', error);
@@ -334,7 +334,7 @@ export const syncLeadToContact = async (leadData) => {
   };
 
   try {
-    const response = await api.post('/customers/contacts/sync-lead', contactData);
+    const response = await api.post('/contact_database/contacts/sync-lead/', contactData);
     if (response.data) {
       return response.data;
     }
@@ -427,7 +427,7 @@ export const convertLeadToCustomer = async (leadData, policyDetails = {}, helper
 /* Utility getters */
 export const getContactByLeadId = async (leadId) => {
   try {
-    const response = await api.get(`/customers/contacts/by-lead/${leadId}`);
+    const response = await api.get(`/contact_database/contacts/by-lead/${leadId}/`);
     if (response.data) {
       return response.data;
     }

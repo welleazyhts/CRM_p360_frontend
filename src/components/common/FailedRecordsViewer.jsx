@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   Box,
   Typography,
@@ -36,6 +37,7 @@ import { useDedupe } from '../../context/DedupeContext';
 
 const FailedRecordsViewer = ({ source = null, limit = 10 }) => {
   const theme = useTheme();
+  const { t } = useTranslation();
   const { getUploadHistory, clearUploadHistory } = useDedupe();
   const [expandedUpload, setExpandedUpload] = useState(null);
 
@@ -93,7 +95,7 @@ const FailedRecordsViewer = ({ source = null, limit = 10 }) => {
   if (uploadHistory.length === 0) {
     return (
       <Alert severity="info">
-        No upload history found. {source ? `Upload some ${source} records to see them here.` : 'Upload some records to see them here.'}
+        {t('upload.noHistory', { source: source ? t(`leads.${source}`) : '' })}
       </Alert>
     );
   }
@@ -102,16 +104,14 @@ const FailedRecordsViewer = ({ source = null, limit = 10 }) => {
     <Box>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
         <Typography variant="h6" fontWeight="600">
-          Upload History {source && `- ${source}`}
+          {t('upload.historyTitle')} {source && `- ${t(`leads.${source}`) || source}`}
         </Typography>
         <Box>
-          <Tooltip title="Clear History">
+          <Tooltip title={t('upload.clearHistory')}>
             <IconButton
               size="small"
               onClick={() => {
-                if (window.confirm('Are you sure you want to clear the upload history?')) {
-                  clearUploadHistory();
-                }
+                clearUploadHistory();
               }}
             >
               <DeleteIcon />
@@ -130,7 +130,7 @@ const FailedRecordsViewer = ({ source = null, limit = 10 }) => {
                     {upload.filename}
                   </Typography>
                   <Chip
-                    label={upload.status}
+                    label={t(`leads.bulk.${upload.status}`) || upload.status}
                     size="small"
                     color={getStatusColor(upload.status)}
                     icon={upload.status === 'completed' ? <CheckCircleIcon /> : <ErrorIcon />}
@@ -138,12 +138,12 @@ const FailedRecordsViewer = ({ source = null, limit = 10 }) => {
                 </Box>
 
                 <Typography variant="body2" color="text.secondary" gutterBottom>
-                  Uploaded by {upload.uploadedBy} • {formatDate(upload.timestamp)}
+                  {t('upload.uploadedBy', { user: upload.uploadedBy })} • {formatDate(upload.timestamp)}
                 </Typography>
 
                 <Box sx={{ display: 'flex', gap: 2, mt: 2 }}>
                   <Chip
-                    label={`Total: ${upload.totalRecords}`}
+                    label={t('upload.summary.total') + ': ' + upload.totalRecords}
                     size="small"
                     sx={{
                       bgcolor: alpha(theme.palette.info.main, 0.1),
@@ -151,7 +151,7 @@ const FailedRecordsViewer = ({ source = null, limit = 10 }) => {
                     }}
                   />
                   <Chip
-                    label={`Valid: ${upload.validRecords}`}
+                    label={t('upload.summary.valid') + ': ' + upload.validRecords}
                     size="small"
                     sx={{
                       bgcolor: alpha(theme.palette.success.main, 0.1),
@@ -160,7 +160,7 @@ const FailedRecordsViewer = ({ source = null, limit = 10 }) => {
                   />
                   {upload.failedRecords && upload.failedRecords.length > 0 && (
                     <Chip
-                      label={`Failed: ${upload.failedRecords.length}`}
+                      label={t('upload.summary.failed') + ': ' + upload.failedRecords.length}
                       size="small"
                       sx={{
                         bgcolor: alpha(theme.palette.error.main, 0.1),
@@ -174,7 +174,7 @@ const FailedRecordsViewer = ({ source = null, limit = 10 }) => {
               <Box sx={{ display: 'flex', gap: 1 }}>
                 {upload.failedRecords && upload.failedRecords.length > 0 && (
                   <>
-                    <Tooltip title="Download Failed Records">
+                    <Tooltip title={t('upload.downloadFailed')}>
                       <IconButton
                         size="small"
                         color="primary"
@@ -183,7 +183,7 @@ const FailedRecordsViewer = ({ source = null, limit = 10 }) => {
                         <DownloadIcon />
                       </IconButton>
                     </Tooltip>
-                    <Tooltip title={expandedUpload === upload.id ? 'Hide Details' : 'Show Details'}>
+                    <Tooltip title={expandedUpload === upload.id ? t('common.hide') + ' ' + t('common.details') : t('common.show') + ' ' + t('common.details')}>
                       <IconButton
                         size="small"
                         onClick={() => handleExpandClick(upload.id)}
@@ -201,16 +201,16 @@ const FailedRecordsViewer = ({ source = null, limit = 10 }) => {
               <Collapse in={expandedUpload === upload.id} timeout="auto" unmountOnExit>
                 <Box sx={{ mt: 3 }}>
                   <Typography variant="subtitle2" fontWeight="600" gutterBottom>
-                    Failed Records Details
+                    {t('upload.failedDetailsTitle')}
                   </Typography>
                   <TableContainer component={Paper} variant="outlined" sx={{ maxHeight: 400 }}>
                     <Table size="small" stickyHeader>
                       <TableHead>
                         <TableRow>
-                          <TableCell>Row #</TableCell>
-                          <TableCell>Type</TableCell>
-                          <TableCell>Reason</TableCell>
-                          <TableCell>Data Preview</TableCell>
+                          <TableCell>{t('upload.rowNumber')}</TableCell>
+                          <TableCell>{t('upload.type')}</TableCell>
+                          <TableCell>{t('upload.reason')}</TableCell>
+                          <TableCell>{t('upload.dataPreview')}</TableCell>
                         </TableRow>
                       </TableHead>
                       <TableBody>
@@ -220,7 +220,7 @@ const FailedRecordsViewer = ({ source = null, limit = 10 }) => {
                             <TableCell>
                               <Chip
                                 icon={getTypeIcon(item.type)}
-                                label={item.type}
+                                label={t(`upload.types.${item.type}`) || item.type}
                                 size="small"
                                 color={item.type === 'duplicate' ? 'warning' : 'error'}
                               />
@@ -249,11 +249,9 @@ const FailedRecordsViewer = ({ source = null, limit = 10 }) => {
         </Card>
       ))}
 
-      {uploadHistory.length >= limit && (
-        <Alert severity="info" sx={{ mt: 2 }}>
-          Showing last {limit} uploads. {source && `Filter by source for more specific results.`}
-        </Alert>
-      )}
+      <Alert severity="info" sx={{ mt: 2 }}>
+        {t('upload.showLastLimit', { limit })}
+      </Alert>
     </Box>
   );
 };

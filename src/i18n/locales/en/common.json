@@ -16,17 +16,47 @@
   "common": {
     "save": "Save",
     "cancel": "Cancel",
+    "view": "View",
+    "download": "Download",
     "delete": "Delete",
     "edit": "Edit",
     "create": "Create",
     "update": "Update",
     "close": "Close",
+    "currentUser": "Current User",
     "submit": "Submit",
     "loading": "Loading...",
     "error": "Error",
     "success": "Success",
     "warning": "Warning",
-    "info": "Info"
+    "info": "Info",
+    "reset": "Reset",
+    "unassigned": "Unassigned",
+    "back": "Back",
+    "done": "Done",
+    "export": "Export",
+    "hide": "Hide",
+    "show": "Show",
+    "details": "Details",
+    "total": "Total",
+    "valid": "Valid",
+    "failed": "Failed",
+    "saving": "Saving...",
+    "languages": {
+      "English": "English",
+      "Hindi": "Hindi",
+      "Bengali": "Bengali",
+      "Telugu": "Telugu",
+      "Marathi": "Marathi",
+      "Tamil": "Tamil",
+      "Gujarati": "Gujarati",
+      "Malayalam": "Malayalam",
+      "Kannada": "Kannada",
+      "Punjabi": "Punjabi",
+      "Assamese": "Assamese",
+      "Odia": "Odia",
+      "Urdu": "Urdu"
+    }
   },
   "navigation": {
     "dashboard": "Dashboard",
@@ -37,7 +67,71 @@
     "users": "Users",
     "profile": "Profile",
     "logout": "Logout",
-    "renewals": "Existing Renewal Management"
+    "renewals": "Existing Renewal Management",
+    "leadManagement": "Lead Management",
+    "allLeads": "All Leads",
+    "assignedLeads": "Assigned Leads",
+    "closedLeads": "Closed Leads",
+    "campaignManagement": "Campaign Management",
+    "caseTracking": "Case Tracking",
+    "closedCases": "Closed Cases",
+    "notInterestedCases": "Not Interested Cases",
+    "renewalFailedCases": "Renewal Failed Cases",
+    "policyProposal": "Policy Proposal Generation",
+    "caseLogs": "Case Logs",
+    "emailDashboard": "Email Dashboard",
+    "emailInbox": "Email Inbox",
+    "bulkEmail": "Bulk Email",
+    "emailAnalytics": "Email Analytics",
+    "lostLeads": "Lost Leads",
+    "archivedLeads": "Archived Leads",
+    "duplicateLeads": "Duplicate Leads",
+    "leadAnalytics": "Lead Analytics",
+    "mis": "MIS",
+    "quoteManagement": "Quote Management",
+    "paymentLinks": "Payment Links",
+    "reminders": "Reminders",
+    "salesPipeline": "Sales Pipeline",
+    "qrcManagement": "QRC Management",
+    "contactDatabase": "Contact Database",
+    "customerDatabase": "Customer Database",
+    "inboundService": "Inbound Service",
+    "complaints": "Complaints",
+    "feedback": "Feedback",
+    "emailManager": "Email Manager",
+    "whatsappManager": "WhatsApp Manager",
+    "autoAssignment": "Auto-Assignment",
+    "autoQuoteSharing": "Auto Quote Sharing",
+    "workflowBuilder": "Workflow Builder",
+    "taskManagement": "Task Management",
+    "slaMonitoring": "SLA Monitoring",
+    "commissionTracking": "Commission Tracking",
+    "callRecording": "Call Recording",
+    "callQualityMonitoring": "Call Quality Monitoring",
+    "insurerProducts": "Insurer & Products",
+    "dispositions": "Dispositions",
+    "vahanIntegration": "Vahan Integration",
+    "attendance": "Attendance",
+    "leaveManagement": "Leave Management",
+    "kpiManagement": "KPI Management",
+    "trainingAnalysis": "Training & Analysis",
+    "collectionsDashboard": "Collections Dashboard",
+    "portfolioOnboarding": "Portfolio Onboarding",
+    "debtorManagement": "Debtor Management",
+    "allDebtors": "All Debtors",
+    "recoveredClosed": "Recovered Closed",
+    "lostClosed": "Lost Closed",
+    "skipTracing": "Skip Tracing & Locator",
+    "workflowManager": "Workflow Manager",
+    "settlementPaymentPlans": "Settlement & Payment Plans",
+    "settlementPlanLog": "Settlement Plan Log",
+    "complianceDisputes": "Compliance & Disputes",
+    "hardshipPrograms": "Hardship Programs",
+    "paymentReconciliation": "Payment Reconciliation",
+    "legalEscalation": "Legal Escalation",
+    "collectionAnalytics": "Collection Analytics",
+    "debtorPortal": "Debtor Portal",
+    "feedbackSurveys": "Feedback & Surveys"
   },
   "whatsapp": {
     "flowBuilder": "Flow Builder",
@@ -51,5 +145,1432 @@
     "publish": "Publish",
     "draft": "Draft",
     "approved": "Approved"
+  },
+  "leads": {
+    "title": "All Leads",
+    "subtitle": "View and manage all sales leads",
+    "addLead": "Add Lead",
+    "editLead": "Edit Lead",
+    "addNewLead": "Add New Lead",
+    "bulkUpload": "Bulk Upload",
+    "dataProviderUpload": "Data Provider Upload",
+    "uploadHistory": "Upload History",
+    "viewAgents": "View Agents",
+    "searchPlaceholder": "Search leads...",
+    "status": "Status",
+    "priority": "Priority",
+    "assignedTo": "Assigned To",
+    "contacts": "Contacts",
+    "bulk": {
+      "completed": "Completed",
+      "upload": "Upload"
+    },
+    "assigned": {
+      "subtitle": "{{count}} of {{total}} leads",
+      "searchPlaceholder": "Search by name, email, phone...",
+      "clearFilters": "Clear all filters",
+      "clear": "Clear",
+      "noLeads": "No leads found matching your filters",
+      "filters": {
+        "status": "Status",
+        "priority": "Priority",
+        "policyType": "Policy Type",
+        "dateRange": "Date Range",
+        "allStatus": "All Status",
+        "allPriority": "All Priority",
+        "allTypes": "All Types",
+        "allTime": "All Time",
+        "last7Days": "Last 7 Days",
+        "last30Days": "Last 30 Days",
+        "last90Days": "Last 90 Days"
+      },
+      "table": {
+        "name": "Name",
+        "contact": "Contact",
+        "lastContact": "Last Contact",
+        "actions": "Actions"
+      },
+      "actions": {
+        "call": "Call Lead",
+        "viewDetails": "View Details",
+        "edit": "Edit",
+        "sendEmail": "Send Email",
+        "shareQuote": "Share Quote"
+      },
+      "dialogs": {
+        "email": {
+          "title": "Send Email",
+          "sendingTo": "Sending to: ",
+          "subject": "Subject",
+          "cc": "CC (Optional)",
+          "ccPlaceholder": "Enter CC email addresses",
+          "body": "Email Body",
+          "send": "Send Email",
+          "success": "Email sent to {{email}}!"
+        },
+        "quote": {
+          "title": "Share Quote",
+          "creatingFor": "Creating quote for: ",
+          "premium": "Premium Amount (₹)",
+          "coverage": "Coverage Amount (₹)",
+          "validTill": "Valid Till",
+          "notes": "Additional Notes",
+          "notesPlaceholder": "Any special terms or conditions...",
+          "share": "Share Quote",
+          "success": "Quote shared with {{name}}!"
+        },
+        "call": {
+          "title": "Contact Lead",
+          "dial": "Dial"
+        }
+      }
+    },
+    "closed": {
+      "title": "Closed Leads",
+      "exportData": "Export Data",
+      "generateReport": "Generate Report",
+      "searchPlaceholder": "Search closed leads...",
+      "filterByResult": "Filter by Result",
+      "allResults": "All Results",
+      "dateRange": "Date Range",
+      "sortBy": "Sort by",
+      "results": {
+        "policyIssued": "Policy Issued",
+        "notInterested": "Not Interested",
+        "highPremium": "High Premium",
+        "boughtFromCompetitor": "Bought from Competitor",
+        "invalidLead": "Invalid Lead"
+      },
+      "table": {
+        "leadDetails": "Lead Details",
+        "contact": "Contact",
+        "result": "Result",
+        "policyDetails": "Policy Details",
+        "premium": "Premium",
+        "closedDate": "Closed Date",
+        "closedBy": "Closed By",
+        "actions": "Actions"
+      },
+      "actions": {
+        "callLead": "Call Lead",
+        "viewDetails": "View Details",
+        "viewHistory": "View History",
+        "downloadDocuments": "Download Documents"
+      },
+      "dialogs": {
+        "call": {
+          "title": "Contact Lead",
+          "leadId": "Lead ID",
+          "leadName": "Lead Name",
+          "result": "Result",
+          "policyDetails": "Policy Details",
+          "policyNumber": "Policy #",
+          "premium": "Premium",
+          "closureDetails": "Closure Details",
+          "closedBy": "Closed By",
+          "closedOn": "Closed On",
+          "phoneNumber": "Phone Number",
+          "email": "Email",
+          "dial": "Dial"
+        },
+        "history": {
+          "title": "Lead History",
+          "leadDetails": "Lead Details",
+          "activityTimeline": "Activity Timeline",
+          "by": "By"
+        }
+      },
+      "messages": {
+        "exportSuccess": "Data exported successfully!",
+        "exportFailed": "Failed to export data",
+        "reportSuccess": "Report generated successfully!",
+        "reportNotAvailable": "Report generation not available. Please try export instead.",
+        "reportFailed": "Failed to generate report",
+        "historyFailed": "Failed to fetch lead history",
+        "documentsSuccess": "Documents downloaded successfully!",
+        "documentsNotAvailable": "No documents available for this lead",
+        "documentsFailed": "Failed to download documents"
+      },
+      "dateRanges": {
+        "allTime": "All Time",
+        "last7Days": "Last 7 Days",
+        "last30Days": "Last 30 Days",
+        "last90Days": "Last 90 Days"
+      }
+    },
+    "lost": {
+      "title": "Lost Leads",
+      "subtitle": "Leads that were closed as lost or not converted",
+      "exportData": "Export Data",
+      "generateReport": "Generate Report",
+      "searchPlaceholder": "Search lost leads...",
+      "filterByReason": "Filter by Reason",
+      "allReasons": "All Reasons",
+      "dateRange": "Date Range",
+      "sortByDate": "Sort by Date",
+      "stats": {
+        "totalLostLeads": "Total Lost Leads",
+        "lostRevenue": "Lost Revenue",
+        "averagePremium": "Average Premium",
+        "thisMonth": "This Month"
+      },
+      "reasons": {
+        "highPremium": "High Premium",
+        "notInterested": "Not Interested",
+        "boughtFromCompetitor": "Bought from Competitor",
+        "invalidContact": "Invalid Contact",
+        "budgetConstraints": "Budget Constraints",
+        "coverageNotSufficient": "Coverage Not Sufficient",
+        "alreadyInsured": "Already Insured",
+        "switchedProvider": "Switched Provider"
+      },
+      "table": {
+        "leadDetails": "Lead Details",
+        "contact": "Contact",
+        "lostReason": "Lost Reason",
+        "policyType": "Policy Type",
+        "quotedPremium": "Quoted Premium",
+        "closedDate": "Closed Date",
+        "closedBy": "Closed By",
+        "actions": "Actions",
+        "source": "Source"
+      },
+      "actions": {
+        "reopenLead": "Reopen Lead",
+        "callLead": "Call Lead",
+        "viewDetails": "View Details",
+        "viewHistory": "View History"
+      },
+      "dialogs": {
+        "call": {
+          "title": "Contact Lost Lead",
+          "leadId": "Lead ID",
+          "leadName": "Lead Name",
+          "lostReason": "Lost Reason",
+          "policyDetails": "Policy Details",
+          "quotedPremium": "Quoted Premium",
+          "closureDetails": "Closure Details",
+          "closedBy": "Closed By",
+          "closedOn": "Closed On",
+          "phoneNumber": "Phone Number",
+          "email": "Email",
+          "dial": "Dial",
+          "reopenLead": "Reopen Lead"
+        },
+        "history": {
+          "title": "Lead History",
+          "leadDetails": "Lead Details",
+          "activityTimeline": "Activity Timeline",
+          "by": "By"
+        },
+        "reopen": {
+          "confirm": "Are you sure you want to reopen the lead for {{name}}?"
+        }
+      },
+      "messages": {
+        "exportSuccess": "Data exported successfully!",
+        "exportFailed": "Failed to export data",
+        "reportSuccess": "Report generated successfully!",
+        "reportNotAvailable": "Report generation not available. Please try export instead.",
+        "reportFailed": "Failed to generate report",
+        "reopenSuccess": "Lead reopened successfully and moved to active leads!",
+        "reopenFailed": "Failed to reopen lead",
+        "historyFailed": "Failed to fetch lead history"
+      },
+      "dateRanges": {
+        "allTime": "All Time",
+        "last7Days": "Last 7 Days",
+        "last30Days": "Last 30 Days",
+        "last90Days": "Last 90 Days"
+      }
+    },
+    "archived": {
+      "title": "Archived Leads",
+      "subtitle": "Leads that have been archived from active database",
+      "exportData": "Export Data",
+      "searchPlaceholder": "Search archived leads...",
+      "filterByPreviousStatus": "Filter by Previous Status",
+      "allStatus": "All Status",
+      "dateRange": "Date Range",
+      "sortByDate": "Sort by Date",
+      "warningNote": "Archived leads can be restored or permanently deleted. Permanent deletion cannot be undone.",
+      "stats": {
+        "totalArchived": "Total Archived",
+        "thisMonth": "This Month",
+        "totalValue": "Total Value"
+      },
+      "statuses": {
+        "newLead": "New Lead",
+        "contacted": "Contacted",
+        "followUp": "Follow Up",
+        "qualified": "Qualified",
+        "proposalSent": "Proposal Sent"
+      },
+      "table": {
+        "leadDetails": "Lead Details",
+        "contact": "Contact",
+        "previousStatus": "Previous Status",
+        "policyType": "Policy Type",
+        "archivedDate": "Archived Date",
+        "archivedReason": "Archived Reason",
+        "archivedBy": "Archived By",
+        "actions": "Actions"
+      },
+      "actions": {
+        "unarchiveLead": "Unarchive Lead",
+        "viewDetails": "View Details",
+        "viewHistory": "View History",
+        "permanentDelete": "Permanent Delete"
+      },
+      "dialogs": {
+        "unarchive": {
+          "title": "Unarchive Lead",
+          "lead": "Lead",
+          "confirm": "Are you sure you want to unarchive this lead? It will be restored to active leads."
+        },
+        "delete": {
+          "title": "Permanent Delete",
+          "confirm": "Are you sure you want to permanently delete this lead? This action cannot be undone."
+        },
+        "history": {
+          "title": "Lead History",
+          "leadDetails": "Lead Details",
+          "activityTimeline": "Activity Timeline",
+          "by": "By"
+        },
+        "buttons": {
+          "cancel": "Cancel",
+          "unarchive": "Unarchive",
+          "deletePermanently": "Delete Permanently"
+        }
+      },
+      "messages": {
+        "exportSuccess": "Data exported successfully!",
+        "exportFailed": "Failed to export data",
+        "unarchiveSuccess": "Lead unarchived successfully and moved to active leads!",
+        "deleteSuccess": "Lead permanently deleted!",
+        "actionFailed": "Failed to perform action",
+        "historyFailed": "Failed to fetch lead history"
+      },
+      "dateRanges": {
+        "allTime": "All Time",
+        "last7Days": "Last 7 Days",
+        "last30Days": "Last 30 Days",
+        "last90Days": "Last 90 Days"
+      }
+    },
+    "duplicate": {
+      "title": "Duplicate Leads",
+      "subtitle": "Manage duplicate leads identified during data upload",
+      "exportReport": "Export Report",
+      "searchPlaceholder": "Search by phone, email, or batch...",
+      "duplicateType": "Duplicate Type",
+      "sortBy": "Sort By",
+      "infoNote": "Leads are grouped by matching phone numbers and/or email addresses. Review each group carefully before merging or deleting records.",
+      "infoTitle": "Duplicate Detection:",
+      "stats": {
+        "totalGroups": "Total Groups",
+        "duplicateRecords": "Duplicate Records",
+        "pendingResolution": "Pending Resolution",
+        "resolved": "Resolved"
+      },
+      "types": {
+        "all": "All",
+        "phoneNumber": "Phone Number",
+        "email": "Email",
+        "both": "Both (Phone & Email)"
+      },
+      "statuses": {
+        "all": "All",
+        "pending": "Pending",
+        "resolved": "Resolved",
+        "ignored": "Ignored"
+      },
+      "sortOptions": {
+        "detectedDate": "Detection Date",
+        "count": "Number of Duplicates",
+        "status": "Status"
+      },
+      "table": {
+        "duplicateType": "Duplicate Type",
+        "matchField": "Match Field",
+        "count": "Count",
+        "uploadBatch": "Upload Batch",
+        "detectedDate": "Detected Date",
+        "status": "Status",
+        "actions": "Actions",
+        "leads": "leads",
+        "noDuplicates": "No duplicate leads found"
+      },
+      "actions": {
+        "viewDetails": "View Details",
+        "mergeLeads": "Merge Leads",
+        "markAsResolved": "Mark as Resolved"
+      },
+      "dialog": {
+        "title": "Duplicate Group Details",
+        "found": "Found {{count}} duplicate records:",
+        "table": {
+          "leadId": "Lead ID",
+          "name": "Name",
+          "phone": "Phone",
+          "email": "Email",
+          "policyType": "Policy Type",
+          "status": "Status",
+          "uploadDate": "Upload Date"
+        },
+        "buttons": {
+          "cancel": "Cancel",
+          "ignore": "Ignore",
+          "mergeLeads": "Merge Leads"
+        }
+      },
+      "messages": {
+        "mergeAlert": "Merging duplicate leads for group {{groupId}}. This will combine all duplicate records into one master record.",
+        "deleteAlert": "Deleting lead {{leadId}} from duplicate group {{groupId}}"
+      }
+    },
+    "analytics": {
+      "title": "Lead Analytics Dashboard",
+      "lastUpdated": "Last updated",
+      "refreshData": "Refresh data",
+      "exportReport": "Export Report",
+      "timeRange": "Time Range",
+      "metric": "Metric",
+      "vsLastPeriod": "vs last period",
+      "timeRangeOptions": {
+        "lastMonth": "Last Month",
+        "last3Months": "Last 3 Months",
+        "last6Months": "Last 6 Months",
+        "lastYear": "Last Year",
+        "customDateRange": "Custom Date Range"
+      },
+      "metricOptions": {
+        "leadCount": "Lead Count",
+        "closedDeals": "Closed Deals",
+        "dealValue": "Deal Value"
+      },
+      "kpis": {
+        "totalLeads": "Total Leads",
+        "newThisMonth": "new this month",
+        "conversionRate": "Conversion Rate",
+        "qualifiedToClosed": "Qualified to closed",
+        "avgDealValue": "Avg Deal Value",
+        "perClosedDeal": "Per closed deal",
+        "pipelineValue": "Pipeline Value",
+        "totalActivePipeline": "Total active pipeline",
+        "avgResponseTime": "Avg Response Time",
+        "followUpRate": "Follow-up Rate",
+        "closedWon": "Closed Won",
+        "thisPeriod": "This period",
+        "qualifiedLeads": "Qualified Leads",
+        "readyToConvert": "Ready to convert"
+      },
+      "charts": {
+        "leadPerformanceTrends": "Lead Performance Trends",
+        "leads": "Leads",
+        "closed": "Closed",
+        "qualified": "Qualified",
+        "newLeads": "New Leads",
+        "closedDeals": "Closed Deals",
+        "leadSourcesDistribution": "Lead Sources Distribution",
+        "leadStatusPipeline": "Lead Status Pipeline",
+        "teamPerformance": "Team Performance",
+        "channelPerformance": "Channel Performance",
+        "successRate": "Success Rate",
+        "efficiency": "Efficiency",
+        "topLeads": "Top Leads by Value",
+        "probability": "Probability",
+        "owner": "Owner",
+        "recentActivities": "Recent Activities",
+        "topPerformers": "Top Performers",
+        "hotLeads": "Hot Leads",
+        "leadsLowercase": "leads",
+        "closedLowercase": "closed"
+      },
+      "sources": {
+        "website": "Website",
+        "referral": "Referral",
+        "coldCall": "Cold Call",
+        "emailCampaign": "Email Campaign",
+        "socialMedia": "Social Media"
+      },
+      "statuses": {
+        "new": "New",
+        "contacted": "Contacted",
+        "qualified": "Qualified",
+        "proposal": "Proposal",
+        "negotiation": "Negotiation",
+        "closedWon": "Closed Won",
+        "closedLost": "Closed Lost"
+      },
+      "channels": {
+        "phone": "Phone",
+        "email": "Email",
+        "whatsapp": "WhatsApp",
+        "meeting": "Meeting"
+      },
+      "teamPerformanceTable": {
+        "name": "Name",
+        "leadsAssigned": "Leads Assigned",
+        "closedDeals": "Closed Deals",
+        "conversionRate": "Conversion Rate",
+        "revenueGenerated": "Revenue Generated"
+      },
+      "customDateDialog": {
+        "title": "Select Custom Date Range",
+        "startDate": "Start Date",
+        "endDate": "End Date",
+        "cancel": "Cancel",
+        "apply": "Apply"
+      },
+      "exportLabels": {
+        "title": "LEAD ANALYTICS REPORT",
+        "generatedOn": "Generated on",
+        "timeRange": "Time Range",
+        "overviewMetrics": "OVERVIEW METRICS",
+        "metric": "Metric",
+        "value": "Value",
+        "changeVsLastPeriod": "Change vs Last Period",
+        "totalLeads": "Total Leads",
+        "newLeads": "New Leads",
+        "qualifiedLeads": "Qualified Leads",
+        "closedWon": "Closed Won",
+        "closedLost": "Closed Lost",
+        "conversionRate": "Conversion Rate",
+        "avgDealValue": "Avg Deal Value",
+        "totalPipelineValue": "Total Pipeline Value",
+        "avgResponseTime": "Avg Response Time",
+        "followUpRate": "Follow-up Rate",
+        "monthlyTrends": "MONTHLY TRENDS",
+        "month": "Month",
+        "closedDeals": "Closed Deals",
+        "dealValue": "Deal Value",
+        "leadSources": "LEAD SOURCES",
+        "source": "Source",
+        "count": "Count",
+        "percentage": "Percentage",
+        "teamPerformance": "TEAM PERFORMANCE",
+        "name": "Name",
+        "leadsAssigned": "Leads Assigned",
+        "revenueGenerated": "Revenue Generated",
+        "noData": "No data available for the selected filters."
+      },
+      "leadType": "Lead Type",
+      "language": "Language",
+      "totalCalls": "Total Calls",
+      "allStatus": "All Status",
+      "allPriority": "All Priority",
+      "allAgents": "All Agents",
+      "allTypes": "All Types",
+      "totalLeads": "Total Leads",
+      "newLeads": "New Leads",
+      "qualified": "Qualified",
+      "closedWon": "Closed Won",
+      "totalValue": "Total Value",
+      "table": {
+        "name": "Name",
+        "contact": "Contact",
+        "company": "Company",
+        "value": "Value",
+        "lastContact": "Last Contact",
+        "score": "Score",
+        "vahan": "Vahan",
+        "actions": {
+          "title": "Actions",
+          "callLead": "Call Lead",
+          "viewDetails": "View Details",
+          "quickUpdate": "Quick Update",
+          "moreActions": "More Actions",
+          "sendEmail": "Send Email",
+          "archive": "Archive"
+        },
+        "never": "Never",
+        "vahanStatus": {
+          "verified": "Verified",
+          "failed": "Failed",
+          "verifiedOn": "Verified on {{date}}",
+          "verificationFailed": "Verification failed",
+          "clickToVerify": "Click to verify vehicle",
+          "notAvailable": "N/A"
+        }
+      },
+      "form": {
+        "firstName": "First Name",
+        "lastName": "Last Name",
+        "email": "Email",
+        "phone": "Phone",
+        "company": "Company",
+        "position": "Position",
+        "source": "Source",
+        "status": "Status",
+        "priority": "Priority",
+        "leadType": "Lead Type",
+        "preferredLanguage": "Preferred Language",
+        "value": "Value",
+        "expectedCloseDate": "Expected Close Date",
+        "notes": "Notes",
+        "vehicleNumber": "Vehicle Registration Number",
+        "vehicleType": "Vehicle Type",
+        "tags": "Lead Tag",
+        "phoneSection": "Phone Numbers",
+        "addPhone": "Add Phone",
+        "product": "Product",
+        "subProduct": "Sub Product",
+        "valueWithCurrency": "Value (₹)",
+        "followUpDate": "Follow-up Date",
+        "notesPlaceholder": "Add notes about this lead...",
+        "saving": "Saving..."
+      },
+      "details": {
+        "backToManagement": "Back to Lead Management",
+        "leadId": "Lead ID",
+        "callCustomer": "Call Customer",
+        "sendPaymentLink": "Send Payment Link",
+        "shareQuote": "Share Quote",
+        "convertToCustomer": "Convert to Customer",
+        "editLead": "Edit Lead",
+        "tabs": {
+          "overview": "Overview",
+          "policyNominee": "Policy & Nominee",
+          "policyHistory": "Policy History",
+          "activities": "Activities",
+          "contactNumbers": "Contact Numbers",
+          "documents": "Documents",
+          "vehicleDocuments": "Vehicle Documents",
+          "insuranceDocuments": "Insurance Documents",
+          "kycDocuments": "KYC Documents",
+          "customerFeedback": "Customer Feedback",
+          "tasks": "Tasks",
+          "callLog": "Call Log",
+          "claims": "Claims",
+          "timeline": "Timeline"
+        },
+        "created": "Created",
+        "sections": {
+          "contactInfo": "Contact Information",
+          "leadDetails": "Lead Details",
+          "insuranceDetails": "Insurance Details",
+          "leadNotes": "Lead Notes",
+          "policyDetails": "Policy Details",
+          "nomineeDetails": "Nominee Details",
+          "policyHistory": "Policy History",
+          "activities": "Activities"
+        },
+        "tasks": {
+          "add": "Add Task"
+        },
+        "callLog": {
+          "title": "Call Log Management",
+          "addLog": "Add Call Log",
+          "type": "Call Type",
+          "allTypes": "All Types",
+          "inbound": "Inbound",
+          "outbound": "Outbound",
+          "status": "Status",
+          "allStatus": "All Status",
+          "completed": "Completed",
+          "missed": "Missed",
+          "noAnswer": "No Answer",
+          "agent": "Agent",
+          "allAgents": "All Agents",
+          "date": "Date",
+          "reset": "Reset",
+          "callId": "Call ID",
+          "disposition": "Disposition",
+          "dateTime": "Date & Time",
+          "searchPlaceholder": "Search calls..."
+        },
+        "documents": {
+          "vehicleTitle": "Vehicle Documents",
+          "insuranceTitle": "Insurance Documents",
+          "kycTitle": "KYC Documents Management",
+          "upload": "Upload Document",
+          "uploadFiles": "Upload Files",
+          "type": "Document Type",
+          "name": "Document Name",
+          "date": "Upload Date",
+          "size": "Size",
+          "status": "Status",
+          "actions": "Actions",
+          "fileName": "File Name",
+          "uploadedOn": "Uploaded On",
+          "noFiles": "No Files Found",
+          "noFilesDesc": "No files have been uploaded yet. Click \"Upload Files\" to get started.",
+          "noMatchDesc": "No files match your current search criteria."
+        },
+        "feedback": {
+          "title": "Customer Feedback",
+          "add": "Add Feedback",
+          "rating": "Overall Rating",
+          "nps": "Recommendation Score (NPS)",
+          "date": "Feedback Date",
+          "general": "General Feedback",
+          "satisfaction": "Areas of Satisfaction",
+          "improvement": "Areas for Improvement",
+          "additionalComments": "Additional Comments",
+          "noFeedback": "No Feedback Recorded",
+          "noFeedbackDesc": "Click the button above to add customer feedback",
+          "placeholderNewLines": "Enter each area on a new line"
+        },
+        "activities": {
+          "timeline": "Timeline",
+          "showingAll": "Showing all activities"
+        },
+        "fields": {
+          "email": "Email",
+          "phone": "Phone",
+          "alternatePhone": "Alternate Phone",
+          "company": "Company",
+          "position": "Position",
+          "source": "Source",
+          "assignedTo": "Assigned To",
+          "value": "Value",
+          "expectedCloseDate": "Expected Close Date",
+          "lastContact": "Last Contact",
+          "product": "Product",
+          "subProduct": "Sub Product",
+          "policyExpiryDate": "Policy Expiry Date",
+          "vehicleRegNumber": "Vehicle Reg. Number",
+          "vehicleType": "Vehicle Type",
+          "policyNumber": "Policy Number",
+          "policyType": "Policy Type",
+          "policyStatus": "Policy Status",
+          "idv": "IDV",
+          "finalPremium": "Final Premium",
+          "odPremium": "OD Premium",
+          "liabilityPremium": "Liability Premium",
+          "addOnPremium": "Total Add-on Premium",
+          "netPremium": "Net Premium",
+          "gst": "GST",
+          "referenceId": "Reference ID",
+          "paymentFrequency": "Payment Frequency",
+          "policyPeriod": "Policy Period",
+          "nextPaymentDue": "Next Payment Due",
+          "nomineeName": "Nominee Name",
+          "relationship": "Relationship",
+          "dob": "Date of Birth",
+          "contactNumber": "Contact Number",
+          "address": "Address",
+          "nomineePercentage": "Nominee Percentage"
+        },
+        "table": {
+          "task": "Task",
+          "dueDate": "Due Date",
+          "priority": "Priority",
+          "assignedTo": "Assigned To",
+          "status": "Status",
+          "createdAt": "Created At",
+          "actions": "Actions",
+          "callId": "Call ID",
+          "customerName": "Customer Name",
+          "agentName": "Agent Name",
+          "callType": "Call Type",
+          "duration": "Duration",
+          "disposition": "Disposition",
+          "dateTime": "Date & Time",
+          "claimNumber": "Claim Number",
+          "date": "Date",
+          "amount": "Amount",
+          "description": "Description",
+          "docType": "Document Type",
+          "uploadDate": "Upload Date",
+          "size": "Size",
+          "fileName": "File Name",
+          "uploadedOn": "Uploaded On",
+          "policyNumber": "Policy Number",
+          "policyType": "Type",
+          "period": "Period",
+          "vehicleDetails": "Vehicle Details",
+          "premium": "Premium",
+          "ncb": "NCB",
+          "claims": "Claims",
+          "user": "User",
+          "content": "Content"
+        },
+        "dialogs": {
+          "addTask": {
+            "title": "Add New Task",
+            "taskDescription": "Task Description",
+            "dueDate": "Due Date",
+            "priority": "Priority",
+            "assignTo": "Assign To",
+            "addTask": "Add Task"
+          },
+          "addCallLog": {
+            "title": "Add Call Log",
+            "type": "Call Type",
+            "duration": "Duration",
+            "durationPlaceholder": "e.g., 15 min",
+            "status": "Call Status",
+            "disposition": "Disposition",
+            "subDisposition": "Sub-Disposition",
+            "subDispositionPlaceholder": "e.g., Needs Quote, Specific Time",
+            "notes": "Call Notes & Summary",
+            "placeholderNotes": "Enter detailed notes about the call conversation, customer queries, and outcomes...",
+            "addLog": "Add Call Log",
+            "placeholderPhone": "Phone Number"
+          },
+          "callDetails": {
+            "title": "Call Details",
+            "callInfo": "Call Information",
+            "participants": "Participants",
+            "summary": "Call Summary",
+            "scheduleFollowUp": "Schedule Follow-up"
+          },
+          "addClaim": {
+            "title": "Add Claim",
+            "customerName": "Customer Name",
+            "mobile": "Mobile Number",
+            "email": "Email ID",
+            "insuranceCompany": "Insurance Company Name",
+            "policyNumber": "Policy Number",
+            "expiryDate": "Expiry Date",
+            "claimNumber": "Claim Number",
+            "status": "Claim Status",
+            "remarks": "Remarks",
+            "remarksPlaceholder": "Enter any additional notes or remarks about the claim",
+            "addClaim": "Add Claim"
+          },
+          "uploadDocs": {
+            "title": "Upload Documents",
+            "docType": "Document Type",
+            "chooseFiles": "Choose Files (Multiple Selection Allowed)",
+            "selectedFiles": "Selected Files ({{count}}):",
+            "initialStatus": "Initial Status",
+            "uploadFiles": "Upload Files"
+          },
+          "contactCustomer": {
+            "title": "Contact Customer",
+            "mainPhone": "Main Phone Number",
+            "alternatePhone": "Alternate Phone Number",
+            "dial": "Dial"
+          },
+          "addFeedback": {
+            "title": "Add Customer Feedback",
+            "saveFeedback": "Save Feedback"
+          },
+          "convertLead": {
+            "title": "Convert Lead to Customer",
+            "instruction": "This will convert the lead to a customer and add an entry to the Customer Database. Please provide policy details below.",
+            "productType": "Product Type",
+            "productTypePlaceholder": "e.g., Vehicle Insurance",
+            "productTypeHelper": "Leave blank to use lead's product type",
+            "policyNumber": "Policy Number",
+            "policyNumberPlaceholder": "Auto-generated if left blank",
+            "premiumAmount": "Premium Amount (₹)",
+            "premiumAmountPlaceholder": "e.g., 45000",
+            "age": "Customer Age",
+            "agePlaceholder": "e.g., 35",
+            "gender": "Gender",
+            "policyStartDate": "Policy Start Date",
+            "policyStartDateHelper": "Defaults to today if left blank",
+            "policyEndDate": "Policy End Date",
+            "convert": "Convert to Customer"
+          },
+          "scheduleFollowup": {
+            "title": "Schedule Follow-up",
+            "date": "Follow-up Date",
+            "time": "Follow-up Time",
+            "type": "Follow-up Type",
+            "notes": "Follow-up Notes",
+            "notesPlaceholder": "Enter specific notes for the follow-up task...",
+            "schedule": "Schedule Follow-up"
+          },
+          "paymentLink": {
+            "title": "Send Payment Link",
+            "amount": "Amount (₹)",
+            "purpose": "Purpose",
+            "purposePlaceholder": "e.g., Policy Premium, Down Payment",
+            "expiresIn": "Link Expires In",
+            "days": "{{count}} Day",
+            "days_plural": "{{count}} Days",
+            "sendVia": "Send Via:",
+            "emailChannel": "Email ({{email}})",
+            "smsChannel": "SMS ({{phone}})",
+            "whatsappChannel": "WhatsApp ({{phone}})",
+            "channelsPlaceholder": "selected channels",
+            "sentToInstruction": "The payment link will be sent to the customer's {{channels}}.",
+            "generate": "Generate & Send Link",
+            "alertSuccess": "Payment link of ₹{{amount}} for \"{{purpose}}\" will be sent to {{name}}"
+          },
+          "policyView": {
+            "title": "Policy Details",
+            "policyInfo": "Policy Information",
+            "policyPeriod": "Policy Period",
+            "vehicleDetails": "Vehicle Details",
+            "premiumDetails": "Premium Details",
+            "claimsHistory": "Claims History",
+            "insuredDetails": "Insured Details",
+            "duration": "Duration",
+            "vehicle": "Vehicle",
+            "registration": "Registration",
+            "premiumAmount": "Premium Amount",
+            "ncb": "No Claim Bonus (NCB)",
+            "totalClaims": "Total Claims",
+            "claimsStatus": "Claims Status",
+            "noClaims": "No Claims",
+            "claimsCount": "{{count}} Claim(s)",
+            "download": "Download Policy"
+          },
+          "postCall": {
+            "title": "Update Call Details",
+            "called": "Called: {{number}}",
+            "save": "Save Call Details",
+            "alertSuccess": "Call details saved successfully!",
+            "alertFollowup": "\nFollow-up scheduled for {{date}} at {{time}}"
+          },
+          "callNumber": {
+            "title": "Select Number to Call",
+            "instruction": "Choose which number you would like to dial:",
+            "mainNumber": "Main Number",
+            "alternateNumber": "Alternate Number"
+          },
+          "shareQuote": {
+            "title": "Share Quote",
+            "instruction": "Create and share a quote for {{name}}.",
+            "type": "Quote Type",
+            "premium": "Premium Amount (₹)",
+            "coverage": "Coverage Amount (₹)",
+            "validTill": "Valid Till",
+            "additionalNotes": "Additional Notes",
+            "notesPlaceholder": "Any special terms or conditions...",
+            "share": "Share Quote"
+          }
+        },
+        "values": {
+          "notProvided": "Not Provided",
+          "unassigned": "Unassigned",
+          "notSet": "Not Set",
+          "never": "Never",
+          "notAssigned": "Not Assigned",
+          "na": "N/A",
+          "noNotes": "No notes available",
+          "to": "to",
+          "leadStatuses": {
+            "New": "New",
+            "Contacted": "Contacted",
+            "Qualified": "Qualified",
+            "Proposal": "Proposal Sent",
+            "Negotiation": "Negotiation",
+            "Closed Won": "Closed Won",
+            "Closed Lost": "Closed Lost"
+          },
+          "policyTypes": {
+            "Comprehensive": "Comprehensive",
+            "Third Party": "Third Party",
+            "Own Damage": "Own Damage",
+            "Motor Insurance": "Motor Insurance",
+            "Vehicle Insurance": "Vehicle Insurance",
+            "Health Insurance": "Health Insurance",
+            "Life Insurance": "Life Insurance",
+            "Home Insurance": "Home Insurance",
+            "Travel Insurance": "Travel Insurance",
+            "healthInsurance": "Health Insurance",
+            "lifeInsurance": "Life Insurance",
+            "motorInsurance": "Motor Insurance",
+            "homeInsurance": "Home Insurance",
+            "travelInsurance": "Travel Insurance",
+            "vehicleInsurance": "Vehicle Insurance"
+          },
+          "paymentFrequencies": {
+            "Annual": "Annual",
+            "Monthly": "Monthly",
+            "Quarterly": "Quarterly",
+            "Half Yearly": "Half Yearly"
+          },
+          "relationships": {
+            "Spouse": "Spouse",
+            "Father": "Father",
+            "Mother": "Mother",
+            "Son": "Son",
+            "Daughter": "Daughter",
+            "Brother": "Brother",
+            "Sister": "Sister",
+            "Other": "Other"
+          },
+          "vehicleTypes": {
+            "Private Car": "Private Car",
+            "Two Wheeler": "Two Wheeler",
+            "Commercial": "Commercial"
+          },
+          "sources": {
+            "Website": "Website",
+            "Referral": "Referral",
+            "Agent": "Agent",
+            "Direct": "Direct",
+            "Social Media": "Social Media"
+          },
+          "policyStatuses": {
+            "Active": "Active",
+            "Expired": "Expired",
+            "Cancelled": "Cancelled",
+            "Pending": "Pending"
+          },
+          "priorities": {
+            "low": "Low",
+            "medium": "Medium",
+            "high": "High",
+            "urgent": "Urgent"
+          },
+          "callTypes": {
+            "inbound": "Inbound",
+            "outbound": "Outbound"
+          },
+          "callStatuses": {
+            "completed": "Completed",
+            "missed": "Missed",
+            "noAnswer": "No Answer",
+            "busy": "Busy",
+            "pending": "Pending"
+          },
+          "dispositions": {
+            "interested": "Interested",
+            "notInterested": "Not Interested",
+            "callBack": "Call Back",
+            "notReachable": "Not Reachable",
+            "converted": "Converted",
+            "dnc": "DNC"
+          },
+          "claimStatuses": {
+            "pending": "Pending",
+            "inProgress": "In Progress",
+            "docPending": "Document Pending",
+            "approved": "Approved",
+            "settled": "Settled",
+            "rejected": "Rejected"
+          },
+          "fileStatuses": {
+            "pending": "Pending",
+            "verified": "Verified",
+            "rejected": "Rejected",
+            "active": "Active"
+          },
+          "gender": {
+            "notSpecified": "Not Specified",
+            "male": "Male",
+            "female": "Female",
+            "other": "Other"
+          },
+          "followupTypes": {
+            "call": "Call",
+            "email": "Email",
+            "meeting": "Meeting",
+            "whatsapp": "WhatsApp"
+          },
+          "quoteTypes": {
+            "standard": "Standard Quote",
+            "premium": "Premium Quote",
+            "custom": "Custom Quote"
+          },
+          "documentTypes": {
+            "Vehicle Document": "Vehicle Document",
+            "Insurance Document": "Insurance Document",
+            "KYC Document": "KYC Document",
+            "Registration Certificate": "Registration Certificate",
+            "Previous Policy Copy": "Previous Policy Copy",
+            "Inspection Report": "Inspection Report",
+            "CKYC Document": "CKYC Document",
+            "Customer Declaration": "Customer Declaration",
+            "Others": "Others",
+            "Aadhaar Card": "Aadhaar Card",
+            "PAN Card": "PAN Card",
+            "Driving License": "Driving License",
+            "Passport": "Passport",
+            "Voter ID": "Voter ID",
+            "Bank Statement": "Bank Statement",
+            "Salary Certificate": "Salary Certificate",
+            "Income Tax Return": "Income Tax Return",
+            "Address Proof": "Address Proof",
+            "Other Identity Proof": "Other Identity Proof",
+            "Pollution Certificate": "Pollution Certificate",
+            "Policy Document": "Policy Document",
+            "Premium Receipt": "Premium Receipt"
+          },
+          "documentMessages": {
+            "verified": "Document has been verified and approved.",
+            "pending": "Document is pending verification.",
+            "rejected": "Document has been rejected.",
+            "active": "Document is currently active."
+          }
+        }
+      },
+      "agentTable": {
+        "title": "Agent Performance Dashboard",
+        "agent": "Agent",
+        "rating": "Rating",
+        "totalLeads": "Total Leads",
+        "closedDeals": "Closed Deals",
+        "successRate": "Success Rate",
+        "languages": "Languages",
+        "specialization": "Specialization",
+        "currentWorkload": "Current: {{count}} leads"
+      },
+      "bulk": {
+        "selected": "lead(s) selected",
+        "pinToTop": "Pin to Top",
+        "unpin": "Unpin",
+        "manualAssign": "Manual Assign",
+        "languageMatch": "Language Match",
+        "autoAssignPremium": "Auto Assign Premium",
+        "pushToDialer": "Push to Dialer",
+        "pushToVahan": "Push to Vahan",
+        "archiveSelected": "Archive Selected",
+        "verifying": "Verifying...",
+        "assignTitle": "Bulk Assign Leads",
+        "assignContent": "Assign {{count}} selected lead(s) to an agent:",
+        "selectAgent": "Select Agent",
+        "assignButton": "Assign Leads"
+      },
+      "quickUpdate": {
+        "title": "Quick Update - {{name}}",
+        "saveButton": "Save Updates"
+      },
+      "dataProvider": {
+        "title": "Data Provider Upload",
+        "content": "Upload Excel/CSV file from data provider",
+        "chooseFile": "Choose File (Excel/CSV)",
+        "selectedFile": "Selected: {{name}}",
+        "uploading": "Uploading... {{progress}}%",
+        "success": "Upload Success! File processed successfully.",
+        "uploadButton": "Upload"
+      },
+      "autoAssign": {
+        "premiumTitle": "Auto-Assign Premium Leads",
+        "content": "This will automatically assign all unassigned Premium leads to the top-rated agents based on:",
+        "criteria": {
+          "rating": "Agent rating (highest first)",
+          "workload": "Current workload (balanced distribution)",
+          "specialization": "Agent specialization"
+        },
+        "summary": {
+          "leadsToAssign": "Premium Leads to Assign:",
+          "topAgents": "Top Agents by Rating:"
+        },
+        "button": "Auto-Assign Premium Leads"
+      },
+      "languageAssign": {
+        "title": "Language-Based Assignment Preview",
+        "content": "Review the proposed assignments based on language preferences:",
+        "noAgent": "No agent available",
+        "table": {
+          "lead": "Lead",
+          "language": "Language",
+          "recommendedAgent": "Recommended Agent",
+          "agentLanguages": "Agent Languages",
+          "matchType": "Match Type"
+        },
+        "matchTypes": {
+          "perfect": "Perfect Match",
+          "fallback": "Fallback (English)",
+          "noMatch": "No Match"
+        },
+        "summary": {
+          "title": "Assignment Summary:",
+          "perfect": "Perfect Matches: {{count}}",
+          "fallback": "Fallback Assignments: {{count}}",
+          "unassignable": "Unassignable: {{count}}"
+        },
+        "confirmButton": "Confirm Assignments"
+      },
+      "contactLead": {
+        "title": "Contact Lead",
+        "labels": {
+          "leadId": "Lead ID",
+          "leadName": "Lead Name",
+          "company": "Company",
+          "status": "Status",
+          "priority": "Priority",
+          "phoneNumber": "Phone Number",
+          "dial": "Dial"
+        }
+      },
+      "vahanVerify": {
+        "title": "Vahan Vehicle Verification",
+        "verifyingFor": "Verifying vehicle for: {{name}}",
+        "placeholder": "e.g., MH12AB1234",
+        "helper": "Enter the vehicle registration number to verify with Vahan API",
+        "loading": "Verifying with Vahan database...",
+        "verifyButton": "Verify Vehicle"
+      },
+      "assignmentReasons": {
+        "languageMatch": "Language match",
+        "fallback": "Fallback: No {{language}} agent",
+        "manual": "Manual assignment",
+        "autoRating": "Auto-assigned by rating"
+      },
+      "sourceOptions": {
+        "Website": "Website",
+        "Referral": "Referral",
+        "Cold Call": "Cold Call",
+        "Email Campaign": "Email Campaign",
+        "Social Media": "Social Media",
+        "Trade Show": "Trade Show",
+        "Other": "Other"
+      },
+      "products": {
+        "Insurance": "Insurance"
+      },
+      "subProducts": {
+        "Life Insurance": "Life Insurance",
+        "Vehicle Insurance": "Vehicle Insurance",
+        "Health Insurance": "Health Insurance"
+      },
+      "tags": {
+        "New Business": "New Business",
+        "Renewal": "Renewal"
+      },
+      "vehicleTypes": {
+        "Private Car": "Private Car",
+        "Two Wheeler": "Two Wheeler",
+        "Three Wheeler": "Three Wheeler",
+        "Taxi": "Taxi",
+        "Commercial Vehicle": "Commercial Vehicle",
+        "Truck": "Truck",
+        "Bus": "Bus"
+      },
+      "statusOptions": {
+        "New": "New",
+        "Contacted": "Contacted",
+        "Qualified": "Qualified",
+        "Proposal": "Proposal",
+        "Negotiation": "Negotiation",
+        "Closed Won": "Closed Won",
+        "Closed Lost": "Closed Lost"
+      },
+      "priorities": {
+        "Low": "Low",
+        "Medium": "Medium",
+        "High": "High",
+        "Urgent": "Urgent",
+        "Hot": "Hot",
+        "Warm": "Warm",
+        "Cold": "Cold"
+      },
+      "types": {
+        "Premium": "Premium",
+        "Regular": "Regular"
+      },
+      "navVerify": {
+        "title": "NAV Verification",
+        "verifyButton": "Verify with NAV",
+        "close": "Close",
+        "loading": "Verifying..."
+      },
+      "policyExpiry": {
+        "title": "Policy Expiry Verification",
+        "crmSystem": "CRM System",
+        "navSystem": "NAV System",
+        "customer": "Customer",
+        "status": "Status"
+      }
+    },
+    "upload": {
+      "steps": {
+        "upload": "Upload File",
+        "review": "Review & Validate",
+        "confirm": "Confirm Upload"
+      },
+      "types": {
+        "duplicate": "Duplicate",
+        "validation": "Validation"
+      },
+      "title": "Bulk Upload {{source}}",
+      "chooseFile": "Choose File",
+      "uploadCsvExcel": "Upload CSV or Excel File",
+      "selectFileContent": "Select a file containing your {{source}} data to upload",
+      "downloadTemplate": "Download Template",
+      "selectedFile": "Selected File: {{name}}",
+      "summary": {
+        "total": "Total Records",
+        "valid": "Valid Records",
+        "failed": "Failed Records"
+      },
+      "noRecordsFound": "No records found in the uploaded file!",
+      "ensureData": "Please ensure your file contains data and the first row has column headers.",
+      "checkConsole": "Check the browser console (F12) for detailed parsing information.",
+      "validTab": "Valid Records ({{count}})",
+      "failedTab": "Failed Records ({{count}})",
+      "validContent": "These records will be uploaded",
+      "failedContent": "These records have errors and will not be uploaded",
+      "noValidRecords": "No valid records found",
+      "allRecordsValid": "All records are valid!",
+      "rowNumber": "Row #",
+      "uploading": "Uploading Records...",
+      "complete": "Upload Complete!",
+      "successMessage": "{{count}} records uploaded successfully",
+      "recordsUploaded": "{{count}} lead(s) uploaded successfully! {{failedCount}} record(s) failed.",
+      "clearHistory": "Clear History",
+      "clearHistoryConfirm": "Are you sure you want to clear the upload history?",
+      "noHistory": "No upload history found. Upload some {{source}} records to see them here.",
+      "historyTitle": "Upload History",
+      "uploadedBy": "Uploaded by {{user}}",
+      "downloadFailed": "Download Failed Records",
+      "failedDetailsTitle": "Failed Records Details",
+      "dataPreview": "Data Preview",
+      "reason": "Reason",
+      "type": "Type",
+      "showLastLimit": "Showing last {{limit}} uploads. Filter by source for more specific results.",
+      "errors": {
+        "emptyFile": "The uploaded file appears to be empty. Please ensure it contains data and is a valid CSV or Excel file.",
+        "parseError": "Failed to parse file. Please ensure it is a valid format.",
+        "uploadFailed": "Upload failed: {{error}}"
+      }
+    },
+    "mockData": {
+      "leads": {
+        "1": {
+          "firstName": "Rahul",
+          "lastName": "Sharma",
+          "company": "Infosys Technologies",
+          "position": "Senior Manager"
+        },
+        "2": {
+          "firstName": "Priya",
+          "lastName": "Verma",
+          "company": "Tata Consultancy Services",
+          "position": "HR Director"
+        },
+        "3": {
+          "firstName": "Vikram",
+          "lastName": "Singh",
+          "company": "StartupIndia Tech",
+          "position": "Founder"
+        },
+        "4": {
+          "firstName": "Anjali",
+          "lastName": "Desai",
+          "company": "Wipro Limited",
+          "position": "Operations Head"
+        },
+        "5": {
+          "firstName": "Arjun",
+          "lastName": "Reddy",
+          "company": "Tech Mahindra",
+          "position": "Project Manager"
+        },
+        "6": {
+          "firstName": "Neha",
+          "lastName": "Kapoor",
+          "company": "StartupGrow Solutions",
+          "position": "CEO"
+        },
+        "7": {
+          "firstName": "Rajesh",
+          "lastName": "Malhotra",
+          "company": "HCL Technologies",
+          "position": "Finance Director"
+        },
+        "8": {
+          "firstName": "Sanjay",
+          "lastName": "Gupta",
+          "company": "Microtech Solutions",
+          "position": "Managing Director"
+        },
+        "9": {
+          "firstName": "Meera",
+          "lastName": "Iyer",
+          "company": "Cognizant Technology",
+          "position": "HR Manager"
+        },
+        "10": {
+          "firstName": "Arun",
+          "lastName": "Patel",
+          "company": "Zoho Corporation",
+          "position": "Technical Director"
+        },
+        "11": {
+          "firstName": "Kavita",
+          "lastName": "Mehta",
+          "company": "EduTech Solutions",
+          "position": "CEO"
+        },
+        "12": {
+          "firstName": "Fleet",
+          "lastName": "Manager1",
+          "company": "ABC Logistics",
+          "position": "Fleet Manager"
+        },
+        "13": {
+          "firstName": "Fleet",
+          "lastName": "Manager2",
+          "company": "ABC Logistics",
+          "position": "Operations Head"
+        }
+      },
+      "agents": {
+        "priya.patel": {
+          "name": "Priya Patel",
+          "specialization": "Corporate Insurance"
+        },
+        "amit.kumar": {
+          "name": "Amit Kumar",
+          "specialization": "Health Insurance"
+        },
+        "sneha.gupta": {
+          "name": "Sneha Gupta",
+          "specialization": "Vehicle Insurance"
+        },
+        "rajesh.kumar": {
+          "name": "Rajesh Kumar",
+          "specialization": "Life Insurance"
+        },
+        "deepak.sharma": {
+          "name": "Deepak Sharma",
+          "specialization": "Property Insurance"
+        }
+      }
+    }
+  },
+  "upload": {
+    "title": "Bulk Upload {{source}}",
+    "steps": {
+      "upload": "Upload File",
+      "review": "Review & Validate",
+      "confirm": "Confirm Upload"
+    },
+    "uploadCsvExcel": "Upload CSV or Excel File",
+    "selectFileContent": "Select a file containing your {{source}} data to upload",
+    "chooseFile": "Choose File",
+    "selectedFile": "Selected File:",
+    "downloadTemplate": "Download Template",
+    "summary": {
+      "total": "Total Records",
+      "valid": "Valid Records",
+      "failed": "Failed Records"
+    },
+    "noRecordsFound": "No records found!",
+    "ensureData": "Please ensure your file contains data in the correct format.",
+    "checkConsole": "Check the browser console for detailed parsing information.",
+    "validTab": "Valid ({{count}})",
+    "failedTab": "Failed ({{count}})",
+    "validContent": "These records will be uploaded:",
+    "failedContent": "These records have errors and will not be uploaded:",
+    "noValidRecords": "No valid records found. Please fix the errors and try again.",
+    "allRecordsValid": "All records are valid!",
+    "rowNumber": "Row #",
+    "type": "Type",
+    "reason": "Reason",
+    "uploading": "Uploading Records...",
+    "complete": "Upload Complete!",
+    "successMessage": "Successfully uploaded {{count}} records",
+    "types": {
+      "validation": "Validation Error",
+      "duplicate": "Duplicate"
+    },
+    "errors": {
+      "emptyFile": "The file appears to be empty. Please check your file and try again.",
+      "parseError": "Failed to parse file. Please ensure it's a valid CSV or Excel file.",
+      "uploadFailed": "Upload failed: {{error}}"
+    },
+    "historyTitle": "Upload History",
+    "uploadedBy": "Uploaded by",
+    "showLastLimit": "Showing last {{limit}} uploads",
+    "clearHistory": "Clear History",
+    "clearHistoryConfirm": "Are you sure you want to clear all upload history? This action cannot be undone.",
+    "downloadFailed": "Download Failed Records",
+    "failedDetailsTitle": "Failed Records Details",
+    "dataPreview": "Data Preview",
+    "noHistory": "No upload history available"
   }
-} 
+}

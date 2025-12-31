@@ -55,7 +55,7 @@ export const AuthProvider = ({ children }) => {
           // Renewals Module Only
           'dashboard', 'upload', 'cases', 'closed-cases', 'policy-timeline', 'logs',
           // Personal Pages
-          'profile' 
+          'profile'
         ]
       },
       'priya@client.com': {
@@ -122,6 +122,37 @@ export const AuthProvider = ({ children }) => {
           // Admin
           'settings', 'billing', 'users', 'profile'
         ]
+      },
+      'nichitham@gmail.com': {
+        id: '4',
+        name: 'Nichitha M',
+        email: 'nichitham@gmail.com',
+        role: 'admin',
+        portalLanguage: 'en',
+        expiryDate: null, // Admin accounts don't expire
+        status: 'active',
+        permissions: [
+          // Full access to all modules
+          'dashboard', 'upload', 'cases', 'closed-cases', 'policy-timeline', 'logs', 'claims',
+          'policy-servicing', 'new-business', 'medical-management',
+          // Lead Management
+          'leads', 'lead-management', 'lead-analytics', 'pipeline', 'payments',
+          // HR Management & Leave
+          'attendance', 'kpi', 'leave-management',
+          // Customer Management
+          'contact-database', 'customer-database', 'inbound-service', 'service-email',
+          'complaints', 'feedback', 'training-analysis',
+          // Email & Marketing
+          'emails', 'email-dashboard', 'email-analytics', 'bulk-email',
+          'campaigns', 'templates', 'survey-designer', 'whatsapp-flow',
+          'renewal-email-manager', 'renewal-whatsapp-manager',
+          // Automation & Tools
+          'sla_monitoring', 'auto_assignment', 'tasks', 'commissions', 'workflows', 'call_scheduling', 'call_recording', 'call_quality_monitoring',
+          // Training & Analysis
+          'training',
+          // Admin
+          'settings', 'billing', 'users', 'profile'
+        ]
       }
     };
 
@@ -137,7 +168,7 @@ export const AuthProvider = ({ children }) => {
         'renewal-email-manager', 'renewal-whatsapp-manager', 'profile'
       ]
     };
-  }; 
+  };
 
   useEffect(() => {
     // Check for existing session
@@ -178,68 +209,76 @@ export const AuthProvider = ({ children }) => {
 
   const login = async (email, password) => {
     try {
-      const response = await authService.login(email, password);
+      logger.info('Attempting login for:', email);
 
-      // Logic to handle different response structures
-      console.log('Login API Response:', response); // Debugging log
+      // Call the real backend API to get a valid token
+      const apiBaseUrl = process.env.REACT_APP_API_BASE_URL || 'http://3.109.128.6:8000/api';
 
-      // Use logical OR to handle direct access (if response is just data) or nested in data property
-      const responseData = response.data || response;
+      const response = await fetch(`${apiBaseUrl}/auth/login/`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: email,
+          password: password
+        })
+      });
 
-      const token = responseData.access || responseData.token || responseData.accessToken;
-      const refreshToken = responseData.refresh || responseData.refreshToken;
-      const user = responseData.user || { email };
-
-      if (token) {
-        localStorage.setItem('authToken', token);
-        if (refreshToken) {
-          localStorage.setItem('refreshToken', refreshToken);
-        }
-        localStorage.setItem('userEmail', email);
-
-        // Use real user data from API but merge with mock permissions for now
-        // This ensures permissions are available immediately after login
-        const mockUserData = getUserData(email);
-
-        // Prioritize mock permissions for demo accounts to ensure full access
-        const finalPermissions = mockUserData.permissions && mockUserData.permissions.length > 0
-          ? mockUserData.permissions
-          : (user.permissions || []);
-
-        const mappedUser = {
-          ...user,
-          ...mockUserData,
-          // Ensure we keep the ID/Email from the real backend if needed, but allow mock data to augment it
-          id: user.id || mockUserData.id,
-          email: user.email || mockUserData.email,
-          role: mockUserData.role || user.role || 'user', // Prioritize mock role for demo users
-          permissions: finalPermissions
-        };
-
-        setCurrentUser(mappedUser);
-        applyUserLanguage(mappedUser);
-
-        return { success: true, user: mappedUser };
-      } else {
-        return { success: false, message: 'Invalid response from server' };
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        logger.error('Login failed with status:', response.status, errorData);
+        throw new Error(errorData.detail || errorData.message || errorData.error || 'Login failed');
       }
+
+      const responseData = await response.json();
+      logger.info('Login response received:', {
+        success: responseData.success,
+        message: responseData.message,
+        hasData: !!responseData.data
+      });
+
+      // Handle nested response structure: { success, message, data: { access, refresh } }
+      const data = responseData.data || responseData;
+
+      // Store the real tokens from backend - handle multiple possible field names
+      const accessToken = data.access || data.token || data.access_token;
+      const refreshToken = data.refresh || data.refresh_token;
+
+      if (accessToken) {
+        localStorage.setItem('authToken', accessToken);
+        localStorage.setItem('access_token', accessToken); // Store both for compatibility
+        logger.info('Access token stored successfully');
+      } else {
+        logger.error('No access token found in response data:', Object.keys(data));
+        logger.error('Full response structure:', Object.keys(responseData));
+        throw new Error('No authentication token received from server');
+      }
+
+      if (refreshToken) {
+        localStorage.setItem('refreshToken', refreshToken);
+      }
+      localStorage.setItem('userEmail', email);
+
+      // Get mock user data with permissions (for frontend UI)
+      const mockUserData = getUserData(email);
+
+      const mappedUser = {
+        ...mockUserData,
+        id: mockUserData.id || 'demo-' + Date.now(),
+        email: email,
+        role: mockUserData.role || 'admin',
+        permissions: mockUserData.permissions || []
+      };
+
+      setCurrentUser(mappedUser);
+      applyUserLanguage(mappedUser);
+
+      logger.info('Login successful with real backend token');
+      return { success: true, user: mappedUser };
     } catch (error) {
       logger.error('Login error:', error);
-      let errorMessage = 'Login failed. Please try again.';
-
-      if (error.detail) {
-        errorMessage = error.detail;
-      } else if (error.message && !error.errors) {
-        errorMessage = error.message;
-      } else if (error.errors) {
-        // Handle validation errors object
-        const messages = Object.values(error.errors).flat();
-        if (messages.length > 0) {
-          errorMessage = messages.join(', ');
-        }
-      }
-
-      return { success: false, message: errorMessage };
+      return { success: false, message: error.message || 'Login failed. Please try again.' };
     }
   };
 
@@ -252,8 +291,8 @@ export const AuthProvider = ({ children }) => {
         // Here we just accept any 6-digit code as valid
         if (otp && otp.length === 6 && /^\d+$/.test(otp)) {
           // OTP is valid, log the user in now
-          const mockToken = 'mock-jwt-token-' + Math.random().toString(36).substring(2);
-          localStorage.setItem('authToken', mockToken);
+          // NOTE: We do NOT overwrite the real authToken here
+          // The real token was already set during the login() function
 
           // Note: userData would come from your backend in a real app
           // Here we'll get it from the stored email
@@ -279,23 +318,16 @@ export const AuthProvider = ({ children }) => {
 
   const register = async (userData) => {
     try {
-      const response = await authService.register(userData);
-      return { success: true, data: response };
+      // API integration removed as requested. Using mock registration logic.
+      logger.info('Simulating registration for:', userData.email);
+
+      // Simulate a small delay for better UX
+      await new Promise(resolve => setTimeout(resolve, 1000));
+
+      return { success: true, data: { message: 'Registration successful (mocked)' } };
     } catch (error) {
-      logger.error('Registration error:', error);
-      let errorMessage = 'Registration failed. Please try again.';
-
-      if (error.detail) {
-        errorMessage = error.detail;
-      } else if (error.message) {
-        errorMessage = error.message;
-      } else if (typeof error === 'object') {
-        // Handle field-specific errors if returned as object (e.g. { email: ['invalid'] })
-        const fieldErrors = Object.values(error).flat().join(', ');
-        if (fieldErrors) errorMessage = fieldErrors;
-      }
-
-      return { success: false, message: errorMessage };
+      logger.error('Registration simulation error:', error);
+      return { success: false, message: 'Registration failed. Please try again.' };
     }
   };
 

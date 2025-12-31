@@ -7,9 +7,9 @@ import {
   ListItemButton, styled, Button, Collapse,
   Snackbar, Alert, alpha
 } from '@mui/material';
-import { 
-  Menu as MenuIcon, 
-  Dashboard as DashboardIcon, 
+import {
+  Menu as MenuIcon,
+  Dashboard as DashboardIcon,
   CloudUpload as UploadIcon,
   ExitToApp as LogoutIcon,
   AccountCircle as ProfileIcon,
@@ -114,18 +114,18 @@ const StyledListItemButton = styled(ListItemButton)(({ theme }) => ({
   margin: theme.spacing(0.5, 1),
   borderRadius: theme.shape.borderRadius,
   '&.Mui-selected': {
-    backgroundColor: theme.palette.mode === 'dark' 
-      ? 'rgba(164, 215, 225, 0.16)' 
+    backgroundColor: theme.palette.mode === 'dark'
+      ? 'rgba(164, 215, 225, 0.16)'
       : 'rgba(164, 215, 225, 0.08)',
     '&:hover': {
-      backgroundColor: theme.palette.mode === 'dark' 
-        ? 'rgba(164, 215, 225, 0.24)' 
+      backgroundColor: theme.palette.mode === 'dark'
+        ? 'rgba(164, 215, 225, 0.24)'
         : 'rgba(164, 215, 225, 0.12)',
     },
   },
   '&:hover': {
-    backgroundColor: theme.palette.mode === 'dark' 
-      ? 'rgba(255, 255, 255, 0.08)' 
+    backgroundColor: theme.palette.mode === 'dark'
+      ? 'rgba(255, 255, 255, 0.08)'
       : 'rgba(0, 0, 0, 0.04)',
   },
 }));
@@ -176,13 +176,13 @@ const Layout = ({ children }) => {
   const { notifications, unreadCount, markAsRead } = useNotifications();
   const { hasPermission, hasModuleAccess } = usePermissions();
   const { t } = useTranslation();
-  const { 
-    isClockedIn, 
-    clockInTime, 
-    snackbar, 
-    handleClockIn, 
-    handleClockOut, 
-    handleCloseSnackbar 
+  const {
+    isClockedIn,
+    clockInTime,
+    snackbar,
+    handleClockIn,
+    handleClockOut,
+    handleCloseSnackbar
   } = useAttendance();
 
 
@@ -262,12 +262,12 @@ const Layout = ({ children }) => {
   const handleNotificationsClose = () => {
     setNotificationsAnchorEl(null);
   };
-  
+
   const handleOpenNotificationsDialog = () => {
     handleNotificationsClose();
     setNotificationsDialogOpen(true);
   };
-  
+
   const handleCloseNotificationsDialog = () => {
     setNotificationsDialogOpen(false);
   };
@@ -345,8 +345,8 @@ const Layout = ({ children }) => {
       return location.pathname === '/emails/bulk';
     } else if (itemPath === '/emails') {
       // Select Email Inbox for /emails and email detail routes only
-      return location.pathname === '/emails' || 
-             location.pathname.startsWith('/emails/detail/');
+      return location.pathname === '/emails' ||
+        location.pathname.startsWith('/emails/detail/');
     }
     return location.pathname === itemPath;
   };
@@ -366,7 +366,7 @@ const Layout = ({ children }) => {
     },
     survey: {
       items: [
-        { text: 'Feedback & Surveys', icon: <FeedbackIcon />, path: '/feedback', permission: 'feedback' },
+        { text: t('navigation.feedbackSurveys'), icon: <FeedbackIcon />, path: '/feedback', permission: 'feedback' },
       ],
       permissions: ['feedback', 'survey-designer']
     },
@@ -385,98 +385,98 @@ const Layout = ({ children }) => {
 
   const renewalMenuItems = [
     { text: t('navigation.dashboard'), icon: <DashboardIcon />, path: '/dashboard/renewals', permission: 'dashboard' },
-    { text: 'Campaign Management', icon: <UploadIcon />, path: '/upload', permission: 'upload' },
-    { text: 'Case Tracking', icon: <AssignmentIcon />, path: '/cases', permission: 'cases' },
-    { text: 'Closed Cases', icon: <AssignmentTurnedInIcon />, path: '/closed-cases', permission: 'closed-cases' },
-    { text: 'Not Interested Cases', icon: <CancelIcon />, path: '/not-interested-cases', permission: 'cases' },
-    { text: 'Renewal Failed Cases', icon: <ErrorIcon />, path: '/renewal-failed-cases', permission: 'cases' },
+    { text: t('navigation.campaignManagement'), icon: <UploadIcon />, path: '/upload', permission: 'upload' },
+    { text: t('navigation.caseTracking'), icon: <AssignmentIcon />, path: '/cases', permission: 'cases' },
+    { text: t('navigation.closedCases'), icon: <AssignmentTurnedInIcon />, path: '/closed-cases', permission: 'closed-cases' },
+    { text: t('navigation.notInterestedCases'), icon: <CancelIcon />, path: '/not-interested-cases', permission: 'cases' },
+    { text: t('navigation.renewalFailedCases'), icon: <ErrorIcon />, path: '/renewal-failed-cases', permission: 'cases' },
     // { text: 'Policy Timeline', icon: <TimelineIcon />, path: '/policy-timeline', permission: 'policy-timeline' },
-    { text: 'Policy Proposal Generation', icon: <DocumentIcon />, path: '/policy-proposal', permission: 'cases' },
+    { text: t('navigation.policyProposal'), icon: <DocumentIcon />, path: '/policy-proposal', permission: 'cases' },
     // { text: 'Template Downloads', icon: <DownloadIcon />, path: '/template-downloads', permission: 'cases' },
-    { text: 'Case Logs', icon: <ListIcon />, path: '/logs', permission: 'logs' },
+    { text: t('navigation.caseLogs'), icon: <ListIcon />, path: '/logs', permission: 'logs' },
   ].filter(item => hasPermission(item.permission));
 
   const emailMenuItems = [
-    { text: t('navigation.email') + ' Dashboard', icon: <DashboardIcon />, path: '/emails/dashboard', permission: 'email-dashboard' },
-    { text: t('navigation.email') + ' Inbox', icon: <EmailIcon />, path: '/emails', permission: 'emails' },
-    { text: 'Bulk ' + t('navigation.email'), icon: <CampaignIcon />, path: '/emails/bulk', permission: 'bulk-email' },
-    { text: t('navigation.email') + ' Analytics', icon: <ReportIcon />, path: '/emails/analytics', permission: 'email-analytics' },
+    { text: t('navigation.emailDashboard'), icon: <DashboardIcon />, path: '/emails/dashboard', permission: 'email-dashboard' },
+    { text: t('navigation.emailInbox'), icon: <EmailIcon />, path: '/emails', permission: 'emails' },
+    { text: t('navigation.bulkEmail'), icon: <CampaignIcon />, path: '/emails/bulk', permission: 'bulk-email' },
+    { text: t('navigation.emailAnalytics'), icon: <ReportIcon />, path: '/emails/analytics', permission: 'email-analytics' },
   ].filter(item => hasPermission(item.permission));
 
   const leadMenuItems = [
-    { text: 'All Leads', icon: <LeadManagementIcon />, path: '/lead-management', permission: 'leads' },
-    { text: 'Assigned Leads', icon: <PersonIcon />, path: '/assigned-leads', permission: 'leads' },
-    { text: 'Closed Leads', icon: <CheckCircleIcon />, path: '/closed-leads', permission: 'leads' },
-    { text: 'Lost Leads', icon: <LostLeadsIcon />, path: '/lost-leads', permission: 'leads' },
-    { text: 'Archived Leads', icon: <ArchiveIcon />, path: '/archived-leads', permission: 'leads' },
-    { text: 'Duplicate Leads', icon: <DuplicateIcon />, path: '/lead-management/duplicate-leads', permission: 'leads' },
-    { text: 'Lead Analytics', icon: <AssessmentIcon />, path: '/leads/analytics', permission: 'lead-analytics' },
-    { text: 'MIS', icon: <MISIcon />, path: '/leads/mis', permission: 'leads' },
-    { text: 'Quote Management', icon: <ReceiptIcon />, path: '/quote-management', permission: 'leads' },
-    { text: 'Payment Links', icon: <PaymentIcon />, path: '/payment-links', permission: 'payments' },
-    { text: 'Reminders', icon: <ReminderIcon />, path: '/reminders', permission: 'leads' },
-    { text: 'Sales Pipeline', icon: <PipelineIcon />, path: '/pipeline', permission: 'leads' },
-    { text: 'QRC Management', icon: <QRCIcon />, path: '/qrc-management', permission: 'leads' },
+    { text: t('navigation.allLeads'), icon: <LeadManagementIcon />, path: '/lead-management', permission: 'leads' },
+    { text: t('navigation.assignedLeads'), icon: <PersonIcon />, path: '/assigned-leads', permission: 'leads' },
+    { text: t('navigation.closedLeads'), icon: <CheckCircleIcon />, path: '/closed-leads', permission: 'leads' },
+    { text: t('navigation.lostLeads'), icon: <LostLeadsIcon />, path: '/lost-leads', permission: 'leads' },
+    { text: t('navigation.archivedLeads'), icon: <ArchiveIcon />, path: '/archived-leads', permission: 'leads' },
+    { text: t('navigation.duplicateLeads'), icon: <DuplicateIcon />, path: '/lead-management/duplicate-leads', permission: 'leads' },
+    { text: t('navigation.leadAnalytics'), icon: <AssessmentIcon />, path: '/leads/analytics', permission: 'lead-analytics' },
+    { text: t('navigation.mis'), icon: <MISIcon />, path: '/leads/mis', permission: 'leads' },
+    { text: t('navigation.quoteManagement'), icon: <ReceiptIcon />, path: '/quote-management', permission: 'leads' },
+    { text: t('navigation.paymentLinks'), icon: <PaymentIcon />, path: '/payment-links', permission: 'payments' },
+    { text: t('navigation.reminders'), icon: <ReminderIcon />, path: '/reminders', permission: 'leads' },
+    { text: t('navigation.salesPipeline'), icon: <PipelineIcon />, path: '/pipeline', permission: 'leads' },
+    { text: t('navigation.qrcManagement'), icon: <QRCIcon />, path: '/qrc-management', permission: 'leads' },
   ].filter(item => hasPermission(item.permission));
 
   const customerMenuItems = [
-    { text: 'Contact Database', icon: <ContactPhoneIcon />, path: '/customer-management/contact-database', permission: 'contact-database' },
-    { text: 'Customer Database', icon: <PeopleIcon />, path: '/customer-management/customer-database', permission: 'customer-database' },
-    { text: 'Inbound Service', icon: <SupportAgentIcon />, path: '/customer-management/inbound-service', permission: 'inbound-service' },
-    { text: 'Complaints', icon: <ComplaintsIcon />, path: '/customer-management/complaints', permission: 'complaints' },
-    { text: 'Feedback', icon: <FeedbackManagementIcon />, path: '/customer-management/feedback', permission: 'feedback' },
-    { text: 'Email Manager', icon: <EmailIcon />, path: '/renewals/email-manager', permission: 'renewal-email-manager' },
-    { text: 'WhatsApp Manager', icon: <WhatsAppIcon />, path: '/renewals/whatsapp-manager', permission: 'renewal-whatsapp-manager' },
+    { text: t('navigation.contactDatabase'), icon: <ContactPhoneIcon />, path: '/customer-management/contact-database', permission: 'contact-database' },
+    { text: t('navigation.customerDatabase'), icon: <PeopleIcon />, path: '/customer-management/customer-database', permission: 'customer-database' },
+    { text: t('navigation.inboundService'), icon: <SupportAgentIcon />, path: '/customer-management/inbound-service', permission: 'inbound-service' },
+    { text: t('navigation.complaints'), icon: <ComplaintsIcon />, path: '/customer-management/complaints', permission: 'complaints' },
+    { text: t('navigation.feedback'), icon: <FeedbackManagementIcon />, path: '/customer-management/feedback', permission: 'feedback' },
+    { text: t('navigation.emailManager'), icon: <EmailIcon />, path: '/renewals/email-manager', permission: 'renewal-email-manager' },
+    { text: t('navigation.whatsappManager'), icon: <WhatsAppIcon />, path: '/renewals/whatsapp-manager', permission: 'renewal-whatsapp-manager' },
   ].filter(item => hasPermission(item.permission));
 
   const automationMenuItems = [
-    { text: 'Auto-Assignment', icon: <AutoAssignIcon />, path: '/auto-assignment', permission: 'auto_assignment' },
-    { text: 'Auto Quote Sharing', icon: <ScheduleIcon />, path: '/auto-quote-sharing', permission: 'settings' },
-    { text: 'Workflow Builder', icon: <WorkflowIcon />, path: '/workflows', permission: 'workflows' },
-    { text: 'Task Management', icon: <TaskIcon />, path: '/tasks', permission: 'tasks' },
-    { text: 'SLA Monitoring', icon: <TimerIcon />, path: '/sla-monitoring', permission: 'sla_monitoring' },
-    { text: 'Commission Tracking', icon: <CommissionIcon />, path: '/commissions', permission: 'commissions' },
-    { text: 'Call Recording', icon: <CallRecordingIcon />, path: '/call-recording', permission: 'call_recording' },
-    { text: 'Call Quality Monitoring', icon: <RateReviewIcon />, path: '/call-quality-monitoring', permission: 'call_quality_monitoring' },
-    { text: 'Insurer & Products', icon: <InsurerIcon />, path: '/insurer-product-configurator', permission: 'settings' },
-    { text: 'Dispositions', icon: <DispositionIcon />, path: '/disposition-configurator', permission: 'settings' },
-    { text: 'Vahan Integration', icon: <VahanIcon />, path: '/vahan-integration', permission: 'settings' },
+    { text: t('navigation.autoAssignment'), icon: <AutoAssignIcon />, path: '/auto-assignment', permission: 'auto_assignment' },
+    { text: t('navigation.autoQuoteSharing'), icon: <ScheduleIcon />, path: '/auto-quote-sharing', permission: 'settings' },
+    { text: t('navigation.workflowBuilder'), icon: <WorkflowIcon />, path: '/workflows', permission: 'workflows' },
+    { text: t('navigation.taskManagement'), icon: <TaskIcon />, path: '/tasks', permission: 'tasks' },
+    { text: t('navigation.slaMonitoring'), icon: <TimerIcon />, path: '/sla-monitoring', permission: 'sla_monitoring' },
+    { text: t('navigation.commissionTracking'), icon: <CommissionIcon />, path: '/commissions', permission: 'commissions' },
+    { text: t('navigation.callRecording'), icon: <CallRecordingIcon />, path: '/call-recording', permission: 'call_recording' },
+    { text: t('navigation.callQualityMonitoring'), icon: <RateReviewIcon />, path: '/call-quality-monitoring', permission: 'call_quality_monitoring' },
+    { text: t('navigation.insurerProducts'), icon: <InsurerIcon />, path: '/insurer-product-configurator', permission: 'settings' },
+    { text: t('navigation.dispositions'), icon: <DispositionIcon />, path: '/disposition-configurator', permission: 'settings' },
+    { text: t('navigation.vahanIntegration'), icon: <VahanIcon />, path: '/vahan-integration', permission: 'settings' },
   ].filter(item => hasPermission(item.permission));
 
   const workforceMenuItems = [
-    { text: 'Attendance', icon: <AttendanceIcon />, path: '/attendance', permission: 'attendance' },
-    { text: 'Leave Management', icon: <CalendarIcon />, path: '/leave-management', permission: 'attendance' },
-    { text: 'KPI Management', icon: <KPIIcon />, path: '/kpi', permission: 'kpi' },
-    { text: 'Training & Analysis', icon: <TrainingIcon />, path: '/training-management', permission: 'training' },
+    { text: t('navigation.attendance'), icon: <AttendanceIcon />, path: '/attendance', permission: 'attendance' },
+    { text: t('navigation.leaveManagement'), icon: <CalendarIcon />, path: '/leave-management', permission: 'attendance' },
+    { text: t('navigation.kpiManagement'), icon: <KPIIcon />, path: '/kpi', permission: 'kpi' },
+    { text: t('navigation.trainingAnalysis'), icon: <TrainingIcon />, path: '/training-management', permission: 'training' },
   ].filter(item => hasPermission(item.permission));
 
   // Debt Collections menu - only show when industry is 'debt_collections'
   const collectionsMenuItems = currentIndustry === 'debt_collections' ? [
-    { text: 'Collections Dashboard', icon: <DashboardIcon />, path: '/dashboard/collections', permission: 'dashboard' },
-    { text: 'Portfolio Onboarding', icon: <UploadIcon />, path: '/collections/portfolio-onboarding', permission: 'cases' },
+    { text: t('navigation.collectionsDashboard'), icon: <DashboardIcon />, path: '/dashboard/collections', permission: 'dashboard' },
+    { text: t('navigation.portfolioOnboarding'), icon: <UploadIcon />, path: '/collections/portfolio-onboarding', permission: 'cases' },
     {
-      text: 'Debtor Management',
+      text: t('navigation.debtorManagement'),
       icon: <PeopleIcon />,
       path: '/collections/debtor-management',
       permission: 'cases',
       hasSubmenu: true,
       submenuItems: [
-        { text: 'All Debtors', icon: <PeopleIcon />, path: '/collections/debtor-management', permission: 'cases' },
-        { text: 'Recovered Closed', icon: <CheckCircleIcon />, path: '/collections/debtor-management/recovered-closed', permission: 'cases' },
-        { text: 'Lost Closed', icon: <CancelIcon />, path: '/collections/debtor-management/lost-closed', permission: 'cases' },
+        { text: t('navigation.allDebtors'), icon: <PeopleIcon />, path: '/collections/debtor-management', permission: 'cases' },
+        { text: t('navigation.recoveredClosed'), icon: <CheckCircleIcon />, path: '/collections/debtor-management/recovered-closed', permission: 'cases' },
+        { text: t('navigation.lostClosed'), icon: <CancelIcon />, path: '/collections/debtor-management/lost-closed', permission: 'cases' },
       ]
     },
-    { text: 'Skip Tracing & Locator', icon: <SearchIcon />, path: '/collections/skip-tracing', permission: 'cases' },
-    { text: 'Workflow Manager', icon: <DialerIcon />, path: '/collections/smart-dialer', permission: 'cases' },
-    { text: 'Settlement & Payment Plans', icon: <SettlementIcon />, path: '/collections/settlement-automation', permission: 'cases' },
-    { text: 'Settlement Plan Log', icon: <HistoryIcon />, path: '/collections/settlement-plan-log', permission: 'cases' },
-    { text: 'Compliance & Disputes', icon: <ComplianceIcon />, path: '/collections/compliance-disputes', permission: 'cases' },
-    { text: 'Hardship Programs', icon: <HardshipIcon />, path: '/collections/hardship-programs', permission: 'cases' },
-    { text: 'Payment Reconciliation', icon: <ReceiptIcon />, path: '/collections/payment-reconciliation', permission: 'cases' },
-    { text: 'Legal Escalation', icon: <GavelIcon />, path: '/collections/legal-escalation', permission: 'cases' },
-    { text: 'Customer Database', icon: <GroupIcon />, path: '/collections/customer-database', permission: 'cases' },
-    { text: 'Collection Analytics', icon: <AssessmentIcon />, path: '/collections/analytics', permission: 'dashboard' },
-    { text: 'Debtor Portal', icon: <PersonIcon />, path: '/collections/debtor-portal', permission: 'cases' },
+    { text: t('navigation.skipTracing'), icon: <SearchIcon />, path: '/collections/skip-tracing', permission: 'cases' },
+    { text: t('navigation.workflowManager'), icon: <DialerIcon />, path: '/collections/smart-dialer', permission: 'cases' },
+    { text: t('navigation.settlementPaymentPlans'), icon: <SettlementIcon />, path: '/collections/settlement-automation', permission: 'cases' },
+    { text: t('navigation.settlementPlanLog'), icon: <HistoryIcon />, path: '/collections/settlement-plan-log', permission: 'cases' },
+    { text: t('navigation.complianceDisputes'), icon: <ComplianceIcon />, path: '/collections/compliance-disputes', permission: 'cases' },
+    { text: t('navigation.hardshipPrograms'), icon: <HardshipIcon />, path: '/collections/hardship-programs', permission: 'cases' },
+    { text: t('navigation.paymentReconciliation'), icon: <ReceiptIcon />, path: '/collections/payment-reconciliation', permission: 'cases' },
+    { text: t('navigation.legalEscalation'), icon: <GavelIcon />, path: '/collections/legal-escalation', permission: 'cases' },
+    { text: t('navigation.customerDatabase'), icon: <GroupIcon />, path: '/collections/customer-database', permission: 'cases' },
+    { text: t('navigation.collectionAnalytics'), icon: <AssessmentIcon />, path: '/collections/analytics', permission: 'dashboard' },
+    { text: t('navigation.debtorPortal'), icon: <PersonIcon />, path: '/collections/debtor-portal', permission: 'cases' },
   ].filter(item => hasPermission(item.permission)) : [];
 
   const secondaryMenuItems = [
@@ -507,7 +507,7 @@ const Layout = ({ children }) => {
                   <LeadManagementIcon />
                 </ListItemIcon>
                 <ListItemText
-                  primary="Lead Management"
+                  primary={t('navigation.leadManagement')}
                   primaryTypographyProps={{
                     fontWeight: 500,
                     color: theme.palette.text.primary
@@ -980,20 +980,20 @@ const Layout = ({ children }) => {
               onClick={() => handleNavigate(item.path)}
               selected={location.pathname === item.path}
             >
-              <ListItemIcon sx={{ 
+              <ListItemIcon sx={{
                 minWidth: 40,
-                color: location.pathname === item.path 
-                  ? theme.palette.primary.main 
+                color: location.pathname === item.path
+                  ? theme.palette.primary.main
                   : theme.palette.text.secondary
               }}>
                 {item.icon}
               </ListItemIcon>
-              <ListItemText 
-                primary={item.text} 
-                primaryTypographyProps={{ 
+              <ListItemText
+                primary={item.text}
+                primaryTypographyProps={{
                   fontWeight: location.pathname === item.path ? 600 : 400,
-                  color: location.pathname === item.path 
-                    ? theme.palette.primary.main 
+                  color: location.pathname === item.path
+                    ? theme.palette.primary.main
                     : theme.palette.text.primary
                 }}
               />
@@ -1017,7 +1017,7 @@ const Layout = ({ children }) => {
         {hasPermission('leads') && leadMenuItems.length > 0 && (
           <>
             <ListItem disablePadding sx={{ display: 'block' }}>
-              <Tooltip title="Lead Management" placement="right">
+              <Tooltip title={t('navigation.leadManagement')} placement="right">
                 <StyledListItemButton
                   onClick={handleLeadMenuClick}
                   sx={{
@@ -1372,8 +1372,8 @@ const Layout = ({ children }) => {
                     minWidth: 0,
                     mr: 'auto',
                     justifyContent: 'center',
-                    color: location.pathname === item.path 
-                      ? theme.palette.primary.main 
+                    color: location.pathname === item.path
+                      ? theme.palette.primary.main
                       : theme.palette.text.secondary
                   }}
                 >
@@ -1412,13 +1412,13 @@ const Layout = ({ children }) => {
           </IconButton>
           <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1, fontWeight: 600 }}>
           </Typography>
-          
+
           <Box sx={{ display: 'flex', alignItems: 'center' }}>
             {/* Clock In/Out Section */}
             {hasPermission('attendance') && (
-              <Box sx={{ 
-                display: 'flex', 
-                alignItems: 'center', 
+              <Box sx={{
+                display: 'flex',
+                alignItems: 'center',
                 gap: 1,
                 mr: 2,
                 px: 2,
@@ -1429,35 +1429,35 @@ const Layout = ({ children }) => {
                 backdropFilter: 'blur(10px)'
               }}>
                 {/* Current Time Display */}
-                <Typography variant="body2" color="text.secondary" sx={{ 
+                <Typography variant="body2" color="text.secondary" sx={{
                   fontSize: '0.75rem',
                   fontWeight: 500,
                   minWidth: '60px',
                   textAlign: 'center',
                   fontFamily: 'monospace'
                 }}>
-                  {currentTime.toLocaleTimeString('en-US', { 
-                    hour: '2-digit', 
+                  {currentTime.toLocaleTimeString('en-US', {
+                    hour: '2-digit',
                     minute: '2-digit',
                     second: '2-digit',
-                    hour12: true 
+                    hour12: true
                   })}
                 </Typography>
-                
+
                 {/* Status Divider */}
-                <Box sx={{ 
-                  width: '1px', 
-                  height: '20px', 
+                <Box sx={{
+                  width: '1px',
+                  height: '20px',
                   bgcolor: alpha(theme.palette.divider, 0.3),
                   mx: 1
                 }} />
-                
+
                 {/* Clock In/Out Button with Status */}
                 {!isClockedIn ? (
                   <Tooltip title="Clock In - Click to start your work day">
-                    <Box sx={{ 
-                      display: 'flex', 
-                      alignItems: 'center', 
+                    <Box sx={{
+                      display: 'flex',
+                      alignItems: 'center',
                       gap: 1,
                       cursor: 'pointer',
                       px: 1.5,
@@ -1480,9 +1480,9 @@ const Layout = ({ children }) => {
                   </Tooltip>
                 ) : (
                   <Tooltip title={`Clock Out - You clocked in at ${clockInTime}`}>
-                    <Box sx={{ 
-                      display: 'flex', 
-                      alignItems: 'center', 
+                    <Box sx={{
+                      display: 'flex',
+                      alignItems: 'center',
                       gap: 1,
                       cursor: 'pointer',
                       px: 1.5,
@@ -1548,21 +1548,21 @@ const Layout = ({ children }) => {
                 <NotificationsIcon />
               </Badge>
             </IconButton>
-            
-            <IconButton 
-              color="inherit" 
+
+            <IconButton
+              color="inherit"
               onClick={() => toggleMode(mode === 'light' ? 'dark' : 'light')}
               sx={{ mr: 2 }}
             >
               {mode === 'dark' ? <LightModeIcon /> : <DarkModeIcon />}
             </IconButton>
-            
+
             {currentUser && (
               <Box sx={{ display: 'flex', alignItems: 'center' }}>
                 <Typography variant="body1" sx={{ mr: 2, display: { xs: 'none', sm: 'block' } }}>
                   {currentUser.name}
                 </Typography>
-                
+
                 <Tooltip title="Account settings">
                   <IconButton
                     onClick={handleProfileMenuOpen}
@@ -1570,10 +1570,10 @@ const Layout = ({ children }) => {
                     edge="end"
                     color="inherit"
                   >
-                    <Avatar 
-                      sx={{ 
-                        width: 40, 
-                        height: 40, 
+                    <Avatar
+                      sx={{
+                        width: 40,
+                        height: 40,
                         bgcolor: theme.palette.primary.main,
                         boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
                       }}
@@ -1585,7 +1585,7 @@ const Layout = ({ children }) => {
               </Box>
             )}
           </Box>
-          
+
           <Menu
             anchorEl={profileMenuAnchorEl}
             open={Boolean(profileMenuAnchorEl)}
@@ -1623,7 +1623,7 @@ const Layout = ({ children }) => {
               Logout
             </MenuItem>
           </Menu>
-          
+
           <Menu
             anchorEl={notificationsAnchorEl}
             open={Boolean(notificationsAnchorEl)}
@@ -1632,18 +1632,18 @@ const Layout = ({ children }) => {
             anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
             PaperProps={{
               elevation: 3,
-              sx: { 
-                mt: 1.5, 
+              sx: {
+                mt: 1.5,
                 width: 350,
                 borderRadius: 2,
                 overflow: 'hidden'
               }
             }}
           >
-            <Box sx={{ 
-              p: 2, 
-              display: 'flex', 
-              justifyContent: 'space-between', 
+            <Box sx={{
+              p: 2,
+              display: 'flex',
+              justifyContent: 'space-between',
               alignItems: 'center',
               borderBottom: `1px solid ${theme.palette.divider}`
             }}>
@@ -1651,8 +1651,8 @@ const Layout = ({ children }) => {
                 Notifications
               </Typography>
               {unreadCount > 0 && (
-                <Button 
-                  size="small" 
+                <Button
+                  size="small"
                   onClick={() => handleOpenNotificationsDialog()}
                   startIcon={<DoneAllIcon fontSize="small" />}
                   sx={{ fontSize: '0.75rem' }}
@@ -1661,7 +1661,7 @@ const Layout = ({ children }) => {
                 </Button>
               )}
             </Box>
-            
+
             {notifications.length === 0 ? (
               <Box sx={{ py: 4, textAlign: 'center' }}>
                 <Typography variant="body2" color="text.secondary">
@@ -1672,9 +1672,9 @@ const Layout = ({ children }) => {
               <>
                 <Box sx={{ maxHeight: 350, overflow: 'auto' }}>
                   {notifications.slice(0, 5).map((notification) => (
-                    <MenuItem 
-                      key={notification.id} 
-                      sx={{ 
+                    <MenuItem
+                      key={notification.id}
+                      sx={{
                         py: 1.5,
                         px: 2,
                         borderLeft: notification.read ? 'none' : `4px solid ${theme.palette.primary.main}`,
@@ -1682,9 +1682,9 @@ const Layout = ({ children }) => {
                       }}
                     >
                       <Box sx={{ display: 'flex', width: '100%' }}>
-                        <Box 
-                          sx={{ 
-                            mr: 1.5, 
+                        <Box
+                          sx={{
+                            mr: 1.5,
                             mt: 0.5,
                             display: 'flex',
                             alignItems: 'center',
@@ -1694,22 +1694,22 @@ const Layout = ({ children }) => {
                             borderRadius: '50%',
                             backgroundColor: alpha(
                               notification.type === 'assignment' ? theme.palette.primary.main :
-                              notification.type === 'update' ? theme.palette.info.main :
-                              notification.type === 'system' ? theme.palette.warning.main :
-                              notification.type === 'document' ? theme.palette.success.main :
-                              notification.type === 'reminder' ? theme.palette.error.main :
-                              notification.type === 'report' ? theme.palette.secondary.main :
-                              theme.palette.grey[500],
+                                notification.type === 'update' ? theme.palette.info.main :
+                                  notification.type === 'system' ? theme.palette.warning.main :
+                                    notification.type === 'document' ? theme.palette.success.main :
+                                      notification.type === 'reminder' ? theme.palette.error.main :
+                                        notification.type === 'report' ? theme.palette.secondary.main :
+                                          theme.palette.grey[500],
                               0.12
                             ),
-                            color: 
+                            color:
                               notification.type === 'assignment' ? theme.palette.primary.main :
-                              notification.type === 'update' ? theme.palette.info.main :
-                              notification.type === 'system' ? theme.palette.warning.main :
-                              notification.type === 'document' ? theme.palette.success.main :
-                              notification.type === 'reminder' ? theme.palette.error.main :
-                              notification.type === 'report' ? theme.palette.secondary.main :
-                              theme.palette.grey[500]
+                                notification.type === 'update' ? theme.palette.info.main :
+                                  notification.type === 'system' ? theme.palette.warning.main :
+                                    notification.type === 'document' ? theme.palette.success.main :
+                                      notification.type === 'reminder' ? theme.palette.error.main :
+                                        notification.type === 'report' ? theme.palette.secondary.main :
+                                          theme.palette.grey[500]
                           }}
                         >
                           {notification.type === 'assignment' && <AssignmentIcon fontSize="small" />}
@@ -1725,7 +1725,7 @@ const Layout = ({ children }) => {
                               {notification.title}
                             </Typography>
                             {!notification.read && (
-                              <Box 
+                              <Box
                                 sx={{
                                   width: 8,
                                   height: 8,
@@ -1749,8 +1749,8 @@ const Layout = ({ children }) => {
                               })}
                             </Typography>
                             {!notification.read && (
-                              <Button 
-                                size="small" 
+                              <Button
+                                size="small"
                                 onClick={(e) => {
                                   e.stopPropagation();
                                   markAsRead(notification.id);
@@ -1766,13 +1766,13 @@ const Layout = ({ children }) => {
                     </MenuItem>
                   ))}
                 </Box>
-                
-                <Box sx={{ 
-                  p: 1.5, 
+
+                <Box sx={{
+                  p: 1.5,
                   borderTop: `1px solid ${theme.palette.divider}`,
-                  textAlign: 'center' 
+                  textAlign: 'center'
                 }}>
-                  <Button 
+                  <Button
                     onClick={handleOpenNotificationsDialog}
                     fullWidth
                     color="primary"
@@ -1786,7 +1786,7 @@ const Layout = ({ children }) => {
           </Menu>
         </Toolbar>
       </AppBar>
-      
+
       <Box
         component="nav"
         sx={{ width: { sm: open ? drawerWidth : 70 }, flexShrink: { sm: 0 } }}
@@ -1800,8 +1800,8 @@ const Layout = ({ children }) => {
           }}
           sx={{
             display: { xs: 'block', sm: 'none' },
-            '& .MuiDrawer-paper': { 
-              boxSizing: 'border-box', 
+            '& .MuiDrawer-paper': {
+              boxSizing: 'border-box',
               width: drawerWidth,
               borderRadius: 0,
             },
@@ -1813,8 +1813,8 @@ const Layout = ({ children }) => {
           variant="permanent"
           sx={{
             display: { xs: 'none', sm: 'block' },
-            '& .MuiDrawer-paper': { 
-              boxSizing: 'border-box', 
+            '& .MuiDrawer-paper': {
+              boxSizing: 'border-box',
               width: open ? drawerWidth : 70,
               borderRadius: 0,
               overflowX: 'hidden',
@@ -1831,9 +1831,9 @@ const Layout = ({ children }) => {
       </Box>
       <Box
         component="main"
-        sx={{ 
-          flexGrow: 1, 
-          p: 3, 
+        sx={{
+          flexGrow: 1,
+          p: 3,
           width: { sm: `calc(100% - ${open ? drawerWidth : 70}px)` },
           marginTop: '64px',
           transition: theme.transitions.create('margin', {
@@ -1844,11 +1844,11 @@ const Layout = ({ children }) => {
       >
         {children}
       </Box>
-      
+
       {/* Notifications Dialog */}
-      <NotificationsDialog 
-        open={notificationsDialogOpen} 
-        onClose={handleCloseNotificationsDialog} 
+      <NotificationsDialog
+        open={notificationsDialogOpen}
+        onClose={handleCloseNotificationsDialog}
       />
 
       {/* AI Bot Icon - Show on all pages */}
