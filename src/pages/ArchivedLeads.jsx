@@ -66,10 +66,10 @@ const ArchivedLeads = () => {
   const statusOptions = ['New Lead', 'Contacted', 'Follow Up', 'Qualified', 'Proposal Sent'];
 
   const dateRangeOptions = [
-    { value: 'all', label: t('leads.archived.dateRanges.allTime') },
-    { value: 'last7', label: t('leads.archived.dateRanges.last7Days') },
-    { value: 'last30', label: t('leads.archived.dateRanges.last30Days') },
-    { value: 'last90', label: t('leads.archived.dateRanges.last90Days') }
+    { value: 'all', label: t('leads.archived.dateRanges.allTime', 'All Time') },
+    { value: 'last7', label: t('leads.archived.dateRanges.last7Days', 'Last 7 Days') },
+    { value: 'last30', label: t('leads.archived.dateRanges.last30Days', 'Last 30 Days') },
+    { value: 'last90', label: t('leads.archived.dateRanges.last90Days', 'Last 90 Days') }
   ];
 
   useEffect(() => {
@@ -193,7 +193,7 @@ const ArchivedLeads = () => {
         document.body.removeChild(link);
         window.URL.revokeObjectURL(url);
 
-        setSnackbar({ open: true, message: t('leads.archived.messages.exportSuccess'), severity: 'success' });
+        setSnackbar({ open: true, message: t('leads.archived.messages.exportSuccess', 'Data exported successfully'), severity: 'success' });
       } else {
         // Fallback: client-side CSV generation
         const csvContent = generateCSV(filteredLeads);
@@ -211,7 +211,7 @@ const ArchivedLeads = () => {
       }
     } catch (error) {
       console.error('Error exporting data:', error);
-      setSnackbar({ open: true, message: t('leads.archived.messages.exportFailed'), severity: 'error' });
+      setSnackbar({ open: true, message: t('leads.archived.messages.exportFailed', 'Failed to export data'), severity: 'error' });
     } finally {
       setLoading(false);
     }
@@ -234,13 +234,13 @@ const ArchivedLeads = () => {
         const result = await leadService.unarchiveLead(lead.id);
         if (result.success) {
           setLeads(prevLeads => prevLeads.filter(l => l.id !== lead.id));
-          setSnackbar({ open: true, message: t('leads.archived.messages.unarchiveSuccess'), severity: 'success' });
+          setSnackbar({ open: true, message: t('leads.archived.messages.unarchiveSuccess', 'Lead unarchived successfully'), severity: 'success' });
         }
       } else if (action === 'delete') {
         const result = await leadService.permanentlyDeleteLead(lead.id);
         if (result.success) {
           setLeads(prevLeads => prevLeads.filter(l => l.id !== lead.id));
-          setSnackbar({ open: true, message: t('leads.archived.messages.deleteSuccess'), severity: 'success' });
+          setSnackbar({ open: true, message: t('leads.archived.messages.deleteSuccess', 'Lead permanently deleted'), severity: 'success' });
         }
       }
     } catch (error) {
@@ -339,7 +339,7 @@ const ArchivedLeads = () => {
             {t('leads.archived.title')}
           </Typography>
           <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
-            {t('leads.archived.subtitle')}
+            {t('leads.archived.subtitle', 'Manage archived and inactive leads')}
           </Typography>
         </Grid>
         <Grid item xs={12} sm={6} sx={{ textAlign: 'right' }}>
@@ -350,7 +350,7 @@ const ArchivedLeads = () => {
             disabled={loading}
             sx={{ mr: 1 }}
           >
-            {t('leads.archived.exportData')}
+            {t('leads.archived.exportData', 'Export Data')}
           </Button>
         </Grid>
       </Grid>
@@ -360,7 +360,7 @@ const ArchivedLeads = () => {
         <Grid item xs={12} sm={6} md={4}>
           <Card sx={{ background: `linear-gradient(135deg, ${alpha(theme.palette.grey[600], 0.1)} 0%, ${alpha(theme.palette.grey[700], 0.05)} 100%)` }}>
             <CardContent>
-              <Typography variant="body2" color="text.secondary">{t('leads.archived.stats.totalArchived')}</Typography>
+              <Typography variant="body2" color="text.secondary">{t('leads.archived.stats.totalArchived', 'Total Archived')}</Typography>
               <Typography variant="h4" fontWeight="600" color="grey.700">
                 {totalArchived}
               </Typography>
@@ -370,7 +370,7 @@ const ArchivedLeads = () => {
         <Grid item xs={12} sm={6} md={4}>
           <Card sx={{ background: `linear-gradient(135deg, ${alpha(theme.palette.warning.main, 0.1)} 0%, ${alpha(theme.palette.warning.dark, 0.05)} 100%)` }}>
             <CardContent>
-              <Typography variant="body2" color="text.secondary">{t('leads.archived.stats.thisMonth')}</Typography>
+              <Typography variant="body2" color="text.secondary">{t('leads.archived.stats.thisMonth', 'This Month')}</Typography>
               <Typography variant="h4" fontWeight="600" color="warning.main">
                 {thisMonthCount}
               </Typography>
@@ -380,7 +380,7 @@ const ArchivedLeads = () => {
         <Grid item xs={12} sm={6} md={4}>
           <Card sx={{ background: `linear-gradient(135deg, ${alpha(theme.palette.info.main, 0.1)} 0%, ${alpha(theme.palette.info.dark, 0.05)} 100%)` }}>
             <CardContent>
-              <Typography variant="body2" color="text.secondary">{t('leads.archived.stats.totalValue')}</Typography>
+              <Typography variant="body2" color="text.secondary">{t('leads.archived.stats.totalValue', 'Total Value')}</Typography>
               <Typography variant="h4" fontWeight="600" color="info.main">
                 ₹{totalValue.toLocaleString()}
               </Typography>
@@ -393,7 +393,7 @@ const ArchivedLeads = () => {
       <Card sx={{ mb: 3, bgcolor: alpha(theme.palette.warning.main, 0.05), border: `1px solid ${alpha(theme.palette.warning.main, 0.2)}` }}>
         <CardContent>
           <Typography variant="body2" color="warning.dark">
-            <strong>{t('common.note')}:</strong> {t('leads.archived.warningNote')}
+            <strong>{t('common.note', 'Note')}:</strong> {t('leads.archived.warningNote', 'Archived leads will be permanently deleted after 365 days of inactivity.')}
           </Typography>
         </CardContent>
       </Card>
@@ -405,7 +405,7 @@ const ArchivedLeads = () => {
             <Grid item xs={12} sm={3}>
               <TextField
                 fullWidth
-                placeholder={t('leads.archived.searchPlaceholder')}
+                placeholder={t('leads.archived.searchPlaceholder', 'Search archived leads...')}
                 value={searchTerm}
                 onChange={handleSearch}
                 InputProps={{
@@ -417,7 +417,7 @@ const ArchivedLeads = () => {
               <TextField
                 fullWidth
                 select
-                label={t('leads.archived.filterByPreviousStatus')}
+                label={t('leads.archived.filterByPreviousStatus', 'Filter by Previous Status')}
                 value={filterStatus}
                 onChange={handleFilterChange}
                 InputProps={{
@@ -426,7 +426,7 @@ const ArchivedLeads = () => {
               >
                 <MenuItem value="All">{t('leads.archived.allStatus')}</MenuItem>
                 {statusOptions.map(status => (
-                  <MenuItem key={status} value={status}>{t(`leads.archived.statuses.${getStatusKey(status)}`)}</MenuItem>
+                  <MenuItem key={status} value={status}>{t(`leads.archived.statuses.${getStatusKey(status)}`, status)}</MenuItem>
                 ))}
               </TextField>
             </Grid>
@@ -434,7 +434,7 @@ const ArchivedLeads = () => {
               <TextField
                 fullWidth
                 select
-                label={t('leads.archived.dateRange')}
+                label={t('leads.archived.dateRange', 'Date Range')}
                 value={selectedDateRange}
                 onChange={(e) => setSelectedDateRange(e.target.value)}
                 InputProps={{
@@ -455,7 +455,7 @@ const ArchivedLeads = () => {
                 onClick={() => handleSort('archivedDate')}
                 fullWidth
               >
-                {t('leads.archived.sortByDate')} {sortField === 'archivedDate' ? (sortOrder === 'asc' ? '↑' : '↓') : ''}
+                {t('leads.archived.sortByDate', 'Sort By Date')} {sortField === 'archivedDate' ? (sortOrder === 'asc' ? '↑' : '↓') : ''}
               </Button>
             </Grid>
           </Grid>
@@ -468,14 +468,14 @@ const ArchivedLeads = () => {
           <Table>
             <TableHead>
               <TableRow>
-                <TableCell>{t('leads.archived.table.leadDetails')}</TableCell>
-                <TableCell>{t('leads.archived.table.contact')}</TableCell>
-                <TableCell>{t('leads.archived.table.previousStatus')}</TableCell>
-                <TableCell>{t('leads.archived.table.policyType')}</TableCell>
-                <TableCell>{t('leads.archived.table.archivedDate')}</TableCell>
-                <TableCell>{t('leads.archived.table.archivedReason')}</TableCell>
-                <TableCell>{t('leads.archived.table.archivedBy')}</TableCell>
-                <TableCell align="center">{t('leads.archived.table.actions')}</TableCell>
+                <TableCell>{t('leads.archived.table.leadDetails', 'Lead Details')}</TableCell>
+                <TableCell>{t('leads.archived.table.contact', 'Contact Details')}</TableCell>
+                <TableCell>{t('leads.archived.table.previousStatus', 'Previous Status')}</TableCell>
+                <TableCell>{t('leads.archived.table.policyType', 'Policy Type')}</TableCell>
+                <TableCell>{t('leads.archived.table.archivedDate', 'Archived Date')}</TableCell>
+                <TableCell>{t('leads.archived.table.archivedReason', 'Archived Reason')}</TableCell>
+                <TableCell>{t('leads.archived.table.archivedBy', 'Archived By')}</TableCell>
+                <TableCell align="center">{t('leads.archived.table.actions', 'Actions')}</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
@@ -501,7 +501,7 @@ const ArchivedLeads = () => {
                   </TableCell>
                   <TableCell>
                     <Chip
-                      label={t(`leads.archived.statuses.${getStatusKey(lead.previousStatus)}`)}
+                      label={t(`leads.archived.statuses.${getStatusKey(lead.previousStatus)}`, lead.previousStatus)}
                       size="small"
                       sx={{
                         backgroundColor: alpha(getStatusColor(lead.previousStatus), 0.1),
@@ -511,7 +511,7 @@ const ArchivedLeads = () => {
                     />
                   </TableCell>
                   <TableCell>
-                    <Typography variant="body2">{lead.policyType ? t(`leads.details.values.policyTypes.${getPolicyTypeKey(lead.policyType)}`) : '-'}</Typography>
+                    <Typography variant="body2">{lead.policyType ? t(`leads.details.values.policyTypes.${getPolicyTypeKey(lead.policyType)}`, lead.policyType) : '-'}</Typography>
                     <Typography variant="caption" color="text.secondary">
                       ₹{lead.premium?.toLocaleString() || 0}
                     </Typography>
@@ -529,7 +529,7 @@ const ArchivedLeads = () => {
                   </TableCell>
                   <TableCell>
                     <Stack direction="row" spacing={1} justifyContent="center">
-                      <Tooltip title={t('leads.archived.actions.unarchiveLead')}>
+                      <Tooltip title={t('leads.archived.actions.unarchiveLead', 'Unarchive Lead')}>
                         <IconButton
                           size="small"
                           onClick={() => handleUnarchive(lead)}
@@ -543,7 +543,7 @@ const ArchivedLeads = () => {
                           <UnarchiveIcon />
                         </IconButton>
                       </Tooltip>
-                      <Tooltip title={t('leads.archived.actions.viewDetails')}>
+                      <Tooltip title={t('leads.archived.actions.viewDetails', 'View Details')}>
                         <IconButton
                           size="small"
                           onClick={() => navigate(`/lead-management/${lead.id}`)}
@@ -551,7 +551,7 @@ const ArchivedLeads = () => {
                           <VisibilityIcon />
                         </IconButton>
                       </Tooltip>
-                      <Tooltip title={t('leads.archived.actions.viewHistory')}>
+                      <Tooltip title={t('leads.archived.actions.viewHistory', 'View History')}>
                         <IconButton
                           size="small"
                           onClick={() => handleViewHistory(lead)}
@@ -560,7 +560,7 @@ const ArchivedLeads = () => {
                           <HistoryIcon />
                         </IconButton>
                       </Tooltip>
-                      <Tooltip title={t('leads.archived.actions.permanentDelete')}>
+                      <Tooltip title={t('leads.archived.actions.permanentDelete', 'Delete Permanently')}>
                         <IconButton
                           size="small"
                           onClick={() => handlePermanentDelete(lead)}
@@ -592,26 +592,26 @@ const ArchivedLeads = () => {
       >
         <DialogTitle>
           <Typography variant="h6" fontWeight="600">
-            {confirmDialog.action === 'unarchive' ? t('leads.archived.dialogs.unarchive.title') : t('leads.archived.dialogs.delete.title')}
+            {confirmDialog.action === 'unarchive' ? t('leads.archived.dialogs.unarchive.title', 'Unarchive Lead') : t('leads.archived.dialogs.delete.title', 'Permanent Delete')}
           </Typography>
         </DialogTitle>
         <DialogContent>
           {confirmDialog.lead && (
             <Box sx={{ mt: 2 }}>
               <Typography variant="body2" color="text.secondary" gutterBottom>
-                {t('leads.archived.dialogs.unarchive.lead')}: <strong>{confirmDialog.lead.firstName} {confirmDialog.lead.lastName}</strong>
+                {t('leads.archived.dialogs.unarchive.lead', 'Lead')}: <strong>{confirmDialog.lead.firstName} {confirmDialog.lead.lastName}</strong>
               </Typography>
               <Typography variant="body1" sx={{ mt: 2 }}>
                 {confirmDialog.action === 'unarchive'
-                  ? t('leads.archived.dialogs.unarchive.confirm')
-                  : t('leads.archived.dialogs.delete.confirm')}
+                  ? t('leads.archived.dialogs.unarchive.confirm', 'Are you sure you want to unarchive this lead? It will be moved back to the main list.')
+                  : t('leads.archived.dialogs.delete.confirm', 'Are you sure you want to permanently delete this lead? This action cannot be undone.')}
               </Typography>
             </Box>
           )}
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setConfirmDialog({ open: false, lead: null, action: '' })}>
-            {t('leads.archived.dialogs.buttons.cancel')}
+            {t('leads.archived.dialogs.buttons.cancel', 'Cancel')}
           </Button>
           <Button
             variant="contained"
@@ -620,7 +620,7 @@ const ArchivedLeads = () => {
             disabled={loading}
             startIcon={loading ? <CircularProgress size={16} /> : null}
           >
-            {confirmDialog.action === 'unarchive' ? t('leads.archived.dialogs.buttons.unarchive') : t('leads.archived.dialogs.buttons.deletePermanently')}
+            {confirmDialog.action === 'unarchive' ? t('leads.archived.dialogs.buttons.unarchive', 'Unarchive') : t('leads.archived.dialogs.buttons.deletePermanently', 'Delete Permanently')}
           </Button>
         </DialogActions>
       </Dialog>
@@ -636,7 +636,7 @@ const ArchivedLeads = () => {
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
             <HistoryIcon color="info" />
             <Typography variant="h6" fontWeight="600">
-              {t('leads.archived.dialogs.history.title')}
+              {t('leads.archived.dialogs.history.title', 'Lead History')}
             </Typography>
           </Box>
         </DialogTitle>

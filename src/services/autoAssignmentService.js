@@ -3,6 +3,100 @@
  * Supports multiple assignment strategies: round-robin, skill-based, load-based, geographic
  */
 
+import api from './api';
+
+/**
+ * API Integration - Auto Assignment Backend Endpoints
+ */
+const BASE_PATH = '/auto_assignment';
+
+/**
+ * Get auto-assignment overview statistics
+ * @returns {Promise} Overview data with assignment metrics
+ */
+export const getOverview = async () => {
+  try {
+    const response = await api.get(`${BASE_PATH}/overview/`);
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching auto-assignment overview:', error);
+    throw error;
+  }
+};
+
+/**
+ * Get agent workload distribution
+ * @returns {Promise} Workload data for all agents
+ */
+export const getWorkload = async () => {
+  try {
+    const response = await api.get(`${BASE_PATH}/workload/`);
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching agent workload:', error);
+    throw error;
+  }
+};
+
+/**
+ * Get assignment history
+ * @param {Object} params - Optional query parameters (page, limit, filters)
+ * @returns {Promise} Assignment history records
+ */
+export const getHistory = async (params = {}) => {
+  try {
+    const response = await api.get(`${BASE_PATH}/history/`, { params });
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching assignment history:', error);
+    throw error;
+  }
+};
+
+/**
+ * Export assignment history
+ * @returns {Promise} File blob for download
+ */
+export const exportHistory = async () => {
+  try {
+    const token = localStorage.getItem('authToken') || localStorage.getItem('access_token');
+
+    const response = await fetch(
+      `${process.env.REACT_APP_API_BASE_URL || 'http://3.109.128.6:8000/api'}${BASE_PATH}/history/export/`,
+      {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      }
+    );
+
+    if (!response.ok) {
+      throw new Error(`Export failed: ${response.status}`);
+    }
+
+    return await response.blob();
+  } catch (error) {
+    console.error('Error exporting assignment history:', error);
+    throw error;
+  }
+};
+
+/**
+ * Search assignment history
+ * @param {string} query - Search query
+ * @returns {Promise} Matching assignment records
+ */
+export const searchHistory = async (query) => {
+  try {
+    const response = await api.get(`${BASE_PATH}/history/search/${encodeURIComponent(query)}/`);
+    return response.data;
+  } catch (error) {
+    console.error('Error searching assignment history:', error);
+    throw error;
+  }
+};
+
 /**
  * Assignment Strategies
  */
@@ -294,7 +388,7 @@ const matchesTerritory = (location, territory) => {
 
   if (typeof territory === 'string') {
     return territory.toLowerCase() === location.state?.toLowerCase() ||
-           territory.toLowerCase() === location.city?.toLowerCase();
+      territory.toLowerCase() === location.city?.toLowerCase();
   }
 
   return false;
@@ -552,6 +646,13 @@ export const batchAutoAssign = (entities, agents, existingEntities, config = {})
 };
 
 export default {
+  // API Methods
+  getOverview,
+  getWorkload,
+  getHistory,
+  exportHistory,
+  searchHistory,
+  // Assignment Strategies & Algorithms
   ASSIGNMENT_STRATEGIES,
   AGENT_SKILLS,
   calculateAgentWorkload,
@@ -565,3 +666,4 @@ export default {
   autoAssignEntity,
   batchAutoAssign
 };
+

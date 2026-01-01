@@ -65,10 +65,10 @@ const AssignedLeads = () => {
   const priorityOptions = ['High', 'Medium', 'Low'];
   const policyTypeOptions = ['Health Insurance', 'Life Insurance', 'Motor Insurance', 'Home Insurance', 'Travel Insurance'];
   const dateRangeOptions = [
-    { value: 'All', label: t('leads.assigned.filters.allTime') },
-    { value: '7', label: t('leads.assigned.filters.last7Days') },
-    { value: '30', label: t('leads.assigned.filters.last30Days') },
-    { value: '90', label: t('leads.assigned.filters.last90Days') }
+    { value: 'All', label: t('leads.assigned.filters.allTime', 'All Time') },
+    { value: '7', label: t('leads.assigned.filters.last7Days', 'Last 7 Days') },
+    { value: '30', label: t('leads.assigned.filters.last30Days', 'Last 30 Days') },
+    { value: '90', label: t('leads.assigned.filters.last90Days', 'Last 90 Days') }
   ];
 
   useEffect(() => {
@@ -167,7 +167,7 @@ const AssignedLeads = () => {
   const handleSendEmail = () => {
     // In production, this would call an API to send the email
     setEmailDialogOpen(false);
-    setSnackbar({ open: true, message: t('leads.assigned.dialogs.email.success', { email: selectedLead.email }), severity: 'success' });
+    setSnackbar({ open: true, message: t('leads.assigned.dialogs.email.success', 'Email sent successfully to {{email}}', { email: selectedLead.email }), severity: 'success' });
     setEmailData({ subject: '', body: '', cc: '' });
   };
 
@@ -187,7 +187,7 @@ const AssignedLeads = () => {
   const handleShareQuote = () => {
     // In production, this would generate and share the quote
     setShareQuoteDialogOpen(false);
-    setSnackbar({ open: true, message: t('leads.assigned.dialogs.quote.success', { name: `${selectedLead.firstName} ${selectedLead.lastName}` }), severity: 'success' });
+    setSnackbar({ open: true, message: t('leads.assigned.dialogs.quote.success', 'Quote shared with {{name}}', { name: `${selectedLead.firstName} ${selectedLead.lastName}` }), severity: 'success' });
     setQuoteData({ quoteType: 'standard', premium: '', coverage: '', validTill: '', notes: '' });
   };
 
@@ -231,7 +231,7 @@ const AssignedLeads = () => {
         <Grid item xs={12} sm={6}>
           <Typography variant="h4" fontWeight="600">{t('navigation.assignedLeads')}</Typography>
           <Typography variant="body2" color="text.secondary">
-            {t('leads.assigned.subtitle', { count: filteredLeads.length, total: leads.length })}
+            {t('leads.assigned.subtitle', 'Displaying {{count}} of {{total}} assigned leads', { count: filteredLeads.length, total: leads.length })}
           </Typography>
         </Grid>
       </Grid>
@@ -244,7 +244,7 @@ const AssignedLeads = () => {
               <TextField
                 fullWidth
                 size="small"
-                placeholder={t('leads.assigned.searchPlaceholder')}
+                placeholder={t('leads.assigned.searchPlaceholder', 'Search leads by name, email, phone...')}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 InputProps={{
@@ -261,8 +261,8 @@ const AssignedLeads = () => {
               <FormControl fullWidth size="small">
                 <InputLabel>{t('leads.assigned.filters.status')}</InputLabel>
                 <Select value={filterStatus} label={t('leads.assigned.filters.status')} onChange={(e) => setFilterStatus(e.target.value)}>
-                  <MenuItem value="All">{t('leads.assigned.filters.allStatus')}</MenuItem>
-                  {statusOptions.map(s => <MenuItem key={s} value={s}>{t(`leads.details.values.leadStatuses.${s}`)}</MenuItem>)}
+                  <MenuItem value="All">{t('leads.assigned.filters.allStatus', 'All Status')}</MenuItem>
+                  {statusOptions.map(s => <MenuItem key={s} value={s}>{t(`leads.details.values.leadStatuses.${s}`, s)}</MenuItem>)}
                 </Select>
               </FormControl>
             </Grid>
@@ -270,8 +270,8 @@ const AssignedLeads = () => {
               <FormControl fullWidth size="small">
                 <InputLabel>{t('leads.assigned.filters.priority')}</InputLabel>
                 <Select value={filterPriority} label={t('leads.assigned.filters.priority')} onChange={(e) => setFilterPriority(e.target.value)}>
-                  <MenuItem value="All">{t('leads.assigned.filters.allPriority')}</MenuItem>
-                  {priorityOptions.map(p => <MenuItem key={p} value={p}>{t(`leads.details.values.priorities.${p.toLowerCase()}`)}</MenuItem>)}
+                  <MenuItem value="All">{t('leads.assigned.filters.allPriority', 'All Priority')}</MenuItem>
+                  {priorityOptions.map(p => <MenuItem key={p} value={p}>{t(`leads.details.values.priorities.${p.toLowerCase()}`, p)}</MenuItem>)}
                 </Select>
               </FormControl>
             </Grid>
@@ -279,8 +279,8 @@ const AssignedLeads = () => {
               <FormControl fullWidth size="small">
                 <InputLabel>{t('leads.assigned.filters.policyType')}</InputLabel>
                 <Select value={filterPolicyType} label={t('leads.assigned.filters.policyType')} onChange={(e) => setFilterPolicyType(e.target.value)}>
-                  <MenuItem value="All">{t('leads.assigned.filters.allTypes')}</MenuItem>
-                  {policyTypeOptions.map(p => <MenuItem key={p} value={p}>{t(`leads.details.values.policyTypes.${getPolicyTypeKey(p)}`)}</MenuItem>)}
+                  <MenuItem value="All">{t('leads.assigned.filters.allTypes', 'All Types')}</MenuItem>
+                  {policyTypeOptions.map(p => <MenuItem key={p} value={p}>{t(`leads.details.values.policyTypes.${getPolicyTypeKey(p)}`, p)}</MenuItem>)}
                 </Select>
               </FormControl>
             </Grid>
@@ -303,7 +303,7 @@ const AssignedLeads = () => {
                     fullWidth
                     size="small"
                   >
-                    {t('leads.assigned.clear')} {activeFiltersCount > 0 && `(${activeFiltersCount})`}
+                    {t('leads.assigned.clear', 'Clear Filters')} {activeFiltersCount > 0 && `(${activeFiltersCount})`}
                   </Button>
                 </span>
               </Tooltip>
@@ -318,19 +318,19 @@ const AssignedLeads = () => {
           <Table>
             <TableHead>
               <TableRow>
-                <TableCell onClick={() => handleSort('firstName')} sx={{ cursor: 'pointer' }}>{t('leads.assigned.table.name')} {sortField === 'firstName' && (sortOrder === 'asc' ? '↑' : '↓')}</TableCell>
-                <TableCell>{t('leads.assigned.table.contact')}</TableCell>
-                <TableCell onClick={() => handleSort('status')} sx={{ cursor: 'pointer' }}>{t('leads.assigned.filters.status')} {sortField === 'status' && (sortOrder === 'asc' ? '↑' : '↓')}</TableCell>
-                <TableCell onClick={() => handleSort('priority')} sx={{ cursor: 'pointer' }}>{t('leads.assigned.filters.priority')} {sortField === 'priority' && (sortOrder === 'asc' ? '↑' : '↓')}</TableCell>
-                <TableCell>{t('leads.assigned.filters.policyType')}</TableCell>
-                <TableCell>{t('leads.assignedTo')}</TableCell>
-                <TableCell onClick={() => handleSort('lastContact')} sx={{ cursor: 'pointer' }}>{t('leads.assigned.table.lastContact')} {sortField === 'lastContact' && (sortOrder === 'asc' ? '↑' : '↓')}</TableCell>
-                <TableCell align="center">{t('leads.assigned.table.actions')}</TableCell>
+                <TableCell onClick={() => handleSort('firstName')} sx={{ cursor: 'pointer' }}>{t('leads.assigned.table.name', 'Name')} {sortField === 'firstName' && (sortOrder === 'asc' ? '↑' : '↓')}</TableCell>
+                <TableCell>{t('leads.assigned.table.contact', 'Contact Details')}</TableCell>
+                <TableCell onClick={() => handleSort('status')} sx={{ cursor: 'pointer' }}>{t('leads.assigned.filters.status', 'Status')} {sortField === 'status' && (sortOrder === 'asc' ? '↑' : '↓')}</TableCell>
+                <TableCell onClick={() => handleSort('priority')} sx={{ cursor: 'pointer' }}>{t('leads.assigned.filters.priority', 'Priority')} {sortField === 'priority' && (sortOrder === 'asc' ? '↑' : '↓')}</TableCell>
+                <TableCell>{t('leads.assigned.filters.policyType', 'Policy Type')}</TableCell>
+                <TableCell>{t('leads.assignedTo', 'Assigned To')}</TableCell>
+                <TableCell onClick={() => handleSort('lastContact')} sx={{ cursor: 'pointer' }}>{t('leads.assigned.table.lastContact', 'Last Contact')} {sortField === 'lastContact' && (sortOrder === 'asc' ? '↑' : '↓')}</TableCell>
+                <TableCell align="center">{t('leads.assigned.table.actions', 'Actions')}</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
               {filteredLeads.length === 0 ? (
-                <TableRow><TableCell colSpan={8} align="center"><Typography color="text.secondary" sx={{ py: 4 }}>{t('leads.assigned.noLeads')}</Typography></TableCell></TableRow>
+                <TableRow><TableCell colSpan={8} align="center"><Typography color="text.secondary" sx={{ py: 4 }}>{t('leads.assigned.noLeads', 'No assigned leads found')}</Typography></TableCell></TableRow>
               ) : (
                 filteredLeads.map((lead) => (
                   <TableRow key={lead.id} hover>
@@ -347,21 +347,21 @@ const AssignedLeads = () => {
                       </Box>
                     </TableCell>
                     <TableCell>
-                      <Chip label={t(`leads.details.values.leadStatuses.${lead.status}`)} size="small" sx={{ backgroundColor: alpha(getStatusColor(lead.status), 0.1), color: getStatusColor(lead.status), fontWeight: 600 }} />
+                      <Chip label={t(`leads.details.values.leadStatuses.${lead.status}`, lead.status)} size="small" sx={{ backgroundColor: alpha(getStatusColor(lead.status), 0.1), color: getStatusColor(lead.status), fontWeight: 600 }} />
                     </TableCell>
                     <TableCell>
-                      <Chip label={t(`leads.details.values.priorities.${lead.priority?.toLowerCase()}`)} size="small" sx={{ backgroundColor: alpha(getPriorityColor(lead.priority), 0.1), color: getPriorityColor(lead.priority), fontWeight: 600 }} />
+                      <Chip label={t(`leads.details.values.priorities.${lead.priority?.toLowerCase()}`, lead.priority)} size="small" sx={{ backgroundColor: alpha(getPriorityColor(lead.priority), 0.1), color: getPriorityColor(lead.priority), fontWeight: 600 }} />
                     </TableCell>
-                    <TableCell>{lead.policyType ? t(`leads.details.values.policyTypes.${getPolicyTypeKey(lead.policyType)}`) : '-'}</TableCell>
+                    <TableCell>{lead.policyType ? t(`leads.details.values.policyTypes.${getPolicyTypeKey(lead.policyType)}`, lead.policyType) : '-'}</TableCell>
                     <TableCell>{lead.assignedTo}</TableCell>
                     <TableCell>{lead.lastContact}</TableCell>
                     <TableCell>
                       <Stack direction="row" spacing={0.5} justifyContent="center">
-                        <Tooltip title={t('leads.assigned.actions.call')}><IconButton size="small" onClick={() => { setSelectedCallLead(lead); setCallDialogOpen(true); }} sx={{ color: theme.palette.success.main }}><CallIcon fontSize="small" /></IconButton></Tooltip>
-                        <Tooltip title={t('leads.assigned.actions.viewDetails')}><IconButton size="small" onClick={() => navigate(`/lead-management/${lead.id}`)}><ViewIcon fontSize="small" /></IconButton></Tooltip>
-                        <Tooltip title={t('leads.assigned.actions.edit')}><IconButton size="small" onClick={() => navigate(`/lead-management/${lead.id}?edit=true`)}><EditIcon fontSize="small" /></IconButton></Tooltip>
-                        <Tooltip title={t('leads.assigned.actions.sendEmail')}><IconButton size="small" onClick={() => handleOpenEmail(lead)} sx={{ color: theme.palette.primary.main }}><EmailIcon fontSize="small" /></IconButton></Tooltip>
-                        <Tooltip title={t('leads.assigned.actions.shareQuote')}><IconButton size="small" onClick={() => handleOpenShareQuote(lead)} sx={{ color: theme.palette.warning.main }}><MoneyIcon fontSize="small" /></IconButton></Tooltip>
+                        <Tooltip title={t('leads.assigned.actions.call', 'Call Lead')}><IconButton size="small" onClick={() => { setSelectedCallLead(lead); setCallDialogOpen(true); }} sx={{ color: theme.palette.success.main }}><CallIcon fontSize="small" /></IconButton></Tooltip>
+                        <Tooltip title={t('leads.assigned.actions.viewDetails', 'View Details')}><IconButton size="small" onClick={() => navigate(`/lead-management/${lead.id}`)}><ViewIcon fontSize="small" /></IconButton></Tooltip>
+                        <Tooltip title={t('leads.assigned.actions.edit', 'Edit Lead')}><IconButton size="small" onClick={() => navigate(`/lead-management/${lead.id}?edit=true`)}><EditIcon fontSize="small" /></IconButton></Tooltip>
+                        <Tooltip title={t('leads.assigned.actions.sendEmail', 'Send Email')}><IconButton size="small" onClick={() => handleOpenEmail(lead)} sx={{ color: theme.palette.primary.main }}><EmailIcon fontSize="small" /></IconButton></Tooltip>
+                        <Tooltip title={t('leads.assigned.actions.shareQuote', 'Share Quote')}><IconButton size="small" onClick={() => handleOpenShareQuote(lead)} sx={{ color: theme.palette.warning.main }}><MoneyIcon fontSize="small" /></IconButton></Tooltip>
                       </Stack>
                     </TableCell>
                   </TableRow>
@@ -376,17 +376,17 @@ const AssignedLeads = () => {
       <Dialog open={emailDialogOpen} onClose={() => setEmailDialogOpen(false)} maxWidth="md" fullWidth>
         <DialogTitle>
           <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}><EmailIcon color="primary" /><Typography variant="h6">{t('leads.assigned.dialogs.email.title')}</Typography></Box>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}><EmailIcon color="primary" /><Typography variant="h6">{t('leads.assigned.dialogs.email.title', 'Compose Email')}</Typography></Box>
             <IconButton onClick={() => setEmailDialogOpen(false)}><CloseIcon /></IconButton>
           </Box>
         </DialogTitle>
         <DialogContent dividers>
           {selectedLead && (
             <Stack spacing={2}>
-              <Alert severity="info">{t('leads.assigned.dialogs.email.sendingTo')} <strong>{selectedLead.firstName} {selectedLead.lastName}</strong> ({selectedLead.email})</Alert>
-              <TextField fullWidth label={t('leads.assigned.dialogs.email.subject')} value={emailData.subject} onChange={(e) => setEmailData({ ...emailData, subject: e.target.value })} />
-              <TextField fullWidth label={t('leads.assigned.dialogs.email.cc')} value={emailData.cc} onChange={(e) => setEmailData({ ...emailData, cc: e.target.value })} placeholder={t('leads.assigned.dialogs.email.ccPlaceholder')} />
-              <TextField fullWidth multiline rows={8} label={t('leads.assigned.dialogs.email.body')} value={emailData.body} onChange={(e) => setEmailData({ ...emailData, body: e.target.value })} />
+              <Alert severity="info">{t('leads.assigned.dialogs.email.sendingTo', 'Sending email to:')} <strong>{selectedLead.firstName} {selectedLead.lastName}</strong> ({selectedLead.email})</Alert>
+              <TextField fullWidth label={t('leads.assigned.dialogs.email.subject', 'Subject')} value={emailData.subject} onChange={(e) => setEmailData({ ...emailData, subject: e.target.value })} />
+              <TextField fullWidth label={t('leads.assigned.dialogs.email.cc', 'CC')} value={emailData.cc} onChange={(e) => setEmailData({ ...emailData, cc: e.target.value })} placeholder={t('leads.assigned.dialogs.email.ccPlaceholder', 'e.g. manager@example.com')} />
+              <TextField fullWidth multiline rows={8} label={t('leads.assigned.dialogs.email.body', 'Message Body')} value={emailData.body} onChange={(e) => setEmailData({ ...emailData, body: e.target.value })} />
             </Stack>
           )}
         </DialogContent>
@@ -400,14 +400,14 @@ const AssignedLeads = () => {
       <Dialog open={shareQuoteDialogOpen} onClose={() => setShareQuoteDialogOpen(false)} maxWidth="sm" fullWidth>
         <DialogTitle>
           <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}><MoneyIcon color="warning" /><Typography variant="h6">{t('leads.assigned.dialogs.quote.title')}</Typography></Box>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}><MoneyIcon color="warning" /><Typography variant="h6">{t('leads.assigned.dialogs.quote.title', 'Share Quote')}</Typography></Box>
             <IconButton onClick={() => setShareQuoteDialogOpen(false)}><CloseIcon /></IconButton>
           </Box>
         </DialogTitle>
         <DialogContent dividers>
           {selectedLead && (
             <Stack spacing={2}>
-              <Alert severity="info">{t('leads.assigned.dialogs.quote.creatingFor')} <strong>{selectedLead.firstName} {selectedLead.lastName}</strong> - {selectedLead.policyType}</Alert>
+              <Alert severity="info">{t('leads.assigned.dialogs.quote.creatingFor', 'Creating quote for:')} <strong>{selectedLead.firstName} {selectedLead.lastName}</strong> - {selectedLead.policyType}</Alert>
               <FormControl fullWidth>
                 <InputLabel>{t('leads.details.values.quoteTypes.type')}</InputLabel>
                 <Select value={quoteData.quoteType} label={t('leads.details.values.quoteTypes.type')} onChange={(e) => setQuoteData({ ...quoteData, quoteType: e.target.value })}>
@@ -417,11 +417,11 @@ const AssignedLeads = () => {
                 </Select>
               </FormControl>
               <Grid container spacing={2}>
-                <Grid item xs={6}><TextField fullWidth label={t('leads.assigned.dialogs.quote.premium')} type="number" value={quoteData.premium} onChange={(e) => setQuoteData({ ...quoteData, premium: e.target.value })} /></Grid>
-                <Grid item xs={6}><TextField fullWidth label={t('leads.assigned.dialogs.quote.coverage')} type="number" value={quoteData.coverage} onChange={(e) => setQuoteData({ ...quoteData, coverage: e.target.value })} /></Grid>
+                <Grid item xs={6}><TextField fullWidth label={t('leads.assigned.dialogs.quote.premium', 'Premium Amount')} type="number" value={quoteData.premium} onChange={(e) => setQuoteData({ ...quoteData, premium: e.target.value })} /></Grid>
+                <Grid item xs={6}><TextField fullWidth label={t('leads.assigned.dialogs.quote.coverage', 'Coverage Amount')} type="number" value={quoteData.coverage} onChange={(e) => setQuoteData({ ...quoteData, coverage: e.target.value })} /></Grid>
               </Grid>
-              <TextField fullWidth label={t('leads.assigned.dialogs.quote.validTill')} type="date" value={quoteData.validTill} onChange={(e) => setQuoteData({ ...quoteData, validTill: e.target.value })} InputLabelProps={{ shrink: true }} />
-              <TextField fullWidth multiline rows={3} label={t('leads.assigned.dialogs.quote.notes')} value={quoteData.notes} onChange={(e) => setQuoteData({ ...quoteData, notes: e.target.value })} placeholder={t('leads.assigned.dialogs.quote.notesPlaceholder')} />
+              <TextField fullWidth label={t('leads.assigned.dialogs.quote.validTill', 'Valid Until')} type="date" value={quoteData.validTill} onChange={(e) => setQuoteData({ ...quoteData, validTill: e.target.value })} InputLabelProps={{ shrink: true }} />
+              <TextField fullWidth multiline rows={3} label={t('leads.assigned.dialogs.quote.notes', 'Additional Notes')} value={quoteData.notes} onChange={(e) => setQuoteData({ ...quoteData, notes: e.target.value })} placeholder={t('leads.assigned.dialogs.quote.notesPlaceholder', 'Enter any additional notes...')} />
             </Stack>
           )}
         </DialogContent>

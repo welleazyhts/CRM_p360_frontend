@@ -82,13 +82,21 @@ const AutoAssignmentSettings = () => {
   };
 
   // Handle configuration updates
-  const handleConfigChange = (field, value) => {
-    updateConfig({ [field]: value });
+  const handleConfigChange = async (field, value) => {
+    try {
+      await updateConfig({ [field]: value });
+    } catch (error) {
+      console.error('Failed to update config:', error);
+    }
   };
 
   // Handle strategy change for entity type
-  const handleStrategyChange = (entityType, strategy) => {
-    updateStrategyForType(entityType, strategy);
+  const handleStrategyChange = async (entityType, strategy) => {
+    try {
+      await updateStrategyForType(entityType, strategy);
+    } catch (error) {
+      console.error('Failed to update strategy:', error);
+    }
   };
 
   // Open agent dialog for add/edit
@@ -130,26 +138,39 @@ const AutoAssignmentSettings = () => {
   };
 
   // Save agent
-  const handleSaveAgent = () => {
+  const handleSaveAgent = async () => {
     if (!agentForm.id || !agentForm.name || !agentForm.email) {
       alert('Please fill in all required fields');
       return;
     }
 
-    upsertAgent(agentForm);
-    handleCloseAgentDialog();
+    try {
+      await upsertAgent(agentForm);
+      handleCloseAgentDialog();
+    } catch (error) {
+      console.error('Failed to save agent:', error);
+      // specific error alert handled in context
+    }
   };
 
   // Delete agent
-  const handleDeleteAgent = (agentId) => {
+  const handleDeleteAgent = async (agentId) => {
     if (window.confirm('Are you sure you want to remove this agent?')) {
-      removeAgent(agentId);
+      try {
+        await removeAgent(agentId);
+      } catch (error) {
+        console.error('Failed to delete agent:', error);
+      }
     }
   };
 
   // Toggle agent active status
-  const handleToggleAgent = (agentId) => {
-    toggleAgentActive(agentId);
+  const handleToggleAgent = async (agentId) => {
+    try {
+      await toggleAgentActive(agentId);
+    } catch (error) {
+      console.error('Failed to toggle agent:', error);
+    }
   };
 
   // Export configuration
@@ -169,10 +190,10 @@ const AutoAssignmentSettings = () => {
     const file = event.target.files[0];
     if (file) {
       const reader = new FileReader();
-      reader.onload = (e) => {
+      reader.onload = async (e) => {
         try {
           const data = JSON.parse(e.target.result);
-          importConfiguration(data);
+          await importConfiguration(data);
           alert('Configuration imported successfully');
         } catch (error) {
           alert('Failed to import configuration: ' + error.message);
@@ -503,7 +524,7 @@ const AutoAssignmentSettings = () => {
                     size="small"
                     color={
                       agent.performanceTier === 'top' ? 'success' :
-                      agent.performanceTier === 'high' ? 'primary' : 'default'
+                        agent.performanceTier === 'high' ? 'primary' : 'default'
                     }
                   />
                 </TableCell>

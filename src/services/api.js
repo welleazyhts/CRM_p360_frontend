@@ -2,7 +2,7 @@
 // For now, it's just a placeholder with mock implementations
 
 // Base URL for API calls - configured from environment variable
-const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://65.0.124.182/api';
+const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://3.109.128.6:8000/api';
 
 /**
  * Helper function to construct full API URL
@@ -86,6 +86,7 @@ const realApi = {
 
     if (!response.ok) {
       const error = await response.json().catch(() => ({}));
+      console.error('[API Error] POST', endpoint, error, response.status);
       throw new Error(error.message || error.detail || `HTTP ${response.status}: ${response.statusText}`);
     }
 

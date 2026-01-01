@@ -907,6 +907,14 @@ const LeadManagement = () => {
     setEditingLead(null);
   };
 
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
   const handleSaveLead = () => {
     // Real-time duplicate check for new leads
     if (!editingLead) {
@@ -1687,7 +1695,7 @@ const LeadManagement = () => {
                   {stats.total}
                 </Typography>
                 <Typography variant="body2" color="text.secondary">
-                  {t('leads.totalLeads')}
+                  {t('leads.totalLeads', 'Total Leads')}
                 </Typography>
               </CardContent>
             </Card>
@@ -1699,7 +1707,7 @@ const LeadManagement = () => {
                   {stats.new}
                 </Typography>
                 <Typography variant="body2" color="text.secondary">
-                  {t('leads.newLeads')}
+                  {t('leads.newLeads', 'New Leads')}
                 </Typography>
               </CardContent>
             </Card>
@@ -1711,7 +1719,7 @@ const LeadManagement = () => {
                   {stats.qualified}
                 </Typography>
                 <Typography variant="body2" color="text.secondary">
-                  {t('leads.qualified')}
+                  {t('leads.qualified', 'Qualified')}
                 </Typography>
               </CardContent>
             </Card>
@@ -1723,7 +1731,7 @@ const LeadManagement = () => {
                   {stats.closedWon}
                 </Typography>
                 <Typography variant="body2" color="text.secondary">
-                  {t('leads.closedWon')}
+                  {t('leads.closedWon', 'Closed Won')}
                 </Typography>
               </CardContent>
             </Card>
@@ -1735,7 +1743,7 @@ const LeadManagement = () => {
                   ₹{stats.totalValue.toLocaleString()}
                 </Typography>
                 <Typography variant="body2" color="text.secondary">
-                  {t('leads.totalValue')}
+                  {t('leads.totalValue', 'Total Value')}
                 </Typography>
               </CardContent>
             </Card>
@@ -1753,7 +1761,7 @@ const LeadManagement = () => {
               <Grid item xs={12} md={4}>
                 <TextField
                   fullWidth
-                  placeholder={t('leads.searchPlaceholder')}
+                  placeholder={t('leads.searchPlaceholder', 'Search leads...')}
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   InputProps={{
@@ -1767,60 +1775,60 @@ const LeadManagement = () => {
               </Grid>
               <Grid item xs={12} md={2}>
                 <FormControl fullWidth>
-                  <InputLabel>{t('leads.status')}</InputLabel>
+                  <InputLabel>{t('leads.status', 'Status')}</InputLabel>
                   <Select
                     value={statusFilter}
-                    label={t('leads.status')}
+                    label={t('leads.status', 'Status')}
                     onChange={(e) => setStatusFilter(e.target.value)}
                   >
-                    <MenuItem value="All">{t('leads.allStatus')}</MenuItem>
+                    <MenuItem value="All">{t('leads.allStatus', 'All Status')}</MenuItem>
                     {statusOptions.map(status => (
-                      <MenuItem key={status} value={status}>{t(`leads.statuses.${status}`)}</MenuItem>
+                      <MenuItem key={status} value={status}>{t(`leads.statuses.${status}`, status)}</MenuItem>
                     ))}
                   </Select>
                 </FormControl>
               </Grid>
               <Grid item xs={12} md={2}>
                 <FormControl fullWidth>
-                  <InputLabel>{t('leads.priority')}</InputLabel>
+                  <InputLabel>{t('leads.priority', 'Priority')}</InputLabel>
                   <Select
                     value={priorityFilter}
-                    label={t('leads.priority')}
+                    label={t('leads.priority', 'Priority')}
                     onChange={(e) => setPriorityFilter(e.target.value)}
                   >
-                    <MenuItem value="All">{t('leads.allPriority')}</MenuItem>
+                    <MenuItem value="All">{t('leads.allPriority', 'All Priority')}</MenuItem>
                     {priorityOptions.map(priority => (
-                      <MenuItem key={priority} value={priority}>{t(`leads.priorities.${priority}`)}</MenuItem>
+                      <MenuItem key={priority} value={priority}>{t(`leads.priorities.${priority}`, priority)}</MenuItem>
                     ))}
                   </Select>
                 </FormControl>
               </Grid>
               <Grid item xs={12} md={1.5}>
                 <FormControl fullWidth>
-                  <InputLabel>{t('leads.assignedTo')}</InputLabel>
+                  <InputLabel>{t('leads.assignedTo', 'Assigned To')}</InputLabel>
                   <Select
                     value={assignedFilter}
-                    label={t('leads.assignedTo')}
+                    label={t('leads.assignedTo', 'Assigned To')}
                     onChange={(e) => setAssignedFilter(e.target.value)}
                   >
-                    <MenuItem value="All">{t('leads.allAgents')}</MenuItem>
+                    <MenuItem value="All">{t('leads.allAgents', 'All Agents')}</MenuItem>
                     {users.map(user => (
-                      <MenuItem key={user.id} value={user.name}>{t(`mockData.agents.${user.id}.name`) || user.name}</MenuItem>
+                      <MenuItem key={user.id} value={user.name}>{user.name}</MenuItem>
                     ))}
                   </Select>
                 </FormControl>
               </Grid>
               <Grid item xs={12} md={1.5}>
                 <FormControl fullWidth>
-                  <InputLabel>{t('leads.leadType')}</InputLabel>
+                  <InputLabel>{t('leads.leadType', 'Lead Type')}</InputLabel>
                   <Select
                     value={leadTypeFilter}
-                    label={t('leads.leadType')}
+                    label={t('leads.leadType', 'Lead Type')}
                     onChange={(e) => setLeadTypeFilter(e.target.value)}
                   >
-                    <MenuItem value="All">{t('leads.allTypes')}</MenuItem>
+                    <MenuItem value="All">{t('leads.allTypes', 'All Types')}</MenuItem>
                     {leadTypeOptions.map(type => (
-                      <MenuItem key={type} value={type}>{t(`leads.types.${type}`) || type}</MenuItem>
+                      <MenuItem key={type} value={type}>{t(`leads.types.${type}`, type)}</MenuItem>
                     ))}
                   </Select>
                 </FormControl>
@@ -1983,19 +1991,19 @@ const LeadManagement = () => {
                         onChange={handleSelectAllLeads}
                       />
                     </TableCell>
-                    <TableCell>{t('leads.table.name')}</TableCell>
-                    <TableCell>{t('leads.table.company')}</TableCell>
-                    <TableCell>{t('leads.leadType')}</TableCell>
-                    <TableCell>{t('leads.status')}</TableCell>
-                    <TableCell>{t('leads.table.score')}</TableCell>
-                    <TableCell>{t('leads.priority')}</TableCell>
-                    <TableCell>{t('leads.assignedTo')}</TableCell>
-                    <TableCell>{t('leads.language') || 'Language'}</TableCell>
-                    <TableCell>{t('leads.totalCalls') || 'Total Calls'}</TableCell>
-                    <TableCell>{t('leads.table.value')}</TableCell>
-                    <TableCell>{t('leads.table.lastContact')}</TableCell>
-                    <TableCell align="center">{t('leads.table.vahan') || 'Vahan'}</TableCell>
-                    <TableCell align="center">{t('leads.table.actions.title')}</TableCell>
+                    <TableCell>{t('leads.table.name', 'Lead')}</TableCell>
+                    <TableCell>{t('leads.table.company', 'Company')}</TableCell>
+                    <TableCell>{t('leads.leadType', 'Type')}</TableCell>
+                    <TableCell>{t('leads.status', 'Status')}</TableCell>
+                    <TableCell>{t('leads.table.score', 'Score')}</TableCell>
+                    <TableCell>{t('leads.priority', 'Priority')}</TableCell>
+                    <TableCell>{t('leads.assignedTo', 'Assigned To')}</TableCell>
+                    <TableCell>{t('leads.language', 'Language')}</TableCell>
+                    <TableCell>{t('leads.totalCalls', 'Total Calls')}</TableCell>
+                    <TableCell>{t('leads.table.value', 'Value')}</TableCell>
+                    <TableCell>{t('leads.table.lastContact', 'Last Contact')}</TableCell>
+                    <TableCell align="center">{t('leads.table.vahan', 'Vahan')}</TableCell>
+                    <TableCell align="center">{t('leads.table.actions.title', 'Actions')}</TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
@@ -2040,13 +2048,13 @@ const LeadManagement = () => {
                             color: lead.leadType === 'Premium' ? '#000' : '#fff',
                             border: lead.leadType === 'Premium' ? '2px solid #FFA000' : 'none'
                           }}>
-                            {t(`mockData.leads.${lead.id}.firstName`)?.charAt(0) || lead.firstName.charAt(0)}{t(`mockData.leads.${lead.id}.lastName`)?.charAt(0) || lead.lastName.charAt(0)}
+                            {lead.firstName.charAt(0)}{lead.lastName.charAt(0)}
                           </Avatar>
                           <Box>
                             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                               <Typography variant="subtitle2" fontWeight="600" sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
                                 <span style={{ fontSize: '0.9rem' }}>{getLeadTypeIcon(lead.leadType)}</span>
-                                {t(`mockData.leads.${lead.id}.firstName`) || lead.firstName} {t(`mockData.leads.${lead.id}.lastName`) || lead.lastName}
+                                {lead.firstName} {lead.lastName}
                               </Typography>
                               {pinnedLeads.includes(lead.id) && (
                                 <Tooltip title="Pinned to top" arrow>
@@ -2062,7 +2070,7 @@ const LeadManagement = () => {
                               )}
                               {lead.leadType === 'Premium' && (
                                 <Chip
-                                  label={t('leads.types.Premium').toUpperCase()}
+                                  label="PREMIUM"
                                   size="small"
                                   sx={{
                                     backgroundColor: '#FFD700',
@@ -2086,16 +2094,16 @@ const LeadManagement = () => {
                       <TableCell>
                         <Box>
                           <Typography variant="subtitle2" fontWeight="600">
-                            {t(`mockData.leads.${lead.id}.company`) || lead.company}
+                            {lead.company}
                           </Typography>
                           <Typography variant="body2" color="text.secondary">
-                            {t(`mockData.leads.${lead.id}.position`) || lead.position}
+                            {lead.position}
                           </Typography>
                         </Box>
                       </TableCell>
                       <TableCell>
                         <Chip
-                          label={t(`leads.types.${lead.leadType}`) || lead.leadType}
+                          label={t(`leads.types.${lead.leadType}`, lead.leadType)}
                           size="small"
                           icon={<span style={{ fontSize: '0.8rem' }}>{getLeadTypeIcon(lead.leadType)}</span>}
                           sx={{
@@ -2108,7 +2116,7 @@ const LeadManagement = () => {
                       </TableCell>
                       <TableCell>
                         <Chip
-                          label={t(`leads.statuses.${lead.status}`)}
+                          label={t(`leads.statuses.${lead.status}`, lead.status)}
                           size="small"
                           sx={{
                             backgroundColor: alpha(getStatusColor(lead.status), 0.1),
@@ -2134,7 +2142,7 @@ const LeadManagement = () => {
                       <TableCell>
                         <Box>
                           <Typography variant="body2" fontWeight={lead.assignedTo ? 600 : 400}>
-                            {lead.assignedToId ? (t(`mockData.agents.${lead.assignedToId}.name`) || lead.assignedTo) : (t('common.unassigned') || 'Unassigned')}
+                            {lead.assignedTo || t('common.unassigned', 'Unassigned')}
                           </Typography>
                           {lead.assignmentReason && (
                             <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.65rem' }}>
@@ -2145,7 +2153,7 @@ const LeadManagement = () => {
                       </TableCell>
                       <TableCell>
                         <Chip
-                          label={t(`common.languages.${lead.preferredLanguage || 'English'}`) || (lead.preferredLanguage || 'English')}
+                          label={t(`common.languages.${lead.preferredLanguage || 'English'}`, lead.preferredLanguage || 'English')}
                           size="small"
                           variant="outlined"
                           sx={{ fontSize: '0.7rem' }}
@@ -2163,7 +2171,7 @@ const LeadManagement = () => {
                       </TableCell>
                       <TableCell>
                         <Typography variant="body2" color="text.secondary">
-                          {lead.lastContactDate || t('leads.table.never')}
+                          {lead.lastContactDate || t('leads.table.never', 'Never')}
                         </Typography>
                       </TableCell>
                       <TableCell align="center">
@@ -2173,10 +2181,10 @@ const LeadManagement = () => {
                             if (vahanStatus) {
                               if (vahanStatus.status === 'verified') {
                                 return (
-                                  <Tooltip title={t('leads.table.vahanStatus.verifiedOn', { date: new Date(vahanStatus.verifiedAt).toLocaleDateString() })}>
+                                  <Tooltip title={t('leads.table.vahanStatus.verifiedOn', 'Verified on {{date}}', { date: new Date(vahanStatus.verifiedAt).toLocaleDateString() })}>
                                     <Chip
                                       icon={<VerifiedUserIcon />}
-                                      label={t('leads.table.vahanStatus.verified')}
+                                      label={t('leads.table.vahanStatus.verified', 'Verified')}
                                       color="success"
                                       size="small"
                                     />
@@ -2184,10 +2192,10 @@ const LeadManagement = () => {
                                 );
                               } else if (vahanStatus.status === 'failed') {
                                 return (
-                                  <Tooltip title={t('leads.table.vahanStatus.verificationFailed')}>
+                                  <Tooltip title={t('leads.table.vahanStatus.verificationFailed', 'Verification Failed')}>
                                     <Chip
                                       icon={<ErrorIcon />}
-                                      label={t('leads.table.vahanStatus.failed')}
+                                      label={t('leads.table.vahanStatus.failed', 'Failed')}
                                       color="error"
                                       size="small"
                                     />
@@ -2196,7 +2204,7 @@ const LeadManagement = () => {
                               }
                             }
                             return (
-                              <Tooltip title={t('leads.table.vahanStatus.clickToVerify')}>
+                              <Tooltip title={t('leads.table.vahanStatus.clickToVerify', 'Click to Verify')}>
                                 <IconButton
                                   size="small"
                                   onClick={() => handlePushToVahan(lead)}
@@ -2209,13 +2217,13 @@ const LeadManagement = () => {
                           })()
                         ) : (
                           <Typography variant="caption" color="text.secondary">
-                            {t('leads.table.vahanStatus.notAvailable')}
+                            {t('leads.table.vahanStatus.notAvailable', 'N/A')}
                           </Typography>
                         )}
                       </TableCell>
                       <TableCell align="center">
                         <Box sx={{ display: 'flex', gap: 1, justifyContent: 'center' }}>
-                          <Tooltip title={t('leads.table.actions.callLead') || "Call Lead"}>
+                          <Tooltip title={t('leads.table.actions.callLead', 'Call Lead')}>
                             <IconButton
                               size="small"
                               onClick={() => {
@@ -2232,17 +2240,17 @@ const LeadManagement = () => {
                               <CallIcon />
                             </IconButton>
                           </Tooltip>
-                          <Tooltip title={t('leads.table.actions.viewDetails') || "View Details"}>
+                          <Tooltip title={t('leads.table.actions.viewDetails', 'View Details')}>
                             <IconButton size="small" onClick={() => handleViewDetails(lead)}>
                               <ViewIcon />
                             </IconButton>
                           </Tooltip>
-                          <Tooltip title={t('leads.table.actions.quickUpdate') || "Quick Update"}>
+                          <Tooltip title={t('leads.table.actions.quickUpdate', 'Quick Update')}>
                             <IconButton size="small" onClick={() => handleQuickUpdate(lead)}>
                               <NoteIcon />
                             </IconButton>
                           </Tooltip>
-                          <Tooltip title={t('leads.table.actions.moreActions') || "More Actions"}>
+                          <Tooltip title={t('leads.table.actions.moreActions', 'More Actions')}>
                             <IconButton size="small" onClick={(e) => handleMenuOpen(e, lead)}>
                               <MoreVertIcon />
                             </IconButton>
@@ -2272,178 +2280,145 @@ const LeadManagement = () => {
         {/* Add/Edit Lead Dialog */}
         <Dialog open={openDialog} onClose={handleCloseDialog} maxWidth="md" fullWidth>
           <DialogTitle>
-            {editingLead ? t('leads.editLead') : t('leads.addNewLead')}
+            {editingLead ? t('leads.editLead', 'Edit Lead') : t('leads.addNewLead', 'Add New Lead')}
           </DialogTitle>
-          <DialogContent>
-            <Grid container spacing={2} sx={{ mt: 1 }}>
+          <DialogContent dividers>
+            <Grid container spacing={3}>
+              {/* Personal Information */}
+              <Grid item xs={12}>
+                <Typography variant="subtitle1" fontWeight="600" gutterBottom>
+                  {t('leads.personalInfo', 'Personal Information')}
+                </Typography>
+              </Grid>
               <Grid item xs={12} sm={6}>
                 <TextField
                   fullWidth
-                  label={t('leads.form.firstName')}
+                  label={t('leads.firstName', 'First Name')}
+                  name="firstName"
                   value={formData.firstName}
-                  onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
+                  onChange={handleInputChange}
                   required
                 />
               </Grid>
               <Grid item xs={12} sm={6}>
                 <TextField
                   fullWidth
-                  label={t('leads.form.lastName')}
+                  label={t('leads.lastName', 'Last Name')}
+                  name="lastName"
                   value={formData.lastName}
-                  onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
+                  onChange={handleInputChange}
                   required
                 />
               </Grid>
               <Grid item xs={12} sm={6}>
                 <TextField
                   fullWidth
-                  label={t('leads.form.email')}
+                  label={t('leads.email', 'Email')}
+                  name="email"
                   type="email"
                   value={formData.email}
-                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                  onChange={handleInputChange}
                   required
                 />
               </Grid>
-              {/* Multi-Phone Mapping */}
-              <Grid item xs={12}>
-                <Typography variant="subtitle2" fontWeight="600" gutterBottom>
-                  📞 {t('leads.form.phoneSection')}
-                </Typography>
-                {phoneNumbers.map((phone, index) => (
-                  <Box key={index} sx={{ display: 'flex', gap: 1, mb: 1 }}>
-                    <TextField
-                      fullWidth
-                      label={t('leads.form.phone') + ` ${index + 1}`}
-                      value={phone}
-                      onChange={(e) => handlePhoneChange(index, e.target.value)}
-                      placeholder="+91-XXXXXXXXXX"
-                    />
-                    {phoneNumbers.length > 1 && (
-                      <IconButton onClick={() => handleRemovePhone(index)} color="error">
-                        <DeleteIcon />
-                      </IconButton>
-                    )}
-                  </Box>
-                ))}
-                <Button
-                  startIcon={<AddIcon />}
-                  onClick={handleAddPhone}
-                  size="small"
-                  variant="outlined"
-                >
-                  {t('leads.form.addPhone')}
-                </Button>
-              </Grid>
               <Grid item xs={12} sm={6}>
                 <TextField
                   fullWidth
-                  label={t('leads.form.company')}
-                  value={formData.company}
-                  onChange={(e) => setFormData({ ...formData, company: e.target.value })}
+                  label={t('leads.phone', 'Phone')}
+                  name="phone"
+                  value={formData.phone}
+                  onChange={handleInputChange}
+                  required
                 />
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  fullWidth
-                  label={t('leads.form.position')}
-                  value={formData.position}
-                  onChange={(e) => setFormData({ ...formData, position: e.target.value })}
-                />
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <FormControl fullWidth>
-                  <InputLabel>{t('leads.form.source')}</InputLabel>
-                  <Select
-                    value={formData.source}
-                    label={t('leads.form.source')}
-                    onChange={(e) => setFormData({ ...formData, source: e.target.value })}
-                  >
-                    {sourceOptions.map(source => (
-                      <MenuItem key={source} value={source}>{t(`leads.sources.${source}`) || source}</MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <FormControl fullWidth>
-                  <InputLabel>{t('leads.status')}</InputLabel>
-                  <Select
-                    value={formData.status}
-                    label={t('leads.status')}
-                    onChange={(e) => setFormData({ ...formData, status: e.target.value })}
-                  >
-                    {statusOptions.map(status => (
-                      <MenuItem key={status} value={status}>{t(`leads.statuses.${status}`) || status}</MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <FormControl fullWidth>
-                  <InputLabel>{t('leads.priority')}</InputLabel>
-                  <Select
-                    value={formData.priority}
-                    label={t('leads.priority')}
-                    onChange={(e) => setFormData({ ...formData, priority: e.target.value })}
-                  >
-                    {priorityOptions.map(priority => (
-                      <MenuItem key={priority} value={priority}>{t(`leads.priorities.${priority}`) || priority}</MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <FormControl fullWidth>
-                  <InputLabel>{t('leads.leadType')}</InputLabel>
-                  <Select
-                    value={formData.leadType}
-                    label={t('leads.leadType')}
-                    onChange={(e) => setFormData({ ...formData, leadType: e.target.value })}
-                  >
-                    {leadTypeOptions.map(type => (
-                      <MenuItem key={type} value={type}>
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                          <span>{getLeadTypeIcon(type)}</span>
-                          {t(`leads.types.${type}`) || type}
-                        </Box>
-                      </MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
               </Grid>
 
-              {/* Lead Tagging */}
+              {/* Company Information */}
+              <Grid item xs={12}>
+                <Typography variant="subtitle1" fontWeight="600" gutterBottom sx={{ mt: 2 }}>
+                  {t('leads.companyInfo', 'Company Information')}
+                </Typography>
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  fullWidth
+                  label={t('leads.company', 'Company')}
+                  name="company"
+                  value={formData.company}
+                  onChange={handleInputChange}
+                />
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  fullWidth
+                  label={t('leads.position', 'Position')}
+                  name="position"
+                  value={formData.position}
+                  onChange={handleInputChange}
+                />
+              </Grid>
+
+              {/* Lead Details */}
+              <Grid item xs={12}>
+                <Typography variant="subtitle1" fontWeight="600" gutterBottom sx={{ mt: 2 }}>
+                  {t('leads.leadDetails', 'Lead Details')}
+                </Typography>
+              </Grid>
               <Grid item xs={12} sm={6}>
                 <FormControl fullWidth>
-                  <InputLabel>{t('leads.form.tags')}</InputLabel>
+                  <InputLabel>{t('leads.source', 'Source')}</InputLabel>
                   <Select
-                    value={leadTag}
-                    label={t('leads.form.tags')}
-                    onChange={(e) => setLeadTag(e.target.value)}
+                    name="source"
+                    value={formData.source}
+                    label={t('leads.source', 'Source')}
+                    onChange={handleInputChange}
                   >
-                    {leadTagOptions.map(tag => (
-                      <MenuItem key={tag} value={tag}>{t(`leads.tags.${tag}`) || tag}</MenuItem>
+                    {sourceOptions.map(option => (
+                      <MenuItem key={option} value={option}>{t(`leads.sources.${option}`, option)}</MenuItem>
                     ))}
                   </Select>
                 </FormControl>
               </Grid>
               <Grid item xs={12} sm={6}>
                 <FormControl fullWidth>
-                  <InputLabel>{t('leads.assignedTo')}</InputLabel>
+                  <InputLabel>{t('leads.status', 'Status')}</InputLabel>
                   <Select
-                    value={formData.assignedToId}
-                    label={t('leads.assignedTo')}
-                    onChange={(e) => {
-                      const agent = agents.find(u => u.id === e.target.value);
-                      setFormData({
-                        ...formData,
-                        assignedToId: e.target.value,
-                        assignedTo: agent?.name || ''
-                      });
-                    }}
+                    name="status"
+                    value={formData.status}
+                    label={t('leads.status', 'Status')}
+                    onChange={handleInputChange}
                   >
-                    {users.map(user => (
-                      <MenuItem key={user.id} value={user.id}>{t(`mockData.agents.${user.id}.name`) || user.name}</MenuItem>
+                    {statusOptions.map(option => (
+                      <MenuItem key={option} value={option}>{t(`leads.statuses.${option}`, option)}</MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <FormControl fullWidth>
+                  <InputLabel>{t('leads.priority', 'Priority')}</InputLabel>
+                  <Select
+                    name="priority"
+                    value={formData.priority}
+                    label={t('leads.priority', 'Priority')}
+                    onChange={handleInputChange}
+                  >
+                    {priorityOptions.map(option => (
+                      <MenuItem key={option} value={option}>{t(`leads.priorities.${option}`, option)}</MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <FormControl fullWidth>
+                  <InputLabel>{t('leads.leadType', 'Lead Type')}</InputLabel>
+                  <Select
+                    name="leadType"
+                    value={formData.leadType}
+                    label={t('leads.leadType', 'Lead Type')}
+                    onChange={handleInputChange}
+                  >
+                    {leadTypeOptions.map(option => (
+                      <MenuItem key={option} value={option}>{t(`leads.types.${option}`, option)}</MenuItem>
                     ))}
                   </Select>
                 </FormControl>
@@ -2451,21 +2426,21 @@ const LeadManagement = () => {
               <Grid item xs={12} sm={6}>
                 <TextField
                   fullWidth
-                  label={t('leads.form.valueWithCurrency')}
+                  label={t('leads.value', 'Deal Value')}
+                  name="value"
                   type="number"
                   value={formData.value}
-                  onChange={(e) => setFormData({ ...formData, value: parseFloat(e.target.value) || 0 })}
+                  onChange={handleInputChange}
                   InputProps={{
-                    startAdornment: (
-                      <InputAdornment position="start">₹</InputAdornment>
-                    ),
+                    startAdornment: <InputAdornment position="start">₹</InputAdornment>,
                   }}
                 />
               </Grid>
               <Grid item xs={12} sm={6}>
                 <TextField
                   fullWidth
-                  label={t('leads.form.expectedCloseDate')}
+                  label={t('leads.expectedCloseDate', 'Expected Close Date')}
+                  name="expectedCloseDate"
                   type="date"
                   value={formData.expectedCloseDate}
                   onChange={(e) => setFormData({ ...formData, expectedCloseDate: e.target.value })}
@@ -2476,24 +2451,24 @@ const LeadManagement = () => {
               {/* Product and Insurance Fields */}
               <Grid item xs={12} sm={6}>
                 <FormControl fullWidth>
-                  <InputLabel>{t('leads.form.product')}</InputLabel>
+                  <InputLabel>{t('leads.form.product', 'Product')}</InputLabel>
                   <Select
                     value={formData.product}
-                    label={t('leads.form.product')}
+                    label={t('leads.form.product', 'Product')}
                     onChange={(e) => setFormData({ ...formData, product: e.target.value })}
                   >
                     {productOptions.map(product => (
-                      <MenuItem key={product} value={product}>{t(`leads.products.${product}`) || product}</MenuItem>
+                      <MenuItem key={product} value={product}>{t(`leads.products.${product}`, product)}</MenuItem>
                     ))}
                   </Select>
                 </FormControl>
               </Grid>
               <Grid item xs={12} sm={6}>
                 <FormControl fullWidth>
-                  <InputLabel>{t('leads.form.subProduct')}</InputLabel>
+                  <InputLabel>{t('leads.form.subProduct', 'Sub Product')}</InputLabel>
                   <Select
                     value={formData.subProduct}
-                    label={t('leads.form.subProduct')}
+                    label={t('leads.form.subProduct', 'Sub Product')}
                     onChange={(e) => {
                       const newSubProduct = e.target.value;
                       setFormData({
@@ -2506,7 +2481,7 @@ const LeadManagement = () => {
                     }}
                   >
                     {subProductOptions.map(subProduct => (
-                      <MenuItem key={subProduct} value={subProduct}>{t(`leads.subProducts.${subProduct}`) || subProduct}</MenuItem>
+                      <MenuItem key={subProduct} value={subProduct}>{t(`leads.subProducts.${subProduct}`, subProduct)}</MenuItem>
                     ))}
                   </Select>
                 </FormControl>
@@ -2518,7 +2493,7 @@ const LeadManagement = () => {
                   <Grid item xs={12} sm={6}>
                     <TextField
                       fullWidth
-                      label={t('leads.form.vehicleNumber')}
+                      label={t('leads.form.vehicleNumber', 'Vehicle Number')}
                       value={formData.vehicleRegistrationNumber}
                       onChange={(e) => setFormData({ ...formData, vehicleRegistrationNumber: e.target.value })}
                       placeholder="e.g., MH12AB1234"
@@ -2526,14 +2501,14 @@ const LeadManagement = () => {
                   </Grid>
                   <Grid item xs={12} sm={6}>
                     <FormControl fullWidth>
-                      <InputLabel>{t('leads.form.vehicleType')}</InputLabel>
+                      <InputLabel>{t('leads.form.vehicleType', 'Vehicle Type')}</InputLabel>
                       <Select
                         value={formData.vehicleType}
-                        label={t('leads.form.vehicleType')}
+                        label={t('leads.form.vehicleType', 'Vehicle Type')}
                         onChange={(e) => setFormData({ ...formData, vehicleType: e.target.value })}
                       >
                         {vehicleTypeOptions.map(type => (
-                          <MenuItem key={type} value={type}>{t(`leads.vehicleTypes.${type}`) || type}</MenuItem>
+                          <MenuItem key={type} value={type}>{t(`leads.vehicleTypes.${type}`, type)}</MenuItem>
                         ))}
                       </Select>
                     </FormControl>
@@ -2543,29 +2518,29 @@ const LeadManagement = () => {
 
               <Grid item xs={12} sm={6}>
                 <FormControl fullWidth>
-                  <InputLabel>{t('leads.form.preferredLanguage')}</InputLabel>
+                  <InputLabel>{t('leads.form.preferredLanguage', 'Preferred Language')}</InputLabel>
                   <Select
                     value={formData.preferredLanguage || 'English'}
-                    label={t('leads.form.preferredLanguage')}
+                    label={t('leads.form.preferredLanguage', 'Preferred Language')}
                     onChange={(e) => setFormData({ ...formData, preferredLanguage: e.target.value })}
                   >
-                    <MenuItem value="English">{t('common.languages.English')}</MenuItem>
-                    <MenuItem value="Hindi">{t('common.languages.Hindi')}</MenuItem>
-                    <MenuItem value="Bengali">{t('common.languages.Bengali')}</MenuItem>
-                    <MenuItem value="Tamil">{t('common.languages.Tamil')}</MenuItem>
-                    <MenuItem value="Telugu">{t('common.languages.Telugu')}</MenuItem>
-                    <MenuItem value="Marathi">{t('common.languages.Marathi')}</MenuItem>
-                    <MenuItem value="Gujarati">{t('common.languages.Gujarati')}</MenuItem>
-                    <MenuItem value="Kannada">{t('common.languages.Kannada')}</MenuItem>
-                    <MenuItem value="Punjabi">{t('common.languages.Punjabi')}</MenuItem>
-                    <MenuItem value="Urdu">{t('common.languages.Urdu')}</MenuItem>
+                    <MenuItem value="English">{t('common.languages.English', 'English')}</MenuItem>
+                    <MenuItem value="Hindi">{t('common.languages.Hindi', 'Hindi')}</MenuItem>
+                    <MenuItem value="Bengali">{t('common.languages.Bengali', 'Bengali')}</MenuItem>
+                    <MenuItem value="Tamil">{t('common.languages.Tamil', 'Tamil')}</MenuItem>
+                    <MenuItem value="Telugu">{t('common.languages.Telugu', 'Telugu')}</MenuItem>
+                    <MenuItem value="Marathi">{t('common.languages.Marathi', 'Marathi')}</MenuItem>
+                    <MenuItem value="Gujarati">{t('common.languages.Gujarati', 'Gujarati')}</MenuItem>
+                    <MenuItem value="Kannada">{t('common.languages.Kannada', 'Kannada')}</MenuItem>
+                    <MenuItem value="Punjabi">{t('common.languages.Punjabi', 'Punjabi')}</MenuItem>
+                    <MenuItem value="Urdu">{t('common.languages.Urdu', 'Urdu')}</MenuItem>
                   </Select>
                 </FormControl>
               </Grid>
               <Grid item xs={12}>
                 <TextField
                   fullWidth
-                  label={t('leads.form.notes')}
+                  label={t('leads.form.notes', 'Notes')}
                   multiline
                   rows={3}
                   value={formData.notes}
@@ -2582,7 +2557,7 @@ const LeadManagement = () => {
               disabled={loading}
               startIcon={loading ? <CircularProgress size={20} /> : null}
             >
-              {loading ? t('leads.form.saving') : (editingLead ? t('common.update') : t('common.save'))}
+              {loading ? t('leads.form.saving', 'Saving...') : (editingLead ? t('common.update', 'Update') : t('common.save', 'Save'))}
             </Button>
           </DialogActions>
         </Dialog>
@@ -2625,20 +2600,20 @@ const LeadManagement = () => {
         </Dialog>
 
         {/* Quick Update Dialog */}
-        <Dialog open={quickUpdateDialog} onClose={() => setQuickUpdateDialog(false)} maxWidth="sm" fullWidth>
-          <DialogTitle>{t('leads.quickUpdate.title', { name: `${t(`mockData.leads.${selectedLead?.id}.firstName`) || selectedLead?.firstName} ${t(`mockData.leads.${selectedLead?.id}.lastName`) || selectedLead?.lastName}` })}</DialogTitle>
+        <Dialog open={quickUpdateDialog} onClose={() => setQuickUpdateDialog(false)}>
+          <DialogTitle>{t('leads.quickUpdate', 'Quick Update')}</DialogTitle>
           <DialogContent>
             <Grid container spacing={2} sx={{ mt: 1 }}>
               <Grid item xs={12}>
                 <FormControl fullWidth>
-                  <InputLabel>{t('leads.form.status')}</InputLabel>
+                  <InputLabel>{t('leads.status', 'Status')}</InputLabel>
                   <Select
                     value={quickUpdateData.status}
-                    label={t('leads.form.status')}
+                    label={t('leads.status', 'Status')}
                     onChange={(e) => setQuickUpdateData({ ...quickUpdateData, status: e.target.value })}
                   >
                     {statusOptions.map(status => (
-                      <MenuItem key={status} value={status}>{t(`leads.statuses.${status}`) || status}</MenuItem>
+                      <MenuItem key={status} value={status}>{t(`leads.statuses.${status}`, status)}</MenuItem>
                     ))}
                   </Select>
                 </FormControl>
@@ -2646,30 +2621,29 @@ const LeadManagement = () => {
               <Grid item xs={12}>
                 <TextField
                   fullWidth
-                  label={t('leads.form.followUpDate')}
+                  label={t('leads.notes', 'Notes')}
+                  multiline
+                  rows={4}
+                  value={quickUpdateData.notes}
+                  onChange={(e) => setQuickUpdateData({ ...quickUpdateData, notes: e.target.value })}
+                />
+              </Grid>
+              <Grid item xs={12}>
+                <TextField
+                  fullWidth
+                  label={t('leads.followUpDate', 'Follow Up Date')}
                   type="date"
                   value={quickUpdateData.followUpDate}
                   onChange={(e) => setQuickUpdateData({ ...quickUpdateData, followUpDate: e.target.value })}
                   InputLabelProps={{ shrink: true }}
                 />
               </Grid>
-              <Grid item xs={12}>
-                <TextField
-                  fullWidth
-                  multiline
-                  rows={4}
-                  label={t('leads.form.notes')}
-                  value={quickUpdateData.notes}
-                  onChange={(e) => setQuickUpdateData({ ...quickUpdateData, notes: e.target.value })}
-                  placeholder={t('leads.form.notesPlaceholder')}
-                />
-              </Grid>
             </Grid>
           </DialogContent>
           <DialogActions>
-            <Button onClick={() => setQuickUpdateDialog(false)}>{t('common.cancel')}</Button>
-            <Button onClick={handleSaveQuickUpdate} variant="contained">
-              {t('leads.quickUpdate.saveButton')}
+            <Button onClick={() => setQuickUpdateDialog(false)}>{t('common.cancel', 'Cancel')}</Button>
+            <Button onClick={handleSaveQuickUpdate} variant="contained" color="primary">
+              {t('common.save', 'Save')}
             </Button>
           </DialogActions>
         </Dialog>
@@ -2703,11 +2677,11 @@ const LeadManagement = () => {
 
         {/* Data Provider Upload Dialog */}
         <Dialog open={uploadDialog} onClose={() => setUploadDialog(false)} maxWidth="sm" fullWidth>
-          <DialogTitle>{t('leads.dataProvider.title')}</DialogTitle>
+          <DialogTitle>{t('leads.dataProvider.title', 'Data Provider Upload')}</DialogTitle>
           <DialogContent>
             <Box sx={{ mt: 2 }}>
               <Typography variant="body2" color="text.secondary" gutterBottom>
-                {t('leads.dataProvider.content')}
+                {t('leads.dataProvider.content', 'Please select a file to upload data from your provider. Supported formats: Check with admin.')}
               </Typography>
               <Button
                 variant="outlined"
@@ -2716,7 +2690,7 @@ const LeadManagement = () => {
                 startIcon={<CloudUploadIcon />}
                 sx={{ mt: 2, mb: 2 }}
               >
-                {t('leads.dataProvider.chooseFile')}
+                {t('leads.dataProvider.chooseFile', 'Choose File')}
                 <input
                   type="file"
                   hidden
@@ -2726,20 +2700,20 @@ const LeadManagement = () => {
               </Button>
               {uploadFile && (
                 <Typography variant="body2" color="primary" gutterBottom>
-                  {t('leads.dataProvider.selectedFile', { name: uploadFile.name })}
+                  {t('leads.dataProvider.selectedFile', { name: uploadFile.name }) || `Selected File: ${uploadFile.name}`}
                 </Typography>
               )}
               {loading && (
                 <Box sx={{ mt: 2 }}>
                   <LinearProgress variant="determinate" value={uploadProgress} />
                   <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-                    {t('leads.dataProvider.uploading', { progress: uploadProgress })}
+                    {t('leads.dataProvider.uploading', { progress: uploadProgress }) || `Uploading... ${uploadProgress}%`}
                   </Typography>
                 </Box>
               )}
               {uploadSuccess && (
                 <Alert severity="success" sx={{ mt: 2 }}>
-                  ✅ {t('leads.dataProvider.success')}
+                  ✅ {t('leads.dataProvider.success', 'File uploaded successfully!')}
                 </Alert>
               )}
             </Box>
@@ -2751,7 +2725,7 @@ const LeadManagement = () => {
               variant="contained"
               disabled={!uploadFile || loading}
             >
-              {t('leads.dataProvider.uploadButton')}
+              {t('leads.dataProvider.uploadButton', 'Upload')}
             </Button>
           </DialogActions>
         </Dialog>
@@ -2896,7 +2870,7 @@ const LeadManagement = () => {
           <DialogTitle>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
               <GroupIcon color="primary" />
-              <Typography variant="h6" fontWeight="600">{t('leads.agentTable.title')}</Typography>
+              <Typography variant="h6" fontWeight="600">{t('leads.agentTable.title', 'Agent Performance')}</Typography>
             </Box>
           </DialogTitle>
           <DialogContent>
@@ -2904,13 +2878,13 @@ const LeadManagement = () => {
               <Table>
                 <TableHead>
                   <TableRow>
-                    <TableCell>{t('leads.agentTable.agent')}</TableCell>
-                    <TableCell>{t('leads.agentTable.rating')}</TableCell>
-                    <TableCell>{t('leads.agentTable.totalLeads')}</TableCell>
-                    <TableCell>{t('leads.agentTable.closedDeals')}</TableCell>
-                    <TableCell>{t('leads.agentTable.successRate')}</TableCell>
-                    <TableCell>{t('leads.agentTable.languages')}</TableCell>
-                    <TableCell>{t('leads.agentTable.specialization')}</TableCell>
+                    <TableCell>{t('leads.agentTable.agent', 'Agent')}</TableCell>
+                    <TableCell>{t('leads.agentTable.rating', 'Rating')}</TableCell>
+                    <TableCell>{t('leads.agentTable.totalLeads', 'Total Leads')}</TableCell>
+                    <TableCell>{t('leads.agentTable.closedDeals', 'Closed Deals')}</TableCell>
+                    <TableCell>{t('leads.agentTable.successRate', 'Success Rate')}</TableCell>
+                    <TableCell>{t('leads.agentTable.languages', 'Languages')}</TableCell>
+                    <TableCell>{t('leads.agentTable.specialization', 'Specialization')}</TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
@@ -2926,10 +2900,10 @@ const LeadManagement = () => {
                             </Avatar>
                             <Box>
                               <Typography variant="subtitle2" fontWeight="600">
-                                {t(`mockData.agents.${agent.id}.name`) || agent.name}
+                                {t(`mockData.agents.${agent.id}.name`, agent.name)}
                               </Typography>
                               <Typography variant="caption" color="text.secondary">
-                                {t('leads.agentTable.currentWorkload', { count: currentWorkload })}
+                                {t('leads.agentTable.currentWorkload', 'Current Workload: {{count}}', { count: currentWorkload })}
                               </Typography>
                             </Box>
                           </Box>
@@ -2976,7 +2950,7 @@ const LeadManagement = () => {
                             {agent.languages.map(language => (
                               <Chip
                                 key={language}
-                                label={t(`common.languages.${language}`) || language}
+                                label={t(`common.languages.${language}`, language)}
                                 size="small"
                                 variant={language === 'English' ? 'filled' : 'outlined'}
                                 color={language === 'English' ? 'primary' : 'default'}
@@ -2991,7 +2965,7 @@ const LeadManagement = () => {
                         </TableCell>
                         <TableCell>
                           <Typography variant="body2" color="text.secondary">
-                            {t(`mockData.agents.${agent.id}.specialization`) || agent.specialization}
+                            {t(`mockData.agents.${agent.id}.specialization`, agent.specialization)}
                           </Typography>
                         </TableCell>
                       </TableRow>

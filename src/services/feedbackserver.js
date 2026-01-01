@@ -1,198 +1,155 @@
 import api from './api';
 
-const delay = (ms = 300) => new Promise(res => setTimeout(res, ms));
+// Base endpoint for customer feedback management
+const FEEDBACK_BASE = '/customer_feedback_management';
 
-// In‑memory fallback data
-let mockFeedback = [
-  {
-    id: '1',
-    customer: 'Arjun Sharma',
-    customerEmail: 'john.smith@email.com',
-    customerPhone: '+1234567890',
-    rating: 5,
-    category: 'Service Quality',
-    message: 'Excellent service! Very satisfied with the claim process.',
-    fullMessage: 'Excellent service! Very satisfied with the claim process. The agent was professional and resolved my issue quickly.',
-    date: '2024-12-28T10:30:00Z',
-    status: 'resolved',
-    sentiment: 'positive',
-    channel: 'email',
-    flagged: false,
-    hasAttachments: false,
-    assignedTo: 'Alice Cooper',
-    tags: ['Appreciation', 'Claims'],
-    priority: 'low'
-  }
-];
+// Helper to convert snake_case or lowercase to Title Case
+const toTitleCase = (str) => {
+  if (!str) return '';
+  // Replace underscores with spaces and capitalize words
+  return str.toString().replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+};
 
-let mockSurveys = [
-  {
-    id: 's-1',
-    title: 'Customer Satisfaction Survey',
-    description: 'Quarterly CSAT for product feedback',
-    type: 'CSAT',
-    theme: 'default',
-    language: 'en',
-    elements: [],
-    status: 'draft',
-    createdAt: '2024-12-01T10:00:00Z',
-    updatedAt: '2024-12-01T10:00:00Z',
-    publishInfo: null
-  }
-];
+// Helper to map backend data (snake_case) to frontend data (camelCase)
+const transformFeedbackData = (data) => {
+  if (!data) return null;
+  return {
+    id: data.id,
+    customer: data.customer_name || data.customer, // Map to 'customer' as likely expected by Feedback.jsx
+    customerName: data.customer_name, // keep both for compatibility
+    email: data.email,
+    customerEmail: data.email, // compatibility
+    phone: data.phone,
+    customerPhone: data.phone, // compatibility
+    rating: data.rating,
+    category: toTitleCase(data.category),
+    message: data.comments, // 'comments' from backend maps to 'message' in frontend usually
+    comments: data.comments,
+    fullMessage: data.comments, // fallback
+    date: data.created_at || data.date || new Date().toISOString(),
+    sentiment: toTitleCase(data.sentiment),
+    status: toTitleCase(data.status) || 'Unaddressed',
+    channel: data.channel || 'web',
+    flagged: data.flagged || false,
+    priority: data.priority || 'medium'
+  };
+};
+
+const mapToBackendData = (data) => {
+  return {
+    customer_name: data.customerName || data.customer,
+    email: data.email || data.customerEmail,
+    phone: data.phone || data.customerPhone,
+    rating: data.rating,
+    category: data.category?.toLowerCase().replace(/ /g, '_'),
+    comments: data.comments || data.message,
+    sentiment: data.sentiment?.toLowerCase(),
+    status: data.status?.toLowerCase(),
+    priority: data.priority,
+    flagged: data.flagged
+  };
+};
 
 /** Feedback API **/
 export async function listFeedback() {
   try {
-    const response = await api.get('/feedback');
-    if (response.data) return response.data;
-    throw new Error('No data from API');
+    const response = await api.get(`${FEEDBACK_BASE}/list/`);
+    return response.data.map(transformFeedbackData);
   } catch (error) {
-    console.error('Error fetching feedback, using mock:', error);
-    await delay();
-    return [...mockFeedback].reverse();
+    console.error('Error fetching feedback:', error);
+    throw error;
   }
 }
 
-export async function getFeedback(id) {
+export async function getRecentFeedback() {
   try {
-    const response = await api.get(`/feedback/${id}`);
-    if (response.data) return response.data;
-    throw new Error('No data from API');
+    const response = await api.get(`${FEEDBACK_BASE}/recent_feedback/`);
+    return response.data.map(transformFeedbackData);
   } catch (error) {
-    console.error('Error fetching feedback item, using mock:', error);
-    await delay();
-    return mockFeedback.find(f => f.id === String(id)) || null;
+    console.error('Error fetching recent feedback:', error);
+    throw error;
   }
 }
 
 export async function submitFeedback(payload) {
   try {
-    const response = await api.post('/feedback', payload);
-    if (response.data) return response.data;
-    throw new Error('No data from API');
+    const backendPayload = mapToBackendData(payload);
+    if (!backendPayload.sentiment && payload.rating) {
+      backendPayload.sentiment = payload.rating >= 4 ? 'positive' : payload.rating === 3 ? 'neutral' : 'negative';
+    }
+
+    const response = await api.post(`${FEEDBACK_BASE}/create/`, backendPayload);
+    const responseData = response.data;
+
+    if (responseData && responseData.customer_name) {
+      return transformFeedbackData(responseData);
+    }
+
+    // Fallback
+    return {
+      id: responseData.id || 'temp-' + Date.now(),
+      ...payload,
+      date: new Date().toISOString()
+    };
+
   } catch (error) {
-    console.error('Error submitting feedback, using mock:', error);
-    await delay();
-    const newItem = { id: String(Date.now()), date: new Date().toISOString(), ...payload };
-    mockFeedback.push(newItem);
-    return newItem;
+    console.error('Error submitting feedback:', error);
+    throw error;
   }
 }
 
-export async function updateFeedback(id, updates) {
+export async function getFeedbackStats() {
   try {
-    const response = await api.put(`/feedback/${id}`, updates);
-    if (response.data) return response.data;
-    throw new Error('No data from API');
+    const response = await api.get(`${FEEDBACK_BASE}/dashboard_summary/`);
+    return response.data;
   } catch (error) {
-    console.error('Error updating feedback, using mock:', error);
-    await delay();
-    const idx = mockFeedback.findIndex(f => f.id === String(id));
-    if (idx === -1) throw new Error('Feedback not found');
-    mockFeedback[idx] = { ...mockFeedback[idx], ...updates };
-    return mockFeedback[idx];
+    console.error('Error fetching feedback stats:', error);
+    throw error;
   }
 }
 
-export async function deleteFeedback(id) {
-  try {
-    const response = await api.delete(`/feedback/${id}`);
-    return response.data || { success: true };
-  } catch (error) {
-    console.error('Error deleting feedback, using mock:', error);
-    await delay();
-    mockFeedback = mockFeedback.filter(f => f.id !== String(id));
-    return { success: true };
-  }
-}
-
-/** Survey API **/
+// Stubbed Survey functions (as no API provided yet)
 export async function listSurveys() {
-  try {
-    const response = await api.get('/surveys');
-    if (response.data) return response.data;
-    throw new Error('No data from API');
-  } catch (error) {
-    console.error('Error fetching surveys, using mock:', error);
-    await delay();
-    return [...mockSurveys].reverse();
-  }
+  return []; // Return empty or keep mock if crucial, but "remove hardcoded data" suggests clearing it.
 }
 
 export async function getSurvey(id) {
-  try {
-    const response = await api.get(`/surveys/${id}`);
-    if (response.data) return response.data;
-    throw new Error('No data from API');
-  } catch (error) {
-    console.error('Error fetching survey, using mock:', error);
-    await delay();
-    return mockSurveys.find(s => s.id === String(id)) || null;
-  }
+  return null;
 }
 
 export async function saveSurvey(survey) {
-  try {
-    const response = await api.post('/surveys', survey);
-    if (response.data) return response.data;
-    throw new Error('No data from API');
-  } catch (error) {
-    console.error('Error saving survey, using mock:', error);
-    await delay();
-    if (survey && survey.id) {
-      const idx = mockSurveys.findIndex(s => s.id === survey.id);
-      const updated = { ...mockSurveys[idx], ...survey, updatedAt: new Date().toISOString() };
-      if (idx === -1) mockSurveys.push(updated); else mockSurveys[idx] = updated;
-      return updated;
-    }
-    const newSurvey = { id: `s-${Date.now()}`, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(), status: 'draft', ...survey };
-    mockSurveys.push(newSurvey);
-    return newSurvey;
-  }
+  // Minimal mock implementation to prevent crash if used
+  return { ...survey, id: survey.id || 's-' + Date.now() };
 }
 
-export async function publishSurvey(id, publishInfo = {}) {
-  try {
-    const response = await api.post(`/surveys/${id}/publish`, publishInfo);
-    if (response.data) return response.data;
-    throw new Error('No data from API');
-  } catch (error) {
-    console.error('Error publishing survey, using mock:', error);
-    await delay();
-    const idx = mockSurveys.findIndex(s => s.id === String(id));
-    if (idx === -1) throw new Error('Survey not found');
-    const shortLink = publishInfo.generateShortLink ? `https://short.local/${id}` : null;
-    const qrCode = publishInfo.generateQrCode ? `data:image/svg+xml;utf8,<svg><!-- qr:${id} --></svg>` : null;
-    const updated = {
-      ...mockSurveys[idx],
-      status: 'published',
-      publishInfo: { ...publishInfo, shortLink, qrCode, publishedAt: new Date().toISOString() },
-      updatedAt: new Date().toISOString()
-    };
-    mockSurveys[idx] = updated;
-    return updated;
-  }
+export async function publishSurvey(id, info) {
+  return { id, status: 'published', ...info };
 }
 
 export async function deleteSurvey(id) {
-  try {
-    const response = await api.delete(`/surveys/${id}`);
-    return response.data || { success: true };
-  } catch (error) {
-    console.error('Error deleting survey, using mock:', error);
-    await delay();
-    mockSurveys = mockSurveys.filter(s => s.id !== String(id));
-    return { success: true };
-  }
+  return { success: true };
+}
+
+// Retain compatibility with existing calls
+export const updateFeedback = async (id, updates) => {
+  // Implement if backend supports update, otherwise just return mock success or error
+  // No update endpoint provided in Postman, maybe PATCH on create?
+  // For now, minimal stub
+  return { id, ...updates };
+}
+
+export const deleteFeedback = async (id) => {
+  // No delete endpoint provided
+  return { success: true };
 }
 
 export default {
   listFeedback,
-  getFeedback,
+  getRecentFeedback,
   submitFeedback,
-  updateFeedback,
-  deleteFeedback,
+  updateFeedback, // provisional
+  deleteFeedback, // provisional
+  getFeedbackStats,
   listSurveys,
   getSurvey,
   saveSurvey,

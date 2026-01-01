@@ -1,414 +1,144 @@
 import api from './api.js';
 
+const BASE_PATH = '/attendance_management';
+
 const attendanceService = {
-  // Get attendance records
-  getAttendanceRecords: async (filters = {}) => {
+  /**
+   * Create attendance record
+   * POST /api/attendance_management/create/
+   */
+  create: async (data) => {
     try {
-      const response = await api.get('/attendance/records', { params: filters });
+      const response = await api.post(`${BASE_PATH}/create/`, data);
       return response.data;
     } catch (error) {
-      console.error('Error fetching attendance records:', error);
+      console.error('Error creating attendance:', error);
       throw error;
     }
   },
 
-  // Get attendance record by ID
-  getAttendanceRecord: async (recordId) => {
+  /**
+   * List attendance history
+   * GET /api/attendance_management/list/
+   */
+  list: async (filters = {}) => {
     try {
-      const response = await api.get(`/attendance/records/${recordId}`);
+      const response = await api.get(`${BASE_PATH}/list/`, { params: filters });
       return response.data;
     } catch (error) {
-      console.error('Error fetching attendance record:', error);
+      console.error('Error fetching attendance list:', error);
       throw error;
     }
   },
 
-  // Create attendance record
-  createAttendanceRecord: async (attendanceData) => {
+  /**
+   * Search attendance
+   * GET /api/attendance_management/search/
+   */
+  search: async (filters = {}) => {
     try {
-      const response = await api.post('/attendance/records', attendanceData);
+      const response = await api.get(`${BASE_PATH}/search/`, { params: filters });
       return response.data;
     } catch (error) {
-      console.error('Error creating attendance record:', error);
+      console.error('Error searching attendance:', error);
       throw error;
     }
   },
 
-  // Update attendance record
-  updateAttendanceRecord: async (recordId, attendanceData) => {
+  /**
+   * Update attendance record
+   * PUT /api/attendance_management/update/{id}/
+   */
+  update: async (id, data) => {
     try {
-      const response = await api.put(`/attendance/records/${recordId}`, attendanceData);
+      const response = await api.put(`${BASE_PATH}/update/${id}/`, data);
       return response.data;
     } catch (error) {
-      console.error('Error updating attendance record:', error);
+      console.error(`Error updating attendance for ID ${id}:`, error);
       throw error;
     }
   },
 
-  // Delete attendance record
-  deleteAttendanceRecord: async (recordId) => {
+  /**
+   * Delete attendance record
+   * DELETE /api/attendance_management/delete/{id}/
+   */
+  delete: async (id, data = {}) => {
     try {
-      const response = await api.delete(`/attendance/records/${recordId}`);
+      const response = await api.delete(`${BASE_PATH}/delete/${id}/`, { data });
       return response.data;
     } catch (error) {
-      console.error('Error deleting attendance record:', error);
+      console.error(`Error deleting attendance for ID ${id}:`, error);
       throw error;
     }
   },
 
-  // Check in employee
-  checkIn: async (employeeId, checkInData) => {
+  /**
+   * Get dashboard summary
+   * GET /api/attendance_management/dashboard_summary/
+   */
+  getDashboardSummary: async (filters = {}) => {
     try {
-      const response = await api.post(`/attendance/check-in/${employeeId}`, checkInData);
+      const response = await api.get(`${BASE_PATH}/dashboard_summary/`, { params: filters });
       return response.data;
     } catch (error) {
-      console.error('Error checking in employee:', error);
+      console.error('Error fetching dashboard summary:', error);
       throw error;
     }
   },
 
-  // Check out employee
-  checkOut: async (employeeId, checkOutData) => {
+  /**
+   * Filter attendance
+   * GET /api/attendance_management/filter/
+   */
+  filter: async (filters = {}) => {
     try {
-      const response = await api.post(`/attendance/check-out/${employeeId}`, checkOutData);
+      const response = await api.get(`${BASE_PATH}/filter/`, { params: filters });
       return response.data;
     } catch (error) {
-      console.error('Error checking out employee:', error);
+      console.error('Error filtering attendance:', error);
       throw error;
     }
   },
 
-  // Get employee attendance summary
-  getEmployeeAttendanceSummary: async (employeeId, dateRange) => {
+  /**
+   * Compute hours
+   * POST /api/attendance_management/compute_hours/
+   */
+  computeHours: async (data) => {
     try {
-      const response = await api.get(`/attendance/employees/${employeeId}/summary`, {
-        params: dateRange
-      });
+      const response = await api.post(`${BASE_PATH}/compute_hours/`, data);
       return response.data;
     } catch (error) {
-      console.error('Error fetching employee attendance summary:', error);
+      console.error('Error computing hours:', error);
       throw error;
     }
   },
 
-  // Get attendance statistics
-  getAttendanceStatistics: async (dateRange) => {
+  /**
+   * Get today's attendance
+   * GET /api/attendance_management/today_attendance/
+   */
+  getTodayAttendance: async () => {
     try {
-      const response = await api.get('/attendance/statistics', {
-        params: dateRange
-      });
+      const response = await api.get(`${BASE_PATH}/today_attendance/`);
       return response.data;
     } catch (error) {
-      console.error('Error fetching attendance statistics:', error);
+      console.error('Error fetching today\'s attendance:', error);
       throw error;
     }
   },
 
-  // Get attendance reports
-  getAttendanceReports: async (reportType, filters = {}) => {
+  /**
+   * Get reports data
+   * GET /api/attendance_management/reports_data/
+   */
+  getReportsData: async () => {
     try {
-      const response = await api.get(`/attendance/reports/${reportType}`, {
-        params: filters
-      });
+      const response = await api.get(`${BASE_PATH}/reports_data/`);
       return response.data;
     } catch (error) {
-      console.error('Error fetching attendance reports:', error);
-      throw error;
-    }
-  },
-
-  // Bulk update attendance
-  bulkUpdateAttendance: async (attendanceUpdates) => {
-    try {
-      const response = await api.post('/attendance/bulk-update', attendanceUpdates);
-      return response.data;
-    } catch (error) {
-      console.error('Error bulk updating attendance:', error);
-      throw error;
-    }
-  },
-
-  // Get attendance calendar
-  getAttendanceCalendar: async (employeeId, month, year) => {
-    try {
-      const response = await api.get(`/attendance/calendar/${employeeId}`, {
-        params: { month, year }
-      });
-      return response.data;
-    } catch (error) {
-      console.error('Error fetching attendance calendar:', error);
-      throw error;
-    }
-  },
-
-  // Get overtime records
-  getOvertimeRecords: async (filters = {}) => {
-    try {
-      const response = await api.get('/attendance/overtime', {
-        params: filters
-      });
-      return response.data;
-    } catch (error) {
-      console.error('Error fetching overtime records:', error);
-      throw error;
-    }
-  },
-
-  // Approve overtime
-  approveOvertime: async (overtimeId, approvalData) => {
-    try {
-      const response = await api.post(`/attendance/overtime/${overtimeId}/approve`, approvalData);
-      return response.data;
-    } catch (error) {
-      console.error('Error approving overtime:', error);
-      throw error;
-    }
-  },
-
-  // Get leave requests
-  getLeaveRequests: async (filters = {}) => {
-    try {
-      const response = await api.get('/attendance/leave-requests', {
-        params: filters
-      });
-      return response.data;
-    } catch (error) {
-      console.error('Error fetching leave requests:', error);
-      throw error;
-    }
-  },
-
-  // Submit leave request
-  submitLeaveRequest: async (leaveRequestData) => {
-    try {
-      const response = await api.post('/attendance/leave-requests', leaveRequestData);
-      return response.data;
-    } catch (error) {
-      console.error('Error submitting leave request:', error);
-      throw error;
-    }
-  },
-
-  // Approve leave request
-  approveLeaveRequest: async (requestId, approvalData) => {
-    try {
-      const response = await api.post(`/attendance/leave-requests/${requestId}/approve`, approvalData);
-      return response.data;
-    } catch (error) {
-      console.error('Error approving leave request:', error);
-      throw error;
-    }
-  },
-
-  // --- Leave management APIs (with api.js and fallback) ---
-  // In-memory fallback storage
-  _mockLeaves: [
-    { id: '1', cscName: 'Priya Patel', fromDate: '2025-02-01', toDate: '2025-02-03', leaveType: 'Casual', status: 'Approved', reason: 'Personal work' },
-    { id: '2', cscName: 'Amit Kumar', fromDate: '2025-02-15', toDate: '2025-02-15', leaveType: 'Sick', status: 'Approved', reason: 'Medical appointment' }
-  ],
-
-  listLeaves: async (filters = {}) => {
-    try {
-      const response = await api.get('/attendance/leaves', { params: filters });
-      if (response.data && Array.isArray(response.data)) {
-        return response.data;
-      }
-      throw new Error('No data from API');
-    } catch (error) {
-      console.error('Error fetching leaves, using mock:', error);
-      const delay = (ms = 300) => new Promise(res => setTimeout(res, ms));
-      await delay();
-      return [...attendanceService._mockLeaves].reverse();
-    }
-  },
-
-  getLeave: async (id) => {
-    try {
-      const response = await api.get(`/attendance/leaves/${id}`);
-      if (response.data) {
-        return response.data;
-      }
-      throw new Error('No data from API');
-    } catch (error) {
-      console.error('Error fetching leave, using mock:', error);
-      const delay = (ms = 200) => new Promise(res => setTimeout(res, ms));
-      await delay();
-      return attendanceService._mockLeaves.find(l => l.id === String(id)) || null;
-    }
-  },
-
-  requestLeave: async (leaveData) => {
-    try {
-      const response = await api.post('/attendance/leaves', leaveData);
-      if (response.data) {
-        return response.data;
-      }
-      throw new Error('No data from API');
-    } catch (error) {
-      console.error('Error requesting leave, using mock:', error);
-      const delay = (ms = 300) => new Promise(res => setTimeout(res, ms));
-      await delay();
-      const id = String(Date.now());
-      const item = {
-        id,
-        cscName: leaveData.cscName || 'Current User',
-        fromDate: leaveData.fromDate,
-        toDate: leaveData.toDate,
-        leaveType: leaveData.leaveType,
-        status: 'Pending',
-        reason: leaveData.reason || ''
-      };
-      attendanceService._mockLeaves.push(item);
-      return item;
-    }
-  },
-
-  updateLeave: async (id, updates) => {
-    try {
-      const response = await api.put(`/attendance/leaves/${id}`, updates);
-      if (response.data) {
-        return response.data;
-      }
-      throw new Error('No data from API');
-    } catch (error) {
-      console.error('Error updating leave, using mock:', error);
-      const delay = (ms = 200) => new Promise(res => setTimeout(res, ms));
-      await delay();
-      const idx = attendanceService._mockLeaves.findIndex(l => l.id === String(id));
-      if (idx === -1) throw new Error('Leave not found');
-      attendanceService._mockLeaves[idx] = { ...attendanceService._mockLeaves[idx], ...updates };
-      return attendanceService._mockLeaves[idx];
-    }
-  },
-
-  cancelLeave: async (id) => {
-    return attendanceService.updateLeave(id, { status: 'Cancelled' });
-  },
-
-  approveLeave: async (id, approver) => {
-    return attendanceService.updateLeave(id, { status: 'Approved', approvedBy: approver || 'admin', approvedAt: new Date().toISOString() });
-  },
-
-  rejectLeave: async (id, reason) => {
-    return attendanceService.updateLeave(id, { status: 'Rejected', rejectedReason: reason || '', rejectedAt: new Date().toISOString() });
-  },
-
-  // Get attendance alerts
-  getAttendanceAlerts: async () => {
-    try {
-      const response = await api.get('/attendance/alerts');
-      return response.data;
-    } catch (error) {
-      console.error('Error fetching attendance alerts:', error);
-      throw error;
-    }
-  },
-
-  // Mark attendance alert as read
-  markAttendanceAlertAsRead: async (alertId) => {
-    try {
-      const response = await api.put(`/attendance/alerts/${alertId}/read`);
-      return response.data;
-    } catch (error) {
-      console.error('Error marking attendance alert as read:', error);
-      throw error;
-    }
-  },
-
-  // Export attendance data
-  exportAttendanceData: async (format = 'csv', filters = {}) => {
-    try {
-      const response = await api.post('/attendance/export', {
-        format,
-        filters
-      });
-      return response.data;
-    } catch (error) {
-      console.error('Error exporting attendance data:', error);
-      throw error;
-    }
-  },
-
-  // Import attendance data
-  importAttendanceData: async (fileData) => {
-    try {
-      const formData = new FormData();
-      formData.append('file', fileData);
-
-      const response = await api.post('/attendance/import', formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data'
-        }
-      });
-      return response.data;
-    } catch (error) {
-      console.error('Error importing attendance data:', error);
-      throw error;
-    }
-  },
-
-  // Get attendance settings
-  getAttendanceSettings: async () => {
-    try {
-      const response = await api.get('/attendance/settings');
-      return response.data;
-    } catch (error) {
-      console.error('Error fetching attendance settings:', error);
-      throw error;
-    }
-  },
-
-  // Update attendance settings
-  updateAttendanceSettings: async (settingsData) => {
-    try {
-      const response = await api.put('/attendance/settings', settingsData);
-      return response.data;
-    } catch (error) {
-      console.error('Error updating attendance settings:', error);
-      throw error;
-    }
-  },
-
-  // Get work schedules
-  getWorkSchedules: async () => {
-    try {
-      const response = await api.get('/attendance/work-schedules');
-      return response.data;
-    } catch (error) {
-      console.error('Error fetching work schedules:', error);
-      throw error;
-    }
-  },
-
-  // Create work schedule
-  createWorkSchedule: async (scheduleData) => {
-    try {
-      const response = await api.post('/attendance/work-schedules', scheduleData);
-      return response.data;
-    } catch (error) {
-      console.error('Error creating work schedule:', error);
-      throw error;
-    }
-  },
-
-  // Update work schedule
-  updateWorkSchedule: async (scheduleId, scheduleData) => {
-    try {
-      const response = await api.put(`/attendance/work-schedules/${scheduleId}`, scheduleData);
-      return response.data;
-    } catch (error) {
-      console.error('Error updating work schedule:', error);
-      throw error;
-    }
-  },
-
-  // Delete work schedule
-  deleteWorkSchedule: async (scheduleId) => {
-    try {
-      const response = await api.delete(`/attendance/work-schedules/${scheduleId}`);
-      return response.data;
-    } catch (error) {
-      console.error('Error deleting work schedule:', error);
+      console.error('Error fetching reports data:', error);
       throw error;
     }
   }

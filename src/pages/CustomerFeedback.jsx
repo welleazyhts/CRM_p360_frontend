@@ -11,10 +11,17 @@ import {
 } from '@mui/icons-material';
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 
+import {
+  listFeedback,
+  submitFeedback,
+  getFeedbackStats
+} from '../services/feedbackserver';
+
 const CustomerFeedback = () => {
   const theme = useTheme();
   const [feedbacks, setFeedbacks] = useState([]);
   const [feedbackDialogOpen, setFeedbackDialogOpen] = useState(false);
+  const [stats, setStats] = useState(null);
 
   const [formData, setFormData] = useState({
     customerName: '',
@@ -26,63 +33,26 @@ const CustomerFeedback = () => {
 
   useEffect(() => {
     loadFeedbacks();
+    loadStats();
   }, []);
 
-  const loadFeedbacks = () => {
-    const mockFeedbacks = [
-      {
-        id: 1,
-        customerName: 'Rajesh Kumar',
-        email: 'rajesh@example.com',
-        rating: 5,
-        category: 'Service Quality',
-        comments: 'Excellent service! Very satisfied with the prompt response.',
-        date: '2025-01-12',
-        sentiment: 'Positive'
-      },
-      {
-        id: 2,
-        customerName: 'Anita Desai',
-        email: 'anita@example.com',
-        rating: 4,
-        category: 'Product Quality',
-        comments: 'Good product but could be improved in some areas.',
-        date: '2025-01-11',
-        sentiment: 'Positive'
-      },
-      {
-        id: 3,
-        customerName: 'Vikram Singh',
-        email: 'vikram@example.com',
-        rating: 3,
-        category: 'Claims Process',
-        comments: 'Average experience. Claims process took longer than expected.',
-        date: '2025-01-10',
-        sentiment: 'Neutral'
-      },
-      {
-        id: 4,
-        customerName: 'Priya Sharma',
-        email: 'priya@example.com',
-        rating: 2,
-        category: 'Customer Support',
-        comments: 'Not satisfied with the support provided.',
-        date: '2025-01-09',
-        sentiment: 'Negative'
-      },
-      {
-        id: 5,
-        customerName: 'Amit Patel',
-        email: 'amit@example.com',
-        rating: 5,
-        category: 'Overall Experience',
-        comments: 'Outstanding! Will definitely recommend to others.',
-        date: '2025-01-08',
-        sentiment: 'Positive'
-      }
-    ];
-    setFeedbacks(mockFeedbacks);
+  const loadFeedbacks = async () => {
+    try {
+      const data = await listFeedback();
+      setFeedbacks(data);
+    } catch (error) {
+      console.error('Failed to load feedbacks:', error);
+    }
   };
+
+  const loadStats = async () => {
+    try {
+      const statsData = await getFeedbackStats();
+      setStats(statsData);
+    } catch (error) {
+      console.error("Failed to load stats", error);
+    }
+  }
 
   const handleAddFeedback = () => {
     setFormData({
@@ -95,15 +65,15 @@ const CustomerFeedback = () => {
     setFeedbackDialogOpen(true);
   };
 
-  const handleSaveFeedback = () => {
-    const newFeedback = {
-      ...formData,
-      id: feedbacks.length + 1,
-      date: new Date().toISOString().split('T')[0],
-      sentiment: formData.rating >= 4 ? 'Positive' : formData.rating === 3 ? 'Neutral' : 'Negative'
-    };
-    setFeedbacks([...feedbacks, newFeedback]);
-    setFeedbackDialogOpen(false);
+  const handleSaveFeedback = async () => {
+    try {
+      const newFeedback = await submitFeedback(formData);
+      setFeedbacks([newFeedback, ...feedbacks]);
+      setFeedbackDialogOpen(false);
+      loadStats(); // Refresh stats
+    } catch (error) {
+      console.error('Failed to save feedback:', error);
+    }
   };
 
   const averageRating = feedbacks.reduce((sum, f) => sum + f.rating, 0) / feedbacks.length || 0;

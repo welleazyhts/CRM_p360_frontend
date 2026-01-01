@@ -52,11 +52,13 @@ import {
   Tablet as TabletIcon,
   AccessTime as AccessTimeIcon
 } from '@mui/icons-material';
+import attendanceService from '../services/attendanceService';
 
 
 const AttendanceManagement = () => {
   const theme = useTheme();
-  const { attendanceData, setAttendanceData } = useAttendance();
+  // Destructure refreshAttendance from context
+  const { attendanceData, setAttendanceData, refreshAttendance } = useAttendance();
   const [filteredData, setFilteredData] = useState(attendanceData);
   const [selectedTab, setSelectedTab] = useState(0);
   const [searchTerm, setSearchTerm] = useState('');
@@ -88,7 +90,7 @@ const AttendanceManagement = () => {
     notes: ''
   });
 
-  // Mock employees
+  // Mock employees - In a real app, fetch from Employee Service
   const employees = [
     { id: 'EMP001', name: 'John Smith', department: 'Sales', position: 'Sales Executive' },
     { id: 'EMP002', name: 'Sarah Johnson', department: 'Marketing', position: 'Marketing Manager' },
@@ -109,9 +111,9 @@ const AttendanceManagement = () => {
     // Search filter
     if (searchTerm) {
       filtered = filtered.filter(record =>
-        record.employeeName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        record.employeeId.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        record.department.toLowerCase().includes(searchTerm.toLowerCase())
+        record.employeeName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        record.employeeId?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        record.department?.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
 
@@ -157,14 +159,26 @@ const AttendanceManagement = () => {
   const currentData = tabData.slice(startIndex, startIndex + itemsPerPage);
 
   // Calculate attendance statistics
-  const attendanceStats = {
-    totalEmployees: employees.length,
-    presentToday: attendanceData.filter(record => record.status === 'Present' && record.date === today).length,
-    absentToday: attendanceData.filter(record => record.status === 'Absent' && record.date === today).length,
-    lateToday: attendanceData.filter(record => record.isLate && record.date === today).length,
-    averageHours: attendanceData.reduce((sum, record) => sum + record.totalHours, 0) / attendanceData.length || 0,
-    totalOvertime: attendanceData.reduce((sum, record) => sum + record.overtimeHours, 0)
-  };
+  const attendanceStats = React.useMemo(() => {
+    const totalEmployees = employees.length;
+    const presentToday = attendanceData.filter(record => record.status === 'Present' && record.date === today).length;
+    const absentToday = attendanceData.filter(record => record.status === 'Absent' && record.date === today).length;
+    const lateToday = attendanceData.filter(record => record.isLate && record.date === today).length;
+
+    const totalHours = attendanceData.reduce((sum, record) => sum + (record.totalHours || 0), 0);
+    const averageHours = attendanceData.length > 0 ? totalHours / attendanceData.length : 0;
+
+    const totalOvertime = attendanceData.reduce((sum, record) => sum + (record.overtimeHours || 0), 0);
+
+    return {
+      totalEmployees,
+      presentToday,
+      absentToday,
+      lateToday,
+      averageHours,
+      totalOvertime
+    };
+  }, [attendanceData, employees.length, today]);
 
   // Handle dialog operations
   const handleOpenDialog = (attendance = null, isView = false) => {
@@ -175,7 +189,7 @@ const AttendanceManagement = () => {
         employeeId: attendance.employeeId,
         employeeName: attendance.employeeName,
         department: attendance.department,
-        position: attendance.position,
+        position: attendance.position || '',
         date: attendance.date,
         checkIn: attendance.checkIn || '',
         checkOut: attendance.checkOut || '',
@@ -212,43 +226,53 @@ const AttendanceManagement = () => {
     setEditingAttendance(null);
   };
 
-  const handleSaveAttendance = () => {
+  const handleSaveAttendance = async () => {
     setLoading(true);
 
-    setTimeout(() => {
+    try {
+      // Prepare payload in snake_case
+      const payload = {
+        employee_id: formData.employeeId,
+        date: formData.date,
+        check_in: formData.checkIn,
+        check_out: formData.checkOut,
+        break_start: formData.breakStart,
+        break_end: formData.breakEnd,
+        status: formData.status.toLowerCase(), // API likely expects lowercase?
+        location: formData.location.toLowerCase(),
+        device: formData.device.toLowerCase(),
+        notes: formData.notes
+      };
+
       if (editingAttendance) {
         // Update existing attendance
-        const updatedData = attendanceData.map(record =>
-          record.id === editingAttendance.id
-            ? {
-              ...record,
-              ...formData,
-              totalHours: calculateTotalHours(formData.checkIn, formData.checkOut, formData.breakStart, formData.breakEnd),
-              updatedAt: new Date().toISOString()
-            }
-            : record
-        );
-        setAttendanceData(updatedData);
+        console.log('Updating Attendance:', editingAttendance); // Debugging log
+        if (!editingAttendance.id) {
+          console.error('Missing ID in editingAttendance:', editingAttendance);
+          setSnackbar({ open: true, message: 'Error: Cannot update record without ID', severity: 'error' });
+          return;
+        }
+        // We use the record ID (primary key) for updates
+        await attendanceService.update(editingAttendance.id, payload);
         setSnackbar({ open: true, message: 'Attendance updated successfully!', severity: 'success' });
       } else {
         // Add new attendance
-        const newAttendance = {
-          id: Math.max(...attendanceData.map(r => r.id)) + 1,
-          ...formData,
-          totalHours: calculateTotalHours(formData.checkIn, formData.checkOut, formData.breakStart, formData.breakEnd),
-          overtimeHours: 0,
-          isLate: false,
-          isEarlyLeave: false,
-          ipAddress: '192.168.1.100',
-          createdAt: new Date().toISOString()
-        };
-        setAttendanceData([...attendanceData, newAttendance]);
+        await attendanceService.create(payload);
         setSnackbar({ open: true, message: 'Attendance record added successfully!', severity: 'success' });
       }
 
-      setLoading(false);
+      // Refresh data from server
+      if (refreshAttendance) {
+        await refreshAttendance();
+      }
+
       handleCloseDialog();
-    }, 1000);
+    } catch (error) {
+      console.error('Error saving attendance:', error);
+      setSnackbar({ open: true, message: 'Failed to save attendance: ' + error.message, severity: 'error' });
+    } finally {
+      setLoading(false);
+    }
   };
 
   // Calculate total hours

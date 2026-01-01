@@ -7,6 +7,7 @@ import {
   calculateAgentWorkload,
   getAvailableAgents
 } from '../services/autoAssignmentService';
+import settingsService from '../services/autoAssignmentSettingsService';
 
 const AutoAssignmentContext = createContext();
 
@@ -20,92 +21,34 @@ export const useAutoAssignment = () => {
 
 export const AutoAssignmentProvider = ({ children }) => {
   // Configuration state
-  const [config, setConfig] = useState(() => {
-    const saved = localStorage.getItem('autoAssignmentConfig');
-    return saved ? JSON.parse(saved) : {
-      enabled: true,
-      defaultStrategy: ASSIGNMENT_STRATEGIES.HYBRID,
-      maxCapacity: 50,
-      considerSLA: true,
-      considerScore: true,
-      autoAssignOnCreate: true,
-      reassignmentRules: {
-        enabled: false,
-        onOverload: true,
-        onInactivity: true,
-        inactivityThreshold: 24 // hours
-      },
-      strategies: {
-        lead: ASSIGNMENT_STRATEGIES.HYBRID,
-        case: ASSIGNMENT_STRATEGIES.LOAD_BASED,
-        task: ASSIGNMENT_STRATEGIES.ROUND_ROBIN,
-        email: ASSIGNMENT_STRATEGIES.LOAD_BASED,
-        claim: ASSIGNMENT_STRATEGIES.SKILL_BASED
-      }
-    };
+  const [config, setConfig] = useState({
+    enabled: true,
+    defaultStrategy: ASSIGNMENT_STRATEGIES.HYBRID,
+    maxCapacity: 50,
+    considerSLA: true,
+    considerScore: true,
+    autoAssignOnCreate: true,
+    reassignmentRules: {
+      enabled: false,
+      onOverload: true,
+      onInactivity: true,
+      inactivityThreshold: 24 // hours
+    },
+    strategies: {
+      lead: ASSIGNMENT_STRATEGIES.HYBRID,
+      case: ASSIGNMENT_STRATEGIES.LOAD_BASED,
+      task: ASSIGNMENT_STRATEGIES.ROUND_ROBIN,
+      email: ASSIGNMENT_STRATEGIES.LOAD_BASED,
+      claim: ASSIGNMENT_STRATEGIES.SKILL_BASED
+    }
   });
 
-  // Agents state
-  const [agents, setAgents] = useState(() => {
-    const saved = localStorage.getItem('autoAssignmentAgents');
-    return saved ? JSON.parse(saved) : [
-      {
-        id: 'priya.patel',
-        name: 'Priya Patel',
-        email: 'priya.patel@company.com',
-        active: true,
-        status: 'active',
-        skills: [AGENT_SKILLS.MOTOR_INSURANCE, AGENT_SKILLS.RENEWAL, AGENT_SKILLS.RETAIL],
-        territory: ['Mumbai', 'Maharashtra'],
-        performanceTier: 'top',
-        maxCapacity: 50
-      },
-      {
-        id: 'amit.kumar',
-        name: 'Amit Kumar',
-        email: 'amit.kumar@company.com',
-        active: true,
-        status: 'active',
-        skills: [AGENT_SKILLS.HEALTH_INSURANCE, AGENT_SKILLS.LIFE_INSURANCE, AGENT_SKILLS.CORPORATE],
-        territory: ['Delhi', 'NCR'],
-        performanceTier: 'high',
-        maxCapacity: 45
-      },
-      {
-        id: 'sneha.gupta',
-        name: 'Sneha Gupta',
-        email: 'sneha.gupta@company.com',
-        active: true,
-        status: 'active',
-        skills: [AGENT_SKILLS.PROPERTY_INSURANCE, AGENT_SKILLS.HNI, AGENT_SKILLS.NEW_BUSINESS],
-        territory: ['Bangalore', 'Karnataka'],
-        performanceTier: 'high',
-        maxCapacity: 40
-      },
-      {
-        id: 'rajesh.kumar',
-        name: 'Rajesh Kumar',
-        email: 'rajesh.kumar@company.com',
-        active: true,
-        status: 'active',
-        skills: [AGENT_SKILLS.MOTOR_INSURANCE, AGENT_SKILLS.HEALTH_INSURANCE, AGENT_SKILLS.RETAIL],
-        territory: ['Chennai', 'Tamil Nadu'],
-        performanceTier: 'average',
-        maxCapacity: 50
-      },
-      {
-        id: 'deepak.sharma',
-        name: 'Deepak Sharma',
-        email: 'deepak.sharma@company.com',
-        active: true,
-        status: 'active',
-        skills: [AGENT_SKILLS.CLAIMS, AGENT_SKILLS.RENEWAL],
-        territory: ['Pune', 'Maharashtra'],
-        performanceTier: 'average',
-        maxCapacity: 45
-      }
-    ];
-  });
+  // Agents state - will be loaded from API
+  const [agents, setAgents] = useState([]);
+
+  // Loading state
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   // Assignment history
   const [assignmentHistory, setAssignmentHistory] = useState(() => {
@@ -115,6 +58,35 @@ export const AutoAssignmentProvider = ({ children }) => {
 
   // Last assigned index for round-robin
   const [lastAssignedIndex, setLastAssignedIndex] = useState(0);
+
+  // Load settings and agents from backend on mount
+  useEffect(() => {
+    loadSettingsFromBackend();
+  }, []);
+
+  const loadSettingsFromBackend = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      // For now, we'll use the default config since there's no GET endpoint for settings
+      // The agents will be managed through the API
+      // If backend returns settings in the future, we can fetch them here
+
+      // Note: The backend doesn't have a GET endpoint for agents list yet
+      // We'll start with empty array and agents will be added through the UI
+      setAgents([]);
+
+    } catch (err) {
+      console.error('Error loading settings from backend:', err);
+      setError(err.message);
+      // Keep default config on error
+    } finally {
+      setLoading(false);
+    }
+  };
+
+
 
   // Save configuration
   useEffect(() => {
@@ -215,52 +187,120 @@ export const AutoAssignmentProvider = ({ children }) => {
   /**
    * Update configuration
    */
-  const updateConfig = useCallback((updates) => {
-    setConfig(prev => ({ ...prev, ...updates }));
-  }, []);
+  const updateConfig = useCallback(async (updates) => {
+    try {
+      const newConfig = { ...config, ...updates };
+      // Update local state immediately
+      setConfig(newConfig);
+      // Call backend API
+      await settingsService.updateSettings(newConfig);
+    } catch (error) {
+      console.error('Error updating config:', error);
+      // Could revert state here if needed
+      throw error;
+    }
+  }, [config]);
 
   /**
    * Update strategy for entity type
    */
-  const updateStrategyForType = useCallback((entityType, strategy) => {
-    setConfig(prev => ({
-      ...prev,
-      strategies: {
-        ...prev.strategies,
+  const updateStrategyForType = useCallback(async (entityType, strategy) => {
+    try {
+      const newStrategies = {
+        ...config.strategies,
         [entityType]: strategy
-      }
-    }));
-  }, []);
+      };
+
+      // Update local state
+      setConfig(prev => ({
+        ...prev,
+        strategies: newStrategies
+      }));
+
+      // Call backend API
+      await settingsService.updateStrategies([
+        { entity_type: entityType, strategy }
+      ]);
+    } catch (error) {
+      console.error('Error updating strategy:', error);
+      throw error;
+    }
+  }, [config]);
 
   /**
    * Add or update agent
    */
-  const upsertAgent = useCallback((agent) => {
-    setAgents(prev => {
-      const index = prev.findIndex(a => a.id === agent.id);
-      if (index >= 0) {
-        const updated = [...prev];
-        updated[index] = { ...updated[index], ...agent };
-        return updated;
+  const upsertAgent = useCallback(async (agent) => {
+    try {
+      const isUpdate = agents.some(a => a.id === agent.id);
+
+      const agentData = {
+        agent_id: agent.id,
+        name: agent.name,
+        email: agent.email,
+        skills: agent.skills || [],
+        territory: agent.territory || [],
+        performance_tier: agent.performanceTier || 'average',
+        max_capacity: agent.maxCapacity || 50
+      };
+
+      if (isUpdate) {
+        // Update existing agent
+        // Exclude ID fields for update to avoid redundancy/conflicts
+        const { id, agent_id, ...updateData } = agentData;
+
+        await settingsService.updateAgent(agent.id, updateData);
+
+        // Update local state
+        setAgents(prev => prev.map(a => a.id === agent.id ? { ...a, ...agent } : a));
+      } else {
+        // Create new agent
+        await settingsService.createAgent(agentData);
+
+        // Add to local state
+        setAgents(prev => [...prev, agent]);
       }
-      return [...prev, agent];
-    });
-  }, []);
+    } catch (error) {
+      console.error('Error upserting agent:', error);
+      alert('Failed to save agent: ' + error.message);
+      throw error;
+    }
+  }, [agents]);
 
   /**
    * Remove agent
    */
-  const removeAgent = useCallback((agentId) => {
-    setAgents(prev => prev.filter(a => a.id !== agentId));
+  const removeAgent = useCallback(async (agentId) => {
+    try {
+      // Call backend API
+      await settingsService.deleteAgent(agentId);
+
+      // Update local state
+      setAgents(prev => prev.filter(a => a.id !== agentId));
+    } catch (error) {
+      console.error('Error removing agent:', error);
+      alert('Failed to delete agent: ' + error.message);
+      throw error;
+    }
   }, []);
 
   /**
    * Toggle agent active status
    */
-  const toggleAgentActive = useCallback((agentId) => {
-    setAgents(prev => prev.map(a =>
-      a.id === agentId ? { ...a, active: !a.active, status: !a.active ? 'active' : 'inactive' } : a
-    ));
+  const toggleAgentActive = useCallback(async (agentId) => {
+    try {
+      // Call backend API
+      await settingsService.toggleAgentActivation(agentId);
+
+      // Update local state
+      setAgents(prev => prev.map(a =>
+        a.id === agentId ? { ...a, active: !a.active, status: !a.active ? 'active' : 'inactive' } : a
+      ));
+    } catch (error) {
+      console.error('Error toggling agent status:', error);
+      alert('Failed to toggle agent status: ' + error.message);
+      throw error;
+    }
   }, []);
 
   /**
@@ -327,20 +367,49 @@ export const AutoAssignmentProvider = ({ children }) => {
   /**
    * Export configuration and agents
    */
-  const exportConfiguration = useCallback(() => {
-    return {
-      config,
-      agents,
-      exportDate: new Date().toISOString()
-    };
-  }, [config, agents]);
+  const exportConfiguration = useCallback(async () => {
+    try {
+      const blob = await settingsService.exportSettings();
+
+      // Create download link
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `auto-assignment-config-${new Date().toISOString().split('T')[0]}.json`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+
+      return { success: true };
+    } catch (error) {
+      console.error('Error exporting configuration:', error);
+      alert('Failed to export configuration: ' + error.message);
+      throw error;
+    }
+  }, []);
 
   /**
    * Import configuration and agents
    */
-  const importConfiguration = useCallback((data) => {
-    if (data.config) setConfig(data.config);
-    if (data.agents) setAgents(data.agents);
+  const importConfiguration = useCallback(async (data) => {
+    try {
+      // Call backend API
+      await settingsService.importSettings(data);
+
+      // Update local state
+      if (data.config) setConfig(data.config);
+      if (data.agents) setAgents(data.agents);
+
+      // Reload from backend to ensure sync
+      await loadSettingsFromBackend();
+
+      return { success: true };
+    } catch (error) {
+      console.error('Error importing configuration:', error);
+      alert('Failed to import configuration: ' + error.message);
+      throw error;
+    }
   }, []);
 
   const value = {

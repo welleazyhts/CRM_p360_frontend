@@ -4,7 +4,7 @@ import {
   Table, TableBody, TableCell, TableContainer, TableHead, TableRow,
   Paper, IconButton, Chip, Dialog, DialogTitle, DialogContent,
   DialogActions, FormControl, InputLabel, Select, MenuItem,
-  Fade, alpha, useTheme, LinearProgress, InputAdornment
+  Fade, alpha, useTheme, LinearProgress, InputAdornment, Snackbar, Alert
 } from '@mui/material';
 import {
   Timeline, TimelineItem, TimelineSeparator, TimelineConnector,
@@ -32,6 +32,7 @@ const ComplaintsManagement = () => {
   const [selectedComplaint, setSelectedComplaint] = useState(null);
   const [stats, setStats] = useState({ total: 0, open: 0, inProgress: 0, resolved: 0 });
   const [loading, setLoading] = useState(false);
+  const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'info' });
 
   const [formData, setFormData] = useState({
     customerName: '',
@@ -104,9 +105,11 @@ const ComplaintsManagement = () => {
       if (selectedComplaint) {
         const updated = await updateComplaint(selectedComplaint.id, formData);
         setComplaints(complaints.map(c => c.id === selectedComplaint.id ? updated : c));
+        setSnackbar({ open: true, message: 'Complaint updated successfully', severity: 'success' });
       } else {
         const newComplaint = await createComplaint(formData);
         setComplaints([newComplaint, ...complaints]); // Add new complaint at the beginning
+        setSnackbar({ open: true, message: 'Complaint registered successfully', severity: 'success' });
       }
       setComplaintDialogOpen(false);
       // Refresh only stats, not the entire complaints list
@@ -114,7 +117,12 @@ const ComplaintsManagement = () => {
       setStats(statsData);
     } catch (error) {
       console.error('Failed to save complaint:', error);
+      setSnackbar({ open: true, message: `Error: ${error.message || 'Failed to save complaint'}`, severity: 'error' });
     }
+  };
+
+  const handleCloseSnackbar = () => {
+    setSnackbar({ ...snackbar, open: false });
   };
 
   const handleViewDetails = (complaint) => {
@@ -478,8 +486,14 @@ const ComplaintsManagement = () => {
             <Button onClick={() => setDetailDialogOpen(false)}>Close</Button>
           </DialogActions>
         </Dialog>
+
+        <Snackbar open={snackbar.open} autoHideDuration={6000} onClose={handleCloseSnackbar}>
+          <Alert onClose={handleCloseSnackbar} severity={snackbar.severity} sx={{ width: '100%' }}>
+            {snackbar.message}
+          </Alert>
+        </Snackbar>
       </Box>
-    </Fade>
+    </Fade >
   );
 };
 

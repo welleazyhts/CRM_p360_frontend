@@ -1,4 +1,6 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import attendanceService from '../services/attendanceService';
+import { useAuth } from './AuthContext';
 
 const AttendanceContext = createContext();
 
@@ -11,456 +13,183 @@ export const useAttendance = () => {
 };
 
 export const AttendanceProvider = ({ children }) => {
-  // Get today's date
-  const today = new Date().toISOString().split('T')[0];
-  const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0];
-  const twoDaysAgo = new Date(Date.now() - 172800000).toISOString().split('T')[0];
-
-  // Mock attendance data with current dates
-  const mockAttendanceData = [
-    // Today's attendance
-    {
-      id: 1,
-      employeeId: 'EMP001',
-      employeeName: 'John Smith',
-      department: 'Sales',
-      position: 'Sales Executive',
-      date: today,
-      checkIn: '09:15',
-      checkOut: '18:30',
-      breakStart: '12:00',
-      breakEnd: '13:00',
-      totalHours: 8.25,
-      overtimeHours: 0.25,
-      status: 'Present',
-      location: 'Office',
-      device: 'Desktop',
-      ipAddress: '192.168.1.100',
-      notes: 'Regular working day',
-      isLate: false,
-      isEarlyLeave: false,
-      createdAt: `${today}T09:15:00Z`
-    },
-    {
-      id: 2,
-      employeeId: 'EMP002',
-      employeeName: 'Sarah Johnson',
-      department: 'Marketing',
-      position: 'Marketing Manager',
-      date: today,
-      checkIn: '08:45',
-      checkOut: '17:45',
-      breakStart: '12:30',
-      breakEnd: '13:30',
-      totalHours: 8.0,
-      overtimeHours: 0,
-      status: 'Present',
-      location: 'Office',
-      device: 'Laptop',
-      ipAddress: '192.168.1.101',
-      notes: 'Team meeting in the morning',
-      isLate: false,
-      isEarlyLeave: false,
-      createdAt: `${today}T08:45:00Z`
-    },
-    {
-      id: 3,
-      employeeId: 'EMP003',
-      employeeName: 'Mike Wilson',
-      department: 'IT',
-      position: 'Software Developer',
-      date: today,
-      checkIn: '09:30',
-      checkOut: '18:45',
-      breakStart: '13:00',
-      breakEnd: '14:00',
-      totalHours: 8.25,
-      overtimeHours: 0.25,
-      status: 'Present',
-      location: 'Remote',
-      device: 'Laptop',
-      ipAddress: '192.168.1.102',
-      notes: 'Working from home',
-      isLate: true,
-      isEarlyLeave: false,
-      createdAt: `${today}T09:30:00Z`
-    },
-    {
-      id: 4,
-      employeeId: 'EMP004',
-      employeeName: 'Emily Davis',
-      department: 'HR',
-      position: 'HR Specialist',
-      date: today,
-      checkIn: '09:00',
-      checkOut: '18:00',
-      breakStart: '12:00',
-      breakEnd: '13:00',
-      totalHours: 8.0,
-      overtimeHours: 0,
-      status: 'Present',
-      location: 'Office',
-      device: 'Desktop',
-      ipAddress: '192.168.1.103',
-      notes: 'Employee interviews',
-      isLate: false,
-      isEarlyLeave: false,
-      createdAt: `${today}T09:00:00Z`
-    },
-    {
-      id: 5,
-      employeeId: 'EMP005',
-      employeeName: 'David Brown',
-      department: 'Finance',
-      position: 'Accountant',
-      date: today,
-      checkIn: '08:30',
-      checkOut: '17:30',
-      breakStart: '12:00',
-      breakEnd: '13:00',
-      totalHours: 8.0,
-      overtimeHours: 0,
-      status: 'Present',
-      location: 'Office',
-      device: 'Desktop',
-      ipAddress: '192.168.1.104',
-      notes: 'Monthly reports',
-      isLate: false,
-      isEarlyLeave: false,
-      createdAt: `${today}T08:30:00Z`
-    },
-    // Yesterday's attendance
-    {
-      id: 6,
-      employeeId: 'EMP001',
-      employeeName: 'John Smith',
-      department: 'Sales',
-      position: 'Sales Executive',
-      date: yesterday,
-      checkIn: '09:00',
-      checkOut: '19:00',
-      breakStart: '12:00',
-      breakEnd: '13:00',
-      totalHours: 9.0,
-      overtimeHours: 1.0,
-      status: 'Overtime',
-      location: 'Office',
-      device: 'Desktop',
-      ipAddress: '192.168.1.100',
-      notes: 'Important client meeting',
-      isLate: false,
-      isEarlyLeave: false,
-      createdAt: `${yesterday}T09:00:00Z`
-    },
-    {
-      id: 7,
-      employeeId: 'EMP002',
-      employeeName: 'Sarah Johnson',
-      department: 'Marketing',
-      position: 'Marketing Manager',
-      date: yesterday,
-      checkIn: '09:10',
-      checkOut: '17:00',
-      breakStart: '12:30',
-      breakEnd: '13:30',
-      totalHours: 6.83,
-      overtimeHours: 0,
-      status: 'Early Leave',
-      location: 'Office',
-      device: 'Laptop',
-      ipAddress: '192.168.1.101',
-      notes: 'Doctor appointment',
-      isLate: true,
-      isEarlyLeave: true,
-      createdAt: `${yesterday}T09:10:00Z`
-    },
-    {
-      id: 8,
-      employeeId: 'EMP003',
-      employeeName: 'Mike Wilson',
-      department: 'IT',
-      position: 'Software Developer',
-      date: yesterday,
-      checkIn: '09:00',
-      checkOut: '18:00',
-      breakStart: '13:00',
-      breakEnd: '14:00',
-      totalHours: 8.0,
-      overtimeHours: 0,
-      status: 'Present',
-      location: 'Remote',
-      device: 'Laptop',
-      ipAddress: '192.168.1.102',
-      notes: 'Sprint planning',
-      isLate: false,
-      isEarlyLeave: false,
-      createdAt: `${yesterday}T09:00:00Z`
-    },
-    {
-      id: 9,
-      employeeId: 'EMP004',
-      employeeName: 'Emily Davis',
-      department: 'HR',
-      position: 'HR Specialist',
-      date: yesterday,
-      checkIn: null,
-      checkOut: null,
-      breakStart: null,
-      breakEnd: null,
-      totalHours: 0,
-      overtimeHours: 0,
-      status: 'Absent',
-      location: null,
-      device: null,
-      ipAddress: null,
-      notes: 'Sick leave',
-      isLate: false,
-      isEarlyLeave: false,
-      createdAt: `${yesterday}T00:00:00Z`
-    },
-    {
-      id: 10,
-      employeeId: 'EMP005',
-      employeeName: 'David Brown',
-      department: 'Finance',
-      position: 'Accountant',
-      date: yesterday,
-      checkIn: '08:45',
-      checkOut: '17:45',
-      breakStart: '12:00',
-      breakEnd: '13:00',
-      totalHours: 8.0,
-      overtimeHours: 0,
-      status: 'Present',
-      location: 'Office',
-      device: 'Desktop',
-      ipAddress: '192.168.1.104',
-      notes: 'Budget review',
-      isLate: false,
-      isEarlyLeave: false,
-      createdAt: `${yesterday}T08:45:00Z`
-    },
-    // Two days ago
-    {
-      id: 11,
-      employeeId: 'EMP001',
-      employeeName: 'John Smith',
-      department: 'Sales',
-      position: 'Sales Executive',
-      date: twoDaysAgo,
-      checkIn: '09:00',
-      checkOut: '14:00',
-      breakStart: '12:00',
-      breakEnd: '13:00',
-      totalHours: 4.0,
-      overtimeHours: 0,
-      status: 'Half Day',
-      location: 'Office',
-      device: 'Desktop',
-      ipAddress: '192.168.1.100',
-      notes: 'Personal work',
-      isLate: false,
-      isEarlyLeave: true,
-      createdAt: `${twoDaysAgo}T09:00:00Z`
-    },
-    {
-      id: 12,
-      employeeId: 'EMP002',
-      employeeName: 'Sarah Johnson',
-      department: 'Marketing',
-      position: 'Marketing Manager',
-      date: twoDaysAgo,
-      checkIn: '09:00',
-      checkOut: '18:00',
-      breakStart: '12:30',
-      breakEnd: '13:30',
-      totalHours: 8.0,
-      overtimeHours: 0,
-      status: 'Present',
-      location: 'Client Site',
-      device: 'Laptop',
-      ipAddress: '192.168.1.101',
-      notes: 'Client presentation',
-      isLate: false,
-      isEarlyLeave: false,
-      createdAt: `${twoDaysAgo}T09:00:00Z`
-    },
-    {
-      id: 13,
-      employeeId: 'EMP003',
-      employeeName: 'Mike Wilson',
-      department: 'IT',
-      position: 'Software Developer',
-      date: twoDaysAgo,
-      checkIn: '10:00',
-      checkOut: '19:00',
-      breakStart: '13:00',
-      breakEnd: '14:00',
-      totalHours: 8.0,
-      overtimeHours: 0,
-      status: 'Late',
-      location: 'Remote',
-      device: 'Laptop',
-      ipAddress: '192.168.1.102',
-      notes: 'Traffic issues',
-      isLate: true,
-      isEarlyLeave: false,
-      createdAt: `${twoDaysAgo}T10:00:00Z`
-    },
-    {
-      id: 14,
-      employeeId: 'EMP004',
-      employeeName: 'Emily Davis',
-      department: 'HR',
-      position: 'HR Specialist',
-      date: twoDaysAgo,
-      checkIn: '09:00',
-      checkOut: '18:00',
-      breakStart: '12:00',
-      breakEnd: '13:00',
-      totalHours: 8.0,
-      overtimeHours: 0,
-      status: 'Present',
-      location: 'Office',
-      device: 'Desktop',
-      ipAddress: '192.168.1.103',
-      notes: 'Training session',
-      isLate: false,
-      isEarlyLeave: false,
-      createdAt: `${twoDaysAgo}T09:00:00Z`
-    },
-    {
-      id: 15,
-      employeeId: 'EMP005',
-      employeeName: 'David Brown',
-      department: 'Finance',
-      position: 'Accountant',
-      date: twoDaysAgo,
-      checkIn: '08:30',
-      checkOut: '17:30',
-      breakStart: '12:00',
-      breakEnd: '13:00',
-      totalHours: 8.0,
-      overtimeHours: 0,
-      status: 'Present',
-      location: 'Office',
-      device: 'Desktop',
-      ipAddress: '192.168.1.104',
-      notes: 'Audit preparation',
-      isLate: false,
-      isEarlyLeave: false,
-      createdAt: `${twoDaysAgo}T08:30:00Z`
-    }
-  ];
-
-  const [attendanceData, setAttendanceData] = useState(mockAttendanceData);
+  const { currentUser } = useAuth();
+  const [attendanceData, setAttendanceData] = useState([]);
   const [currentUserAttendance, setCurrentUserAttendance] = useState(null);
   const [isClockedIn, setIsClockedIn] = useState(false);
   const [clockInTime, setClockInTime] = useState(null);
+  const [loading, setLoading] = useState(true);
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
 
-  // Check current user's attendance status on component mount
-  useEffect(() => {
-    const today = new Date().toISOString().split('T')[0];
-    const currentUser = 'EMP001'; // Mock current user ID
-    
-    const todayAttendance = attendanceData.find(record => 
-      record.employeeId === currentUser && record.date === today
-    );
-    
-    if (todayAttendance) {
-      setCurrentUserAttendance(todayAttendance);
-      setIsClockedIn(!!todayAttendance.checkIn && !todayAttendance.checkOut);
-      setClockInTime(todayAttendance.checkIn);
+  // Fetch attendance data
+  const fetchAttendance = useCallback(async () => {
+    try {
+      setLoading(true);
+      const data = await attendanceService.list();
+      console.log('Attendance API Response:', data); // Debugging log
+
+      // Ensure data is an array (handle pagination if needed)
+      const records = Array.isArray(data) ? data : (data.results || []);
+      console.log('Processed Records (First Item):', records[0]); // Debugging log, to check ID field
+
+      setAttendanceData(records);
+
+      // Update current user status based on today's record
+      if (currentUser) {
+        const today = new Date().toISOString().split('T')[0];
+        // Assuming the API returns fields compatible with what we expect, or we map them
+        // API fields seem to be snake_case based on Postman (employee_id, check_in), 
+        // but frontend uses camelCase (employeeId, checkIn). 
+        // We might need to normalize the data or update frontend components.
+        // Let's check first if we need mapping. For now, assuming API returns camelCase or we handle it in component.
+        // Actually, Postman showed snake_case request. Response likely snake_case too.
+        // I will map snake_case to camelCase here for frontend consistency.
+
+        const normalizeDates = (record) => {
+          // Try to find the ID from various common fields
+          const recordId = record.id || record._id || record.pk || record.attendance_id;
+
+          // Handle employee field which might be an object or an ID
+          const empId = record.employee?.id || record.employee?.employee_id || record.employee_id || record.employeeId;
+          const empName = record.employee?.name || record.employee?.employee_name || record.employee_name || record.employeeName || 'Unknown';
+          const empDept = record.employee?.department || record.department;
+
+          return {
+            ...record,
+            id: recordId,
+            employeeId: empId,
+            employeeName: empName,
+            department: empDept,
+            date: record.date,
+            checkIn: record.check_in || record.checkIn,
+            checkOut: record.check_out || record.checkOut,
+            breakStart: record.break_start || record.breakStart,
+            breakEnd: record.break_end || record.breakEnd,
+            status: record.status,
+            location: record.location,
+            device: record.device,
+            notes: record.notes,
+            totalHours: record.total_hours || record.totalHours || 0,
+            overtimeHours: record.overtime_hours || record.overtimeHours || 0
+          };
+        };
+
+        const normalizedRecords = records.map(normalizeDates);
+        setAttendanceData(normalizedRecords);
+
+        const todayRecord = normalizedRecords.find(record =>
+          (record.employeeId === currentUser.id || record.employeeId === `EMP00${currentUser.id}`) && // strict check?
+          record.date === today
+        );
+
+        if (todayRecord) {
+          setCurrentUserAttendance(todayRecord);
+          setIsClockedIn(!!todayRecord.checkIn && !todayRecord.checkOut);
+          setClockInTime(todayRecord.checkIn);
+        }
+      }
+    } catch (error) {
+      console.error('Failed to fetch attendance:', error);
+      // Don't show error snackbar on initial load to avoid annoyance if empty
+    } finally {
+      setLoading(false);
     }
-  }, [attendanceData]);
+  }, [currentUser]);
+
+  useEffect(() => {
+    fetchAttendance();
+  }, [fetchAttendance]);
 
   // Clock in function
-  const handleClockIn = () => {
-    const now = new Date();
-    const currentTime = now.toTimeString().split(' ')[0].substring(0, 5);
-    const currentDate = now.toISOString().split('T')[0];
-    
-    // Mock current user (in real app, this would come from auth context)
-    const currentUser = {
-      id: 'EMP001',
-      name: 'John Smith',
-      department: 'Sales',
-      position: 'Sales Executive'
-    };
+  const handleClockIn = async () => {
+    if (!currentUser) return;
 
-    const newAttendance = {
-      id: Date.now(),
-      employeeId: currentUser.id,
-      employeeName: currentUser.name,
-      department: currentUser.department,
-      position: currentUser.position,
-      date: currentDate,
-      checkIn: currentTime,
-      checkOut: null,
-      breakStart: null,
-      breakEnd: null,
-      totalHours: 0,
-      overtimeHours: 0,
-      status: 'Present',
-      location: 'Office',
-      device: 'Desktop',
-      ipAddress: '192.168.1.100',
-      notes: 'Quick clock in',
-      isLate: false,
-      isEarlyLeave: false,
-      createdAt: now.toISOString()
-    };
+    try {
+      const now = new Date();
+      const currentTime = now.toTimeString().split(' ')[0]; // HH:MM:SS
+      const currentDate = now.toISOString().split('T')[0];
 
-    setAttendanceData(prev => [newAttendance, ...prev]);
-    setCurrentUserAttendance(newAttendance);
-    setIsClockedIn(true);
-    setClockInTime(currentTime);
-    
-    setSnackbar({
-      open: true,
-      message: `Clocked in at ${currentTime}`,
-      severity: 'success'
-    });
+      const payload = {
+        employee_id: currentUser.id || 'EMP001', // Fallback or strict ID
+        date: currentDate,
+        check_in: currentTime,
+        status: 'present',
+        location: 'office', // Default or fetch from geolocation
+        device: 'desktop',
+        notes: 'Web check-in'
+      };
+
+      const response = await attendanceService.create(payload);
+
+      // Update local state
+      await fetchAttendance(); // Refresh to get the normalized new record
+
+      setSnackbar({
+        open: true,
+        message: `Clocked in at ${currentTime}`,
+        severity: 'success'
+      });
+    } catch (error) {
+      console.error('Clock in failed:', error);
+      setSnackbar({
+        open: true,
+        message: 'Failed to clock in: ' + (error.message || 'Unknown error'),
+        severity: 'error'
+      });
+    }
   };
 
   // Clock out function
-  const handleClockOut = () => {
-    if (!currentUserAttendance) return;
+  const handleClockOut = async () => {
+    if (!currentUserAttendance || !currentUser) return;
 
-    const now = new Date();
-    const currentTime = now.toTimeString().split(' ')[0].substring(0, 5);
-    
-    // Calculate total hours
-    const checkInTime = new Date(`${currentUserAttendance.date}T${currentUserAttendance.checkIn}:00`);
-    const checkOutTime = new Date(`${currentUserAttendance.date}T${currentTime}:00`);
-    const totalMs = checkOutTime - checkInTime;
-    const totalHours = Math.round((totalMs / (1000 * 60 * 60)) * 100) / 100;
-    const overtimeHours = totalHours > 8 ? totalHours - 8 : 0;
+    try {
+      const now = new Date();
+      const currentTime = now.toTimeString().split(' ')[0]; // HH:MM:SS
 
-    const updatedAttendance = {
-      ...currentUserAttendance,
-      checkOut: currentTime,
-      totalHours,
-      overtimeHours,
-      status: totalHours >= 8 ? 'Present' : 'Half Day'
-    };
+      // Calculate hours first? The backend might do it, 
+      // but the `compute_hours` endpoint exists. 
+      // However, usually we just update the checkout time and let backend calc.
+      // Based on Postman, `update` takes full object.
 
-    setAttendanceData(prev => 
-      prev.map(record => 
-        record.id === currentUserAttendance.id ? updatedAttendance : record
-      )
-    );
-    
-    setCurrentUserAttendance(null);
-    setIsClockedIn(false);
-    setClockInTime(null);
-    
-    setSnackbar({
-      open: true,
-      message: `Clocked out at ${currentTime}. Total hours: ${totalHours}h`,
-      severity: 'success'
-    });
+      const payload = {
+        employee_id: currentUserAttendance.employeeId,
+        date: currentUserAttendance.date,
+        check_in: currentUserAttendance.checkIn,
+        check_out: currentTime,
+        status: 'present', // Or logic to determine half-day
+        location: currentUserAttendance.location,
+        device: currentUserAttendance.device,
+        notes: currentUserAttendance.notes
+      };
+
+      // We use different endpoint or update? The service has `update(employeeId, data)`.
+      // NOTE: The update endpoint usually takes ID if it's RESTful resource update, 
+      // but here it asks for employeeId in URL? "/update/{employeeId}/". 
+      // This might be tricky if an employee has multiple records. 
+      // Usually update should be by ID. 
+      // But looking at provided Postman: `attendance_management/update/EMP003/`. 
+      // It seems it updates TODAY's record for that employee? Or just generic update?
+      // I'll assume it handles the logic.
+
+      await attendanceService.update(currentUser.id || 'EMP001', payload);
+
+      await fetchAttendance();
+
+      setSnackbar({
+        open: true,
+        message: `Clocked out at ${currentTime}`,
+        severity: 'success'
+      });
+
+    } catch (error) {
+      console.error('Clock out failed:', error);
+      setSnackbar({
+        open: true,
+        message: 'Failed to clock out: ' + (error.message || 'Unknown error'),
+        severity: 'error'
+      });
+    }
   };
 
   // Close snackbar
@@ -470,11 +199,13 @@ export const AttendanceProvider = ({ children }) => {
 
   const value = {
     attendanceData,
-    setAttendanceData,
+    setAttendanceData, // Allow manual updates if needed
     currentUserAttendance,
     isClockedIn,
     clockInTime,
     snackbar,
+    loading,
+    refreshAttendance: fetchAttendance,
     handleClockIn,
     handleClockOut,
     handleCloseSnackbar

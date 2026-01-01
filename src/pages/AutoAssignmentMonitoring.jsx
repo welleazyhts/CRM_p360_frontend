@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import {
   Box,
   Card,
@@ -23,7 +23,9 @@ import {
   MenuItem,
   TextField,
   InputAdornment,
-  Alert
+  Alert,
+  CircularProgress,
+  Backdrop
 } from '@mui/material';
 import {
   Assignment as AssignmentIcon,
@@ -35,13 +37,20 @@ import {
   FileDownload as DownloadIcon
 } from '@mui/icons-material';
 import { useAutoAssignment } from '../context/AutoAssignmentContext';
-import { ASSIGNMENT_STRATEGIES } from '../services/autoAssignmentService';
+import {
+  ASSIGNMENT_STRATEGIES,
+  getOverview,
+  getWorkload,
+  getHistory,
+  searchHistory,
+  exportHistory
+} from '../services/autoAssignmentService';
 
 const AutoAssignmentMonitoring = () => {
   const {
     config,
     agents,
-    assignmentHistory,
+    assignmentHistory: contextHistory,
     getAssignmentStats,
     getAllAgentWorkloads,
     getAvailableAgentsList
@@ -51,6 +60,84 @@ const AutoAssignmentMonitoring = () => {
   const [filterStrategy, setFilterStrategy] = useState('all');
   const [filterAgent, setFilterAgent] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
+
+  // API State
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [apiOverview, setApiOverview] = useState(null);
+  const [apiWorkload, setApiWorkload] = useState([]);
+  const [apiHistory, setApiHistory] = useState([]);
+  const [exporting, setExporting] = useState(false);
+
+  // Fetch data on component mount
+  useEffect(() => {
+    loadData();
+  }, []);
+
+  const loadData = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      const [overview, workload, history] = await Promise.all([
+        getOverview().catch(err => {
+          console.warn('Overview API failed, using fallback:', err);
+          return null;
+        }),
+        getWorkload().catch(err => {
+          console.warn('Workload API failed, using fallback:', err);
+          return [];
+        }),
+        getHistory().catch(err => {
+          console.warn('History API failed, using fallback:', err);
+          return [];
+        })
+      ]);
+
+      setApiOverview(overview);
+      setApiWorkload(workload);
+      setApiHistory(history);
+    } catch (err) {
+      console.error('Error loading auto-assignment data:', err);
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Handle search with API
+  const handleSearch = async (query) => {
+    if (!query || query.trim() === '') {
+      // Reload all history
+      loadData();
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const results = await searchHistory(query);
+      setApiHistory(results);
+    } catch (err) {
+      console.error('Search failed:', err);
+      setError('Search failed. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Debounced search
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (searchQuery) {
+        handleSearch(searchQuery);
+      } else {
+        // If search query is cleared, reload all data
+        loadData();
+      }
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
 
   // Mock data for demonstration
   const MOCK_STATS = {
@@ -71,18 +158,6 @@ const AutoAssignmentMonitoring = () => {
     }
   };
 
-  // Calculate statistics
-  const stats = useMemo(() => {
-    const realStats = getAssignmentStats();
-    // Return mock data if no real data exists
-    if (!realStats || !realStats.total || realStats.total === 0) {
-      return MOCK_STATS;
-    }
-    return realStats;
-  }, [assignmentHistory]);
-  const agentWorkloads = useMemo(() => getAllAgentWorkloads([]), [agents]);
-  const availableAgents = useMemo(() => getAvailableAgentsList([]), [agents, config.maxCapacity]);
-
   const MOCK_HISTORY = [
     { id: 'HIST-001', entityId: 'LEAD-2024-001', entityType: 'Lead', agentId: 'AGT-001', agentName: 'Sarah Johnson', strategy: 'ROUND_ROBIN', reason: 'Next in rotation', assignedAt: new Date(Date.now() - 1000 * 60 * 30).toISOString() },
     { id: 'HIST-002', entityId: 'CASE-2024-089', entityType: 'Case', agentId: 'AGT-003', agentName: 'Mike Wilson', strategy: 'SKILL_BASED', reason: 'Best skill match: Support', assignedAt: new Date(Date.now() - 1000 * 60 * 60).toISOString() },
@@ -94,33 +169,78 @@ const AutoAssignmentMonitoring = () => {
     { id: 'HIST-008', entityId: 'LEAD-2024-005', entityType: 'Lead', agentId: 'AGT-001', agentName: 'Sarah Johnson', strategy: 'SKILL_BASED', reason: 'Best skill match: Sales', assignedAt: new Date(Date.now() - 1000 * 60 * 60 * 28).toISOString() }
   ];
 
+  // Calculate statistics from API data or fallback to context
+  const stats = useMemo(() => {
+    if (apiOverview) {
+      // Use API overview data
+      return {
+        total: apiOverview.total_assignments || 0,
+        byStrategy: apiOverview.by_strategy || {},
+        byAgent: apiOverview.by_agent || {}
+      };
+    }
+
+    // Fallback to context stats
+    const contextStats = getAssignmentStats();
+    if (contextStats && contextStats.total && contextStats.total > 0) {
+      return contextStats;
+    }
+
+    // Last resort: mock data
+    return MOCK_STATS;
+  }, [apiOverview, contextHistory]);
+
+  // Use API workload data or fallback to context
+  const agentWorkloads = useMemo(() => {
+    if (apiWorkload && apiWorkload.length > 0) {
+      // Transform API workload data to match expected format
+      return apiWorkload.map(w => ({
+        agent: {
+          id: w.agent_id,
+          name: w.agent_name,
+          email: w.agent_email || '',
+          active: w.is_active !== false,
+          performanceTier: w.performance_tier || 'average'
+        },
+        workload: {
+          assigned: w.current_leads || 0,
+          capacity: w.capacity || 50,
+          utilizationPercent: w.utilization || 0
+        }
+      }));
+    }
+    return getAllAgentWorkloads([]);
+  }, [apiWorkload, agents]);
+
+  // Use API history or fallback to context
+  const assignmentHistory = useMemo(() => {
+    if (apiHistory && apiHistory.length > 0) {
+      return apiHistory;
+    }
+    if (contextHistory && contextHistory.length > 0) {
+      return contextHistory;
+    }
+    return MOCK_HISTORY;
+  }, [apiHistory, contextHistory]);
+
+  const availableAgents = useMemo(() => getAvailableAgentsList([]), [agents, config.maxCapacity]);
+
   // Filter assignment history
   const filteredHistory = useMemo(() => {
-    // Use mock history if real history is empty
-    let filtered = (assignmentHistory && assignmentHistory.length > 0)
-      ? assignmentHistory
-      : MOCK_HISTORY;
+    let filtered = assignmentHistory;
 
     if (filterStrategy !== 'all') {
       filtered = filtered.filter(h => h.strategy === filterStrategy);
     }
 
     if (filterAgent !== 'all') {
-      filtered = filtered.filter(h => h.agentId === filterAgent);
+      filtered = filtered.filter(h => h.agentId === filterAgent || h.agent_id === filterAgent);
     }
 
-    if (searchQuery) {
-      const query = searchQuery.toLowerCase();
-      filtered = filtered.filter(h =>
-        h.agentName.toLowerCase().includes(query) ||
-        h.entityId.toLowerCase().includes(query) ||
-        h.entityType.toLowerCase().includes(query) ||
-        h.reason.toLowerCase().includes(query)
-      );
-    }
+    // Note: Search is now handled by API, not client-side filtering
 
     return filtered;
-  }, [assignmentHistory, filterStrategy, filterAgent, searchQuery]);
+  }, [assignmentHistory, filterStrategy, filterAgent]);
 
   // Calculate workload metrics
   const workloadStats = useMemo(() => {
@@ -145,22 +265,27 @@ const AutoAssignmentMonitoring = () => {
     setCurrentTab(newValue);
   };
 
-  // Export assignment history
-  const handleExportHistory = () => {
-    const data = {
-      exportDate: new Date().toISOString(),
-      stats,
-      workloadStats,
-      history: filteredHistory
-    };
+  // Export assignment history using API
+  const handleExportHistory = async () => {
+    try {
+      setExporting(true);
+      const blob = await exportHistory();
 
-    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `assignment-history-${new Date().toISOString().split('T')[0]}.json`;
-    a.click();
-    URL.revokeObjectURL(url);
+      // Create download link
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `assignment_history_${new Date().toISOString().split('T')[0]}.csv`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error('Export failed:', err);
+      setError('Failed to export history. Please try again.');
+    } finally {
+      setExporting(false);
+    }
   };
 
   // Get workload color
@@ -556,6 +681,26 @@ const AutoAssignmentMonitoring = () => {
 
   return (
     <Box sx={{ p: 3 }}>
+      {/* Loading Backdrop */}
+      <Backdrop
+        sx={{ color: '#fff', zIndex: (theme) => theme.zIndex.drawer + 1 }}
+        open={loading || exporting}
+      >
+        <Box sx={{ textAlign: 'center' }}>
+          <CircularProgress color="inherit" />
+          <Typography variant="h6" sx={{ mt: 2 }}>
+            {exporting ? 'Exporting data...' : 'Loading...'}
+          </Typography>
+        </Box>
+      </Backdrop>
+
+      {/* Error Alert */}
+      {error && (
+        <Alert severity="error" onClose={() => setError(null)} sx={{ mb: 3 }}>
+          {error}
+        </Alert>
+      )}
+
       <Box sx={{ mb: 3, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <Box>
           <Typography variant="h4" gutterBottom>

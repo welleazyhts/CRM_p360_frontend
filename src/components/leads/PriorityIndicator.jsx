@@ -87,7 +87,7 @@ const PriorityIndicator = ({ priority = 'Warm', compact = false, showStats = fal
     >
       <Chip
         icon={<PriorityIcon />}
-        label={t(`leads.priorities.${priority}`) || priority}
+        label={t(`leads.priorities.${priority}`, priority)}
         sx={{
           bgcolor: config.bgColor,
           color: config.color,
