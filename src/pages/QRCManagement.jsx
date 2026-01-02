@@ -68,10 +68,10 @@ const QRCManagement = () => {
   // Form state
   const [formData, setFormData] = useState({
     communicationMode: 'Call',
-    caller: '',
+    caller: 'Customer',
     callType: 'Query',
-    resolution: '',
-    callReason: '',
+    resolution: 'Pending',
+    callReason: 'Policy Information',
     callDateTime: new Date(),
     callerName: '',
     taCode: '',
@@ -165,30 +165,8 @@ const QRCManagement = () => {
           setEntries([]);
         }
       } catch (err) {
-        console.error('Failed to load QRC entries from API, using mock data as fallback:', err);
-        // fallback mock data (same as previous mock)
-        setEntries([
-          {
-            id: 1,
-            communicationMode: 'Call',
-            caller: 'Customer',
-            callType: 'Query',
-            resolution: 'Resolved',
-            callReason: 'Policy Information',
-            callDateTime: '2025-10-10 09:30 AM',
-            callerName: 'Rajesh Kumar',
-            taCode: 'TA123456',
-            csrName: 'Firoz Khan Ummer',
-            icName: 'Pnb Metlife IC',
-            callerEmail: 'rajesh.kumar@email.com',
-            state: 'Karnataka',
-            city: 'Bangalore',
-            contactNumber: '9876543210',
-            remarks: 'Customer inquired about policy renewal process',
-            callId: 'CALL001',
-            isSuspiciousCase: false
-          },
-        ]);
+        console.error('Failed to load QRC entries from API:', err);
+        setEntries([]);
       }
     };
 
@@ -204,46 +182,30 @@ const QRCManagement = () => {
       if (selectedEntry && selectedEntry.id) {
         // update via API
         const updated = await qrcService.update(selectedEntry.id, payload);
-        // normalize date for display
-        const normalized = { ...updated, callDateTime: _formatDateTimeForDisplay(updated.callDateTime) };
+        // normalize date for display, and merge with formData to ensure UI updates immediately with user input
+        // even if backend response is partial.
+        const normalized = {
+          ...selectedEntry,
+          ...formData, // Trust user input for display (optimistic)
+          ...updated, // Backend data overrides if present
+          callDateTime: _formatDateTimeForDisplay(updated.callDateTime || formData.callDateTime)
+        };
         setEntries(prev => prev.map(entry => (entry.id === selectedEntry.id ? normalized : entry)));
       } else {
         // create via API
         const created = await qrcService.create(payload);
-        const normalized = { ...created, callDateTime: _formatDateTimeForDisplay(created.callDateTime) };
+        const normalized = {
+          ...formData, // Trust user input
+          ...created,
+          callDateTime: _formatDateTimeForDisplay(created.callDateTime || formData.callDateTime)
+        };
         setEntries(prev => [...prev, normalized]);
       }
       setOpenDialog(false);
       resetForm();
     } catch (err) {
-      // If API persist fails (backend unavailable or network), fall back to a local in-memory save
-      console.error('Failed to save entry to API, falling back to local:', err);
-      try {
-        if (selectedEntry && selectedEntry.id) {
-          // local update
-          const normalized = {
-            ...selectedEntry,
-            ...payload,
-            callDateTime: _formatDateTimeForDisplay(payload.callDateTime || selectedEntry.callDateTime),
-          };
-          setEntries(prev => prev.map(entry => (entry.id === selectedEntry.id ? normalized : entry)));
-        } else {
-          // local create: synthesize an id and callId when backend is unavailable
-          const id = Date.now();
-          const callId = formData.callId || `CALL${id}`;
-          const local = {
-            id,
-            callId,
-            ...payload,
-            callDateTime: _formatDateTimeForDisplay(payload.callDateTime),
-          };
-          setEntries(prev => [...prev, local]);
-        }
-        setOpenDialog(false);
-        resetForm();
-      } catch (localErr) {
-        console.error('Failed to perform local fallback save:', localErr);
-      }
+      console.error('Failed to save entry to API:', err);
+      alert('Failed to save entry. Please try again.');
     }
   };
 
@@ -274,20 +236,17 @@ const QRCManagement = () => {
       setEntries(entries.filter(entry => entry.id !== id));
     } catch (err) {
       console.error('Failed to delete entry via API:', err);
-      // Fallback: delete locally even if API fails
-      setEntries(entries.filter(entry => entry.id !== id));
-      // Optionally show a warning that it was deleted locally but may not persist
-      alert('Entry deleted locally. Note: Server may not have been updated due to connection issues.');
+      alert('Failed to delete entry. Please try again.');
     }
   };
 
   const resetForm = () => {
     setFormData({
       communicationMode: 'Call',
-      caller: '',
+      caller: 'Customer',
       callType: 'Query',
-      resolution: '',
-      callReason: '',
+      resolution: 'Pending',
+      callReason: 'Policy Information',
       callDateTime: new Date(),
       callerName: '',
       taCode: '',
@@ -336,7 +295,7 @@ const QRCManagement = () => {
     const matchesSearch = Object.values(entry).some(value =>
       value?.toString().toLowerCase().includes(searchTerm.toLowerCase())
     );
-    const matchesType = filterType === 'all' || entry.callType.toLowerCase() === filterType;
+    const matchesType = filterType === 'all' || (entry.callType && entry.callType.toLowerCase() === filterType);
     return matchesSearch && matchesType;
   });
 
@@ -425,23 +384,23 @@ const QRCManagement = () => {
                   <TableCell>{entry.callDateTime}</TableCell>
                   <TableCell>
                     <Stack direction="row" spacing={1} alignItems="center">
-                      {getTypeIcon(entry.callType)}
-                      <Typography variant="body2">{entry.callType}</Typography>
+                      {getTypeIcon(entry.callType || 'Query')}
+                      <Typography variant="body2">{entry.callType || 'Unknown'}</Typography>
                     </Stack>
                   </TableCell>
                   <TableCell>
                     <Box>
-                      <Typography variant="subtitle2">{entry.callerName}</Typography>
+                      <Typography variant="subtitle2">{entry.callerName || 'N/A'}</Typography>
                       <Typography variant="caption" color="text.secondary">
-                        {entry.contactNumber}
+                        {entry.contactNumber || 'N/A'}
                       </Typography>
                     </Box>
                   </TableCell>
-                  <TableCell>{entry.callReason}</TableCell>
-                  <TableCell>{entry.csrName}</TableCell>
+                  <TableCell>{entry.callReason || 'N/A'}</TableCell>
+                  <TableCell>{entry.csrName || 'N/A'}</TableCell>
                   <TableCell>
                     <Chip
-                      label={entry.resolution}
+                      label={entry.resolution || 'Pending'}
                       size="small"
                       sx={{
                         backgroundColor: alpha(getStatusColor(entry.resolution), 0.1),

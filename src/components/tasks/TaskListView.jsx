@@ -183,7 +183,7 @@ const TaskListView = ({ tasks, onEditTask, getPriorityColor, getStatusColor }) =
                         label={`${task.estimatedDuration} min`}
                       />
                     )}
-                    {task.tags && task.tags.map((tag) => (
+                    {Array.isArray(task.tags) && task.tags.map((tag) => (
                       <Chip key={tag} size="small" label={tag} variant="outlined" />
                     ))}
                   </Box>

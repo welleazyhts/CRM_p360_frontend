@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import {
+import taskManagementService, {
   TASK_STATUS,
   TASK_PRIORITY,
   TASK_TYPE,
@@ -32,10 +32,7 @@ export const useTaskManagement = () => {
 
 export const TaskManagementProvider = ({ children }) => {
   // Tasks state
-  const [tasks, setTasks] = useState(() => {
-    const saved = localStorage.getItem('tasks');
-    return saved ? JSON.parse(saved) : [];
-  });
+  const [tasks, setTasks] = useState([]);
 
   // Configuration state
   const [config, setConfig] = useState(() => {
@@ -54,10 +51,19 @@ export const TaskManagementProvider = ({ children }) => {
     };
   });
 
-  // Save tasks to localStorage
+  // Fetch tasks from API on mount
   useEffect(() => {
-    localStorage.setItem('tasks', JSON.stringify(tasks));
-  }, [tasks]);
+    const fetchTasks = async () => {
+      try {
+        const response = await taskManagementService.listTasks();
+        const taskList = Array.isArray(response) ? response : (response.results || []);
+        setTasks(taskList);
+      } catch (error) {
+        console.error("Failed to fetch tasks:", error);
+      }
+    };
+    fetchTasks();
+  }, []);
 
   // Save config to localStorage
   useEffect(() => {
@@ -97,36 +103,19 @@ export const TaskManagementProvider = ({ children }) => {
   /**
    * Create a new task
    */
-  const createTask = useCallback((taskData) => {
-    const newTask = {
-      id: `task_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-      title: taskData.title,
-      description: taskData.description || '',
-      type: taskData.type || TASK_TYPE.CUSTOM,
-      priority: taskData.priority || TASK_PRIORITY.MEDIUM,
-      status: TASK_STATUS.TODO,
-      assignedTo: taskData.assignedTo || null,
-      dueDate: taskData.dueDate || null,
-      estimatedDuration: taskData.estimatedDuration || config.defaultDuration,
-      checklist: taskData.checklist || [],
-      tags: taskData.tags || [],
-      entityType: taskData.entityType || null,
-      entityId: taskData.entityId || null,
-      parentTaskId: taskData.parentTaskId || null,
-      dependencies: taskData.dependencies || [],
-      recurring: taskData.recurring || false,
-      recurrence: taskData.recurrence || null,
-      reminder: taskData.reminder || null,
-      progress: 0,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-      createdBy: taskData.createdBy || null,
-      ...taskData
-    };
-
-    setTasks(prev => [newTask, ...prev]);
-    return newTask;
-  }, [config.defaultDuration]);
+  /**
+   * Create a new task
+   */
+  const createTask = useCallback(async (taskData) => {
+    try {
+      const newTask = await taskManagementService.createTask(taskData);
+      setTasks(prev => [newTask, ...prev]);
+      return newTask;
+    } catch (error) {
+      console.error("Failed to create task:", error);
+      throw error;
+    }
+  }, []);
 
   /**
    * Create task from template
@@ -139,38 +128,36 @@ export const TaskManagementProvider = ({ children }) => {
   /**
    * Update a task
    */
-  const updateTask = useCallback((taskId, updates) => {
-    setTasks(prev => prev.map(task => {
-      if (task.id !== taskId) return task;
-
-      const updated = {
-        ...task,
-        ...updates,
-        updatedAt: new Date().toISOString()
-      };
-
-      // Recalculate progress if checklist changed
-      if (updates.checklist) {
-        updated.progress = calculateTaskProgress(updates.checklist);
-      }
-
-      // Auto-complete task if all checklist items are done
-      if (updated.checklist && updated.checklist.length > 0 && updated.progress === 100) {
-        if (updated.status !== TASK_STATUS.COMPLETED) {
-          updated.status = TASK_STATUS.COMPLETED;
-          updated.completedAt = new Date().toISOString();
-        }
-      }
-
-      return updated;
-    }));
+  /**
+   * Update a task
+   */
+  const updateTask = useCallback(async (taskId, updates) => {
+    try {
+      const updatedTask = await taskManagementService.updateTask(taskId, updates);
+      setTasks(prev => prev.map(task =>
+        task.id === taskId ? updatedTask : task
+      ));
+      return updatedTask;
+    } catch (error) {
+      console.error(`Failed to update task ${taskId}:`, error);
+      throw error;
+    }
   }, []);
 
   /**
    * Delete a task
    */
-  const deleteTask = useCallback((taskId) => {
-    setTasks(prev => prev.filter(task => task.id !== taskId));
+  /**
+   * Delete a task
+   */
+  const deleteTask = useCallback(async (taskId) => {
+    try {
+      await taskManagementService.deleteTask(taskId);
+      setTasks(prev => prev.filter(task => task.id !== taskId));
+    } catch (error) {
+      console.error(`Failed to delete task ${taskId}:`, error);
+      throw error;
+    }
   }, []);
 
   /**

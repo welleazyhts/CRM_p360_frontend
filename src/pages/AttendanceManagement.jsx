@@ -165,10 +165,10 @@ const AttendanceManagement = () => {
     const absentToday = attendanceData.filter(record => record.status === 'Absent' && record.date === today).length;
     const lateToday = attendanceData.filter(record => record.isLate && record.date === today).length;
 
-    const totalHours = attendanceData.reduce((sum, record) => sum + (record.totalHours || 0), 0);
+    const totalHours = attendanceData.reduce((sum, record) => sum + (Number(record.totalHours) || 0), 0);
     const averageHours = attendanceData.length > 0 ? totalHours / attendanceData.length : 0;
 
-    const totalOvertime = attendanceData.reduce((sum, record) => sum + (record.overtimeHours || 0), 0);
+    const totalOvertime = attendanceData.reduce((sum, record) => sum + (Number(record.overtimeHours) || 0), 0);
 
     return {
       totalEmployees,
@@ -247,13 +247,14 @@ const AttendanceManagement = () => {
       if (editingAttendance) {
         // Update existing attendance
         console.log('Updating Attendance:', editingAttendance); // Debugging log
-        if (!editingAttendance.id) {
+        if (!editingAttendance.id && !editingAttendance.employeeId) {
           console.error('Missing ID in editingAttendance:', editingAttendance);
           setSnackbar({ open: true, message: 'Error: Cannot update record without ID', severity: 'error' });
           return;
         }
-        // We use the record ID (primary key) for updates
-        await attendanceService.update(editingAttendance.id, payload);
+        // We use the record ID (primary key) or employee ID for updates
+        const updateId = editingAttendance.id || editingAttendance.employeeId;
+        await attendanceService.update(updateId, payload);
         setSnackbar({ open: true, message: 'Attendance updated successfully!', severity: 'success' });
       } else {
         // Add new attendance
@@ -534,7 +535,7 @@ const AttendanceManagement = () => {
                           <TableCell>
                             <Box sx={{ display: 'flex', alignItems: 'center' }}>
                               <Avatar sx={{ mr: 2, bgcolor: theme.palette.primary.main }}>
-                                {record.employeeName.split(' ').map(n => n[0]).join('')}
+                                {(record.employeeName || '').split(' ').map(n => n[0]).join('')}
                               </Avatar>
                               <Box>
                                 <Typography variant="subtitle2" fontWeight="600">
@@ -787,8 +788,8 @@ const AttendanceManagement = () => {
                     <TableBody>
                       {employees.map((emp, index) => {
                         const empRecords = attendanceData.filter(r => r.employeeId === emp.id);
-                        const totalHours = empRecords.reduce((sum, r) => sum + r.totalHours, 0);
-                        const overtimeHours = empRecords.reduce((sum, r) => sum + r.overtimeHours, 0);
+                        const totalHours = empRecords.reduce((sum, r) => sum + (Number(r.totalHours) || 0), 0);
+                        const overtimeHours = empRecords.reduce((sum, r) => sum + (Number(r.overtimeHours) || 0), 0);
                         const presentCount = empRecords.filter(r => r.status === 'Present').length;
                         const attendanceRate = empRecords.length > 0 ? (presentCount / empRecords.length) * 100 : 0;
 
@@ -804,7 +805,7 @@ const AttendanceManagement = () => {
                             <TableCell>
                               <Box sx={{ display: 'flex', alignItems: 'center' }}>
                                 <Avatar sx={{ mr: 2, bgcolor: theme.palette.primary.main, width: 32, height: 32 }}>
-                                  {emp.name.split(' ').map(n => n[0]).join('')}
+                                  {(emp.name || '').split(' ').map(n => n[0]).join('')}
                                 </Avatar>
                                 <Typography variant="body2" fontWeight="600">
                                   {emp.name}
@@ -834,8 +835,8 @@ const AttendanceManagement = () => {
                           </TableRow>
                         );
                       }).sort((a, b) => {
-                        const aTotal = attendanceData.filter(r => r.employeeId === employees[a.key]?.id).reduce((sum, r) => sum + r.totalHours, 0);
-                        const bTotal = attendanceData.filter(r => r.employeeId === employees[b.key]?.id).reduce((sum, r) => sum + r.totalHours, 0);
+                        const aTotal = attendanceData.filter(r => r.employeeId === employees[a.key]?.id).reduce((sum, r) => sum + (Number(r.totalHours) || 0), 0);
+                        const bTotal = attendanceData.filter(r => r.employeeId === employees[b.key]?.id).reduce((sum, r) => sum + (Number(r.totalHours) || 0), 0);
                         return bTotal - aTotal;
                       })}
                     </TableBody>
@@ -859,7 +860,7 @@ const AttendanceManagement = () => {
                 <Grid item xs={12}>
                   <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
                     <Avatar sx={{ mr: 2, width: 56, height: 56, bgcolor: theme.palette.primary.main }}>
-                      {formData.employeeName.split(' ')[0]?.[0]}{formData.employeeName.split(' ')[1]?.[0]}
+                      {(formData.employeeName || '').split(' ')[0]?.[0]}{(formData.employeeName || '').split(' ')[1]?.[0]}
                     </Avatar>
                     <Box>
                       <Typography variant="h6">{formData.employeeName}</Typography>
