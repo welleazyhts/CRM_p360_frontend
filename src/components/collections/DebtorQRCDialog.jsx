@@ -1071,3 +1071,8 @@ const DebtorQRCDialog = ({ open, onClose, onSubmit }) => {
 };
 
 export default DebtorQRCDialog;
+
+
+
+
+
