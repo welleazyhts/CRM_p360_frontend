@@ -46,7 +46,14 @@ export const WorkflowProvider = ({ children }) => {
         if (Array.isArray(response.results)) list = response.results;
       }
 
-      setWorkflows(list);
+      // Normalize IDs
+      const normalizedList = list.map(item => ({
+        ...item,
+        id: item.id || item._id || item.pk || item.uuid || item.workflow_id
+      }));
+
+      console.log('Normalized workflows:', normalizedList);
+      setWorkflows(normalizedList);
     } catch (err) {
       console.error('Fetch workflows error', err);
       setError(err.message);
@@ -101,8 +108,11 @@ export const WorkflowProvider = ({ children }) => {
 
       // Optimistically update local state if we found a workflow object
       if (newWorkflow) {
+        // Normalize ID
+        newWorkflow.id = newWorkflow.id || newWorkflow._id || newWorkflow.pk || newWorkflow.uuid;
+
         setWorkflows(prev => {
-          if (prev.some(w => w.id === newWorkflow.id)) return prev;
+          if (newWorkflow.id && prev.some(w => w.id === newWorkflow.id)) return prev;
           return [newWorkflow, ...prev];
         });
       }
