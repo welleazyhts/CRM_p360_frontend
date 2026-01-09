@@ -37,17 +37,28 @@ const TrainingAnalysis = () => {
   const loadTrainingData = async () => {
     try {
       setLoading(true);
-      const [modules, records] = await Promise.all([
-        trainingAnalysisService.getTrainingModules(),
-        trainingAnalysisService.getTrainingRecords()
-      ]);
-      setTrainingModules(modules);
-      setTrainingRecords(records);
+
+      // Load modules (Main functionality)
+      try {
+        const modules = await trainingAnalysisService.getTrainingModules();
+        setTrainingModules(Array.isArray(modules) ? modules : []);
+      } catch (err) {
+        console.error('Failed to load training modules:', err);
+        setTrainingModules([]);
+      }
+
+      // Load records (Secondary/Optional functionality)
+      try {
+        const records = await trainingAnalysisService.getTrainingRecords();
+        setTrainingRecords(Array.isArray(records) ? records : []);
+      } catch (err) {
+        // Suppress error for optional data not yet ready in backend
+        console.warn('Failed to load training records (feature might be incomplete):', err);
+        setTrainingRecords([]);
+      }
+
     } catch (error) {
-      console.error('Error loading training data:', error);
-      // Fallback to empty arrays on error
-      setTrainingModules([]);
-      setTrainingRecords([]);
+      console.error('Unexpected error loading training data:', error);
     } finally {
       setLoading(false);
     }
@@ -66,13 +77,13 @@ const TrainingAnalysis = () => {
 
   const handleSaveModule = async () => {
     try {
-      const newModule = await trainingAnalysisService.createTrainingModule(formData);
-      setTrainingModules([...trainingModules, newModule]);
+      await trainingAnalysisService.createTrainingModule(formData);
+      // Reload all data to ensure fresh state from backend
+      await loadTrainingData();
       setModuleDialogOpen(false);
     } catch (error) {
       console.error('Error saving module:', error);
-      // Still close dialog on error, user can retry
-      setModuleDialogOpen(false);
+      alert('Failed to create module. Please try again.');
     }
   };
 

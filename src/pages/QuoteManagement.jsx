@@ -47,12 +47,16 @@ import {
   Refresh as RefreshIcon,
   Print as PrintIcon
 } from '@mui/icons-material';
+import { useTranslation } from 'react-i18next'; // Added import
 
 // Quote Management Component - Updated with action handlers
 
-import QuoteService from '../services/qouteservice';
+// Quote Management Component - Updated with action handlers
+
+import QuoteService from '../services/quoteService';
 
 const QuoteManagement = () => {
+  const { t } = useTranslation();
   const theme = useTheme();
   const [currentTab, setCurrentTab] = useState(0);
   const [openDialog, setOpenDialog] = useState(false);
@@ -223,25 +227,17 @@ const QuoteManagement = () => {
       customerPhone: formData.customerPhone,
       productType: formData.productType,
       productPlan: formData.productPlan,
-      coverageAmount: formData.coverageAmount || '₹0',
-      premium: formData.premium || '₹0',
-      sumInsured: formData.sumInsured || '₹0',
+      coverageAmount: formData.coverageAmount,
+      premium: formData.premium,
+      sumInsured: formData.sumInsured,
       tenure: formData.tenure || '1 Year',
-      quoteAmount: formData.quoteAmount && formData.quoteAmount.toString().startsWith('₹') ? formData.quoteAmount : `₹${formData.quoteAmount}`,
+      // Ensure quoteAmount is string or number as expected by service logic which strips symbol
+      quoteAmount: formData.quoteAmount,
       status: 'Draft',
-      validUntil: '',
-      raisedBy: 'Current User',
-      raisedDate: new Date().toLocaleDateString('en-GB'), // Add raised date
-      conversionProbability: 50, // Default conversion probability for new quotes
-      attachments: [],
-      timeline: [
-        {
-          action: 'Quote Created',
-          user: 'Current User',
-          timestamp: new Date().toLocaleString(),
-          details: 'Initial quote raised'
-        }
-      ]
+      validityPeriod: formData.validityPeriod || '30',
+      remarks: formData.remarks,
+      ageOfInsured: formData.ageOfInsured,
+      // Add other fields as necessary matching payload mapping
     };
 
     setLoading(true);
@@ -250,58 +246,24 @@ const QuoteManagement = () => {
       // Check if we're editing an existing quote
       if (selectedQuote && selectedQuote.id) {
         // UPDATE existing quote
-        const updatePayload = {
-          ...selectedQuote,
-          customerName: formData.customerName,
-          customerEmail: formData.customerEmail,
-          customerPhone: formData.customerPhone,
-          productType: formData.productType,
-          productPlan: formData.productPlan,
-          coverageAmount: formData.coverageAmount || '₹0',
-          premium: formData.premium || '₹0',
-          sumInsured: formData.sumInsured || '₹0',
-          tenure: formData.tenure || '1 Year',
-          quoteAmount: formData.quoteAmount && formData.quoteAmount.toString().startsWith('₹') ? formData.quoteAmount : `₹${formData.quoteAmount}`,
-          remarks: formData.remarks,
-          ageOfInsured: formData.ageOfInsured,
-          medicalHistory: formData.medicalHistory,
-          vehicleDetails: formData.vehicleDetails,
-          previousInsurance: formData.previousInsurance,
-          timeline: [
-            ...(selectedQuote.timeline || []),
-            {
-              action: 'Quote Updated',
-              user: 'Current User',
-              timestamp: new Date().toLocaleString(),
-              details: 'Quote details modified'
-            }
-          ]
-        };
+        const updated = await QuoteService.updateQuote(selectedQuote.id, payload);
 
         // Update the quote in the list
-        setQuotes(prev => prev.map(q => q.id === selectedQuote.id ? updatePayload : q));
+        setQuotes(prev => prev.map(q => q.id === selectedQuote.id ? updated : q));
 
-        // Log activity
-        addActivityHistory(
-          selectedQuote.id,
-          'Quote Updated',
-          `Quote details modified for ${formData.customerName}`
-        );
+        // Refresh history
+        try { const h = await QuoteService.listHistory(); setMockHistory(Array.isArray(h) ? h : (h.items || [])); } catch (e) { }
 
         // Clear selected quote
         setSelectedQuote(null);
       } else {
         // CREATE new quote
         const created = await QuoteService.createQuote(payload);
-        // QuoteService mock returns created item; prepend to local list
+        // Prepend to local list
         setQuotes(prev => [created, ...prev]);
 
-        // Log activity
-        addActivityHistory(
-          created.id,
-          'Quote Created',
-          `New quote created for ${formData.customerName} - ${formData.productType} (${formData.productPlan})`
-        );
+        // Refresh history
+        try { const h = await QuoteService.listHistory(); setMockHistory(Array.isArray(h) ? h : (h.items || [])); } catch (e) { }
       }
 
       // reset form
@@ -325,9 +287,11 @@ const QuoteManagement = () => {
         previousInsurance: ''
       });
       setCurrentTab(0);
+      setSnackbar({ open: true, message: 'Quote saved successfully', severity: 'success' });
     } catch (err) {
       console.error('Quote operation error', err);
       setError(err.message || 'Failed to process quote');
+      setSnackbar({ open: true, message: 'Failed to process quote', severity: 'error' });
     } finally {
       setLoading(false);
     }
@@ -674,38 +638,14 @@ const QuoteManagement = () => {
   const handleDuplicateQuote = async (quote) => {
     if (!quote) return;
 
-    // Calculate valid until date (30 days from now)
-    const validUntilDate = new Date();
-    validUntilDate.setDate(validUntilDate.getDate() + 30);
-
-    const duplicatedQuote = {
-      ...quote,
-      id: `${quote.id}-duplicated`, // Use original ID with -duplicated suffix
-      status: 'Draft',
-      raisedDate: new Date().toLocaleDateString('en-GB'),
-      validUntil: validUntilDate.toLocaleDateString('en-GB'),
-      policyNumber: undefined,
-      timeline: [
-        {
-          action: 'Quote Duplicated',
-          user: 'Current User',
-          timestamp: new Date().toLocaleString(),
-          details: `Duplicated from ${quote.id}`
-        }
-      ]
-    };
-
     setLoading(true);
     try {
-      const created = await QuoteService.createQuote(duplicatedQuote);
+      // Use service specific duplicate endpoint
+      const created = await QuoteService.duplicateQuote(quote.id);
       setQuotes(prev => [created, ...prev]);
 
-      // Log activity
-      addActivityHistory(
-        created.id,
-        'Quote Duplicated',
-        `Duplicated from quote ${quote.id} for ${quote.customerName}`
-      );
+      // Refresh history
+      try { const h = await QuoteService.listHistory(); setMockHistory(Array.isArray(h) ? h : (h.items || [])); } catch (e) { }
 
       handleMenuClose();
     } catch (err) {
@@ -739,17 +679,20 @@ const QuoteManagement = () => {
   };
 
   // Confirm Delete Quote
-  const handleConfirmDelete = () => {
+  const handleConfirmDelete = async () => {
     if (!selectedQuote) return;
 
-    // Log activity before deleting
-    addActivityHistory(
-      selectedQuote.id,
-      'Quote Deleted',
-      `Quote deleted for ${selectedQuote.customerName} - ${selectedQuote.productType}`
-    );
+    try {
+      await QuoteService.deleteQuote(selectedQuote.id);
+      setQuotes(prev => prev.filter(q => q.id !== selectedQuote.id));
 
-    setQuotes(prev => prev.filter(q => q.id !== selectedQuote.id));
+      // Refresh history
+      try { const h = await QuoteService.listHistory(); setMockHistory(Array.isArray(h) ? h : (h.items || [])); } catch (e) { }
+    } catch (err) {
+      console.error('Delete Quote Error', err);
+      setError(err.message || 'Failed to delete quote');
+    }
+
     setDeleteConfirmDialog(false);
     handleMenuClose();
     setSelectedQuote(null);
@@ -830,7 +773,7 @@ const QuoteManagement = () => {
             <TextField
               fullWidth
               size="small"
-              placeholder="Search by customer name, quote ID, or product..."
+              placeholder={t('quoteManagement.filter.searchPlaceholder', 'Search by customer name, quote ID, or product...')}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               InputProps={{
@@ -851,10 +794,10 @@ const QuoteManagement = () => {
           </Grid>
           <Grid item xs={12} md={4}>
             <FormControl fullWidth size="small">
-              <InputLabel>Filter by Status</InputLabel>
+              <InputLabel>{t('quoteManagement.filter.status', 'Filter by Status')}</InputLabel>
               <Select
                 value={statusFilter}
-                label="Filter by Status"
+                label={t('quoteManagement.filter.status', 'Filter by Status')}
                 onChange={(e) => setStatusFilter(e.target.value)}
                 startAdornment={
                   <InputAdornment position="start">
@@ -862,13 +805,13 @@ const QuoteManagement = () => {
                   </InputAdornment>
                 }
               >
-                <MenuItem value="all">All Quotes</MenuItem>
-                <MenuItem value="Draft">Draft</MenuItem>
-                <MenuItem value="Pending">Pending</MenuItem>
-                <MenuItem value="Approved">Approved</MenuItem>
-                <MenuItem value="Converted">Converted</MenuItem>
-                <MenuItem value="Rejected">Rejected</MenuItem>
-                <MenuItem value="Lost">Lost</MenuItem>
+                <MenuItem value="all">{t('quoteManagement.filter.all', 'All Quotes')}</MenuItem>
+                <MenuItem value="Draft">{t('quoteManagement.status.draft', 'Draft')}</MenuItem>
+                <MenuItem value="Pending">{t('quoteManagement.status.pending', 'Pending')}</MenuItem>
+                <MenuItem value="Approved">{t('quoteManagement.status.approved', 'Approved')}</MenuItem>
+                <MenuItem value="Converted">{t('quoteManagement.status.converted', 'Converted')}</MenuItem>
+                <MenuItem value="Rejected">{t('quoteManagement.status.rejected', 'Rejected')}</MenuItem>
+                <MenuItem value="Lost">{t('quoteManagement.status.lost', 'Lost')}</MenuItem>
               </Select>
             </FormControl>
           </Grid>
@@ -882,7 +825,7 @@ const QuoteManagement = () => {
                 setStatusFilter('all');
               }}
             >
-              Reset
+              {t('quoteManagement.filter.reset', 'Reset')}
             </Button>
           </Grid>
         </Grid>
@@ -949,7 +892,7 @@ const QuoteManagement = () => {
                   subheader={
                     <Stack direction="row" spacing={1} sx={{ mt: 0.5 }}>
                       <Chip
-                        label={quote.status}
+                        label={t(`quoteManagement.status.${quote.status.toLowerCase()}`, quote.status)}
                         color={getStatusColor(quote.status)}
                         size="small"
                       />
@@ -996,7 +939,7 @@ const QuoteManagement = () => {
                     <Grid container spacing={1}>
                       <Grid item xs={6}>
                         <Typography variant="caption" color="text.secondary">
-                          Coverage
+                          {t('quoteManagement.cards.coverage', 'Coverage')}
                         </Typography>
                         <Typography variant="body2" fontWeight="700" color="primary.main">
                           {quote.coverageAmount}
@@ -1004,7 +947,7 @@ const QuoteManagement = () => {
                       </Grid>
                       <Grid item xs={6}>
                         <Typography variant="caption" color="text.secondary">
-                          Premium
+                          {t('quoteManagement.cards.premium', 'Premium')}
                         </Typography>
                         <Typography variant="body2" fontWeight="700" color="success.main">
                           {quote.premium}
@@ -1017,7 +960,7 @@ const QuoteManagement = () => {
                       <Box>
                         <Stack direction="row" justifyContent="space-between" sx={{ mb: 0.5 }}>
                           <Typography variant="caption" color="text.secondary">
-                            Conversion Probability
+                            {t('quoteManagement.cards.conversionProbability', 'Conversion Probability')}
                           </Typography>
                           <Typography variant="caption" fontWeight="600">
                             {quote.conversionProbability || 0}%
@@ -1039,11 +982,11 @@ const QuoteManagement = () => {
                     <Stack direction="row" justifyContent="space-between">
                       <Typography variant="caption" color="text.secondary">
                         <CalendarIcon sx={{ fontSize: 12, mr: 0.5, verticalAlign: 'middle' }} />
-                        Raised: {quote.raisedDate}
+                        {t('quoteManagement.cards.raised', 'Raised')}: {quote.raisedDate}
                       </Typography>
                       {quote.validUntil && (
                         <Typography variant="caption" color="error.main" fontWeight="600">
-                          Valid till: {quote.validUntil}
+                          {t('quoteManagement.cards.validTill', 'Valid till')}: {quote.validUntil}
                         </Typography>
                       )}
                     </Stack>
@@ -1053,7 +996,7 @@ const QuoteManagement = () => {
                       <Box>
                         <Typography variant="caption" color="text.secondary">
                           <AttachIcon sx={{ fontSize: 12, mr: 0.5, verticalAlign: 'middle' }} />
-                          {quote.attachments.length} attachment(s)
+                          {quote.attachments.length} {t('quoteManagement.cards.attachments', 'attachment(s)')}
                         </Typography>
                       </Box>
                     )}
@@ -1067,7 +1010,7 @@ const QuoteManagement = () => {
                     startIcon={<ViewIcon />}
                     onClick={() => handleViewQuote(quote)}
                   >
-                    View Details
+                    {t('quoteManagement.cards.viewDetails', 'View Details')}
                   </Button>
                   <Stack direction="row" spacing={0.5}>
                     <Tooltip title="Send Email">
@@ -1106,12 +1049,12 @@ const QuoteManagement = () => {
         <Paper sx={{ p: 6, textAlign: 'center', borderRadius: 3 }}>
           <QuoteIcon sx={{ fontSize: 64, color: 'text.secondary', mb: 2 }} />
           <Typography variant="h6" color="text.secondary" gutterBottom>
-            No quotes found
+            {t('quoteManagement.empty.title', 'No quotes found')}
           </Typography>
           <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
             {searchTerm || statusFilter !== 'all'
-              ? 'Try adjusting your search or filter criteria'
-              : 'Create your first quote to get started'}
+              ? t('quoteManagement.empty.adjustParams', 'Try adjusting your search or filter criteria')
+              : t('quoteManagement.empty.createFirst', 'Create your first quote to get started')}
           </Typography>
           {!searchTerm && statusFilter === 'all' && (
             <Button
@@ -1119,7 +1062,7 @@ const QuoteManagement = () => {
               startIcon={<AddIcon />}
               onClick={() => setCurrentTab(1)}
             >
-              Create Quote
+              {t('quoteManagement.empty.createButton', 'Create Quote')}
             </Button>
           )}
         </Paper>
@@ -1131,18 +1074,18 @@ const QuoteManagement = () => {
     <Card sx={{ borderRadius: 3 }}>
       <CardContent sx={{ p: 4 }}>
         <Typography variant="h5" fontWeight="700" gutterBottom sx={{ mb: 3 }}>
-          {selectedQuote ? 'Edit Quote' : 'Create New Quote'}
+          {selectedQuote ? t('quoteManagement.form.editTitle', 'Edit Quote') : t('quoteManagement.form.createTitle', 'Create New Quote')}
         </Typography>
 
         <Stepper activeStep={0} sx={{ mb: 4 }}>
           <Step>
-            <StepLabel>Customer Info</StepLabel>
+            <StepLabel>{t('quoteManagement.form.steps.customerInfo', 'Customer Info')}</StepLabel>
           </Step>
           <Step>
-            <StepLabel>Product Details</StepLabel>
+            <StepLabel>{t('quoteManagement.form.steps.productDetails', 'Product Details')}</StepLabel>
           </Step>
           <Step>
-            <StepLabel>Pricing</StepLabel>
+            <StepLabel>{t('quoteManagement.form.steps.pricing', 'Pricing')}</StepLabel>
           </Step>
         </Stepper>
 
@@ -1158,7 +1101,7 @@ const QuoteManagement = () => {
           <Grid item xs={12} md={6}>
             <TextField
               fullWidth
-              label="Customer Name"
+              label={t('quoteManagement.form.customer.name', 'Customer Name')}
               required
               value={formData.customerName}
               onChange={(e) => handleInputChange('customerName', e.target.value)}
@@ -1174,16 +1117,16 @@ const QuoteManagement = () => {
           <Grid item xs={12} md={6}>
             <TextField
               fullWidth
-              label="Lead ID"
+              label={t('quoteManagement.form.customer.leadId', 'Lead ID')}
               value={formData.leadId}
               onChange={(e) => handleInputChange('leadId', e.target.value)}
-              placeholder="Auto-generated if left empty"
+              placeholder={t('quoteManagement.form.customer.leadIdPlaceholder', 'Auto-generated if left empty')}
             />
           </Grid>
           <Grid item xs={12} md={6}>
             <TextField
               fullWidth
-              label="Customer Email"
+              label={t('quoteManagement.form.customer.email', 'Customer Email')}
               type="email"
               required
               value={formData.customerEmail}
@@ -1200,7 +1143,7 @@ const QuoteManagement = () => {
           <Grid item xs={12} md={6}>
             <TextField
               fullWidth
-              label="Customer Phone"
+              label={t('quoteManagement.form.customer.phone', 'Customer Phone')}
               required
               value={formData.customerPhone}
               onChange={(e) => handleInputChange('customerPhone', e.target.value)}
@@ -1217,17 +1160,17 @@ const QuoteManagement = () => {
           {/* Product Information */}
           <Grid item xs={12} sx={{ mt: 2 }}>
             <Typography variant="subtitle1" fontWeight="600" gutterBottom>
-              Product Information
+              {t('quoteManagement.form.product.title', 'Product Information')}
             </Typography>
             <Divider sx={{ mb: 2 }} />
           </Grid>
 
           <Grid item xs={12} md={6}>
             <FormControl fullWidth required>
-              <InputLabel>Product Type</InputLabel>
+              <InputLabel>{t('quoteManagement.form.product.type', 'Product Type')}</InputLabel>
               <Select
                 value={formData.productType}
-                label="Product Type"
+                label={t('quoteManagement.form.product.type', 'Product Type')}
                 onChange={(e) => handleInputChange('productType', e.target.value)}
               >
                 <MenuItem value="Health Insurance">Health Insurance</MenuItem>
@@ -1240,10 +1183,10 @@ const QuoteManagement = () => {
           </Grid>
           <Grid item xs={12} md={6}>
             <FormControl fullWidth required>
-              <InputLabel>Product / Plan</InputLabel>
+              <InputLabel>{t('quoteManagement.form.product.plan', 'Product / Plan')}</InputLabel>
               <Select
                 value={formData.productPlan}
-                label="Product / Plan"
+                label={t('quoteManagement.form.product.plan', 'Product / Plan')}
                 onChange={(e) => handleInputChange('productPlan', e.target.value)}
               >
                 <MenuItem value="Health Insurance Premium">Health Insurance Premium</MenuItem>
@@ -1262,7 +1205,7 @@ const QuoteManagement = () => {
           {/* Coverage and Pricing */}
           <Grid item xs={12} sx={{ mt: 2 }}>
             <Typography variant="subtitle1" fontWeight="600" gutterBottom>
-              Coverage & Pricing
+              {t('quoteManagement.form.pricing.title', 'Coverage & Pricing')}
             </Typography>
             <Divider sx={{ mb: 2 }} />
           </Grid>
@@ -1270,7 +1213,7 @@ const QuoteManagement = () => {
           <Grid item xs={12} md={4}>
             <TextField
               fullWidth
-              label="Coverage Amount"
+              label={t('quoteManagement.form.pricing.coverage', 'Coverage Amount')}
               required
               value={formData.coverageAmount}
               onChange={(e) => handleInputChange('coverageAmount', e.target.value)}
@@ -1285,7 +1228,7 @@ const QuoteManagement = () => {
           <Grid item xs={12} md={4}>
             <TextField
               fullWidth
-              label="Sum Insured"
+              label={t('quoteManagement.form.pricing.sumInsured', 'Sum Insured')}
               required
               value={formData.sumInsured}
               onChange={(e) => handleInputChange('sumInsured', e.target.value)}
@@ -1300,7 +1243,7 @@ const QuoteManagement = () => {
           <Grid item xs={12} md={4}>
             <TextField
               fullWidth
-              label="Premium (Annual)"
+              label={t('quoteManagement.form.pricing.premium', 'Premium (Annual)')}
               required
               value={formData.premium}
               onChange={(e) => handleInputChange('premium', e.target.value)}
@@ -1316,7 +1259,7 @@ const QuoteManagement = () => {
           <Grid item xs={12} md={6}>
             <TextField
               fullWidth
-              label="Total Quote Amount"
+              label={t('quoteManagement.form.pricing.totalQuote', 'Total Quote Amount')}
               required
               value={formData.quoteAmount}
               onChange={(e) => handleInputChange('quoteAmount', e.target.value)}
@@ -1332,10 +1275,10 @@ const QuoteManagement = () => {
           </Grid>
           <Grid item xs={12} md={6}>
             <FormControl fullWidth>
-              <InputLabel>Policy Tenure</InputLabel>
+              <InputLabel>{t('quoteManagement.form.pricing.tenure', 'Policy Tenure')}</InputLabel>
               <Select
                 value={formData.tenure}
-                label="Policy Tenure"
+                label={t('quoteManagement.form.pricing.tenure', 'Policy Tenure')}
                 onChange={(e) => handleInputChange('tenure', e.target.value)}
               >
                 <MenuItem value="1">1 Year</MenuItem>
@@ -1351,10 +1294,10 @@ const QuoteManagement = () => {
 
           <Grid item xs={12} md={6}>
             <FormControl fullWidth>
-              <InputLabel>Quote Validity Period</InputLabel>
+              <InputLabel>{t('quoteManagement.form.pricing.validity', 'Quote Validity Period')}</InputLabel>
               <Select
                 value={formData.validityPeriod}
-                label="Quote Validity Period"
+                label={t('quoteManagement.form.pricing.validity', 'Quote Validity Period')}
                 onChange={(e) => handleInputChange('validityPeriod', e.target.value)}
               >
                 <MenuItem value="15">15 days</MenuItem>
@@ -1367,7 +1310,7 @@ const QuoteManagement = () => {
           <Grid item xs={12} md={6}>
             <TextField
               fullWidth
-              label="Age of Insured"
+              label={t('quoteManagement.form.pricing.age', 'Age of Insured')}
               type="number"
               value={formData.ageOfInsured}
               onChange={(e) => handleInputChange('ageOfInsured', e.target.value)}
@@ -1380,17 +1323,17 @@ const QuoteManagement = () => {
               fullWidth
               multiline
               rows={3}
-              label="Remarks / Notes"
+              label={t('quoteManagement.form.remarks.label', 'Remarks / Notes')}
               value={formData.remarks}
               onChange={(e) => handleInputChange('remarks', e.target.value)}
-              placeholder="Add any additional information or special conditions..."
+              placeholder={t('quoteManagement.form.remarks.placeholder', 'Add any additional information or special conditions...')}
             />
           </Grid>
 
           <Grid item xs={12}>
             <Alert severity="info" sx={{ borderRadius: 2 }}>
               <Typography variant="body2">
-                After creating the quote, you can send it to the customer via email and track its status through the quote management dashboard.
+                {t('quoteManagement.form.infoAlert', 'After creating the quote, you can send it to the customer via email and track its status through the quote management dashboard.')}
               </Typography>
             </Alert>
           </Grid>
@@ -1422,7 +1365,7 @@ const QuoteManagement = () => {
                   });
                 }}
               >
-                Reset Form
+                {t('quoteManagement.form.buttons.reset', 'Reset Form')}
               </Button>
               <Button
                 variant="contained"
@@ -1430,7 +1373,7 @@ const QuoteManagement = () => {
                 startIcon={selectedQuote ? <EditIcon /> : <AddIcon />}
                 onClick={handleSubmit}
               >
-                {selectedQuote ? 'Update Quote' : 'Submit Quote'}
+                {selectedQuote ? t('quoteManagement.form.buttons.update', 'Update Quote') : t('quoteManagement.form.buttons.submit', 'Submit Quote')}
               </Button>
             </Stack>
           </Grid>
@@ -1442,7 +1385,7 @@ const QuoteManagement = () => {
   const renderQuoteHistory = () => (
     <Paper sx={{ p: 3, borderRadius: 3 }}>
       <Typography variant="h6" fontWeight="700" gutterBottom sx={{ mb: 3 }}>
-        Quote Activity Timeline
+        {t('quoteManagement.dialog.timeline', 'Quote Activity Timeline')}
       </Typography>
 
       {mockHistory.length > 0 ? (
@@ -1503,7 +1446,7 @@ const QuoteManagement = () => {
         <Box sx={{ textAlign: 'center', py: 6 }}>
           <AssessmentIcon sx={{ fontSize: 64, color: 'text.secondary', mb: 2 }} />
           <Typography variant="h6" color="text.secondary">
-            No activity history yet
+            {t('quoteManagement.empty.noHistory', 'No activity history yet')}
           </Typography>
         </Box>
       )}
@@ -1516,10 +1459,10 @@ const QuoteManagement = () => {
       <Box sx={{ mb: 3, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <Box>
           <Typography variant="h4" fontWeight="700" gutterBottom>
-            Quote Management
+            {t('quoteManagement.title', 'Quote Management')}
           </Typography>
           <Typography variant="body2" color="text.secondary">
-            Create, manage, and track insurance quotes
+            {t('quoteManagement.subtitle', 'Create, manage, and track insurance quotes')}
           </Typography>
         </Box>
         <Button
@@ -1550,7 +1493,7 @@ const QuoteManagement = () => {
             setCurrentTab(1);
           }}
         >
-          New Quote
+          {t('quoteManagement.newQuote', 'New Quote')}
         </Button>
       </Box>
 
@@ -1576,13 +1519,13 @@ const QuoteManagement = () => {
               <Stack direction="row" justifyContent="space-between" alignItems="flex-start">
                 <Box>
                   <Typography variant="body2" color="text.secondary" gutterBottom fontWeight="600">
-                    Total Quotes
+                    {t('quoteManagement.stats.totalQuotes', 'Total Quotes')}
                   </Typography>
                   <Typography variant="h3" fontWeight="700" color="primary.main">
                     {stats.totalQuotes}
                   </Typography>
                   <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
-                    {stats.draftQuotes} drafts
+                    {stats.draftQuotes} {t('quoteManagement.stats.drafts', 'drafts')}
                   </Typography>
                 </Box>
                 <Avatar
@@ -1612,13 +1555,13 @@ const QuoteManagement = () => {
               <Stack direction="row" justifyContent="space-between" alignItems="flex-start">
                 <Box>
                   <Typography variant="body2" color="text.secondary" gutterBottom fontWeight="600">
-                    Pending Approval
+                    {t('quoteManagement.stats.pendingApproval', 'Pending Approval')}
                   </Typography>
                   <Typography variant="h3" fontWeight="700" color="warning.main">
                     {stats.pendingQuotes}
                   </Typography>
                   <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
-                    {stats.approvedQuotes} approved
+                    {stats.approvedQuotes} {t('quoteManagement.stats.approved', 'approved')}
                   </Typography>
                 </Box>
                 <Avatar
@@ -1648,13 +1591,13 @@ const QuoteManagement = () => {
               <Stack direction="row" justifyContent="space-between" alignItems="flex-start">
                 <Box>
                   <Typography variant="body2" color="text.secondary" gutterBottom fontWeight="600">
-                    Converted
+                    {t('quoteManagement.stats.converted', 'Converted')}
                   </Typography>
                   <Typography variant="h3" fontWeight="700" color="info.main">
                     {stats.convertedQuotes}
                   </Typography>
                   <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
-                    {stats.conversionRate}% rate
+                    {stats.conversionRate}% {t('quoteManagement.stats.rate', 'rate')}
                   </Typography>
                 </Box>
                 <Avatar
@@ -1684,13 +1627,13 @@ const QuoteManagement = () => {
               <Stack direction="row" justifyContent="space-between" alignItems="flex-start">
                 <Box>
                   <Typography variant="body2" color="text.secondary" gutterBottom fontWeight="600">
-                    Total Value
+                    {t('quoteManagement.stats.totalValue', 'Total Value')}
                   </Typography>
                   <Typography variant="h3" fontWeight="700" color="success.main">
                     ₹{(stats.totalValue / 100000).toFixed(1)}L
                   </Typography>
                   <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
-                    Avg: ₹{(stats.avgQuoteValue / 1000).toFixed(0)}K
+                    {t('quoteManagement.stats.avg', 'Avg')}: ₹{(stats.avgQuoteValue / 1000).toFixed(0)}K
                   </Typography>
                 </Box>
                 <Avatar
@@ -1726,13 +1669,13 @@ const QuoteManagement = () => {
           <Tab
             icon={<Badge badgeContent={filteredQuotes.length} color="primary" max={999}><QuoteIcon /></Badge>}
             iconPosition="start"
-            label="All Quotes"
+            label={t('quoteManagement.tabs.allQuotes', 'All Quotes')}
           />
-          <Tab icon={<AddIcon />} iconPosition="start" label="Create Quote" />
+          <Tab icon={<AddIcon />} iconPosition="start" label={t('quoteManagement.tabs.createQuote', 'Create Quote')} />
           <Tab
             icon={<Badge badgeContent={mockHistory.length} color="primary" max={999}><AssessmentIcon /></Badge>}
             iconPosition="start"
-            label="Activity History"
+            label={t('quoteManagement.tabs.activityHistory', 'Activity History')}
           />
         </Tabs>
       </Paper>
@@ -1768,13 +1711,13 @@ const QuoteManagement = () => {
                   {selectedQuote?.id}
                 </Typography>
                 <Typography variant="caption" color="text.secondary">
-                  Quote Details
+                  {t('quoteManagement.dialog.details', 'Quote Details')}
                 </Typography>
               </Box>
             </Box>
             {selectedQuote && (
               <Chip
-                label={selectedQuote.status}
+                label={t(`quoteManagement.status.${selectedQuote.status.toLowerCase()}`, selectedQuote.status)}
                 color={getStatusColor(selectedQuote.status)}
                 icon={getStatusIcon(selectedQuote.status)}
               />
@@ -1786,23 +1729,23 @@ const QuoteManagement = () => {
             <Box>
               {/* Customer Section */}
               <Typography variant="subtitle1" fontWeight="700" gutterBottom>
-                Customer Information
+                {t('quoteManagement.dialog.customerInfo', 'Customer Information')}
               </Typography>
               <Grid container spacing={2} sx={{ mb: 3 }}>
                 <Grid item xs={12} md={6}>
-                  <Typography variant="caption" color="text.secondary">Customer Name</Typography>
+                  <Typography variant="caption" color="text.secondary">{t('quoteManagement.dialog.labels.name', 'Customer Name')}</Typography>
                   <Typography variant="body2" fontWeight="600">{selectedQuote.customerName}</Typography>
                 </Grid>
                 <Grid item xs={12} md={6}>
-                  <Typography variant="caption" color="text.secondary">Lead ID</Typography>
+                  <Typography variant="caption" color="text.secondary">{t('quoteManagement.dialog.labels.leadId', 'Lead ID')}</Typography>
                   <Typography variant="body2" fontWeight="600">{selectedQuote.leadId}</Typography>
                 </Grid>
                 <Grid item xs={12} md={6}>
-                  <Typography variant="caption" color="text.secondary">Email</Typography>
+                  <Typography variant="caption" color="text.secondary">{t('quoteManagement.dialog.labels.email', 'Email')}</Typography>
                   <Typography variant="body2">{selectedQuote.customerEmail}</Typography>
                 </Grid>
                 <Grid item xs={12} md={6}>
-                  <Typography variant="caption" color="text.secondary">Phone</Typography>
+                  <Typography variant="caption" color="text.secondary">{t('quoteManagement.dialog.labels.phone', 'Phone')}</Typography>
                   <Typography variant="body2">{selectedQuote.customerPhone}</Typography>
                 </Grid>
               </Grid>
@@ -1811,23 +1754,23 @@ const QuoteManagement = () => {
 
               {/* Product Section */}
               <Typography variant="subtitle1" fontWeight="700" gutterBottom>
-                Product Details
+                {t('quoteManagement.dialog.productDetails', 'Product Details')}
               </Typography>
               <Grid container spacing={2} sx={{ mb: 3 }}>
                 <Grid item xs={12} md={6}>
-                  <Typography variant="caption" color="text.secondary">Product Type</Typography>
+                  <Typography variant="caption" color="text.secondary">{t('quoteManagement.dialog.labels.productType', 'Product Type')}</Typography>
                   <Typography variant="body2" fontWeight="600">{selectedQuote.productType}</Typography>
                 </Grid>
                 <Grid item xs={12} md={6}>
-                  <Typography variant="caption" color="text.secondary">Plan Name</Typography>
+                  <Typography variant="caption" color="text.secondary">{t('quoteManagement.dialog.labels.planName', 'Plan Name')}</Typography>
                   <Typography variant="body2" fontWeight="600">{selectedQuote.productPlan}</Typography>
                 </Grid>
                 <Grid item xs={12} md={6}>
-                  <Typography variant="caption" color="text.secondary">Policy Tenure</Typography>
+                  <Typography variant="caption" color="text.secondary">{t('quoteManagement.dialog.labels.tenure', 'Policy Tenure')}</Typography>
                   <Typography variant="body2">{selectedQuote.tenure}</Typography>
                 </Grid>
                 <Grid item xs={12} md={6}>
-                  <Typography variant="caption" color="text.secondary">Version</Typography>
+                  <Typography variant="caption" color="text.secondary">{t('quoteManagement.dialog.labels.version', 'Version')}</Typography>
                   <Typography variant="body2">v{selectedQuote.version}</Typography>
                 </Grid>
               </Grid>
@@ -1836,23 +1779,23 @@ const QuoteManagement = () => {
 
               {/* Financial Section */}
               <Typography variant="subtitle1" fontWeight="700" gutterBottom>
-                Financial Details
+                {t('quoteManagement.dialog.financialDetails', 'Financial Details')}
               </Typography>
               <Grid container spacing={2} sx={{ mb: 3 }}>
                 <Grid item xs={12} md={4}>
-                  <Typography variant="caption" color="text.secondary">Coverage Amount</Typography>
+                  <Typography variant="caption" color="text.secondary">{t('quoteManagement.dialog.labels.coverage', 'Coverage Amount')}</Typography>
                   <Typography variant="h6" fontWeight="700" color="primary.main">
                     {selectedQuote.coverageAmount}
                   </Typography>
                 </Grid>
                 <Grid item xs={12} md={4}>
-                  <Typography variant="caption" color="text.secondary">Premium (Annual)</Typography>
+                  <Typography variant="caption" color="text.secondary">{t('quoteManagement.dialog.labels.premium', 'Premium (Annual)')}</Typography>
                   <Typography variant="h6" fontWeight="700" color="success.main">
                     {selectedQuote.premium}
                   </Typography>
                 </Grid>
                 <Grid item xs={12} md={4}>
-                  <Typography variant="caption" color="text.secondary">Total Quote</Typography>
+                  <Typography variant="caption" color="text.secondary">{t('quoteManagement.dialog.labels.totalQuote', 'Total Quote')}</Typography>
                   <Typography variant="h6" fontWeight="700" color="info.main">
                     {selectedQuote.quoteAmount}
                   </Typography>
@@ -1863,23 +1806,23 @@ const QuoteManagement = () => {
 
               {/* Timeline Section */}
               <Typography variant="subtitle1" fontWeight="700" gutterBottom sx={{ mb: 2 }}>
-                Quote Timeline
+                {t('quoteManagement.dialog.timeline', 'Quote Timeline')}
               </Typography>
               <Grid container spacing={2} sx={{ mb: 3 }}>
                 <Grid item xs={6}>
-                  <Typography variant="caption" color="text.secondary">Raised Date</Typography>
+                  <Typography variant="caption" color="text.secondary">{t('quoteManagement.dialog.labels.raisedDate', 'Raised Date')}</Typography>
                   <Typography variant="body2" fontWeight="600">{selectedQuote.raisedDate}</Typography>
                 </Grid>
                 <Grid item xs={6}>
-                  <Typography variant="caption" color="text.secondary">Raised By</Typography>
+                  <Typography variant="caption" color="text.secondary">{t('quoteManagement.dialog.labels.raisedBy', 'Raised By')}</Typography>
                   <Typography variant="body2" fontWeight="600">{selectedQuote.raisedBy}</Typography>
                 </Grid>
                 <Grid item xs={6}>
-                  <Typography variant="caption" color="text.secondary">Last Updated</Typography>
+                  <Typography variant="caption" color="text.secondary">{t('quoteManagement.dialog.labels.lastUpdated', 'Last Updated')}</Typography>
                   <Typography variant="body2">{selectedQuote.lastUpdated}</Typography>
                 </Grid>
                 <Grid item xs={6}>
-                  <Typography variant="caption" color="text.secondary">Valid Until</Typography>
+                  <Typography variant="caption" color="text.secondary">{t('quoteManagement.dialog.labels.validUntil', 'Valid Until')}</Typography>
                   <Typography variant="body2" color={selectedQuote.validUntil ? 'text.primary' : 'text.secondary'}>
                     {selectedQuote.validUntil || 'Not set'}
                   </Typography>
@@ -1889,7 +1832,7 @@ const QuoteManagement = () => {
               {selectedQuote.policyNumber && (
                 <Alert severity="success" sx={{ mb: 2 }}>
                   <Typography variant="body2" fontWeight="600">
-                    Policy Number: {selectedQuote.policyNumber}
+                    {t('quoteManagement.dialog.policyNumber', 'Policy Number')}: {selectedQuote.policyNumber}
                   </Typography>
                 </Alert>
               )}
@@ -1899,7 +1842,7 @@ const QuoteManagement = () => {
                 <>
                   <Divider sx={{ my: 2 }} />
                   <Typography variant="subtitle1" fontWeight="700" gutterBottom>
-                    Attachments ({selectedQuote.attachments.length})
+                    {t('quoteManagement.dialog.attachments', 'Attachments')} ({selectedQuote.attachments.length})
                   </Typography>
                   <List>
                     {selectedQuote.attachments.map((file, index) => (
@@ -1928,7 +1871,7 @@ const QuoteManagement = () => {
                 <>
                   <Divider sx={{ my: 2 }} />
                   <Typography variant="subtitle1" fontWeight="700" gutterBottom>
-                    Activity Log
+                    {t('quoteManagement.dialog.activityLog', 'Activity Log')}
                   </Typography>
                   <Timeline sx={{ mt: 2 }}>
                     {selectedQuote.timeline.map((activity, index) => (
@@ -1962,27 +1905,27 @@ const QuoteManagement = () => {
           )}
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setOpenDetailsDialog(false)}>Close</Button>
+          <Button onClick={() => setOpenDetailsDialog(false)}>{t('quoteManagement.dialog.buttons.close', 'Close')}</Button>
           <Button
             variant="outlined"
             startIcon={<PrintIcon />}
             onClick={() => handlePrintQuote(selectedQuote)}
           >
-            Print
+            {t('quoteManagement.dialog.buttons.print', 'Print')}
           </Button>
           <Button
             variant="outlined"
             startIcon={<DownloadIcon />}
             onClick={handleDownloadPDFFromMenu}
           >
-            Download PDF
+            {t('quoteManagement.dialog.buttons.download', 'Download PDF')}
           </Button>
           <Button
             variant="contained"
             startIcon={<SendIcon />}
             onClick={handleSendQuoteFromMenu}
           >
-            Send to Customer
+            {t('quoteManagement.dialog.buttons.send', 'Send to Customer')}
           </Button>
         </DialogActions>
       </Dialog>
@@ -2007,7 +1950,7 @@ const QuoteManagement = () => {
               <ListItemIcon>
                 <PendingIcon fontSize="small" />
               </ListItemIcon>
-              <ListItemText>Submit for Approval</ListItemText>
+              <ListItemText>{t('quoteManagement.menu.submitApproval', 'Submit for Approval')}</ListItemText>
             </MenuItem>
             <Divider />
           </>
@@ -2018,13 +1961,13 @@ const QuoteManagement = () => {
               <ListItemIcon>
                 <ApprovedIcon fontSize="small" color="success" />
               </ListItemIcon>
-              <ListItemText>Approve Quote</ListItemText>
+              <ListItemText>{t('quoteManagement.menu.approve', 'Approve Quote')}</ListItemText>
             </MenuItem>
             <MenuItem onClick={() => handleStatusChange('Rejected')}>
               <ListItemIcon>
                 <RejectedIcon fontSize="small" color="error" />
               </ListItemIcon>
-              <ListItemText>Reject Quote</ListItemText>
+              <ListItemText>{t('quoteManagement.menu.reject', 'Reject Quote')}</ListItemText>
             </MenuItem>
             <Divider />
           </>
@@ -2035,13 +1978,13 @@ const QuoteManagement = () => {
               <ListItemIcon>
                 <ConvertedIcon fontSize="small" color="info" />
               </ListItemIcon>
-              <ListItemText>Convert to Policy</ListItemText>
+              <ListItemText>{t('quoteManagement.menu.convert', 'Convert to Policy')}</ListItemText>
             </MenuItem>
             <MenuItem onClick={() => handleStatusChange('Lost')}>
               <ListItemIcon>
                 <LostIcon fontSize="small" color="error" />
               </ListItemIcon>
-              <ListItemText>Mark as Lost</ListItemText>
+              <ListItemText>{t('quoteManagement.menu.markLost', 'Mark as Lost')}</ListItemText>
             </MenuItem>
             <Divider />
           </>
@@ -2052,39 +1995,39 @@ const QuoteManagement = () => {
           <ListItemIcon>
             <EditIcon fontSize="small" />
           </ListItemIcon>
-          <ListItemText>Edit Quote</ListItemText>
+          <ListItemText>{t('quoteManagement.menu.edit', 'Edit Quote')}</ListItemText>
         </MenuItem>
         <MenuItem onClick={() => handleDuplicateQuote(selectedQuote)}>
           <ListItemIcon>
             <ContentCopy fontSize="small" />
           </ListItemIcon>
-          <ListItemText>Duplicate Quote</ListItemText>
+          <ListItemText>{t('quoteManagement.menu.duplicate', 'Duplicate Quote')}</ListItemText>
         </MenuItem>
         <Divider />
         <MenuItem onClick={handleSendQuoteFromMenu}>
           <ListItemIcon>
             <SendIcon fontSize="small" />
           </ListItemIcon>
-          <ListItemText>Send to Customer</ListItemText>
+          <ListItemText>{t('quoteManagement.menu.send', 'Send to Customer')}</ListItemText>
         </MenuItem>
         <MenuItem onClick={handleDownloadPDFFromMenu}>
           <ListItemIcon>
             <DownloadIcon fontSize="small" />
           </ListItemIcon>
-          <ListItemText>Download PDF</ListItemText>
+          <ListItemText>{t('quoteManagement.menu.download', 'Download PDF')}</ListItemText>
         </MenuItem>
         <MenuItem onClick={() => handlePrintQuote(selectedQuote)}>
           <ListItemIcon>
             <PrintIcon fontSize="small" />
           </ListItemIcon>
-          <ListItemText>Print Quote</ListItemText>
+          <ListItemText>{t('quoteManagement.menu.print', 'Print Quote')}</ListItemText>
         </MenuItem>
         <Divider />
         <MenuItem onClick={() => handleDeleteQuote(selectedQuote)} sx={{ color: 'error.main' }}>
           <ListItemIcon>
             <DeleteIcon fontSize="small" color="error" />
           </ListItemIcon>
-          <ListItemText>Delete Quote</ListItemText>
+          <ListItemText>{t('quoteManagement.menu.delete', 'Delete Quote')}</ListItemText>
         </MenuItem>
       </Menu>
 
@@ -2098,33 +2041,33 @@ const QuoteManagement = () => {
         <DialogTitle>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
             <DeleteIcon color="error" />
-            <Typography variant="h6">Delete Quote</Typography>
+            <Typography variant="h6">{t('quoteManagement.delete.title', 'Delete Quote')}</Typography>
           </Box>
         </DialogTitle>
         <DialogContent>
           <Typography variant="body1" gutterBottom>
-            Are you sure you want to delete this quote?
+            {t('quoteManagement.delete.confirmation', 'Are you sure you want to delete this quote?')}
           </Typography>
           {selectedQuote && (
             <Box sx={{ mt: 2, p: 2, bgcolor: 'background.default', borderRadius: 1 }}>
               <Typography variant="body2" color="text.secondary">
-                <strong>Quote ID:</strong> {selectedQuote.id}
+                <strong>{t('quoteManagement.delete.quoteId', 'Quote ID')}:</strong> {selectedQuote.id}
               </Typography>
               <Typography variant="body2" color="text.secondary">
-                <strong>Customer:</strong> {selectedQuote.customerName}
+                <strong>{t('quoteManagement.delete.customer', 'Customer')}:</strong> {selectedQuote.customerName}
               </Typography>
               <Typography variant="body2" color="text.secondary">
-                <strong>Amount:</strong> {selectedQuote.quoteAmount}
+                <strong>{t('quoteManagement.delete.amount', 'Amount')}:</strong> {selectedQuote.quoteAmount}
               </Typography>
             </Box>
           )}
           <Alert severity="warning" sx={{ mt: 2 }}>
-            This action cannot be undone.
+            {t('quoteManagement.delete.warning', 'This action cannot be undone.')}
           </Alert>
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setDeleteConfirmDialog(false)}>
-            Cancel
+            {t('quoteManagement.delete.cancel', 'Cancel')}
           </Button>
           <Button
             onClick={handleConfirmDelete}
@@ -2132,7 +2075,7 @@ const QuoteManagement = () => {
             variant="contained"
             startIcon={<DeleteIcon />}
           >
-            Delete
+            {t('quoteManagement.delete.confirm', 'Delete')}
           </Button>
         </DialogActions>
       </Dialog>
@@ -2154,7 +2097,7 @@ const QuoteManagement = () => {
           <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
               <EmailIcon color="primary" />
-              <Typography variant="h6">Email Preview</Typography>
+              <Typography variant="h6">{t('quoteManagement.emailPreview.title', 'Email Preview')}</Typography>
             </Box>
             <IconButton onClick={() => setEmailPreviewDialog(false)} size="small">
               <CloseIcon />
@@ -2168,19 +2111,19 @@ const QuoteManagement = () => {
               <Paper sx={{ p: 2, mb: 2, bgcolor: 'background.default', borderRadius: 2 }}>
                 <Grid container spacing={2}>
                   <Grid item xs={12}>
-                    <Typography variant="caption" color="text.secondary">From</Typography>
+                    <Typography variant="caption" color="text.secondary">{t('quoteManagement.emailPreview.from', 'From')}</Typography>
                     <Typography variant="body2" fontWeight="600">
                       {emailPreviewData.preview.from}
                     </Typography>
                   </Grid>
                   <Grid item xs={12}>
-                    <Typography variant="caption" color="text.secondary">To</Typography>
+                    <Typography variant="caption" color="text.secondary">{t('quoteManagement.emailPreview.to', 'To')}</Typography>
                     <Typography variant="body2" fontWeight="600">
                       {emailPreviewData.preview.to}
                     </Typography>
                   </Grid>
                   <Grid item xs={12}>
-                    <Typography variant="caption" color="text.secondary">Subject</Typography>
+                    <Typography variant="caption" color="text.secondary">{t('quoteManagement.emailPreview.subject', 'Subject')}</Typography>
                     <Typography variant="body2" fontWeight="600">
                       {emailPreviewData.preview.subject}
                     </Typography>
@@ -2206,7 +2149,7 @@ const QuoteManagement = () => {
                   gap: 1
                 }}>
                   <Typography variant="caption" fontWeight="600" color="text.secondary">
-                    EMAIL PREVIEW
+                    {t('quoteManagement.emailPreview.preview', 'EMAIL PREVIEW')}
                   </Typography>
                 </Box>
                 <Box
@@ -2223,7 +2166,7 @@ const QuoteManagement = () => {
               {/* Success Info */}
               <Alert severity="success" sx={{ mt: 2 }}>
                 <Typography variant="body2">
-                  Email is ready to be sent to <strong>{emailPreviewData.preview.to}</strong>
+                  {t('quoteManagement.emailPreview.ready', 'Email is ready to be sent to')} <strong>{emailPreviewData.preview.to}</strong>
                 </Typography>
               </Alert>
             </Box>
@@ -2234,7 +2177,7 @@ const QuoteManagement = () => {
             onClick={() => setEmailPreviewDialog(false)}
             variant="outlined"
           >
-            Close
+            {t('quoteManagement.emailPreview.close', 'Close')}
           </Button>
           <Button
             onClick={() => {
@@ -2251,7 +2194,7 @@ const QuoteManagement = () => {
             startIcon={<SendIcon />}
             color="primary"
           >
-            Confirm & Send Email
+            {t('quoteManagement.emailPreview.confirm', 'Confirm & Send Email')}
           </Button>
         </DialogActions>
       </Dialog>

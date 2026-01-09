@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   Box, Typography, Paper, TextField, InputAdornment,
   Table, TableBody, TableCell, TableContainer, TableHead,
@@ -52,6 +53,7 @@ import FailedRecordsViewer from '../components/common/FailedRecordsViewer';
 import { useDedupe } from '../context/DedupeContext';
 
 const CaseTracking = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { settings } = useSettings();
   const { currentUser } = useAuth();
@@ -1373,7 +1375,7 @@ const CaseTracking = () => {
           mb: 4
         }}>
           <Typography variant="h4" fontWeight="600">
-            Case Tracking
+            {t('caseTracking.title', 'Case Tracking')}
           </Typography>
 
           <Box sx={{ display: 'flex', gap: 2 }}>
@@ -1396,7 +1398,7 @@ const CaseTracking = () => {
                   }
                 }}
               >
-                Filters
+                {t('caseTracking.filterButton', 'Filters')}
               </Button>
             </Zoom>
 
@@ -1416,7 +1418,7 @@ const CaseTracking = () => {
                   }
                 }}
               >
-                Bulk Upload
+                {t('caseTracking.bulkUpload', 'Bulk Upload')}
               </Button>
             </Zoom>
 
@@ -1436,7 +1438,7 @@ const CaseTracking = () => {
                   }
                 }}
               >
-                History
+                {t('caseTracking.history', 'History')}
               </Button>
             </Zoom>
 
@@ -1457,7 +1459,7 @@ const CaseTracking = () => {
                   }
                 }}
               >
-                Export
+                {t('caseTracking.export', 'Export')}
               </Button>
             </Zoom>
           </Box>
@@ -1531,12 +1533,12 @@ const CaseTracking = () => {
               <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
                 <AssignmentIndIcon sx={{ mr: 1, color: theme.palette.primary.main }} />
                 <Typography variant="h6" fontWeight="600">
-                  Search Cases
+                  {t('caseTracking.searchTitle', 'Search Cases')}
                 </Typography>
               </Box>
               <Divider sx={{ mb: 2 }} />
               <TextField
-                placeholder="Search by Case ID, Customer Name or Policy Number (comma-separated for multiple values)"
+                placeholder={t('caseTracking.searchPlaceholder', 'Search by Case ID, Customer Name or Policy Number (comma-separated for multiple values)')}
                 variant="outlined"
                 fullWidth
                 value={searchTerm}
@@ -1576,17 +1578,17 @@ const CaseTracking = () => {
                 <Box sx={{ display: 'flex', alignItems: 'center', flex: 1 }}>
                   <CheckCircleIcon sx={{ mr: 1, color: theme.palette.primary.main }} />
                   <Typography variant="h6" sx={{ fontWeight: 600 }}>
-                    {selectedCases.length} case(s) selected
+                    {t('caseTracking.selected', { count: selectedCases.length, defaultValue: '{{count}} case(s) selected' })}
                   </Typography>
                 </Box>
                 <Box sx={{ display: 'flex', gap: 1 }}>
                   <Tooltip
                     title={
                       selectedCases.some(id => pinnedCases.includes(id))
-                        ? "Unpin selected cases"
+                        ? t('caseTracking.unpin', "Unpin selected cases")
                         : pinnedCases.length + selectedCases.length > 5
-                          ? "Maximum 5 cases can be pinned"
-                          : "Pin selected cases to top"
+                          ? t('caseTracking.maxPins', "Maximum 5 cases can be pinned")
+                          : t('caseTracking.pinToTop', "Pin selected cases to top")
                     }
                     arrow
                   >
@@ -1614,7 +1616,7 @@ const CaseTracking = () => {
                           }
                         }}
                       >
-                        {selectedCases.some(id => pinnedCases.includes(id)) ? 'Unpin' : 'Pin to Top'}
+                        {selectedCases.some(id => pinnedCases.includes(id)) ? t('caseTracking.bulkActions.unpin', 'Unpin') : t('caseTracking.bulkActions.pinToTop', 'Pin to Top')}
                       </Button>
                     </span>
                   </Tooltip>
@@ -1632,7 +1634,7 @@ const CaseTracking = () => {
                       }
                     }}
                   >
-                    Change Status
+                    {t('caseTracking.bulkActions.changeStatus', 'Change Status')}
                   </Button>
                   <Button
                     startIcon={<PersonIcon />}
@@ -1649,7 +1651,7 @@ const CaseTracking = () => {
                       }
                     }}
                   >
-                    Assign to Agent
+                    {t('caseTracking.bulkActions.assignAgent', 'Assign to Agent')}
                   </Button>
                   <Button
                     startIcon={<CheckCircleIcon />}
@@ -1666,7 +1668,7 @@ const CaseTracking = () => {
                       }
                     }}
                   >
-                    Change Policy Status
+                    {t('caseTracking.bulkActions.changePolicyStatus', 'Change Policy Status')}
                   </Button>
                   <Button
                     startIcon={<CloseIcon />}
@@ -1684,7 +1686,7 @@ const CaseTracking = () => {
                       }
                     }}
                   >
-                    Clear Selection
+                    {t('caseTracking.bulkActions.clearSelection', 'Clear Selection')}
                   </Button>
                 </Box>
               </Toolbar>
@@ -1769,26 +1771,26 @@ const CaseTracking = () => {
                         }}
                       />
                     </TableCell>
-                    <TableCell sx={{ fontWeight: 'bold', py: 3, width: 180, textAlign: 'center' }}>Actions</TableCell>
-                    <TableCell sx={{ fontWeight: 'bold', py: 3, width: 140 }}>Case ID</TableCell>
-                    <TableCell sx={{ fontWeight: 'bold', py: 3, width: 180 }}>Customer Name</TableCell>
-                    <TableCell sx={{ fontWeight: 'bold', py: 3, width: 150 }}>Profile</TableCell>
-                    <TableCell sx={{ fontWeight: 'bold', py: 3, width: 150 }}>Mobile</TableCell>
-                    <TableCell sx={{ fontWeight: 'bold', py: 3, width: 130 }}>Language</TableCell>
-                    <TableCell sx={{ fontWeight: 'bold', py: 3, width: 160 }}>Policy Number</TableCell>
-                    <TableCell sx={{ fontWeight: 'bold', py: 3, width: 200 }}>Product Name</TableCell>
-                    <TableCell sx={{ fontWeight: 'bold', py: 3, width: 140 }}>Category</TableCell>
-                    <TableCell sx={{ fontWeight: 'bold', py: 3, width: 170 }}>Channel</TableCell>
-                    <TableCell sx={{ fontWeight: 'bold', py: 3, width: 160 }}>CCC(cur.comm.ch.)</TableCell>
-                    <TableCell sx={{ fontWeight: 'bold', py: 3, width: 140 }}>Batch ID</TableCell>
-                    <TableCell sx={{ fontWeight: 'bold', py: 3, width: 130 }}>Status</TableCell>
-                    <TableCell sx={{ fontWeight: 'bold', py: 3, width: 150 }}>Policy Status</TableCell>
-                    <TableCell sx={{ fontWeight: 'bold', py: 3, width: 160 }}>Agent</TableCell>
-                    <TableCell sx={{ fontWeight: 'bold', py: 3, width: 120, textAlign: 'center' }}>Priority</TableCell>
-                    <TableCell sx={{ fontWeight: 'bold', py: 3, width: 150 }}>Last Action</TableCell>
-                    <TableCell sx={{ fontWeight: 'bold', py: 3, width: 120, textAlign: 'center' }}>Calls</TableCell>
-                    <TableCell sx={{ fontWeight: 'bold', py: 3, width: 150 }}>Renewal Date</TableCell>
-                    <TableCell sx={{ fontWeight: 'bold', py: 3, width: 140 }}>Upload Date</TableCell>
+                    <TableCell sx={{ fontWeight: 'bold', py: 3, width: 180, textAlign: 'center' }}>{t('caseTracking.table.actions', 'Actions')}</TableCell>
+                    <TableCell sx={{ fontWeight: 'bold', py: 3, width: 140 }}>{t('caseTracking.table.caseId', 'Case ID')}</TableCell>
+                    <TableCell sx={{ fontWeight: 'bold', py: 3, width: 180 }}>{t('caseTracking.table.customerName', 'Customer Name')}</TableCell>
+                    <TableCell sx={{ fontWeight: 'bold', py: 3, width: 150 }}>{t('caseTracking.table.profile', 'Profile')}</TableCell>
+                    <TableCell sx={{ fontWeight: 'bold', py: 3, width: 150 }}>{t('caseTracking.table.mobile', 'Mobile')}</TableCell>
+                    <TableCell sx={{ fontWeight: 'bold', py: 3, width: 130 }}>{t('caseTracking.table.language', 'Language')}</TableCell>
+                    <TableCell sx={{ fontWeight: 'bold', py: 3, width: 160 }}>{t('caseTracking.table.policyNumber', 'Policy Number')}</TableCell>
+                    <TableCell sx={{ fontWeight: 'bold', py: 3, width: 200 }}>{t('caseTracking.table.productName', 'Product Name')}</TableCell>
+                    <TableCell sx={{ fontWeight: 'bold', py: 3, width: 140 }}>{t('caseTracking.table.category', 'Category')}</TableCell>
+                    <TableCell sx={{ fontWeight: 'bold', py: 3, width: 170 }}>{t('caseTracking.table.channel', 'Channel')}</TableCell>
+                    <TableCell sx={{ fontWeight: 'bold', py: 3, width: 160 }}>{t('caseTracking.table.ccc', 'CCC')}</TableCell>
+                    <TableCell sx={{ fontWeight: 'bold', py: 3, width: 140 }}>{t('caseTracking.table.batchId', 'Batch ID')}</TableCell>
+                    <TableCell sx={{ fontWeight: 'bold', py: 3, width: 130 }}>{t('caseTracking.table.status', 'Status')}</TableCell>
+                    <TableCell sx={{ fontWeight: 'bold', py: 3, width: 150 }}>{t('caseTracking.table.policyStatus', 'Policy Status')}</TableCell>
+                    <TableCell sx={{ fontWeight: 'bold', py: 3, width: 160 }}>{t('caseTracking.table.agent', 'Agent')}</TableCell>
+                    <TableCell sx={{ fontWeight: 'bold', py: 3, width: 120, textAlign: 'center' }}>{t('caseTracking.table.priority', 'Priority')}</TableCell>
+                    <TableCell sx={{ fontWeight: 'bold', py: 3, width: 150 }}>{t('caseTracking.table.lastAction', 'Last Action')}</TableCell>
+                    <TableCell sx={{ fontWeight: 'bold', py: 3, width: 120, textAlign: 'center' }}>{t('caseTracking.table.calls', 'Calls')}</TableCell>
+                    <TableCell sx={{ fontWeight: 'bold', py: 3, width: 150 }}>{t('caseTracking.table.renewalDate', 'Renewal Date')}</TableCell>
+                    <TableCell sx={{ fontWeight: 'bold', py: 3, width: 140 }}>{t('caseTracking.table.uploadDate', 'Upload Date')}</TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
@@ -1856,7 +1858,7 @@ const CaseTracking = () => {
                         <TableCell sx={{ textAlign: 'center', width: 200 }}>
                           <Box sx={{ display: 'flex', gap: 0.5, alignItems: 'center', justifyContent: 'center' }}>
                             {/* Primary Actions - Always Visible */}
-                            <Tooltip title={caseItem.isStarred ? "Unmark as Important" : "Mark as Important"} arrow placement="top">
+                            <Tooltip title={caseItem.isStarred ? t('caseTracking.actions.unmarkImportant', "Unmark as Important") : t('caseTracking.actions.markImportant', "Mark as Important")} arrow placement="top">
                               <IconButton
                                 size="small"
                                 onClick={(e) => {
@@ -1882,7 +1884,7 @@ const CaseTracking = () => {
                               </IconButton>
                             </Tooltip>
 
-                            <Tooltip title="Call Lead" arrow placement="top">
+                            <Tooltip title={t('caseTracking.actions.callLead', "Call Lead")} arrow placement="top">
                               <IconButton
                                 size="small"
                                 onClick={(e) => {
@@ -1903,7 +1905,7 @@ const CaseTracking = () => {
                               </IconButton>
                             </Tooltip>
 
-                            <Tooltip title="View Details" arrow placement="top">
+                            <Tooltip title={t('caseTracking.actions.viewDetails', "View Details")} arrow placement="top">
                               <IconButton
                                 size="small"
                                 onClick={(e) => {
@@ -1920,7 +1922,7 @@ const CaseTracking = () => {
                               </IconButton>
                             </Tooltip>
 
-                            <Tooltip title="Quick Edit" arrow placement="top">
+                            <Tooltip title={t('caseTracking.actions.quickEdit', "Quick Edit")} arrow placement="top">
                               <IconButton
                                 size="small"
                                 onClick={(e) => {
@@ -1937,7 +1939,7 @@ const CaseTracking = () => {
                               </IconButton>
                             </Tooltip>
 
-                            <Tooltip title="Add Comment" arrow placement="top">
+                            <Tooltip title={t('caseTracking.actions.addComment', "Add Comment")} arrow placement="top">
                               <IconButton
                                 size="small"
                                 onClick={(e) => {
@@ -1955,7 +1957,7 @@ const CaseTracking = () => {
                             </Tooltip>
 
                             {/* More Actions Menu */}
-                            <Tooltip title="More Actions" arrow placement="top">
+                            <Tooltip title={t('caseTracking.actions.moreActions', "More Actions")} arrow placement="top">
                               <IconButton
                                 size="small"
                                 onClick={(e) => handleMoreActionsClick(e, caseItem)}
@@ -1976,7 +1978,7 @@ const CaseTracking = () => {
                         <TableCell sx={{ width: 140 }}>
                           <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1 }}>
                             {pinnedCases.includes(caseItem.id) && (
-                              <Tooltip title="Pinned to top" arrow>
+                              <Tooltip title={t('caseTracking.tooltips.pinned', "Pinned to top")} arrow>
                                 <PushPinIcon
                                   fontSize="small"
                                   sx={{
@@ -2082,7 +2084,7 @@ const CaseTracking = () => {
                         </TableCell>
                         <TableCell sx={{ width: 130 }}>
                           <Chip
-                            label={caseItem.status}
+                            label={t(`caseTracking.status.${caseItem.status}`, caseItem.status)}
                             color={getStatusColor(caseItem.status)}
                             size="small"
                             sx={{
@@ -2095,7 +2097,7 @@ const CaseTracking = () => {
                         </TableCell>
                         <TableCell sx={{ width: 150 }}>
                           <Chip
-                            label={caseItem.policyStatus}
+                            label={t(`caseTracking.policyStatus.${caseItem.policyStatus}`, caseItem.policyStatus)}
                             color={getPolicyStatusColor(caseItem.policyStatus)}
                             size="small"
                             sx={{
@@ -2114,7 +2116,7 @@ const CaseTracking = () => {
                         <TableCell sx={{ width: 120, textAlign: 'center' }}>
                           <Chip
                             icon={<PriorityHighIcon />}
-                            label={caseItem.isPriority ? "Priority" : "Normal"}
+                            label={caseItem.isPriority ? t('caseTracking.table.priority', "Priority") : t('caseTracking.table.normal', "Normal")}
                             color={caseItem.isPriority ? "error" : "primary"}
                             variant={caseItem.isPriority ? "filled" : "outlined"}
                             size="small"
@@ -2173,7 +2175,7 @@ const CaseTracking = () => {
                               {caseItem.totalCalls}
                             </Typography>
                             <Typography variant="caption" color="text.secondary">
-                              calls
+                              {t('caseTracking.table.calls_lower', 'calls')}
                             </Typography>
                           </Box>
                         </TableCell>
@@ -2385,14 +2387,14 @@ const CaseTracking = () => {
           }}
         >
           <Typography variant="subtitle2" sx={{ px: 1, pb: 2, fontWeight: 600 }}>
-            Filter Cases
+            {t('caseTracking.filters.title', 'Filter Cases')}
           </Typography>
           <MenuItem sx={{ py: 1.5 }}>
             <FormControl fullWidth size="small">
-              <InputLabel>Status</InputLabel>
+              <InputLabel>{t('caseTracking.filters.status', 'Status')}</InputLabel>
               <Select
                 value={statusFilter}
-                label="Status"
+                label={t('caseTracking.filters.status', 'Status')}
                 onChange={handleStatusFilterChange}
                 sx={{
                   borderRadius: 2,
@@ -2404,32 +2406,32 @@ const CaseTracking = () => {
                   },
                 }}
               >
-                <MenuItem value="all">All Statuses</MenuItem>
-                <MenuItem value="uploaded">Uploaded</MenuItem>
-                <MenuItem value="assigned">Assigned</MenuItem>
-                <MenuItem value="inProgress">In Progress</MenuItem>
-                <MenuItem value="processed">Payment Processed</MenuItem>
-                <MenuItem value="renewed">Renewed</MenuItem>
-                <MenuItem value="failed">Failed</MenuItem>
-                <MenuItem value="renewalFailed">Renewal Failed</MenuItem>
-                <MenuItem value="notInterested">Not Interested</MenuItem>
-                <MenuItem value="dncEmail">DNC Email</MenuItem>
-                <MenuItem value="dncWhatsApp">DNC WhatsApp</MenuItem>
-                <MenuItem value="dncSms">DNC SMS</MenuItem>
-                <MenuItem value="dncCall">DNC Call</MenuItem>
-                <MenuItem value="dncBotCalling">DNC Bot Calling</MenuItem>
-                <MenuItem value="paymentFailed">Payment Failed</MenuItem>
-                <MenuItem value="customerPostponed">Customer Postponed</MenuItem>
+                <MenuItem value="all">{t('caseTracking.filters.allStatuses', 'All Statuses')}</MenuItem>
+                <MenuItem value="uploaded">{t('caseTracking.status.Uploaded', 'Uploaded')}</MenuItem>
+                <MenuItem value="assigned">{t('caseTracking.status.Assigned', 'Assigned')}</MenuItem>
+                <MenuItem value="inProgress">{t('caseTracking.status.In Progress', 'In Progress')}</MenuItem>
+                <MenuItem value="processed">{t('caseTracking.status.Processed', 'Payment Processed')}</MenuItem>
+                <MenuItem value="renewed">{t('caseTracking.status.Renewed', 'Renewed')}</MenuItem>
+                <MenuItem value="failed">{t('caseTracking.status.Failed', 'Failed')}</MenuItem>
+                <MenuItem value="renewalFailed">{t('caseTracking.status.Renewal Failed', 'Renewal Failed')}</MenuItem>
+                <MenuItem value="notInterested">{t('caseTracking.status.Not Interested', 'Not Interested')}</MenuItem>
+                <MenuItem value="dncEmail">{t('caseTracking.status.DNC Email', 'DNC Email')}</MenuItem>
+                <MenuItem value="dncWhatsApp">{t('caseTracking.status.DNC WhatsApp', 'DNC WhatsApp')}</MenuItem>
+                <MenuItem value="dncSms">{t('caseTracking.status.DNC SMS', 'DNC SMS')}</MenuItem>
+                <MenuItem value="dncCall">{t('caseTracking.status.DNC Call', 'DNC Call')}</MenuItem>
+                <MenuItem value="dncBotCalling">{t('caseTracking.status.DNC Bot Calling', 'DNC Bot Calling')}</MenuItem>
+                <MenuItem value="paymentFailed">{t('caseTracking.status.Payment Failed', 'Payment Failed')}</MenuItem>
+                <MenuItem value="customerPostponed">{t('caseTracking.status.Customer Postponed', 'Customer Postponed')}</MenuItem>
               </Select>
             </FormControl>
           </MenuItem>
 
           <MenuItem sx={{ py: 1.5 }}>
             <FormControl fullWidth size="small">
-              <InputLabel>Date</InputLabel>
+              <InputLabel>{t('caseTracking.filters.date', 'Date')}</InputLabel>
               <Select
                 value={dateFilter}
-                label="Date"
+                label={t('caseTracking.filters.date', 'Date')}
                 onChange={handleDateFilterChange}
                 sx={{
                   borderRadius: 2,
@@ -2441,21 +2443,21 @@ const CaseTracking = () => {
                   },
                 }}
               >
-                <MenuItem value="all">All Dates</MenuItem>
-                <MenuItem value="today">Today</MenuItem>
-                <MenuItem value="yesterday">Yesterday</MenuItem>
-                <MenuItem value="lastWeek">Last 7 Days</MenuItem>
-                <MenuItem value="lastMonth">Last 30 Days</MenuItem>
+                <MenuItem value="all">{t('caseTracking.filters.allDates', 'All Dates')}</MenuItem>
+                <MenuItem value="today">{t('caseTracking.filters.today', 'Today')}</MenuItem>
+                <MenuItem value="yesterday">{t('caseTracking.filters.yesterday', 'Yesterday')}</MenuItem>
+                <MenuItem value="lastWeek">{t('caseTracking.filters.lastWeek', 'Last 7 Days')}</MenuItem>
+                <MenuItem value="lastMonth">{t('caseTracking.filters.lastMonth', 'Last 30 Days')}</MenuItem>
               </Select>
             </FormControl>
           </MenuItem>
 
           <MenuItem sx={{ py: 1.5 }}>
             <FormControl fullWidth size="small">
-              <InputLabel>Agent</InputLabel>
+              <InputLabel>{t('caseTracking.filters.agent', 'Agent')}</InputLabel>
               <Select
                 value={agentFilter}
-                label="Agent"
+                label={t('caseTracking.filters.agent', 'Agent')}
                 onChange={handleAgentFilterChange}
                 sx={{
                   borderRadius: 2,
@@ -2467,22 +2469,22 @@ const CaseTracking = () => {
                   },
                 }}
               >
-                <MenuItem value="all">All Agents</MenuItem>
-                <MenuItem value="Priya Patel">Priya Patel</MenuItem>
-                <MenuItem value="Rajesh Kumar">Rajesh Kumar</MenuItem>
-                <MenuItem value="Ananya Reddy">Ananya Reddy</MenuItem>
-                <MenuItem value="Amit Shah">Amit Shah</MenuItem>
-                <MenuItem value="Unassigned">Unassigned</MenuItem>
+                <MenuItem value="all">{t('caseTracking.filters.allAgents', 'All Agents')}</MenuItem>
+                <MenuItem value="Priya Patel">{t('caseTracking.filters.agents.Priya Patel', 'Priya Patel')}</MenuItem>
+                <MenuItem value="Rajesh Kumar">{t('caseTracking.filters.agents.Rajesh Kumar', 'Rajesh Kumar')}</MenuItem>
+                <MenuItem value="Ananya Reddy">{t('caseTracking.filters.agents.Ananya Reddy', 'Ananya Reddy')}</MenuItem>
+                <MenuItem value="Amit Shah">{t('caseTracking.filters.agents.Amit Shah', 'Amit Shah')}</MenuItem>
+                <MenuItem value="Unassigned">{t('caseTracking.filters.unassigned', 'Unassigned')}</MenuItem>
               </Select>
             </FormControl>
           </MenuItem>
 
           <MenuItem sx={{ py: 1.5 }}>
             <FormControl fullWidth size="small">
-              <InputLabel>Policy Status</InputLabel>
+              <InputLabel>{t('caseTracking.filters.policyStatus', 'Policy Status')}</InputLabel>
               <Select
                 value={policyStatusFilter}
-                label="Policy Status"
+                label={t('caseTracking.filters.policyStatus', 'Policy Status')}
                 onChange={handlePolicyStatusFilterChange}
                 sx={{
                   borderRadius: 2,
@@ -2494,10 +2496,10 @@ const CaseTracking = () => {
                   },
                 }}
               >
-                <MenuItem value="all">All Policy Statuses</MenuItem>
-                <MenuItem value="Pre Due Stage">Pre Due Stage</MenuItem>
-                <MenuItem value="Policy Due">Policy Due</MenuItem>
-                <MenuItem value="Reinstatement">Reinstatement</MenuItem>
+                <MenuItem value="all">{t('caseTracking.filters.allPolicyStatuses', 'All Policy Statuses')}</MenuItem>
+                <MenuItem value="Pre Due Stage">{t('caseTracking.policyStatus.Pre Due Stage', 'Pre Due Stage')}</MenuItem>
+                <MenuItem value="Policy Due">{t('caseTracking.policyStatus.Policy Due', 'Policy Due')}</MenuItem>
+                <MenuItem value="Reinstatement">{t('caseTracking.policyStatus.Reinstatement', 'Reinstatement')}</MenuItem>
               </Select>
             </FormControl>
           </MenuItem>
@@ -2519,7 +2521,7 @@ const CaseTracking = () => {
                 }
               }}
             >
-              Apply Filters
+              {t('caseTracking.filters.apply', 'Apply Filters')}
             </Button>
           </Box>
         </Menu>

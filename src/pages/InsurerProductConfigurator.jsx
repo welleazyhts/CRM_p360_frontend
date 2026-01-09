@@ -185,7 +185,7 @@ const InsurerProductConfigurator = () => {
     }));
   };
 
-  const handleSaveInsurer = () => {
+  const handleSaveInsurer = async () => {
     const { mode, data } = insurerDialog;
 
     if (!data.name || !data.fullName || !data.apiEndpoint) {
@@ -194,13 +194,13 @@ const InsurerProductConfigurator = () => {
     }
 
     if (mode === 'add') {
-      const result = addInsurer(data);
+      const result = await addInsurer(data);
       if (result.success) {
         showSnackbar('Insurer added successfully');
         handleCloseInsurerDialog();
       }
     } else {
-      const result = updateInsurer(data.id, data);
+      const result = await updateInsurer(data.id, data);
       if (result.success) {
         showSnackbar('Insurer updated successfully');
         handleCloseInsurerDialog();
@@ -208,9 +208,9 @@ const InsurerProductConfigurator = () => {
     }
   };
 
-  const handleDeleteInsurer = (insurerId) => {
+  const handleDeleteInsurer = async (insurerId) => {
     if (window.confirm('Are you sure you want to delete this insurer?')) {
-      const result = deleteInsurer(insurerId);
+      const result = await deleteInsurer(insurerId);
       if (result.success) {
         showSnackbar('Insurer deleted successfully');
       } else {
@@ -219,8 +219,8 @@ const InsurerProductConfigurator = () => {
     }
   };
 
-  const handleToggleInsurerStatus = (insurerId) => {
-    const result = toggleInsurerStatus(insurerId);
+  const handleToggleInsurerStatus = async (insurerId) => {
+    const result = await toggleInsurerStatus(insurerId);
     if (result.success) {
       showSnackbar(`Insurer ${result.status === 'active' ? 'activated' : 'deactivated'} successfully`);
     }
@@ -345,7 +345,7 @@ const InsurerProductConfigurator = () => {
     }));
   };
 
-  const handleSaveProduct = () => {
+  const handleSaveProduct = async () => {
     const { mode, data } = productDialog;
 
     if (!data.name || !data.insurerId || !data.category) {
@@ -354,13 +354,13 @@ const InsurerProductConfigurator = () => {
     }
 
     if (mode === 'add') {
-      const result = addProduct(data);
+      const result = await addProduct(data);
       if (result.success) {
         showSnackbar('Product added successfully');
         handleCloseProductDialog();
       }
     } else {
-      const result = updateProduct(data.id, data);
+      const result = await updateProduct(data.id, data);
       if (result.success) {
         showSnackbar('Product updated successfully');
         handleCloseProductDialog();
@@ -368,24 +368,24 @@ const InsurerProductConfigurator = () => {
     }
   };
 
-  const handleDeleteProduct = (productId) => {
+  const handleDeleteProduct = async (productId) => {
     if (window.confirm('Are you sure you want to delete this product?')) {
-      const result = deleteProduct(productId);
+      const result = await deleteProduct(productId);
       if (result.success) {
         showSnackbar('Product deleted successfully');
       }
     }
   };
 
-  const handleToggleProductStatus = (productId) => {
-    const result = toggleProductStatus(productId);
+  const handleToggleProductStatus = async (productId) => {
+    const result = await toggleProductStatus(productId);
     if (result.success) {
       showSnackbar(`Product ${result.status === 'active' ? 'activated' : 'deactivated'} successfully`);
     }
   };
 
-  const handleDuplicateProduct = (productId) => {
-    const result = duplicateProduct(productId);
+  const handleDuplicateProduct = async (productId) => {
+    const result = await duplicateProduct(productId);
     if (result.success) {
       showSnackbar('Product duplicated successfully');
     }
@@ -961,12 +961,19 @@ const InsurerProductConfigurator = () => {
                     value={productDialog.data.insurerId}
                     label="Insurer *"
                     onChange={(e) => handleProductFieldChange('insurerId', e.target.value)}
+                    MenuProps={{ style: { zIndex: 1500 } }}
                   >
-                    {insurers.filter(i => i.status === 'active').map((insurer) => (
-                      <MenuItem key={insurer.id} value={insurer.id}>
-                        {insurer.name}
+                    {insurers.length > 0 ? (
+                      insurers.map((insurer) => (
+                        <MenuItem key={insurer.id} value={insurer.id}>
+                          {insurer.name}
+                        </MenuItem>
+                      ))
+                    ) : (
+                      <MenuItem disabled value="">
+                        No Insurers Found - Please Add an Insurer First
                       </MenuItem>
-                    ))}
+                    )}
                   </Select>
                 </FormControl>
               </Grid>

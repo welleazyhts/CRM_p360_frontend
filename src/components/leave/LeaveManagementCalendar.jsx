@@ -67,7 +67,7 @@ const LeaveManagementCalendar = () => {
   const [activeTab, setActiveTab] = useState(0);
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
   const [leaveForm, setLeaveForm] = useState({
-    type: 'Casual Leave',
+    type: 'casual',
     startDate: '',
     endDate: '',
     reason: '',
@@ -84,31 +84,88 @@ const LeaveManagementCalendar = () => {
   const [regularizations, setRegularizations] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  // Dashboard stats
+  const [stats, setStats] = useState({
+    total_leaves: 0,
+    available: 0,
+    used: 0,
+    pending: 0
+  });
+
   // Fetch leaves and regularizations on component mount
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        setLoading(true);
-        const [leavesData, regularizationsData] = await Promise.all([
-          leaveService.fetchLeaves(),
-          leaveService.fetchRegularizations(),
-        ]);
-        setLeaves(leavesData);
-        setRegularizations(regularizationsData);
-      } catch (error) {
-        console.error('Error fetching data:', error);
-        setSnackbar({
-          open: true,
-          message: 'Failed to load data. Please try again.',
-          severity: 'error'
-        });
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchData();
   }, []);
+
+  const fetchData = async () => {
+    try {
+      setLoading(true);
+      // Using new service methods that call actual APIs
+      const [recentData, regularizationsData, dashboardData] = await Promise.all([
+        leaveService.getRecentActivity(),
+        leaveService.getRegularizationRequests(),
+        leaveService.getDashboardData() // Fetch dashboard stats
+      ]);
+
+      // Helper to title-case status
+      const formatStatus = (status) => {
+        if (!status) return 'Pending';
+        return status.charAt(0).toUpperCase() + status.slice(1).toLowerCase();
+      };
+
+      // Map API response to component state structure
+      const mapLeaveData = (item) => ({
+        id: item.id || item.leave_id || item.pk,
+        employee: item.employee_name || item.employee || item.employee_code || 'Unknown',
+        employeeId: item.employee_code || item.employee_id || '',
+        type: item.leave_type || item.type || 'casual',
+        startDate: item.start_date || item.startDate,
+        endDate: item.end_date || item.endDate,
+        // Add more fallbacks for reason based on common API conventions
+        reason: item.reason || item.leave_reason || item.remarks || item.description || 'No reason provided',
+        status: formatStatus(item.status),
+        days: item.days || item.number_of_days || leaveService.calculateLeaveDays(item.start_date || item.startDate, item.end_date || item.endDate),
+        appliedDate: item.created_at ? new Date(item.created_at).toLocaleDateString() : (item.applied_on || item.appliedDate || new Date().toLocaleDateString())
+      });
+
+      const mapRegularizationData = (item) => ({
+        id: item.id || item.regularization_id || item.pk,
+        employee: item.employee_name || item.employee || item.employee_code || 'Unknown',
+        employeeId: item.employee_code || item.employee_id || '',
+        date: item.regularization_date || item.date,
+        scheduledCheckIn: item.scheduled_check_in || '09:00',
+        scheduledCheckOut: item.scheduled_check_out || '18:00',
+        actualCheckIn: item.actual_check_in || item.actualCheckIn,
+        actualCheckOut: item.actual_check_out || item.actualCheckOut,
+        reason: item.regularization_reason || item.reason || item.remarks || 'No reason provided',
+        status: formatStatus(item.status),
+        appliedDate: item.created_at ? new Date(item.created_at).toLocaleDateString() : (item.applied_on || item.appliedDate || new Date().toLocaleDateString())
+      });
+
+      // Assuming getRecentActivity returns list of leaves
+      const leavesList = recentData.results || recentData || [];
+      setLeaves(leavesList.map(mapLeaveData));
+
+      // Assuming getRegularizationRequests returns list
+      const regList = regularizationsData.results || regularizationsData || [];
+      setRegularizations(regList.map(mapRegularizationData));
+
+      // Set dashboard stats
+      if (dashboardData) {
+        setStats(dashboardData);
+      }
+
+    } catch (error) {
+      console.error('Error fetching data:', error);
+      setSnackbar({
+        open: true,
+        message: 'Failed to load data. Please try again.',
+        severity: 'error'
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const leaveTypes = {
     'Casual Leave': { icon: EventIcon, color: theme.palette.info.main },
@@ -116,6 +173,37 @@ const LeaveManagementCalendar = () => {
     'Earned Leave': { icon: VacationIcon, color: theme.palette.success.main },
     'Work From Home': { icon: WorkIcon, color: theme.palette.warning.main },
   };
+
+  const getLeaveConfig = (type) => {
+    // Default to 'casual' if type is undefined/null
+    const safeType = type || 'casual';
+
+    // Normalize keys for case-insensitive lookup
+    const normalizedType = safeType.toLowerCase();
+    const map = {
+      'casual leave': 'Casual Leave',
+      'casual': 'Casual Leave',
+      'sick leave': 'Sick Leave',
+      'sick': 'Sick Leave',
+      'earned leave': 'Earned Leave',
+      'earned': 'Earned Leave',
+      'work from home': 'Work From Home',
+      'wfh': 'Work From Home'
+    };
+
+    const key = map[normalizedType] ||
+      Object.keys(leaveTypes).find(k => k.toLowerCase() === normalizedType);
+
+    return leaveTypes[key] || leaveTypes['Casual Leave']; // Fallback to Casual Leave icon
+  };
+
+  // ... (inside the renders)
+
+  // Use getLeaveConfig instead of direct access
+  // Example for calendar view render:
+  // const config = getLeaveConfig(leave.type);
+  // const LeaveIcon = config.icon;
+
 
   const getDaysInMonth = (date) => {
     const year = date.getFullYear();
@@ -158,7 +246,7 @@ const LeaveManagementCalendar = () => {
   const handleCloseDialog = () => {
     setOpenDialog(false);
     setLeaveForm({
-      type: 'Casual Leave',
+      type: 'casual',
       startDate: '',
       endDate: '',
       reason: '',
@@ -168,17 +256,18 @@ const LeaveManagementCalendar = () => {
   const handleSubmitLeave = async () => {
     try {
       const leaveData = {
-        employee: 'Current User',
-        employeeId: 'EMP001',
-        type: leaveForm.type,
-        startDate: leaveForm.startDate,
-        endDate: leaveForm.endDate,
-        days: leaveService.calculateLeaveDays(leaveForm.startDate, leaveForm.endDate),
+        employee_code: 'EMP005', // Helper/Current user ID - typically from auth context
+        leave_type: leaveForm.type,
+        start_date: leaveForm.startDate,
+        end_date: leaveForm.endDate,
         reason: leaveForm.reason,
       };
 
-      const newLeave = await leaveService.createLeave(leaveData);
-      setLeaves([...leaves, newLeave]);
+      await leaveService.applyLeave(leaveData);
+
+      // Refresh data
+      fetchData();
+
       setSnackbar({ open: true, message: 'Leave request submitted successfully!', severity: 'success' });
       handleCloseDialog();
     } catch (error) {
@@ -190,10 +279,9 @@ const LeaveManagementCalendar = () => {
   // Approve leave
   const handleApproveLeave = async (leaveId) => {
     try {
-      await leaveService.updateLeaveStatus(leaveId, 'Approved');
-      setLeaves(leaves.map(leave =>
-        leave.id === leaveId ? { ...leave, status: 'Approved' } : leave
-      ));
+      await leaveService.approveLeave(leaveId);
+      // Refresh to update UI
+      fetchData();
       setSnackbar({ open: true, message: 'Leave request approved!', severity: 'success' });
     } catch (error) {
       console.error('Error approving leave:', error);
@@ -201,14 +289,12 @@ const LeaveManagementCalendar = () => {
     }
   };
 
-  // Reject leave
   const handleRejectLeave = async (leaveId) => {
     try {
-      await leaveService.updateLeaveStatus(leaveId, 'Rejected');
-      setLeaves(leaves.map(leave =>
-        leave.id === leaveId ? { ...leave, status: 'Rejected' } : leave
-      ));
-      setSnackbar({ open: true, message: 'Leave request rejected!', severity: 'error' });
+      await leaveService.rejectLeave(leaveId);
+      // Refresh to update UI
+      fetchData();
+      setSnackbar({ open: true, message: 'Leave request rejected!', severity: 'success' });
     } catch (error) {
       console.error('Error rejecting leave:', error);
       setSnackbar({ open: true, message: 'Failed to reject leave request.', severity: 'error' });
@@ -233,18 +319,18 @@ const LeaveManagementCalendar = () => {
   const handleSubmitRegularization = async () => {
     try {
       const regularizationData = {
-        employee: 'Current User',
-        employeeId: 'EMP001',
-        date: regularizationForm.date,
-        scheduledCheckIn: '09:00',
-        actualCheckIn: regularizationForm.actualCheckIn,
-        scheduledCheckOut: '18:00',
-        actualCheckOut: regularizationForm.actualCheckOut,
+        employee_code: 'EMP006', // Typically from auth
+        regularization_date: regularizationForm.date,
+        actual_check_in: regularizationForm.actualCheckIn,
+        actual_check_out: regularizationForm.actualCheckOut,
         reason: regularizationForm.reason,
       };
 
-      const newRegularization = await leaveService.createRegularization(regularizationData);
-      setRegularizations([...regularizations, newRegularization]);
+      await leaveService.applyRegularization(regularizationData);
+
+      // Refresh data
+      fetchData();
+
       setSnackbar({ open: true, message: 'Regularization request submitted successfully!', severity: 'success' });
       handleCloseRegularizationDialog();
     } catch (error) {
@@ -253,13 +339,29 @@ const LeaveManagementCalendar = () => {
     }
   };
 
+
   // Approve regularization
   const handleApproveRegularization = async (regId) => {
     try {
-      await leaveService.updateRegularizationStatus(regId, 'Approved');
-      setRegularizations(regularizations.map(reg =>
-        reg.id === regId ? { ...reg, status: 'Approved' } : reg
-      ));
+      // The API requires body data for approval?
+      // "actual_check_in", "actual_check_out", "regularization_reason" are in body of approve request in Postman.
+      // We need to fetch the item details first or pass them. 
+      // For now, finding the item in state:
+      const reg = regularizations.find(r => r.id === regId);
+      if (!reg) return;
+
+      const payload = {
+        regularization_date: reg.regularization_date || reg.date, // adapting to potential API naming
+        actual_check_in: reg.actual_check_in || reg.actualCheckIn,
+        actual_check_out: reg.actual_check_out || reg.actualCheckOut,
+        regularization_reason: reg.reason || reg.regularization_reason || "Approved"
+      };
+
+      await leaveService.approveRegularization(regId, payload);
+
+      // Refresh
+      fetchData();
+
       setSnackbar({ open: true, message: 'Regularization request approved!', severity: 'success' });
     } catch (error) {
       console.error('Error approving regularization:', error);
@@ -270,10 +372,21 @@ const LeaveManagementCalendar = () => {
   // Reject regularization
   const handleRejectRegularization = async (regId) => {
     try {
-      await leaveService.updateRegularizationStatus(regId, 'Rejected');
-      setRegularizations(regularizations.map(reg =>
-        reg.id === regId ? { ...reg, status: 'Rejected' } : reg
-      ));
+      const reg = regularizations.find(r => r.id === regId);
+      if (!reg) return;
+
+      const payload = {
+        regularization_date: reg.regularization_date || reg.date,
+        actual_check_in: reg.actual_check_in || reg.actualCheckIn,
+        actual_check_out: reg.actual_check_out || reg.actualCheckOut,
+        regularization_reason: reg.reason || reg.regularization_reason || "Rejected"
+      };
+
+      await leaveService.rejectRegularization(regId, payload);
+
+      // Refresh
+      fetchData();
+
       setSnackbar({ open: true, message: 'Regularization request rejected!', severity: 'error' });
     } catch (error) {
       console.error('Error rejecting regularization:', error);
@@ -349,7 +462,7 @@ const LeaveManagementCalendar = () => {
                 </Avatar>
                 <Box>
                   <Typography variant="h4" fontWeight="700">
-                    12
+                    {stats.total_leaves || 0}
                   </Typography>
                   <Typography variant="caption" color="text.secondary">
                     Total Leaves
@@ -368,7 +481,7 @@ const LeaveManagementCalendar = () => {
                 </Avatar>
                 <Box>
                   <Typography variant="h4" fontWeight="700">
-                    8
+                    {stats.available || 0}
                   </Typography>
                   <Typography variant="caption" color="text.secondary">
                     Available
@@ -387,7 +500,7 @@ const LeaveManagementCalendar = () => {
                 </Avatar>
                 <Box>
                   <Typography variant="h4" fontWeight="700">
-                    4
+                    {stats.used || 0}
                   </Typography>
                   <Typography variant="caption" color="text.secondary">
                     Used
@@ -406,7 +519,7 @@ const LeaveManagementCalendar = () => {
                 </Avatar>
                 <Box>
                   <Typography variant="h4" fontWeight="700">
-                    2
+                    {stats.pending || 0}
                   </Typography>
                   <Typography variant="caption" color="text.secondary">
                     Pending
@@ -425,6 +538,7 @@ const LeaveManagementCalendar = () => {
             <Tab label="Calendar View" />
             <Tab label={`Leave Requests (${leaves.filter(l => l.status === 'Pending').length})`} />
             <Tab label={`Regularization Requests (${regularizations.filter(r => r.status === 'Pending').length})`} />
+            <Tab label="Approvals" />
           </Tabs>
         </Box>
       </Card>
@@ -519,7 +633,8 @@ const LeaveManagementCalendar = () => {
                               {/* Leave indicators */}
                               <Stack spacing={0.5} sx={{ mt: 0.5 }}>
                                 {leavesOnDate.slice(0, 2).map((leave) => {
-                                  const LeaveIcon = leaveTypes[leave.type].icon;
+                                  const config = getLeaveConfig(leave.type);
+                                  const LeaveIcon = config.icon;
                                   return (
                                     <Tooltip key={leave.id} title={`${leave.employee} - ${leave.type}`}>
                                       <Chip
@@ -529,14 +644,14 @@ const LeaveManagementCalendar = () => {
                                         sx={{
                                           height: 18,
                                           fontSize: 9,
-                                          bgcolor: alpha(leaveTypes[leave.type].color, 0.1),
-                                          color: leaveTypes[leave.type].color,
+                                          bgcolor: alpha(config.color, 0.1),
+                                          color: config.color,
                                           '& .MuiChip-label': {
                                             px: 0.5,
                                           },
                                           '& .MuiChip-icon': {
                                             fontSize: 10,
-                                            color: leaveTypes[leave.type].color,
+                                            color: config.color,
                                           },
                                         }}
                                       />
@@ -597,21 +712,22 @@ const LeaveManagementCalendar = () => {
 
                   <Stack spacing={2}>
                     {leaves.slice(0, 5).map((leave) => {
-                      const LeaveIcon = leaveTypes[leave.type].icon;
+                      const config = getLeaveConfig(leave.type);
+                      const LeaveIcon = config.icon;
                       return (
                         <Paper
                           key={leave.id}
                           sx={{
                             p: 2,
                             borderRadius: 2,
-                            border: `1px solid ${alpha(leaveTypes[leave.type].color, 0.3)}`,
+                            border: `1px solid ${alpha(config.color, 0.3)}`,
                           }}
                         >
                           <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1.5 }}>
                             <Avatar
                               sx={{
-                                bgcolor: alpha(leaveTypes[leave.type].color, 0.15),
-                                color: leaveTypes[leave.type].color,
+                                bgcolor: alpha(config.color, 0.15),
+                                color: config.color,
                                 width: 40,
                                 height: 40,
                               }}
@@ -681,7 +797,8 @@ const LeaveManagementCalendar = () => {
                 </TableHead>
                 <TableBody>
                   {leaves.map((leave) => {
-                    const LeaveIcon = leaveTypes[leave.type].icon;
+                    const config = getLeaveConfig(leave.type);
+                    const LeaveIcon = config.icon;
                     return (
                       <TableRow key={leave.id} hover>
                         <TableCell>
@@ -705,9 +822,9 @@ const LeaveManagementCalendar = () => {
                             label={leave.type}
                             size="small"
                             sx={{
-                              bgcolor: alpha(leaveTypes[leave.type].color, 0.1),
-                              color: leaveTypes[leave.type].color,
-                              '& .MuiChip-icon': { color: leaveTypes[leave.type].color },
+                              bgcolor: alpha(config.color, 0.1),
+                              color: config.color,
+                              '& .MuiChip-icon': { color: config.color },
                             }}
                           />
                         </TableCell>
@@ -741,49 +858,18 @@ const LeaveManagementCalendar = () => {
                           />
                         </TableCell>
                         <TableCell align="center">
-                          {leave.status === 'Pending' ? (
-                            <Stack direction="row" spacing={1} justifyContent="center">
-                              <Tooltip title="Approve">
-                                <IconButton
-                                  size="small"
-                                  color="success"
-                                  onClick={() => handleApproveLeave(leave.id)}
-                                  sx={{
-                                    bgcolor: alpha(theme.palette.success.main, 0.1),
-                                    '&:hover': { bgcolor: alpha(theme.palette.success.main, 0.2) }
-                                  }}
-                                >
-                                  <CheckIcon fontSize="small" />
-                                </IconButton>
-                              </Tooltip>
-                              <Tooltip title="Reject">
-                                <IconButton
-                                  size="small"
-                                  color="error"
-                                  onClick={() => handleRejectLeave(leave.id)}
-                                  sx={{
-                                    bgcolor: alpha(theme.palette.error.main, 0.1),
-                                    '&:hover': { bgcolor: alpha(theme.palette.error.main, 0.2) }
-                                  }}
-                                >
-                                  <CloseIcon fontSize="small" />
-                                </IconButton>
-                              </Tooltip>
-                            </Stack>
-                          ) : (
-                            <Tooltip title="View Details">
-                              <IconButton
-                                size="small"
-                                onClick={() => handleViewLeaveDetails(leave)}
-                                sx={{
-                                  bgcolor: alpha(theme.palette.primary.main, 0.1),
-                                  '&:hover': { bgcolor: alpha(theme.palette.primary.main, 0.2) }
-                                }}
-                              >
-                                <ViewIcon fontSize="small" />
-                              </IconButton>
-                            </Tooltip>
-                          )}
+                          <Tooltip title="View Details">
+                            <IconButton
+                              size="small"
+                              onClick={() => handleViewLeaveDetails(leave)}
+                              sx={{
+                                bgcolor: alpha(theme.palette.primary.main, 0.1),
+                                '&:hover': { bgcolor: alpha(theme.palette.primary.main, 0.2) }
+                              }}
+                            >
+                              <ViewIcon fontSize="small" />
+                            </IconButton>
+                          </Tooltip>
                         </TableCell>
                       </TableRow>
                     );
@@ -896,52 +982,188 @@ const LeaveManagementCalendar = () => {
                         />
                       </TableCell>
                       <TableCell align="center">
-                        {reg.status === 'Pending' ? (
-                          <Stack direction="row" spacing={1} justifyContent="center">
-                            <Tooltip title="Approve">
-                              <IconButton
-                                size="small"
-                                color="success"
-                                onClick={() => handleApproveRegularization(reg.id)}
-                                sx={{
-                                  bgcolor: alpha(theme.palette.success.main, 0.1),
-                                  '&:hover': { bgcolor: alpha(theme.palette.success.main, 0.2) }
-                                }}
-                              >
-                                <CheckIcon fontSize="small" />
-                              </IconButton>
-                            </Tooltip>
-                            <Tooltip title="Reject">
-                              <IconButton
-                                size="small"
-                                color="error"
-                                onClick={() => handleRejectRegularization(reg.id)}
-                                sx={{
-                                  bgcolor: alpha(theme.palette.error.main, 0.1),
-                                  '&:hover': { bgcolor: alpha(theme.palette.error.main, 0.2) }
-                                }}
-                              >
-                                <CloseIcon fontSize="small" />
-                              </IconButton>
-                            </Tooltip>
-                          </Stack>
-                        ) : (
-                          <Tooltip title="View Details">
-                            <IconButton
-                              size="small"
-                              onClick={() => handleViewRegularizationDetails(reg)}
-                              sx={{
-                                bgcolor: alpha(theme.palette.primary.main, 0.1),
-                                '&:hover': { bgcolor: alpha(theme.palette.primary.main, 0.2) }
-                              }}
-                            >
-                              <ViewIcon fontSize="small" />
-                            </IconButton>
-                          </Tooltip>
-                        )}
+                        <Tooltip title="View Details">
+                          <IconButton
+                            size="small"
+                            onClick={() => handleViewRegularizationDetails(reg)}
+                            sx={{
+                              bgcolor: alpha(theme.palette.primary.main, 0.1),
+                              '&:hover': { bgcolor: alpha(theme.palette.primary.main, 0.2) }
+                            }}
+                          >
+                            <ViewIcon fontSize="small" />
+                          </IconButton>
+                        </Tooltip>
                       </TableCell>
                     </TableRow>
                   ))}
+                </TableBody>
+              </Table>
+            </TableContainer>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Tab 3: Approvals */}
+      {activeTab === 3 && (
+        <Card sx={{ borderRadius: 3, boxShadow: 3 }}>
+          <CardContent sx={{ p: 3 }}>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+              <Typography variant="h6" fontWeight="700">
+                Pending Approvals
+              </Typography>
+            </Box>
+
+            <TableContainer>
+              <Table>
+                <TableHead>
+                  <TableRow>
+                    <TableCell>Request Type</TableCell>
+                    <TableCell>Employee</TableCell>
+                    <TableCell>Details</TableCell>
+                    <TableCell>Reason</TableCell>
+                    <TableCell>Applied On</TableCell>
+                    <TableCell align="center">Actions</TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {/* Regularizations Pending */}
+                  {regularizations.filter(r => r.status === 'Pending').map((reg) => (
+                    <TableRow key={`reg-${reg.id}`} hover>
+                      <TableCell>
+                        <Chip
+                          icon={<RegularizationIcon />}
+                          label="Regularization"
+                          size="small"
+                          color="warning"
+                          variant="outlined"
+                        />
+                      </TableCell>
+                      <TableCell>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                          <Avatar sx={{ width: 30, height: 30 }} />
+                          <Box>
+                            <Typography variant="body2" fontWeight="600">{reg.employee}</Typography>
+                            <Typography variant="caption" color="text.secondary">{reg.employeeId}</Typography>
+                          </Box>
+                        </Box>
+                      </TableCell>
+                      <TableCell>
+                        <Typography variant="body2" fontWeight="500">
+                          {reg.date}
+                        </Typography>
+                        <Typography variant="caption" display="block" color="text.secondary">
+                          In: {reg.actualCheckIn} | Out: {reg.actualCheckOut}
+                        </Typography>
+                      </TableCell>
+                      <TableCell sx={{ maxWidth: 200 }}>
+                        <Typography variant="body2" noWrap title={reg.reason || 'No reason'}>
+                          {reg.reason || '-'}
+                        </Typography>
+                      </TableCell>
+                      <TableCell>
+                        <Typography variant="body2">{reg.appliedDate}</Typography>
+                      </TableCell>
+                      <TableCell align="center">
+                        <Stack direction="row" spacing={1} justifyContent="center">
+                          <Button
+                            size="small"
+                            variant="outlined"
+                            color="success"
+                            startIcon={<CheckIcon />}
+                            onClick={() => handleApproveRegularization(reg.id)}
+                          >
+                            Approve
+                          </Button>
+                          <Button
+                            size="small"
+                            variant="outlined"
+                            color="error"
+                            startIcon={<CloseIcon />}
+                            onClick={() => handleRejectRegularization(reg.id)}
+                          >
+                            Reject
+                          </Button>
+                        </Stack>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+
+                  {/* Leaves Pending */}
+                  {leaves.filter(l => l.status === 'Pending').map((leave) => {
+                    const config = getLeaveConfig(leave.type);
+                    return (
+                      <TableRow key={`leave-${leave.id}`} hover>
+                        <TableCell>
+                          <Chip
+                            icon={<config.icon />}
+                            label="Leave"
+                            size="small"
+                            sx={{ color: config.color, borderColor: config.color }}
+                            variant="outlined"
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                            <Avatar sx={{ width: 30, height: 30 }} />
+                            <Box>
+                              <Typography variant="body2" fontWeight="600">{leave.employee}</Typography>
+                              <Typography variant="caption" color="text.secondary">{leave.employeeId}</Typography>
+                            </Box>
+                          </Box>
+                        </TableCell>
+                        <TableCell>
+                          <Typography variant="body2" fontWeight="500">
+                            {typeof config === 'object' && config.map ? (config.map[leave.type.toLowerCase()] || leave.type) : leave.type}
+                          </Typography>
+                          <Typography variant="caption" display="block" color="text.secondary">
+                            {leave.startDate} to {leave.endDate}
+                          </Typography>
+                        </TableCell>
+                        <TableCell sx={{ maxWidth: 200 }}>
+                          <Typography variant="body2" noWrap title={leave.reason || 'No reason'}>
+                            {leave.reason || '-'}
+                          </Typography>
+                        </TableCell>
+                        <TableCell>
+                          <Typography variant="body2">{leave.appliedDate}</Typography>
+                        </TableCell>
+                        <TableCell align="center">
+                          <Stack direction="row" spacing={1} justifyContent="center">
+                            {/* Using same handlers for now, but really should be separate if endpoints differ */}
+                            <Button
+                              size="small"
+                              variant="outlined"
+                              color="success"
+                              startIcon={<CheckIcon />}
+                              onClick={() => handleApproveLeave(leave.id)}
+                            >
+                              Approve
+                            </Button>
+                            <Button
+                              size="small"
+                              variant="outlined"
+                              color="error"
+                              startIcon={<CloseIcon />}
+                              onClick={() => handleRejectLeave(leave.id)}
+                            >
+                              Reject
+                            </Button>
+                          </Stack>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+
+                  {regularizations.filter(r => r.status === 'Pending').length === 0 && leaves.filter(l => l.status === 'Pending').length === 0 && (
+                    <TableRow>
+                      <TableCell colSpan={6} align="center">
+                        <Typography variant="body2" color="text.secondary" sx={{ py: 3 }}>
+                          No pending approvals found.
+                        </Typography>
+                      </TableCell>
+                    </TableRow>
+                  )}
                 </TableBody>
               </Table>
             </TableContainer>
@@ -961,11 +1183,10 @@ const LeaveManagementCalendar = () => {
                 onChange={(e) => setLeaveForm({ ...leaveForm, type: e.target.value })}
                 label="Leave Type"
               >
-                {Object.keys(leaveTypes).map((type) => (
-                  <MenuItem key={type} value={type}>
-                    {type}
-                  </MenuItem>
-                ))}
+                <MenuItem value="casual">Casual Leave</MenuItem>
+                <MenuItem value="sick leave">Sick Leave</MenuItem>
+                <MenuItem value="earned">Earned Leave</MenuItem>
+                <MenuItem value="wfh">Work From Home</MenuItem>
               </Select>
             </FormControl>
             <TextField
@@ -1098,16 +1319,22 @@ const LeaveManagementCalendar = () => {
                       <Typography variant="caption" color="text.secondary" display="block">
                         Leave Type
                       </Typography>
-                      <Chip
-                        icon={React.createElement(leaveTypes[selectedItem.type].icon)}
-                        label={selectedItem.type}
-                        sx={{
-                          mt: 1,
-                          bgcolor: alpha(leaveTypes[selectedItem.type].color, 0.1),
-                          color: leaveTypes[selectedItem.type].color,
-                          '& .MuiChip-icon': { color: leaveTypes[selectedItem.type].color },
-                        }}
-                      />
+                      {(() => {
+                        const config = getLeaveConfig(selectedItem.type);
+                        const LeaveIcon = config.icon;
+                        return (
+                          <Chip
+                            icon={<LeaveIcon />}
+                            label={selectedItem.type}
+                            sx={{
+                              mt: 1,
+                              bgcolor: alpha(config.color, 0.1),
+                              color: config.color,
+                              '& .MuiChip-icon': { color: config.color },
+                            }}
+                          />
+                        );
+                      })()}
                     </Box>
                   </Grid>
 

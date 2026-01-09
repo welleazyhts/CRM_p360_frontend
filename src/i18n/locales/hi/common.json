@@ -42,6 +42,21 @@
     "valid": "वैध",
     "failed": "विफल",
     "saving": "सहेजा जा रहा है...",
+    "policies": {
+      "life": "जीवन बीमा",
+      "health": "स्वास्थ्य बीमा",
+      "vehicle": "वाहन बीमा",
+      "home": "गृह बीमा",
+      "travel": "यात्रा बीमा",
+      "business": "व्यवसाय बीमा"
+    },
+    "caseStatus": {
+      "lapsed": "समाप्त",
+      "cancelled": "रद्द",
+      "onHold": "होल्ड पर",
+      "followUp": "फालो-अप",
+      "failed": "विफल"
+    },
     "languages": {
       "English": "अंग्रेज़ी",
       "Hindi": "हिन्दी",
@@ -56,6 +71,15 @@
       "Assamese": "असमिया",
       "Odia": "ओड़िया",
       "Urdu": "उर्दू"
+    },
+    "days": {
+      "mon": "सोम",
+      "tue": "मंगल",
+      "wed": "बुध",
+      "thu": "गुरु",
+      "fri": "शुक्र",
+      "sat": "शनि",
+      "sun": "रवि"
     }
   },
   "navigation": {
@@ -160,6 +184,51 @@
     "status": "स्थिति",
     "priority": "प्राथमिकता",
     "assignedTo": "किसे सौंपा गया",
+    "bulk": {
+      "completed": "पूरा हुआ",
+      "upload": "अपलोड",
+      "selected": "लीड(्स) चयनित",
+      "pinToTop": "शीर्ष पर पिन करें",
+      "unpin": "अनपिन करें",
+      "manualAssign": "मैन्युअल असाइन",
+      "languageMatch": "भाषा मिलान",
+      "autoAssignPremium": "ऑटो असाइन प्रीमियम",
+      "pushToDialer": "डायलर पर भेजें",
+      "pushToVahan": "वाहन पर भेजें",
+      "archiveSelected": "चयनित आर्काइव करें",
+      "verifying": "सत्यापित किया जा रहा है...",
+      "assignTitle": "बल्क लीड्स असाइन करें",
+      "assignContent": "{{count}} चयनित लीड(्स) को एजेंट को असाइन करें:",
+      "selectAgent": "एजेंट चुनें",
+      "assignButton": "लीड्स असाइन करें"
+    },
+    "table": {
+      "name": "लीड",
+      "company": "कंपनी",
+      "score": "स्कोर",
+      "value": "मूल्य",
+      "lastContact": "अंतिम संपर्क",
+      "vahan": "वाहन",
+      "status": "स्थिति",
+      "actions": {
+        "title": "कार्रवाई",
+        "callLead": "लीड को कॉल करें",
+        "viewDetails": "विवरण देखें",
+        "quickUpdate": "त्वरित अपडेट",
+        "moreActions": "अधिक विकल्प",
+        "sendEmail": "ई-मेल भेजें",
+        "archive": "संग्रह करें"
+      },
+      "never": "कभी नहीं",
+      "vahanStatus": {
+        "verified": "सत्यापित",
+        "failed": "विफल",
+        "verifiedOn": "{{date}} को सत्यापित",
+        "verificationFailed": "सत्यापन विफल",
+        "clickToVerify": "वाहन सत्यापित करने के लिए क्लिक करें",
+        "notAvailable": "अनुपलब्ध"
+      }
+    },
     "assigned": {
       "subtitle": "{{total}} में से {{count}} लीड्स",
       "searchPlaceholder": "नाम, ईमेल, फोन द्वारा खोजें...",
@@ -663,33 +732,6 @@
     "qualified": "योग्य",
     "closedWon": "सफल बंद",
     "totalValue": "कुल मूल्य",
-    "table": {
-      "name": "नाम",
-      "contact": "संपर्क",
-      "company": "कंपनी",
-      "value": "मूल्य",
-      "lastContact": "पिछला संपर्क",
-      "score": "स्कोर",
-      "vahan": "वाहन",
-      "actions": {
-        "title": "कार्य",
-        "callLead": "लीड को कॉल करें",
-        "viewDetails": "विवरण देखें",
-        "quickUpdate": "त्वरित अपडेट",
-        "moreActions": "अधिक कार्य",
-        "sendEmail": "ईमेल भेजें",
-        "archive": "आर्काइव"
-      },
-      "never": "कभी नहीं",
-      "vahanStatus": {
-        "verified": "सत्यापित",
-        "failed": "विफल",
-        "verifiedOn": "{{date}} को सत्यापित",
-        "verificationFailed": "सत्यापन विफल",
-        "clickToVerify": "वाहन सत्यापित करने के लिए क्लिक करें",
-        "notAvailable": "लागू नहीं"
-      }
-    },
     "form": {
       "firstName": "पहला नाम",
       "lastName": "अंतिम नाम",
@@ -1201,22 +1243,6 @@
       "specialization": "विशेषज्ञता",
       "currentWorkload": "वर्तमान: {{count}} लीड्स"
     },
-    "bulk": {
-      "selected": "लीड(्स) चयनित",
-      "pinToTop": "शीर्ष पर पिन करें",
-      "unpin": "अनपिन करें",
-      "manualAssign": "मैन्युअल असाइन",
-      "languageMatch": "भाषा मिलान",
-      "autoAssignPremium": "ऑटो असाइन प्रीमियम",
-      "pushToDialer": "डायलर पर भेजें",
-      "pushToVahan": "वाहन पर भेजें",
-      "archiveSelected": "चयनित आर्काइव करें",
-      "verifying": "सत्यापित किया जा रहा है...",
-      "assignTitle": "बल्क लीड्स असाइन करें",
-      "assignContent": "{{count}} चयनित लीड(्स) को एजेंट को असाइन करें:",
-      "selectAgent": "एजेंट चुनें",
-      "assignButton": "लीड्स असाइन करें"
-    },
     "quickUpdate": {
       "title": "त्वरित अपडेट - {{name}}",
       "saveButton": "अपडेट सहेजें"
@@ -1514,6 +1540,1494 @@
         "name": "दीपक शर्मा",
         "specialization": "संपत्ति बीमा"
       }
+    }
+  },
+  "leadMIS": {
+    "title": "लीड एमआईएस रिपोर्ट",
+    "tabs": {
+      "statusDistribution": "स्थिति वितरण",
+      "performanceAnalysis": "प्रदर्शन विश्लेषण",
+      "trends": "रुझान और पैटर्न",
+      "duplicates": "डुप्लिकेट विश्लेषण",
+      "renewals": "पूर्व-समाप्ति नवीनीकरण",
+      "cscProductivity": "CSC उत्पादकता",
+      "lostReasons": "खोने के कारणों का विश्लेषण",
+      "conversion": "रूपांतरण रिपोर्ट",
+      "pivot": "पिवट रिपोर्ट",
+      "cscLoadTracking": "CSC लोड ट्रैकिंग",
+      "dailyInsurerMIS": "दैनिक बीमाकर्ता एमआईएस",
+      "premiumRegisters": "प्रीमियम रजिस्टर",
+      "capacityPlanning": "क्षमता योजना CSC",
+      "workloadDistribution": "कार्यभार वितरण"
+    },
+    "filters": {
+      "title": "फ़िल्टर",
+      "dateRange": "तिथि सीमा",
+      "agents": "एजेंट",
+      "sources": "स्रोत",
+      "status": "स्थिति",
+      "refresh": "डेटा रिफ्रेश करें",
+      "reset": "फ़िल्टर रीसेट करें",
+      "exportExcel": "एक्सेल निर्यात करें",
+      "exportPDF": "पीडीएफ निर्यात करें",
+      "month": "महीना",
+      "region": "क्षेत्र",
+      "performance": "प्रदर्शन",
+      "insurer": "बीमाकर्ता",
+      "policyType": "पॉलिसी का प्रकार",
+      "team": "टीम",
+      "lostReason": "खोने का कारण",
+      "productType": "उत्पाद का प्रकार",
+      "duplicates": "डुप्लिकेट प्रकार",
+      "groupBy": "समूह द्वारा"
+    },
+    "charts": {
+      "leadsByStatus": "स्थिति के अनुसार लीड्स",
+      "leadsBySource": "स्रोत के अनुसार लीड्स",
+      "leadsTrend": "लीड्स रुझान",
+      "agentPerformance": "एजेंट प्रदर्शन",
+      "conversionByProduct": "उत्पाद के अनुसार रूपांतरण",
+      "lostReasons": "खोने के कारणों का वितरण",
+      "cscProductivity": "CSC उत्पादकता स्कोर"
+    },
+    "table": {
+      "agent": "एजेंट",
+      "totalLeads": "कुल लीड्स",
+      "converted": "परिवर्तित",
+      "conversionRate": "रूपांतरण दर",
+      "revenue": "राजस्व",
+      "cscName": "CSC नाम",
+      "calls": "कॉल",
+      "policies": "पॉलिसियां",
+      "score": "स्कोर",
+      "region": "क्षेत्र",
+      "reason": "कारण",
+      "count": "संख्या",
+      "percentage": "प्रतिशत",
+      "leadId": "लीड आईडी",
+      "customer": "ग्राहक",
+      "lostDate": "खोने की तिथि",
+      "premium": "प्रीमियम (₹)",
+      "policyNumber": "पॉलिसी नंबर",
+      "expiryDate": "समाप्ति तिथि",
+      "daysToExpiry": "समाप्ति के दिन",
+      "group": "समूह आईडी",
+      "confidence": "विश्वास",
+      "matchType": "मिलान का प्रकार",
+      "leadsCount": "लीड्स संख्या",
+      "status": "स्थिति",
+      "actions": "कार्रवाई",
+      "name": "नाम",
+      "email": "ईमेल",
+      "phone": "फ़ोन",
+      "source": "स्रोत",
+      "policyId": "पॉलिसी आईडी",
+      "customerName": "ग्राहक का नाम",
+      "assignedAgent": "नियुक्त एजेंट",
+      "lastContact": "अंतिम संपर्क",
+      "performance": "प्रदर्शन",
+      "progress": "प्रगति",
+      "recoveryRate": "वसूली दर",
+      "topReason": "मुख्य कारण",
+      "lostRevenue": "खोया राजस्व",
+      "csc": "CSC",
+      "efficiency": "दक्षता",
+      "avgPerAgent": "औसत प्रति एजेंट",
+      "claims": "दावे",
+      "claimRatio": "दावा अनुपात",
+      "marketShare": "बाजार हिस्सेदारी",
+      "tenure": "अवधि",
+      "renewalRate": "नवीनीकरण दर",
+      "satisfaction": "संतुष्टि",
+      "notes": "नोट्स"
+    },
+    "duplicateAnalysis": {
+      "title": "डुप्लिकेट लीड विश्लेषण",
+      "description": "लीड्स को मिलान मानदंडों द्वारा समूहीकृत किया जाता है। डुप्लिकेट को मर्ज करने, मान्य करने या हटाने के लिए क्रियाओं का उपयोग करें।",
+      "totalGroups": "कुल डुप्लिकेट समूह",
+      "affectedLeads": "प्रभावित लीड्स",
+      "highConfidence": "उच्च विश्वास",
+      "potentialSavings": "संभावित बचत",
+      "noDuplicates": "कोई डुप्लिकेट लीड नहीं मिली",
+      "allUnique": "वर्तमान मानदंडों के आधार पर सभी लीड अद्वितीय प्रतीत होती हैं",
+      "merge": "मर्ज करें",
+      "valid": "मान्य",
+      "delete": "हटाएं"
+    },
+    "renewals": {
+      "title": "पूर्व-समाप्ति नवीनीकरण रिपोर्ट",
+      "description": "अगले 60 दिनों में समाप्त होने वाली नीतियां जिन्हें नवीनीकरण कार्रवाई की आवश्यकता है।",
+      "expiringSoon": "जल्द समाप्त हो रहा है",
+      "renewed": "नवीनीकृत",
+      "totalPremium": "कुल प्रीमियम",
+      "pending": "लंबित",
+      "status": {
+        "pending": "लंबित",
+        "contacted": "संपर्क किया गया",
+        "proposal": "प्रस्ताव भेजा गया",
+        "renewed": "नवीनीकृत",
+        "negotiation": "बातचीत"
+      }
+    },
+    "cscProductivity": {
+      "title": "CSC उत्पादकता रिपोर्ट",
+      "description": "ग्राहक सेवा केंद्र प्रतिनिधियों का व्यापक प्रदर्शन विश्लेषण।",
+      "totalCSCs": "कुल CSCs",
+      "totalCalls": "कुल कॉल",
+      "totalPolicies": "कुल पॉलिसियां",
+      "avgConversion": "औसत रूपांतरण",
+      "performanceDist": "CSC प्रदर्शन वितरण",
+      "conversionRates": "CSC रूपांतरण दर"
+    },
+    "lostReasons": {
+      "title": "खोने के कारणों का विश्लेषण",
+      "totalLost": "कुल खोई गई लीड्स",
+      "topReason": "मुख्य कारण",
+      "lostRevenue": "खोया राजस्व",
+      "recoveryRate": "वसूली दर"
+    },
+    "conversionReports": {
+      "overall": "कुल रूपांतरण",
+      "bestPerformer": "सर्वश्रेष्ठ प्रदर्शनकर्ता",
+      "totalConverted": "कुल परिवर्तित",
+      "revenue": "रूपांतरण राजस्व",
+      "agentVsRate": "एजेंट बनाम रूपांतरण दर",
+      "monthlyTrend": "मासिक रूपांतरण रुझान",
+      "agentTableTitle": "एजेंट-वार रूपांतरण विवरण",
+      "agentTableDesc": "एजेंट प्रदर्शन मेट्रिक्स के साथ व्यापक रूपांतरण ट्रैकिंग।",
+      "productTableTitle": "उत्पाद-वार रूपांतरण विश्लेषण",
+      "productTableDesc": "बीमा उत्पाद श्रेणियों द्वारा रूपांतरण प्रदर्शन विश्लेषण।",
+      "primaryProduct": "प्राथमिक उत्पाद",
+      "avgDealValue": "औसत सौदा मूल्य"
+    },
+    "pivotReports": {
+      "totalRecords": "कुल रिकॉर्ड",
+      "topPerformer": "शीर्ष प्रदर्शनकर्ता",
+      "avgPerformance": "औसत प्रदर्शन",
+      "groupBy": "समूह द्वारा",
+      "dateRange": "तिथि सीमा",
+      "productFilter": "उत्पाद फ़िल्टर",
+      "distribution": "वितरण",
+      "policyCount": "पॉलिसी संख्या तुलना",
+      "analysisTitle": "पिवट विश्लेषण",
+      "analysisDesc": "{{group}} द्वारा समूहीकृत गतिशील पिवट रिपोर्ट व्यापक मेट्रिक्स के साथ।",
+      "insurerName": "बीमाकर्ता का नाम",
+      "cscLocation": "CSC स्थान",
+      "policyTenure": "पॉलिसी अवधि",
+      "agents": "एजेंट",
+      "avgPerAgent": "औसत प्रति एजेंट",
+      "efficiency": "दक्षता",
+      "avgPremium": "औसत प्रीमियम"
+    },
+    "premiumRegisters": {
+      "title": "प्रीमियम रजिस्टर - अवधि विवरण",
+      "filters": {
+        "insurer": "बीमाकर्ता",
+        "policyType": "पॉलिसी का प्रकार",
+        "tenure": "अवधि"
+      },
+      "table": {
+        "insurer": "बीमाकर्ता",
+        "policyType": "पॉलिसी का प्रकार",
+        "tenure": "अवधि",
+        "totalPolicies": "कुल पॉलिसियां",
+        "totalPremium": "कुल प्रीमियम",
+        "avgPremium": "औसत प्रीमियम"
+      },
+      "chart": "अवधि के अनुसार प्रीमियम वितरण"
+    },
+    "dailyMIS": {
+      "title": "दैनिक बीमाकर्ता एमआईएस डेटा",
+      "chart": "दैनिक प्रीमियम रुझान",
+      "filters": {
+        "conversion": "रूपांतरण द्वारा फ़िल्टर करें"
+      },
+      "cards": {
+        "policiesSold": "बेची गई पॉलिसियां",
+        "leadsGenerated": "उत्पन्न लीड्स"
+      }
+    },
+    "capacityPlanning": {
+      "tableTitle": "CSC क्षमता विश्लेषण",
+      "warning": "स्टाफिंग की कमी: क्षमता आवश्यकताओं को पूरा करने के लिए {{count}} CSCs जोड़ें",
+      "cards": {
+        "requiredCSCs": "आवश्यक CSCs",
+        "shortfall": "कमी"
+      },
+      "charts": {
+        "availableVsRequired": "उपलब्ध बनाम आवश्यक CSCs",
+        "workloadDistribution": "क्षेत्र द्वारा कार्यभार वितरण"
+      },
+      "table": {
+        "assignedLeads": "सौंपे गए लीड्स",
+        "capacity": "क्षमता",
+        "utilization": "उपयोग %"
+      },
+      "status": {
+        "overloaded": "अतिभारित",
+        "optimal": "इष्टतम",
+        "underutilized": "कम उपयोग",
+        "available": "उपलब्ध",
+        "atCapacity": "क्षमता पर",
+        "balanced": "संतुलित"
+      }
+    },
+    "workload": {
+      "avgUtilization": "औसत उपयोग",
+      "overloadedCSCs": "अतिभारित CSCs",
+      "chart": "CSC कार्यभार वितरण",
+      "share": "कार्यभार हिस्सेदारी",
+      "tableTitle": "विस्तृत CSC प्रदर्शन",
+      "team": "टीम",
+      "assigned": "सौंपा गया",
+      "completed": "पूर्ण"
+    },
+    "cscLoad": {
+      "tableTitle": "CSC लोड ट्रैकिंग डेटा",
+      "avgCalls": "औसत कॉल प्रति CSC",
+      "meetingTarget": "लक्ष्य पूरा करने का %"
+    },
+    "performance": {
+      "excellent": "उत्कृष्ट",
+      "good": "अच्छा",
+      "average": "औसत",
+      "needsImprovement": "सुधार की आवश्यकता"
+    },
+    "detailedReport": {
+      "title": "विस्तृत एमआईएस रिपोर्ट",
+      "generatedOn": "रिपोर्ट जनरेट की गई",
+      "period": "अवधि",
+      "thisMonth": "इस महीने",
+      "downloadExcel": "एक्सेल डाउनलोड करें",
+      "downloadPDF": "पीडीएफ डाउनलोड करें"
+    },
+    "messages": {
+      "noData": "कोई डेटा उपलब्ध नहीं है",
+      "loading": "डेटा लोड हो रहा है...",
+      "failed": "एमआईएस डेटा लोड करने में विफल",
+      "noRecordsFound": "चयनित फ़िल्टर के लिए कोई रिकॉर्ड नहीं मिला।",
+      "trySelecting": "विभिन्न फ़िल्टर चुनने का प्रयास करें।",
+      "noCSCRecords": "चयनित फ़िल्टर के लिए कोई CSC रिकॉर्ड नहीं मिला।",
+      "noCSCPerformance": "चयनित फ़िल्टर के लिए कोई CSC प्रदर्शन रिकॉर्ड नहीं मिला।"
+    }
+  },
+  "quoteManagement": {
+    "title": "कोट प्रबंधन",
+    "subtitle": "बीमा कोट्स बनाएं, प्रबंधित करें और ट्रैक करें",
+    "newQuote": "नया कोट",
+    "filter": {
+      "searchPlaceholder": "ग्राहक के नाम, कोट आईडी या उत्पाद द्वारा खोजें...",
+      "status": "स्थिति के अनुसार फ़िल्टर करें",
+      "all": "सभी कोट्स",
+      "reset": "रीसेट"
+    },
+    "status": {
+      "draft": "ड्राफ्ट",
+      "pending": "लंबित",
+      "approved": "स्वीकृत",
+      "converted": "परिवर्तित",
+      "rejected": "अस्वीकार",
+      "lost": "खोया"
+    },
+    "stats": {
+      "totalQuotes": "कुल कोट्स",
+      "pendingApproval": "स्वीकृति लंबित",
+      "converted": "परिवर्तित",
+      "totalValue": "कुल मूल्य",
+      "drafts": "ड्राफ्ट",
+      "approved": "स्वीकृत",
+      "rate": "दर",
+      "avg": "औसत"
+    },
+    "tabs": {
+      "allQuotes": "सभी कोट्स",
+      "createQuote": "कोट बनाएं",
+      "activityHistory": "गतिविधि का इतिहास"
+    },
+    "cards": {
+      "lead": "लीड",
+      "coverage": "कवरेज",
+      "premium": "प्रीमियम",
+      "conversionProbability": "रूपांतरण की संभावना",
+      "raised": "बनाया गया",
+      "validTill": "तक वैध",
+      "attachments": "अनुलग्नक",
+      "viewDetails": "विवरण देखें"
+    },
+    "empty": {
+      "title": "कोई कोट नहीं मिला",
+      "adjustParams": "अपने खोज या फ़िल्टर मानदंड को समायोजित करने का प्रयास करें",
+      "createFirst": "शुरू करने के लिए अपना पहला कोट बनाएं",
+      "createButton": "कोट बनाएं",
+      "noHistory": "अभी तक कोई गतिविधि इतिहास नहीं"
+    },
+    "form": {
+      "createTitle": "नया कोट बनाएं",
+      "editTitle": "कोट संपादित करें",
+      "steps": {
+        "customerInfo": "ग्राहक जानकारी",
+        "productDetails": "उत्पाद विवरण",
+        "pricing": "मूल्य निर्धारण"
+      },
+      "customer": {
+        "title": "ग्राहक जानकारी",
+        "name": "ग्राहक का नाम",
+        "leadId": "लीड आईडी",
+        "leadIdPlaceholder": "यदि खाली छोड़ दिया गया तो स्वचालित रूप से उत्पन्न",
+        "email": "ग्राहक ईमेल",
+        "phone": "ग्राहक फोन"
+      },
+      "product": {
+        "title": "उत्पाद जानकारी",
+        "type": "उत्पाद का प्रकार",
+        "plan": "उत्पाद / योजना"
+      },
+      "pricing": {
+        "title": "कवरेज और मूल्य निर्धारण",
+        "coverage": "कवरेज राशि",
+        "sumInsured": "बीमित राशि",
+        "premium": "प्रीमियम (वार्षिक)",
+        "totalQuote": "कुल कोट राशि",
+        "tenure": "पॉलिसी कार्यकाल",
+        "validity": "कोट वैधता अवधि",
+        "age": "बीमित व्यक्ति की आयु"
+      },
+      "remarks": {
+        "label": "टिप्पणियाँ / नोट्स",
+        "placeholder": "कोई भी अतिरिक्त जानकारी या विशेष शर्तें जोड़ें..."
+      },
+      "infoAlert": "कोट करने के बाद, आप इसे ईमेल के माध्यम से ग्राहक को भेज सकते हैं और कोट प्रबंधन डैशबोर्ड के माध्यम से इसकी स्थिति को ट्रैक कर सकते हैं।",
+      "buttons": {
+        "reset": "फ़ॉर्म रीसेट करें",
+        "update": "कोट अपडेट करें",
+        "submit": "कोट जमा करें"
+      }
+    },
+    "dialog": {
+      "details": "कोट विवरण",
+      "customerInfo": "ग्राहक जानकारी",
+      "productDetails": "उत्पाद विवरण",
+      "financialDetails": "वित्तीय विवरण",
+      "timeline": "कोट समयरेखा",
+      "activityLog": "गतिविधि लॉग",
+      "policyNumber": "पॉलिसी नंबर",
+      "attachments": "अनुलग्नक",
+      "buttons": {
+        "close": "बंद करें",
+        "print": "प्रिंट",
+        "download": "पीडीएफ डाउनलोड करें",
+        "send": "ग्राहक को भेजें"
+      },
+      "labels": {
+        "name": "ग्राहक का नाम",
+        "leadId": "लीड आईडी",
+        "email": "ईमेल",
+        "phone": "फोन",
+        "productType": "उत्पाद का प्रकार",
+        "planName": "योजना का नाम",
+        "tenure": "पॉलिसी कार्यकाल",
+        "version": "संस्करण",
+        "coverage": "कवरेज राशि",
+        "premium": "प्रीमियम (वार्षिक)",
+        "totalQuote": "कुल कोट",
+        "raisedDate": "बनाई गई तारीख",
+        "raisedBy": "द्वारा बनाया गया",
+        "lastUpdated": "अंतिम अद्यतन",
+        "validUntil": "तक वैध"
+      }
+    },
+    "menu": {
+      "submitApproval": "अनुमोदन के लिए जमा करें",
+      "approve": "कोट स्वीकृत करें",
+      "reject": "कोट अस्वीकार करें",
+      "convert": "पॉलिसी में बदलें",
+      "markLost": "खोया हुआ चिह्नित करें",
+      "edit": "कोट संपादित करें",
+      "duplicate": "कोट डुप्लिकेट करें",
+      "send": "ग्राहक को भेजें",
+      "download": "पीडीएफ डाउनलोड करें",
+      "print": "कोट प्रिंट करें",
+      "delete": "कोट हटाएं"
+    },
+    "delete": {
+      "title": "कोट हटाएं",
+      "confirmation": "क्या आप वाकई इस कोट को हटाना चाहते हैं?",
+      "warning": "यह कार्रवाई पूर्ववत नहीं की जा सकती।",
+      "cancel": "रद्द करें",
+      "confirm": "हटाएं",
+      "quoteId": "कोट आईडी",
+      "customer": "ग्राहक",
+      "amount": " राशि"
+    },
+    "emailPreview": {
+      "title": "ईमेल पूर्वावलोकन",
+      "from": "से",
+      "to": "को",
+      "subject": "विषय",
+      "preview": "ईमेल पूर्वावलोकन",
+      "ready": "ईमेल भेजा जाने के लिए तैयार है",
+      "close": "बंद करें",
+      "confirm": "पुष्टि करें और ईमेल भेजें"
+    }
+  },
+  "paymentLinks": {
+    "title": "भुगतान लिंक प्रबंधन",
+    "subtitle": "बीमा प्रीमियम के लिए भुगतान लिंक बनाएं और प्रबंधित करें",
+    "buttons": {
+      "refresh": "रिफ्रेश करें",
+      "create": "भुगतान लिंक बनाएं",
+      "createLink": "लिंक बनाएं",
+      "cancel": "रद्द करें",
+      "close": "बंद करें",
+      "send": "लिंक भेजें",
+      "sendReminder": "रिमाइंडर भेजें"
+    },
+    "stats": {
+      "totalLinks": "कुल लिंक",
+      "totalAmount": "कुल राशि",
+      "pending": "लंबित",
+      "successful": "सफल",
+      "conversionRate": "रूपांतरण दर",
+      "collected": "एकत्रित",
+      "pendingAmount": "लंबित"
+    },
+    "filters": {
+      "searchPlaceholder": "ग्राहक का नाम, फोन, लिंक आईडी या पॉलिसी नंबर द्वारा खोजें...",
+      "status": "स्थिति फ़िल्टर",
+      "allStatus": "सभी स्थिति"
+    },
+    "tabs": {
+      "all": "सभी",
+      "pending": "लंबित",
+      "paid": "भुगतान किया",
+      "others": "अन्य"
+    },
+    "table": {
+      "linkId": "लिंक आईडी",
+      "customerDetails": "ग्राहक विवरण",
+      "amount": "राशि",
+      "type": "प्रकार",
+      "status": "स्थिति",
+      "created": "बनाया गया",
+      "expiry": "समाप्ति",
+      "actions": "कार्रवाई",
+      "noPolicy": "कोई पॉलिसी नहीं",
+      "paid": "भुगतान किया",
+      "transactionId": "लेनदेन आईडी",
+      "paidAt": "भुगतान की तिथि"
+    },
+    "tooltips": {
+      "view": "विवरण देखें",
+      "copy": "लिंक कॉपी करें",
+      "send": "लिंक भेजें",
+      "reminder": "रिमाइंडर भेजें",
+      "cancel": "लिंक रद्द करें"
+    },
+    "dialogs": {
+      "createTitle": "नया भुगतान लिंक बनाएं",
+      "viewTitle": "भुगतान लिंक विवरण",
+      "sendTitle": "भुगतान लिंक भेजें",
+      "reminderTitle": "भुगतान रिमाइंडर भेजें",
+      "selectChannels": "भुगतान लिंक भेजने के लिए चैनल चुनें:",
+      "selectChannelsReminder": "भुगतान रिमाइंडर भेजने के लिए चैनल चुनें:",
+      "channels": {
+        "sms": "एसएमएस",
+        "email": "ईमेल",
+        "whatsapp": "व्हाट्सएप"
+      },
+      "url": "भुगतान यूआरएल"
+    },
+    "form": {
+      "customerName": "ग्राहक का नाम",
+      "customerPhone": "ग्राहक का फोन",
+      "customerEmail": "ग्राहक ईमेल",
+      "amount": "राशि",
+      "description": "विवरण",
+      "policyNumber": "पॉलिसी नंबर",
+      "leadId": "लीड आईडी",
+      "paymentType": "भुगतान का प्रकार",
+      "paymentProvider": "भुगतान प्रदाता",
+      "expiryDays": "समाप्ति (दिन)"
+    },
+    "messages": {
+      "copySuccess": "भुगतान लिंक क्लिपबोर्ड पर कॉपी किया गया!",
+      "cancelConfirm": "क्या आप वाकई इस भुगतान लिंक को रद्द करना चाहते हैं?"
+    },
+    "status": {
+      "Pending": "लंबित",
+      "Paid": "भुगतान किया",
+      "Failed": "विफल",
+      "Expired": "समाप्त",
+      "Cancelled": "रद्द"
+    },
+    "type": {
+      "Premium": "प्रीमियम",
+      "Renewal": "नवीनीकरण",
+      "Endorsement": "समर्थन",
+      "Inspection": "निरीक्षण",
+      "Other": "अन्य"
+    }
+  },
+  "reminders": {
+    "title": "रिमाइंडर प्रबंधन",
+    "subtitle": "अपने सभी फॉलो-अप रिमाइंडर्स का प्रबंधन करें",
+    "buttons": {
+      "refresh": "रिफ्रेश करें",
+      "create": "रिमाइंडर बनाएं",
+      "cancel": "रद्द करें",
+      "sendEmail": "ईमेल द्वारा भेजें",
+      "sendSMS": "एसएमएस द्वारा भेजें",
+      "sendWhatsapp": "व्हाट्सएप द्वारा भेजें",
+      "complete": "पूरा करें",
+      "snooze": "2 घंटे के लिए स्नूज करें",
+      "delete": "हटाएं"
+    },
+    "stats": {
+      "total": "कुल रिमाइंडर्स",
+      "pending": "लंबित",
+      "overdue": "नियत तिथि पार",
+      "dueToday": "आज देय"
+    },
+    "filters": {
+      "searchPlaceholder": "शीर्षक या लीड नाम से रिमाइंडर्स खोजें..."
+    },
+    "tabs": {
+      "all": "सभी",
+      "pending": "लंबित",
+      "overdue": "नियत तिथि पार",
+      "completed": "पूरा हुआ"
+    },
+    "table": {
+      "type": "प्रकार",
+      "title": "शीर्षक",
+      "lead": "लीड",
+      "dueDate": "नियत तिथि",
+      "priority": "प्राथमिकता",
+      "status": "स्थिति",
+      "notifyVia": "अधिसूचना माध्यम",
+      "actions": "कार्रवाई"
+    },
+    "dialogs": {
+      "createTitle": "नया रिमाइंडर बनाएं",
+      "notifyVia": "अधिसूचना माध्यम",
+      "msgSent": "अधिसूचना सफलतापूर्वक भेजी गई!",
+      "deleteConfirm": "क्या आप वाकई इस रिमाइंडर को हटाना चाहते हैं?"
+    },
+    "form": {
+      "title": "शीर्षक",
+      "description": "विवरण",
+      "type": "प्रकार",
+      "priority": "प्राथमिकता",
+      "leadId": "लीड आईडी",
+      "leadName": "लीड का नाम",
+      "dueDate": "नियत तिथि",
+      "dueTime": "नियत समय",
+      "recurring": "आवर्ती रिमाइंडर",
+      "recurringInterval": "आवर्ती अंतराल",
+      "channels": {
+        "email": "ईमेल",
+        "sms": "एसएमएस",
+        "whatsapp": "व्हाट्सएप",
+        "inApp": "इन-ऐप"
+      },
+      "intervals": {
+        "daily": "दैनिक",
+        "weekly": "साप्ताहिक",
+        "monthly": "मासिक"
+      }
+    },
+    "types": {
+      "call": "कॉल",
+      "follow_up": "फॉलो-अप",
+      "quote": "कोट",
+      "document": "दस्तावेज़",
+      "payment": "भुगतान",
+      "renewal": "नवीनीकरण",
+      "custom": "कस्टम"
+    },
+    "priorities": {
+      "high": "उच्च",
+      "medium": "मध्यम",
+      "low": "कम"
+    },
+    "status": {
+      "pending": "लंबित",
+      "completed": "पूरा हुआ",
+      "snoozed": "स्नूज",
+      "overdue": "नियत तिथि पार",
+      "cancelled": "रद्द"
+    }
+  },
+  "pipeline": {
+    "title": "बिक्री पाइपलाइन",
+    "buttons": {
+      "addLead": "लीड जोड़ें",
+      "addStage": "चरण जोड़ें",
+      "refresh": "रिफ्रेश करें",
+      "resetFilters": "फिल्टर रीसेट करें",
+      "save": "सहेजें",
+      "update": "अपडेट करें",
+      "cancel": "रद्द करें",
+      "edit": "संपादित करें",
+      "delete": "हटाएं"
+    },
+    "metrics": {
+      "totalLeads": "कुल लीड्स",
+      "totalValue": "पाइपलाइन मूल्य",
+      "wonDeals": "जीते गए सौदे",
+      "wonValue": "जीता गया मूल्य",
+      "conversionRate": "रूपांतरण दर"
+    },
+    "filters": {
+      "searchPlaceholder": "लीड्स खोजें...",
+      "filterByStage": "चरण द्वारा फिल्टर करें",
+      "allStages": "सभी चरण"
+    },
+    "pipelineSelector": {
+      "label": "पाइपलाइन",
+      "default": "डिफ़ॉल्ट पाइपलाइन"
+    },
+    "stage": {
+      "leads": "लीड्स",
+      "addTitle": "चरण जोड़ें",
+      "editTitle": "चरण संपादित करें",
+      "nameLabel": "चरण का नाम",
+      "deleteConfirm": "चरण हटाएं? इसे पूर्ववत नहीं किया जा सकता।"
+    },
+    "leadCard": {
+      "assignedTo": "सांपा गया:",
+      "expectedClose": "अपेक्षित समाप्ति:"
+    },
+    "dialog": {
+      "addTitle": "नई लीड जोड़ें",
+      "editTitle": "लीड संपादित करें",
+      "detailsTitle": "लीड विवरण",
+      "firstName": "पहला नाम",
+      "lastName": "अंतिम नाम",
+      "email": "ईमेल",
+      "phone": "फ़ोन",
+      "company": "कंपनी",
+      "position": "पद",
+      "value": "मूल्य (₹)",
+      "expectedCloseDate": "अपेक्षित समाप्ति तिथि",
+      "stage": "चरण",
+      "priority": "प्राथमिकता",
+      "assignedTo": "किसे सौंपा गया",
+      "notes": "नोट्स"
+    },
+    "history": {
+      "title": "पॉलिसी इतिहास",
+      "subtitle": "पिछली पॉलिसियां और प्रीमियम विवरण",
+      "policyNumber": "पॉलिसी संख्या",
+      "type": "प्रकार",
+      "period": "अवधि",
+      "premium": "प्रीमियम",
+      "status": "स्थिति",
+      "coverage": "कवरेज",
+      "totalPremium": "कुल प्रीमियम मूल्य",
+      "activePolicies": "सक्रिय पॉलिसियां",
+      "totalPolicies": "कुल पॉलिसियां"
+    },
+    "messages": {
+      "noPipeline": "कोई पाइपलाइन नहीं चुनी गई",
+      "stageUpdated": "चरण अपडेट किया गया",
+      "stageAdded": "चरण जोड़ा गया",
+      "stageDeleted": "चरण हटाया गया",
+      "errorDeleting": "चरण हटाने में त्रुटि",
+      "reordered": "चरण पुनः व्यवस्थित किए गए",
+      "leadMoved": "लीड को नए चरण में ले जाया गया",
+      "leadUpdated": "लीड सफलतापूर्वक अपडेट की गई!",
+      "leadAdded": "लीड सफलतापूर्वक जोड़ी गई!"
+    },
+    "priority": {
+      "low": "कम",
+      "medium": "मध्यम",
+      "high": "उच्च",
+      "urgent": "अत्यावश्यक"
+    },
+    "stages": {
+      "new": "नई लीड्स",
+      "contacted": "संपर्क किया",
+      "qualified": "योग्य",
+      "proposal": "प्रस्ताव",
+      "negotiation": "बातचीत",
+      "closed-won": "सफल समापन",
+      "closed-lost": "असफल समापन"
+    },
+    "status": {
+      "active": "सक्रिय",
+      "expired": "समाप्त"
+    }
+  },
+  "qrc": {
+    "title": "क्यूआरसी प्रबंधन",
+    "subtitle": "प्रश्नों, अनुरोधों और शिकायतों का प्रबंधन करें",
+    "buttons": {
+      "addNew": "नई प्रविष्टि जोड़ें",
+      "edit": "संपादित करें",
+      "delete": "हटाएं",
+      "cancel": "रद्द करें",
+      "save": "सहेजें",
+      "update": "अपडेट करें"
+    },
+    "filters": {
+      "searchPlaceholder": "खोजें...",
+      "filterByType": "प्रकार द्वारा फिल्टर करें",
+      "allTypes": "सभी प्रकार",
+      "queries": "प्रश्न",
+      "requests": "अनुरोध",
+      "complaints": "शिकायतें"
+    },
+    "table": {
+      "id": "आईडी",
+      "dateTime": "दिनांक और समय",
+      "type": "प्रकार",
+      "callerDetails": "कॉलर विवरण",
+      "reason": "कारण",
+      "csr": "सीएसआर",
+      "status": "स्थिति",
+      "actions": "क्रियाएं"
+    },
+    "dialog": {
+      "addTitle": "नई प्रविष्टि जोड़ें",
+      "editTitle": "प्रविष्टि संपादित करें",
+      "communicationMode": "संचार माध्यम",
+      "callerType": "कॉलर प्रकार",
+      "callType": "कॉल प्रकार",
+      "resolutionStatus": "समाधान स्थिति",
+      "callReason": "कॉल का कारण",
+      "callDateTime": "कॉल दिनांक और समय",
+      "callerName": "कॉलर का नाम",
+      "taCode": "टीए/केस कोड",
+      "csrName": "सीएसआर का नाम",
+      "icName": "आईसी नाम",
+      "callerEmail": "कॉलर ईमेल आईडी",
+      "state": "राज्य",
+      "city": "शहर",
+      "contactNumber": "संपर्क नंबर",
+      "remarks": "टिप्पणियाँ",
+      "suspiciousCase": "संदेहजनक मामला?",
+      "yes": "हाँ",
+      "no": "नहीं"
+    },
+    "messages": {
+      "deleteConfirm": "क्या आप वाकई इस प्रविष्टि को हटाना चाहते हैं?",
+      "saveError": "प्रविष्टि सहेजने में विफल। कृपया पुन: प्रयास करें।",
+      "deleteError": "प्रविष्टि हटाने में विफल। कृपया पुन: प्रयास करें।"
+    },
+    "enums": {
+      "communicationMode": {
+        "call": "कॉल",
+        "email": "ईमेल",
+        "whatsapp": "व्हाट्सएप",
+        "inPerson": "व्यक्तिगत रूप से"
+      },
+      "caller": {
+        "customer": "ग्राहक",
+        "agent": "एजेंट",
+        "employee": "कर्मचारी"
+      },
+      "callType": {
+        "query": "प्रश्न",
+        "request": "अनुरोध",
+        "complaint": "शिकायत"
+      },
+      "resolution": {
+        "resolved": "सुलझा हुआ",
+        "pending": "लंबित",
+        "escalated": "एस्केलेटेड",
+        "closed": "बंद"
+      },
+      "callReason": {
+        "policyInformation": "पॉलिसी जानकारी",
+        "premiumPayment": "प्रीमियम भुगतान",
+        "claimStatus": "दावा स्थिति",
+        "documentRequest": "दस्तावेज़ अनुरोध",
+        "complaint": "शिकायत",
+        "generalInquiry": "सामान्य पूछताछ",
+        "technicalIssue": "तकनीकी समस्या"
+      }
+    }
+  },
+  "dashboard": {
+    "title": "डैशबोर्ड",
+    "stats": {
+      "totalCases": "कुल मामले",
+      "inProgress": "प्रगति पर",
+      "renewed": "नवीनीकृत",
+      "pendingAction": "लंबित कार्रवाई",
+      "errors": "त्रुटियां",
+      "paymentCollected": "भुगतान प्राप्त",
+      "paymentPending": "भुगतान लंबित",
+      "newCases": "नए मामले",
+      "completedRenewals": "पूर्ण नवीनीकरण"
+    },
+    "filters": {
+      "dateRange": "दिनांक सीमा",
+      "policyType": "पॉलिसी प्रकार",
+      "caseStatus": "मामला स्थिति",
+      "team": "टीम",
+      "teamMember": "टीम सदस्य",
+      "teamMembers": "टीम सदस्य",
+      "all": "सभी",
+      "today": "आज",
+      "week": "इस सप्ताह",
+      "month": "इस महीने",
+      "quarter": "इस तिमाही",
+      "year": "इस साल",
+      "custom": "कस्टम सीमा",
+      "apply": "लागू करें",
+      "activeFilters": "सक्रिय फिल्टर्स",
+      "closed": "बंद"
+    },
+    "charts": {
+      "trends": "नवीनीकरण रुझान",
+      "channelPerformance": "चैनल प्रदर्शन",
+      "regionPerformance": "क्षेत्र प्रदर्शन",
+      "managerPerformance": "प्रबंधक प्रदर्शन",
+      "communicationAnalysis": "संचार विश्लेषण",
+      "costAnalysis": "लागत विश्लेषण",
+      "paymentAnalysis": "भुगतान विश्लेषण",
+      "collectionMode": "संग्रहण मोड",
+      "customerRetention": "ग्राहक प्रतिधारण",
+      "caseVolume": "मामलों की मात्रा",
+      "caseVolumeDesc": "नए मामलों और पूर्ण नवीनीकरण की तुलना",
+      "successRate": "सफलता दर रुझान",
+      "successRateDesc": "समय के साथ सफल नवीनीकरण का प्रतिशत"
+    },
+    "misExport": {
+      "title": "एमआईएस निर्यात",
+      "exportData": "डेटा निर्यात करें",
+      "collapseExport": "निर्यात संक्षिप्त करें",
+      "generateExport": "निर्यात उत्पन्न करें",
+      "exporting": "निर्यात हो रहा है...",
+      "dataType": "डेटा प्रकार",
+      "format": "निर्यात प्रारूप",
+      "preview": "निर्यात पूर्वावलोकन",
+      "estimatedSize": "अनुमानित आकार"
+    },
+    "channelManagement": {
+      "title": "चैनल और पदानुक्रम प्रबंधन",
+      "tabs": {
+        "communication": "संचार चैनल",
+        "distribution": "वितरण चैनल",
+        "hierarchy": "पदानुक्रम",
+        "analytics": "एनालिटिक्स"
+      },
+      "communication": {
+        "title": "संचार चैनल प्रबंधन",
+        "subtitle": "सभी ग्राहक संचार चैनलों का प्रबंधन और निगरानी करें",
+        "addChannel": "चैनल जोड़ें",
+        "costPerLead": "लागत/लीड",
+        "efficiency": "दक्षता",
+        "revenue": "राजस्व",
+        "currentCases": "वर्तमान मामले",
+        "renewed": "नवीनीकृत",
+        "conversionRate": "रूपांतरण दर"
+      },
+      "distribution": {
+        "title": "वितरण चैनल प्रबंधन",
+        "subtitle": "वितरण भागीदारों, एजेंटों और बिक्री चैनलों का प्रबंधन करें",
+        "addChannel": "वितरण चैनल जोड़ें",
+        "currentPolicies": "वर्तमान पॉलिसियां",
+        "renewalRate": "नवीनीकरण दर",
+        "commissionRate": "कमीशन दर",
+        "partnerSince": "साझेदार कब से"
+      },
+      "hierarchy": {
+        "title": "संगठनात्मक पदानुक्रम",
+        "subtitle": "संगठनात्मक संरचना और रिपोर्टिंग पदानुक्रम का प्रबंधन करें",
+        "addNode": "नोड जोड़ें",
+        "cases": "मामले",
+        "budgetUtilization": "बजट उपयोग",
+        "targetAchievement": "लक्ष्य उपलब्धि"
+      },
+      "analytics": {
+        "title": "चैनल और पदानुक्रम विश्लेषण",
+        "performanceComparison": "चैनल प्रदर्शन तुलना",
+        "efficiencyVsCost": "चैनलों में दक्षता बनाम लागत विश्लेषण",
+        "regionalPerformance": "क्षेत्रीय प्रदर्शन अवलोकन",
+        "performanceMetrics": "विभिन्न क्षेत्रों में प्रदर्शन मेट्रिक्स"
+      }
+    },
+    "data": {
+      "channels": {
+        "online": "ऑनलाइन पोर्टल",
+        "mobile": "मोबाइल ऐप",
+        "branch": "शाखा कार्यालय",
+        "agent": "एजेंट विजिट",
+        "phone": "फोन कॉल",
+        "broker": "ब्रोकर",
+        "bank": "बैंक साझेदारी",
+        "corporate": "कॉर्पोरेट",
+        "direct": "प्रत्यक्ष बिक्री",
+        "call_center": "कॉल सेंटर",
+        "agent_network": "एजेंट नेटवर्क"
+      },
+      "hierarchy": {
+        "region": "क्षेत्र",
+        "state": "राज्य",
+        "branch": "शाखा",
+        "department": "विभाग",
+        "team": "टीम",
+        "north": "उत्तरी क्षेत्र",
+        "west": "पश्चिमी क्षेत्र",
+        "south": "दक्षिणी क्षेत्र",
+        "east": "पूर्वी क्षेत्र"
+      },
+      "paymentModes": {
+        "upi": "यूपीआई/डिजिटल",
+        "net_banking": "नेट बैंकिंग",
+        "credit_card": "क्रेडिट कार्ड",
+        "debit_card": "डेबिट कार्ड",
+        "cash": "नकद",
+        "branch_cash": "शाखा नकद",
+        "agent_collection": "एजेंट संग्रह"
+      },
+      "paymentTypes": {
+        "annual": "वार्षिक प्रीमियम",
+        "quarterly": "त्रैमासिक प्रीमियम",
+        "monthly": "मासिक प्रीमियम",
+        "one_time": "एकमुश्त भुगतान"
+      },
+      "communication": {
+        "ai_call": "एआई कॉल",
+        "whatsapp": "व्हाट्सएप",
+        "tele_caller": "टेली कॉलर",
+        "sms": "एसएमएस"
+      },
+      "dueDate": {
+        "before": "नियत तारीख से पहले",
+        "on": "नियत तारीख पर",
+        "after": "नियत तारीख के बाद"
+      },
+      "retention": {
+        "retained": "बरकरार ग्राहक",
+        "churned": "छोड़ कर गए ग्राहक",
+        "premium": "प्रीमियम",
+        "standard": "मानक",
+        "basic": "बुनियादी"
+      }
+    },
+    "campaigns": {
+      "title": "नवीनीकरण अभियान ट्रैकिंग",
+      "activeCampaigns": "सक्रिय नवीनीकरण अभियान",
+      "subtitle": "सभी नवीनीकरण मार्केटिंग अभियानों की रीयल-टाइम ट्रैकिंग",
+      "target": "लक्ष्य",
+      "sent": "भेजा गया",
+      "openRate": "ओपन दर",
+      "clickRate": "क्लिक दर",
+      "deliveryRate": "वितरण दर",
+      "readRate": "पठित दर",
+      "conversions": "रूपांतरण",
+      "created": "बनाया गया",
+      "pause": "अभियान रोकें",
+      "resume": "अभियान फिर से शुरू करें",
+      "viewDetails": "विवरण देखें"
+    }
+  },
+  "uploadPolicy": {
+    "title": "पॉलिसी डेटा अपलोड करें",
+    "buttons": {
+      "changeCampaign": "अभियान बदलें",
+      "downloadTemplate": "टेम्पलेट डाउनलोड करें",
+      "changeFile": "फ़ाइल बदलें",
+      "selectFile": "फ़ाइल चुनें",
+      "uploadProcess": "फ़ाइल अपलोड और प्रोसेस करें"
+    },
+    "sections": {
+      "uploadNew": "नई फ़ाइल अपलोड करें",
+      "recentUploads": "हाल के अपलोड",
+      "activeCampaigns": "सक्रिय अभियान"
+    },
+    "descriptions": {
+      "format": "हमारे टेम्पलेट प्रारूप का उपयोग करके मामले अपलोड करें। केवल एक्सेल (.xlsx) या CSV फ़ाइलें समर्थित हैं।",
+      "dragDrop": "खींचें और छोड़ें या चुनने के लिए क्लिक करें",
+      "createCampaign": "अपने ग्राहकों से जुड़ने के लिए पूर्ण अपलोड से अभियान बनाएं"
+    },
+    "stats": {
+      "totalRecords": "कुल रिकॉर्ड",
+      "successful": "सफल",
+      "failed": "विफल",
+      "target": "लक्ष्य",
+      "sent": "भेजा गया",
+      "opened": "खोला गया",
+      "clicked": "क्लिक किया गया",
+      "delivered": "वितरित",
+      "read": "पढ़ा गया",
+      "created": "बनाया गया"
+    },
+    "messages": {
+      "noActiveCampaigns": "कोई सक्रिय अभियान नहीं"
+    },
+    "tooltips": {
+      "createCampaign": "अभियान बनाएं",
+      "downloadFile": "फ़ाइल डाउनलोड करें",
+      "pauseCampaign": "अभियान रोकें",
+      "resumeCampaign": "अभियान फिर से शुरू करें",
+      "viewDetails": "विवरण देखें"
+    },
+    "status": {
+      "uploading": "अपलोड हो रहा है...",
+      "success": "सफलता",
+      "error": "त्रुटि"
+    },
+    "dialog": {
+      "createTitle": "नया अभियान बनाएं",
+      "editTitle": "अभियान बदलें",
+      "details": "अभियान विवरण",
+      "name": "अभियान का नाम",
+      "channel": "अभियान चैनल",
+      "audience": "लक्षित दर्शक",
+      "providers": "संचार प्रदाता चुनें",
+      "templateTitle": "टेम्पलेट चयन",
+      "templateSubtitle": "प्रत्येक चयनित अभियान प्रकार के लिए टेम्पलेट चुनें",
+      "templatePreview": "टेम्पलेट पूर्वावलोकन:",
+      "nextBasic": "अगला: मूल अनुसूची",
+      "scheduleTitle": "मूल अनुसूची",
+      "scheduleType": "अनुसूची प्रकार",
+      "advanced": "उन्नत शेड्यूलिंग",
+      "advancedSubtitle": "मल्टी-चैनल संचार अंतराल कॉन्फ़िगर करें",
+      "intervals": "संचार अंतराल",
+      "addInterval": "अंतराल जोड़ें",
+      "noIntervals": "अभी तक कोई अंतराल कॉन्फ़िगर नहीं किया गया है। अपना पहला संचार अंतराल ऊपर जोड़ें।",
+      "create": "अभियान बनाएं",
+      "update": "अभियान अपडेट करें",
+      "nextAdvanced": "अगला: उन्नत अनुसूची",
+      "createAdvanced": "उन्नत अभियान बनाएं",
+      "updateAdvanced": "उन्नत अभियान अपडेट करें",
+      "back": "वापस",
+      "cancel": "रद्द करें",
+      "uploadNew": "नई फ़ाइल अपलोड करें",
+      "uploadDescription": "वर्तमान अभियान डेटा को बदलने के लिए एक नई फ़ाइल अपलोड करें, या मौजूदा फ़ाइल रखें",
+      "changeFile": "फ़ाइल बदलें",
+      "selectNewFile": "नई फ़ाइल चुनें",
+      "uploadNewData": "नई डेटा फ़ाइल अपलोड करें",
+      "emailCampaign": "ईमेल अभियान",
+      "whatsappCampaign": "व्हाट्सएप अभियान",
+      "smsCampaign": "एसएमएस अभियान",
+      "callCampaign": "कॉल अभियान",
+      "botCalling": "बॉट कोलिंग",
+      "allCustomers": "सभी ग्राहक",
+      "pendingRenewals": "केवल लंबित नवीनीकरण",
+      "expiredPolicies": "केवल समाप्त पॉलिसी",
+      "chooseProviders": "प्रत्येक संचार चैनल के लिए विशिष्ट प्रदाता चुनें",
+      "provider": "प्रदाता",
+      "providerDefault": "डिफ़ॉल्ट",
+      "noActiveProviders": "कोई सक्रिय {{channel}} प्रदाता कॉन्फ़िगर नहीं किया गया",
+      "configureProviders": "सेटिंग्स → प्रदाता में {{channel}} प्रदाता कॉन्फ़िगर करें",
+      "chooseTemplatesMulti": "प्रत्येक चयनित अभियान प्रकार के लिए टेम्पलेट चुनें",
+      "chooseTemplatesSingle": "पूर्वनिर्धारित टेम्पलेट में से चुनें या एक कस्टम बनाएं",
+      "template": "टेम्पलेट",
+      "selectTemplate": "{{channel}} टेम्पलेट चुनें",
+      "sendImmediately": "तुरंत भेजें",
+      "scheduleLater": "बाद के लिए शेड्यूल करें",
+      "scheduleDate": "शेड्यूल तिथि",
+      "scheduleTime": "शेड्यूल समय",
+      "enableAdvanced": "उन्नत शेड्यूलिंग सक्षम करें (मल्टी-चैनल अंतराल)",
+      "advancedInfo": "उन्नत शेड्यूलिंग आपको विभिन्न चैनलों पर अलग-अलग अंतराल पर कई संचार स्थापित करने की अनुमति देती है। इसे अगले चरण में कॉन्फ़िगर किया जाएगा।",
+      "advancedDescription": "ग्राहक जुड़ाव को अधिकतम करने के लिए विशिष्ट अंतराल पर विभिन्न चैनलों पर स्वचालित अनुवर्ती संचार स्थापित करें।",
+      "communicationIntervals": "संचार अंतराल",
+      "after": "के बाद",
+      "noTemplate": "कोई टेम्पलेट नहीं चुना गया",
+      "delay": "देरी",
+      "unit": "इकाई",
+      "minutes": "मिनट",
+      "hours": "घंटे",
+      "days": "दिन",
+      "weeks": "सप्ताह",
+      "triggerConditions": "ट्रिगर शर्तें",
+      "sendIfNoResponse": "यदि पिछले संदेश का कोई उत्तर नहीं है तो भेजें",
+      "sendIfNoAction": "यदि कोई कार्रवाई नहीं की गई (क्लिक/रूपांतरण) तो भेजें",
+      "removeInterval": "अंतराल हटाएं",
+      "nextUpdateTemplate": "अगला: टेम्पलेट अपडेट करें",
+      "nextSelectTemplate": "अगला: टेम्पलेट चुनें"
+    }
+  },
+  "campaignDetails": {
+    "title": "अभियान विवरण",
+    "status": {
+      "label": "अभियान स्थिति",
+      "progress": "अभियान प्रगति",
+      "created": "बनाया गया",
+      "launched": "लॉन्च किया गया",
+      "lastModified": "अंतिम संशोधन",
+      "active": "सक्रिय",
+      "scheduled": "अनुसूचित",
+      "paused": "रुका हुआ",
+      "completed": "पुरा होना",
+      "failed": "विफल",
+      "draft": "मसौदा",
+      "unknown": "अज्ञात"
+    },
+    "audience": {
+      "title": "ऑडियंस और चैनल",
+      "targetAudience": "लक्षित ऑडियंस",
+      "channels": "संचार चैनल",
+      "tags": "अभियान टैग",
+      "size": "संपर्क",
+      "allCustomers": "सभी ग्राहक"
+    },
+    "metrics": {
+      "keyMetrics": "प्रमुख मेट्रिक्स",
+      "sent": "संदेश भेजे गए",
+      "delivered": "डिलीवर किए गए",
+      "opened": "खोले गए",
+      "clicked": "क्लिक किए गए",
+      "bounced": "बाउंस हो गए",
+      "failed": "विफल",
+      "unsubscribed": "सदस्यता समाप्त",
+      "converted": "परिवर्तित",
+      "conversionRate": "रूपांतरण दर",
+      "openRate": "खोलने की दर",
+      "clickRate": "क्लिक दर"
+    },
+    "charts": {
+      "channelPerformance": "चैनल प्रदर्शन",
+      "deliveryStatus": "डिलीवरी स्थिति",
+      "engagementMetrics": "एंगेजमेंट मेट्रिक्स"
+    },
+    "compliance": {
+      "consentManagement": "सहमति प्रबंधन",
+      "complianceStatus": "अनुपालन स्थिति",
+      "emailConsent": "ईमेल सहमति",
+      "smsConsent": "SMS सहमति",
+      "whatsappConsent": "व्हाट्सऐप सहमति",
+      "optedOut": "ऑप्ट आउट किया गया",
+      "dltApproved": "DLT टेम्पलेट स्वीकृत",
+      "consentVerified": "सहमति सत्यापित",
+      "dndChecked": "DND रजिस्ट्री जांची गई",
+      "retentionCompliant": "डेटा प्रतिधारण अनुपालन",
+      "allApproved": "सभी टेम्पलेट स्वीकृत",
+      "pendingApproval": "अनुमोदन लंबित",
+      "allVerified": "सभी सहमति सत्यापित",
+      "verificationPending": "सत्यापन लंबित",
+      "dndCompleted": "DND जांच पूरी हुई",
+      "dndPending": "DND जांच लंबित",
+      "compliantPolicy": "डेटा प्रतिधारण नीतियों के अनुरूप",
+      "nonCompliant": "गैर-अनुरूप"
+    },
+    "timeline": {
+      "title": "अभियान टाइमलाइन"
+    },
+    "buttons": {
+      "pause": "रोकें",
+      "resume": "फिर से शुरू करें",
+      "edit": "संपादित करें",
+      "export": "रिपोर्ट निर्यात करें",
+      "saveChanges": "परिवर्तन सहेजें",
+      "cancel": "रद्द करें"
+    },
+    "tabs": {
+      "overview": "अवलोकन",
+      "analytics": "एनालिटिक्स",
+      "compliance": "अनुपालन",
+      "timeline": "टाइमलाइन"
+    },
+    "loading": "अभियान विवरण लोड हो रहा है..."
+  },
+  "caseTracking": {
+    "title": "केस ट्रैकिंग",
+    "filterButton": "फ़िल्टर",
+    "bulkUpload": "बल्क अपलोड",
+    "history": "इतिहास",
+    "export": "निर्यात (Export)",
+    "searchPlaceholder": "केस आईडी, ग्राहक नाम या पॉलिसी नंबर द्वारा खोजें (अल्पविराम से अलग करें)",
+    "searchTitle": "केस खोजें",
+    "selected": "{{count}} केस चुने गए",
+    "unpin": "चयनित केस अनपिन करें",
+    "pinToTop": "चयनित केस शीर्ष पर पिन करें",
+    "maxPins": "अधिकतम 5 केस पिन किए जा सकते हैं",
+    "table": {
+      "actions": "कार्रवाई",
+      "caseId": "केस आईडी",
+      "customerName": "ग्राहक का नाम",
+      "profile": "प्रोफ़ाइल",
+      "mobile": "मोबाइल",
+      "language": "भाषा",
+      "policyNumber": "पॉलिसी नंबर",
+      "productName": "उत्पाद का नाम",
+      "category": "श्रेणी",
+      "channel": "चैनल",
+      "ccc": "CCC (वर्तमान चैनल)",
+      "batchId": "बैच आईडी",
+      "status": "स्थिति",
+      "policyStatus": "पॉलिसी स्थिति",
+      "agent": "एजेंट",
+      "priority": "प्राथमिकता",
+      "lastAction": "अंतिम कार्रवाई",
+      "calls": "कॉल्स",
+      "renewalDate": "नवीनीकरण तिथि",
+      "uploadDate": "अपलोड तिथि",
+      "normal": "सामान्य",
+      "calls_lower": "कॉल्स"
+    },
+    "filters": {
+      "title": "केस फ़िल्टर करें",
+      "status": "स्थिति",
+      "date": "तिथि",
+      "agent": "एजेंट",
+      "policyStatus": "पॉलिसी स्थिति",
+      "apply": "फ़िल्टर लागू करें",
+      "allStatuses": "सभी स्थितियाँ",
+      "allDates": "सभी तिथियाँ",
+      "allAgents": "सभी एजेंट",
+      "allPolicyStatuses": "सभी पॉलिसी स्थितियाँ",
+      "today": "आज",
+      "yesterday": "कल",
+      "lastWeek": "पिछले 7 दिन",
+      "lastMonth": "पिछले 30 दिन",
+      "unassigned": "अनअसाइंड",
+      "agents": {
+        "Priya Patel": "प्रिया पटेल",
+        "Rajesh Kumar": "राजेश कुमार",
+        "Ananya Reddy": "अनन्या रेड्डी",
+        "Amit Shah": "अमित शाह"
+      }
+    },
+    "bulkActions": {
+      "unpin": "अनपिन करें",
+      "pinToTop": "शीर्ष पर पिन करें",
+      "changeStatus": "स्थिति बदलें",
+      "assignAgent": "एजेंट को सौंपें",
+      "changePolicyStatus": "पॉलिसी स्थिति बदलें",
+      "clearSelection": "चयन साफ़ करें"
+    },
+    "actions": {
+      "markImportant": "महत्वपूर्ण चिह्नित करें",
+      "unmarkImportant": "महत्वपूर्ण से हटाएं",
+      "callLead": "लीड को कॉल करें",
+      "viewDetails": "विवरण देखें",
+      "quickEdit": "त्वरित संपादन",
+      "addComment": "टिप्पणी जोड़ें",
+      "moreActions": "अधिक कार्रवाई"
+    },
+    "status": {
+      "Assigned": "आवंटित",
+      "Renewed": "नवीनीकृत",
+      "Failed": "विफल",
+      "In Progress": "प्रगति पर",
+      "Processed": "भुगतान संसाधित (Processed)",
+      "Uploaded": "अपलोड किया गया",
+      "Pending": "लंबित",
+      "Renewal Failed": "नवीनीकरण विफल",
+      "Not Interested": "रुचि नहीं",
+      "DNC Email": "DNC ईमेल",
+      "DNC WhatsApp": "DNC व्हाट्सएप",
+      "DNC SMS": "DNC एसएमएस",
+      "DNC Call": "DNC कॉल",
+      "DNC Bot Calling": "DNC बॉट कॉलिंग",
+      "Payment Failed": "भुगतान विफल",
+      "Customer Postponed": "ग्राहक ने स्थगित किया"
+    },
+    "subStatus": {
+      "Document Pending": "दस्तावेज़ लंबित",
+      "Ready for Renewal": "नवीनीकरण के लिए तैयार",
+      "Customer Contact Required": "ग्राहक संपर्क आवश्यक",
+      "Payment Processing": "भुगतान प्रक्रिया में",
+      "Under Review": "समीक्षा के तहत",
+      "Verification in Progress": "सत्यापन प्रगति पर",
+      "Approval Required": "अनुमोदन आवश्यक",
+      "Follow-up Required": "फॉलो-अप आवश्यक"
+    },
+    "policyStatus": {
+      "Pre Due Stage": "देय पूर्व चरण",
+      "Policy Due": "पॉलिसी देय",
+      "Reinstatement": "बहाली (Reinstatement)"
+    }
+  },
+  "closedCases": {
+    "title": "बंद मामले (Closed Cases)",
+    "filterButton": "फ़िल्टर",
+    "export": "निर्यात (Export)",
+    "exportAsXls": "XLS के रूप में निर्यात करें",
+    "exportAsCsv": "CSV के रूप में निर्यात करें",
+    "searchTitle": "बंद मामले खोजें",
+    "searchPlaceholder": "केस आईडी, ग्राहक नाम या पॉलिसी नंबर द्वारा खोजें",
+    "table": {
+      "actions": "कार्रवाई",
+      "caseId": "केस आईडी",
+      "lastAction": "अंतिम कार्रवाई",
+      "customerName": "ग्राहक का नाम",
+      "profile": "प्रोफ़ाइल",
+      "mobile": "मोबाइल",
+      "language": "भाषा",
+      "policyNumber": "पॉलिसी नंबर",
+      "productName": "उत्पाद का नाम",
+      "category": "श्रेणी",
+      "channel": "चैनल",
+      "batchId": "बैच आईडी",
+      "status": "स्थिति",
+      "policyStatus": "पॉलिसी स्थिति",
+      "agent": "एजेंट",
+      "priority": "प्राथमिकता",
+      "totalCalls": "कुल कॉल्स",
+      "premium": "प्रीमियम",
+      "renewalDate": "नवीनीकरण तिथि",
+      "closedDate": "बंद होने की तिथि",
+      "uploadDate": "अपलोड तिथि"
+    },
+    "filters": {
+      "title": "केस फ़िल्टर करें",
+      "status": "स्थिति",
+      "date": "तिथि",
+      "agent": "एजेंट",
+      "policyStatus": "पॉलिसी स्थिति",
+      "apply": "फ़िल्टर लागू करें",
+      "allStatuses": "सभी स्थितियाँ",
+      "allDates": "सभी तिथियाँ",
+      "allAgents": "सभी एजेंट",
+      "allPolicyStatuses": "सभी पॉलिसी स्थितियाँ",
+      "today": "आज",
+      "yesterday": "कल",
+      "lastWeek": "पिछले 7 दिन",
+      "lastMonth": "पिछले 30 दिन",
+      "unassigned": "अनअसाइंड",
+      "agents": {
+        "Priya Patel": "प्रिया पटेल",
+        "Rajesh Kumar": "राजेश कुमार",
+        "Ananya Reddy": "अनन्या रेड्डी",
+        "Amit Shah": "अमित शाह"
+      }
+    }
+  },
+  "caseDetails": {
+    "title": "केस विवरण",
+    "loading": "केस विवरण लोड हो रहा है...",
+    "notFound": "केस नहीं मिला",
+    "switchTabView": "टैब दृश्य पर जाएं",
+    "switchConsolidatedView": "समेकित दृश्य पर जाएं",
+    "tabView": "टैब दृश्य",
+    "consolidatedView": "समेकित दृश्य",
+    "sendCommunication": "संचार भेजें",
+    "sendRenewalOrPayment": "नवीनीकरण सूचना या भुगतान लिंक भेजें",
+    "editCase": "केस संपादित करें",
+    "lastUpdated": "अंतिम अपडेट",
+    "priority": "प्राथमिकता",
+    "normal": "सामान्य",
+    "tabs": {
+      "overview": "अवलोकन और पॉलिसी",
+      "members": "पॉलिसी सदस्य",
+      "preferences": "प्राथमिकताएँ",
+      "insights": "अंतर्दृष्टि",
+      "analytics": "एनालिटिक्स",
+      "offers": "ऑफ़र",
+      "outstanding": "बकाया राशि",
+      "history": "इतिहास और समयरेखा"
+    },
+    "customerDetails": {
+      "title": "ग्राहक विवरण",
+      "verify": "सत्यापित करें",
+      "verifying": "सत्यापित हो रहा औसत...",
+      "verified": "सत्यापित",
+      "verifiedOn": "{{date}} को सत्यापित"
+    },
+    "policyInfo": {
+      "title": "पॉलिसी जानकारी",
+      "policyNumber": "पॉलिसी नंबर",
+      "policyType": "पॉलिसी का प्रकार",
+      "premium": "प्रीमियम",
+      "expiryDate": "समाप्ति तिथि",
+      "annualIncome": "वार्षिक आय",
+      "channelPartner": "चैनल पार्टनर",
+      "policyProposer": "पॉलिसी प्रस्तावक",
+      "lifeAssured": "बीमित व्यक्ति"
+    },
+    "policyFeatures": {
+      "title": "पॉलिसी सुविधाएँ",
+      "health": "स्वास्थ्य बीमा",
+      "wellness": "कल्याण लाभ",
+      "preventive": "निवारक देखभाल",
+      "opd": "ओपीडी, दंत और दृष्टि",
+      "valueAdded": "मूल्य वर्धित सेवाएं",
+      "vehicle": "वाहन बीमा",
+      "additional": "अतिरिक्त लाभ",
+      "life": "जीवन बीमा",
+      "investment": "निवेश लाभ",
+      "home": "गृह बीमा",
+      "protection": "अतिरिक्त सुरक्षा"
+    },
+    "members": {
+      "title": "पॉलिसी सदस्य विवरण",
+      "totalMembers": "कुल सदस्य",
+      "annualPremium": "वार्षिक प्रीमियम",
+      "totalClaims": "कुल दावे",
+      "recentClaimsValue": "हाल के दावों का मूल्य",
+      "dob": "जन्म तिथि",
+      "gender": "लिंग",
+      "sumInsured": "बीमा राशि",
+      "premiumShare": "प्रीमियम हिस्सा",
+      "medicalHistory": "चिकित्सा इतिहास",
+      "noMedicalHistory": "कोई चिकित्सा इतिहास दर्ज नहीं",
+      "recentClaim": "हाल का दावा",
+      "date": "दिनांक",
+      "amount": "राशि",
+      "noClaims": "कोई दावा नहीं किया गया"
+    },
+    "otherPolicies": {
+      "title": "अन्य पॉलिसियाँ",
+      "policyId": "पॉलिसी आईडी",
+      "coverage": "कवरेज"
+    },
+    "coverage": {
+      "title": "कवरेज विवरण",
+      "primaryCoverage": "प्राथमिक कवरेज",
+      "sumInsured": "बीमा राशि",
+      "deductible": "कटौती",
+      "coverageRatio": "कवरेज अनुपात",
+      "supportCoverage": "सहयोग कवरेज",
+      "typesAndLimits": "कवरेज प्रकार और सीमाएँ",
+      "vehicleProtection": "वाहन सुरक्षा",
+      "liabilityCoverage": "देयता कवरेज",
+      "medicalCoverage": "चिकित्सा कवरेज",
+      "specialBenefits": "विशेष लाभ",
+      "lifeCoverage": "जीवन कवरेज",
+      "investmentBenefits": "निवेश लाभ",
+      "propertyCoverage": "संपत्ति कवरेज",
+      "naturalDisasters": "प्राकृतिक आपदाएँ"
+    },
+    "benefits": {
+      "title": "अतिरिक्त लाभ और राइडर",
+      "enhancedProtection": "संवर्धित सुरक्षा",
+      "addOnCovers": "एड-ऑन कवर",
+      "financialBenefits": "वित्तीय लाभ",
+      "healthAddons": "स्वास्थ्य एड-ऑन",
+      "wellnessBenefits": "कल्याण लाभ",
+      "premiumFeatures": "प्रीमियम सुविधाएँ",
+      "protectionRiders": "सुरक्षा राइडर",
+      "taxInvestment": "कर और निवेश",
+      "propertyProtection": "संपत्ति सुरक्षा",
+      "additionalCovers": "अतिरिक्त कवर"
+    },
+    "exclusions": {
+      "title": "महत्वपूर्ण बहिष्करण",
+      "notCovered": "कवर नहीं किया गया",
+      "conditionsApply": "शर्तें लागू",
+      "importantExclusions": "महत्वपूर्ण बहिष्करण"
+    },
+    "caseFlow": {
+      "title": "केस फ्लो"
+    },
+    "comments": {
+      "title": "टिप्पणी जोड़ें",
+      "placeholder": "एक टिप्पणी जोड़ें...",
+      "button": "टिप्पणी जोड़ें",
+      "success": "टिप्पणी सफलतापूर्वक जोड़ी गई",
+      "error": "टिप्पणी जोड़ने में विफल"
+    },
+    "preferences": {
+      "title": "ग्राहक प्राथमिकताएँ",
+      "communication": "संचार प्राथमिकताएँ",
+      "email": "ईमेल",
+      "phone": "फ़ोन कॉल",
+      "whatsapp": "व्हाट्सऐप",
+      "sms": "एसएमएस",
+      "aiCall": "एआई कॉल",
+      "postalMail": "डाक मेल",
+      "preferred": "पसंदीदा",
+      "backup": "बैकअप",
+      "accepted": "स्वीकृत",
+      "optedOut": "ऑप्ट आउट किया गया"
     }
   }
 }

@@ -49,11 +49,10 @@ import {
   Settings as SettingsIcon
 } from '@mui/icons-material';
 import { useSLA } from '../../context/SLAContext';
-import { SLA_TEMPLATES } from '../../services/slaService';
 
 const SLASettings = () => {
   const theme = useTheme();
-  const { slaConfig, updateSLAConfig, updateSLATemplates, clearAllSLATrackings } = useSLA();
+  const { slaConfig, updateSLAConfig, updateSLATemplates, clearAllSLATrackings, restoreDefaultTemplates } = useSLA();
 
   const [currentTab, setCurrentTab] = useState(0);
   const [editDialog, setEditDialog] = useState(false);
@@ -108,9 +107,9 @@ const SLASettings = () => {
     setTimeout(() => setSuccessMessage(''), 3000);
   };
 
-  const handleRestoreDefaults = () => {
+  const handleRestoreDefaults = async () => {
     if (window.confirm('Are you sure you want to restore default SLA templates? This cannot be undone.')) {
-      updateSLAConfig({ templates: SLA_TEMPLATES });
+      await restoreDefaultTemplates();
       setSuccessMessage('Default SLA templates restored');
       setTimeout(() => setSuccessMessage(''), 3000);
     }
@@ -220,7 +219,7 @@ const SLASettings = () => {
                             <TableRow key={slaType} hover>
                               <TableCell>
                                 <Typography variant="body2" fontWeight="500" sx={{ textTransform: 'capitalize' }}>
-                                  {slaType.replace(/([A-Z])/g, ' $1').trim()}
+                                  {(slaType || '').toString().replace(/([A-Z])/g, ' $1').trim()}
                                 </Typography>
                               </TableCell>
                               <TableCell>
@@ -419,7 +418,7 @@ const SLASettings = () => {
                         </TableCell>
                         <TableCell>
                           <Typography variant="body2" fontWeight="500">
-                            {level.action.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                            {(level.action || '').toString().replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
                           </Typography>
                         </TableCell>
                         <TableCell>

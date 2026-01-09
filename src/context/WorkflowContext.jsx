@@ -1,10 +1,9 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import {
+import workflowService, {
   WORKFLOW_STATUS,
   NODE_TYPE,
   TRIGGER_TYPE,
   WORKFLOW_TEMPLATES,
-  executeWorkflow,
   validateWorkflow
 } from '../services/workflowService';
 
@@ -20,83 +19,131 @@ export const useWorkflow = () => {
 
 export const WorkflowProvider = ({ children }) => {
   // Workflows state
-  const [workflows, setWorkflows] = useState(() => {
-    const saved = localStorage.getItem('workflows');
-    return saved ? JSON.parse(saved) : [];
-  });
+  const [workflows, setWorkflows] = useState([]);
+  const [executions, setExecutions] = useState([]);
+  const [stats, setStats] = useState({ total: 0, successful: 0, failed: 0, pending: 0, byWorkflow: {} });
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
 
-  // Workflow executions
-  const [executions, setExecutions] = useState(() => {
-    const saved = localStorage.getItem('workflowExecutions');
-    return saved ? JSON.parse(saved) : [];
-  });
-
-  // Save to localStorage
+  // Fetch initial data
   useEffect(() => {
-    localStorage.setItem('workflows', JSON.stringify(workflows));
-  }, [workflows]);
+    fetchWorkflows();
+    fetchStats();
+  }, []);
 
-  useEffect(() => {
-    localStorage.setItem('workflowExecutions', JSON.stringify(executions));
-  }, [executions]);
+  const fetchWorkflows = async () => {
+    setLoading(true);
+    try {
+      const data = await workflowService.listWorkflows();
+      // Adjust handling based on exact API response structure (e.g. data.results or plain array)
+      const list = Array.isArray(data) ? data : (data.results || data.items || []);
+      setWorkflows(list);
+    } catch (err) {
+      console.error('Failed to fetch workflows', err);
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchStats = async () => {
+    try {
+      const data = await workflowService.getStats();
+      setStats(data);
+    } catch (err) {
+      console.warn('Failed to fetch stats', err);
+    }
+  };
 
   /**
    * Create workflow
    */
-  const createWorkflow = useCallback((workflowData) => {
-    const newWorkflow = {
-      id: `workflow_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-      name: workflowData.name || 'Untitled Workflow',
-      description: workflowData.description || '',
-      trigger: workflowData.trigger || TRIGGER_TYPE.MANUAL,
-      status: WORKFLOW_STATUS.DRAFT,
-      nodes: workflowData.nodes || [
-        { id: 'start', type: NODE_TYPE.START, next: 'end' },
-        { id: 'end', type: NODE_TYPE.END }
-      ],
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-      ...workflowData
-    };
-
-    setWorkflows(prev => [newWorkflow, ...prev]);
-    return newWorkflow;
-  }, []);
+  /**
+   * Create workflow
+   */
+  const createWorkflow = useCallback(async (workflowData) => {
+    setLoading(true);
+    try {
+      await workflowService.createWorkflow(workflowData);
+      // Refresh list to ensure we have the correct ID and state from server
+      await fetchWorkflows();
+    } catch (err) {
+      setError(err.message);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }, []); // Remove dependency on fetchWorkflows to avoid circular warnings, or use a ref/stable function
 
   /**
    * Create workflow from template
    */
-  const createFromTemplate = useCallback((templateKey) => {
+  const createFromTemplate = useCallback(async (templateKey) => {
     const template = WORKFLOW_TEMPLATES[templateKey];
     if (!template) {
       throw new Error(`Template ${templateKey} not found`);
     }
 
-    return createWorkflow(template);
+    setLoading(true);
+    try {
+      // Construct payload for clone if needed or just pass template data
+      try {
+        await workflowService.cloneTemplate({ template: templateKey, ...template });
+      } catch (cloneErr) {
+        console.warn('Clone failed, falling back to create', cloneErr);
+        await workflowService.createWorkflow(template);
+      }
+      await fetchWorkflows();
+    } catch (err) {
+      setError(err.message);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [createWorkflow]);
 
   /**
    * Update workflow
    */
-  const updateWorkflow = useCallback((workflowId, updates) => {
-    setWorkflows(prev => prev.map(wf =>
-      wf.id === workflowId
-        ? { ...wf, ...updates, updatedAt: new Date().toISOString() }
-        : wf
-    ));
+  const updateWorkflow = useCallback(async (workflowId, updates) => {
+    setLoading(true);
+    try {
+      await workflowService.updateWorkflow(workflowId, updates);
+      await fetchWorkflows();
+    } catch (err) {
+      setError(err.message);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
   /**
    * Delete workflow
    */
-  const deleteWorkflow = useCallback((workflowId) => {
-    setWorkflows(prev => prev.filter(wf => wf.id !== workflowId));
+  const deleteWorkflow = useCallback(async (workflowId) => {
+    if (!workflowId) {
+      console.error("Attempted to delete workflow without ID");
+      setError("Invalid workflow ID");
+      return;
+    }
+    setLoading(true);
+    try {
+      await workflowService.deleteWorkflow(workflowId);
+      await fetchWorkflows();
+    } catch (err) {
+      setError(err.message);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
   /**
    * Activate workflow
    */
-  const activateWorkflow = useCallback((workflowId) => {
+  const activateWorkflow = useCallback(async (workflowId) => {
     const workflow = workflows.find(wf => wf.id === workflowId);
     if (!workflow) return { success: false, error: 'Workflow not found' };
 
@@ -106,52 +153,63 @@ export const WorkflowProvider = ({ children }) => {
       return { success: false, errors: validation.errors };
     }
 
-    updateWorkflow(workflowId, { status: WORKFLOW_STATUS.ACTIVE });
-    return { success: true };
-  }, [workflows, updateWorkflow]);
+    try {
+      const updated = await workflowService.activateWorkflow(workflowId);
+      setWorkflows(prev => prev.map(wf =>
+        wf.id === workflowId ? (updated.id ? updated : { ...wf, status: WORKFLOW_STATUS.ACTIVE }) : wf
+      ));
+      return { success: true };
+    } catch (err) {
+      console.error('Activate failed', err);
+      return { success: false, error: err.message };
+    }
+  }, [workflows]);
 
   /**
    * Pause workflow
    */
-  const pauseWorkflow = useCallback((workflowId) => {
-    updateWorkflow(workflowId, { status: WORKFLOW_STATUS.PAUSED });
-  }, [updateWorkflow]);
+  const pauseWorkflow = useCallback(async (workflowId) => {
+    try {
+      const updated = await workflowService.pauseWorkflow(workflowId);
+      setWorkflows(prev => prev.map(wf =>
+        wf.id === workflowId ? (updated.id ? updated : { ...wf, status: WORKFLOW_STATUS.PAUSED }) : wf
+      ));
+    } catch (err) {
+      console.error('Pause failed', err);
+      setError(err.message);
+    }
+  }, []);
 
   /**
    * Execute workflow
    */
   const runWorkflow = useCallback(async (workflowId, data, context = {}) => {
-    const workflow = workflows.find(wf => wf.id === workflowId);
-    if (!workflow) {
-      return { success: false, error: 'Workflow not found' };
+    // Note: context might be unused if backend handles everything
+    try {
+      const response = await workflowService.runWorkflow(workflowId, data);
+
+      // Refresh stats or executions list
+      try {
+        // Optimistically add execution if response contains it
+        if (response.execution) {
+          setExecutions(prev => [response.execution, ...prev]);
+        } else {
+          // otherwise fetch fresh executions
+          loadWorkflowExecutions(workflowId);
+          // Stats update
+          fetchStats();
+        }
+      } catch (e) {
+        console.warn('Background refresh failed', e);
+      }
+
+      return { success: true, result: response };
+    } catch (err) {
+      console.error('Execution failed', err);
+      return { success: false, error: err.message };
     }
-
-    if (workflow.status !== WORKFLOW_STATUS.ACTIVE && workflow.status !== WORKFLOW_STATUS.DRAFT) {
-      return { success: false, error: 'Workflow is not active' };
-    }
-
-    // Execute
-    const result = await executeWorkflow(workflow, data, context);
-
-    // Save execution and include the provided input as `details` for easy access
-    const execution = {
-      id: `exec_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-      workflowId,
-      workflowName: workflow.name,
-      data,
-      // store original input payload under `details` for UI / auditing
-      details: data,
-      // include details also on the result object for quick lookup in the UI
-      result: { ...result, details: data },
-      startedAt: new Date().toISOString(),
-      completedAt: result.status === WORKFLOW_STATUS.COMPLETED ? new Date().toISOString() : null,
-      status: result.status
-    };
-
-    setExecutions(prev => [execution, ...prev].slice(0, 1000)); // Keep last 1000
-
-    return { success: result.success, execution };
-  }, [workflows]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   /**
    * Get workflow by ID
@@ -169,56 +227,62 @@ export const WorkflowProvider = ({ children }) => {
 
   /**
    * Get executions for workflow
+   * This now actually fetches from backend if needed or filters local if we decide to cache all.
+   * Given potentially large history, better to fetch on demand or return promise.
+   * However, to keep signature similar to before (synchronous return), we stick to returning what we have,
+   * but we should add a separate "fetchExecutions" method or useEffect in the UI.
+   * 
+   * Updated approach: Return local, but provide method to load.
    */
   const getWorkflowExecutions = useCallback((workflowId) => {
     return executions.filter(exec => exec.workflowId === workflowId);
   }, [executions]);
 
   /**
+   * Fetch executions for a specific workflow (to be called by UI when viewing details)
+   */
+  const loadWorkflowExecutions = useCallback(async (workflowId) => {
+    try {
+      const data = await workflowService.getWorkflowExecutions(workflowId);
+      const list = Array.isArray(data) ? data : (data.results || []);
+      // We can either merge this into global executions or just return it. 
+      // Merging allows "getWorkflowExecutions" to work offline-ish.
+      setExecutions(prev => {
+        // Remove existing for this workflow to avoid dups, then add new
+        const others = prev.filter(e => e.workflowId !== workflowId);
+        return [...list, ...others].sort((a, b) => new Date(b.startedAt) - new Date(a.startedAt));
+      });
+      return list;
+    } catch (err) {
+      console.error('Failed to load executions', err);
+      return [];
+    }
+  }, []);
+
+
+  /**
    * Get execution statistics
    */
   const getExecutionStats = useCallback(() => {
-    const stats = {
-      total: executions.length,
-      successful: 0,
-      failed: 0,
-      pending: 0,
-      byWorkflow: {}
-    };
-
-    executions.forEach(exec => {
-      if (exec.status === WORKFLOW_STATUS.COMPLETED) stats.successful++;
-      else if (exec.status === WORKFLOW_STATUS.FAILED) stats.failed++;
-      else stats.pending++;
-
-      if (!stats.byWorkflow[exec.workflowId]) {
-        stats.byWorkflow[exec.workflowId] = {
-          workflowName: exec.workflowName,
-          count: 0
-        };
-      }
-      stats.byWorkflow[exec.workflowId].count++;
-    });
-
     return stats;
-  }, [executions]);
+  }, [stats]);
 
   /**
    * Clear old executions
+   * Not applicable for backend usually, unless we have a cleanup endpoint. 
+   * We will leave it as a no-op or implementation of local cleanup if needed.
    */
   const clearExecutions = useCallback((daysOld = 30) => {
-    const cutoffDate = new Date();
-    cutoffDate.setDate(cutoffDate.getDate() - daysOld);
-
-    setExecutions(prev => prev.filter(exec =>
-      new Date(exec.startedAt) > cutoffDate
-    ));
+    // Optional: Call a backend cleanup endpoint
   }, []);
 
   const value = {
     // State
     workflows,
     executions,
+    loading,
+    error,
+    stats,
 
     // Workflow Operations
     createWorkflow,
@@ -233,8 +297,11 @@ export const WorkflowProvider = ({ children }) => {
     // Execution Operations
     runWorkflow,
     getWorkflowExecutions,
+    loadWorkflowExecutions,
     getExecutionStats,
     clearExecutions,
+    refreshWorkflows: fetchWorkflows,
+    refreshStats: fetchStats,
 
     // Constants
     WORKFLOW_STATUS,

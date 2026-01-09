@@ -60,6 +60,8 @@ import {
   Save as SaveIcon
 } from '@mui/icons-material';
 
+import AutoQuoteService from '../services/AutoQuoteService';
+
 // Tab Panel Component
 function TabPanel({ children, value, index, ...other }) {
   return (
@@ -95,82 +97,75 @@ const AutoQuoteSharingSettings = () => {
   });
 
   const [customers, setCustomers] = useState([]);
+  const [analytics, setAnalytics] = useState(null);
+  const [notifications, setNotifications] = useState(null);
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
   const [loading, setLoading] = useState(false);
   const [confirmDialog, setConfirmDialog] = useState({ open: false, customer: null });
   const [sendingCustomerId, setSendingCustomerId] = useState(null);
 
-  // Mock customer data
   useEffect(() => {
-    const mockCustomers = [
-      {
-        id: 1,
-        name: 'Rajesh Sharma',
-        email: 'rajesh.sharma@gmail.com',
-        phone: '+91-98765-43210',
-        lastQuoteSent: '2024-01-15',
-        nextScheduled: '2024-01-22',
-        status: 'Active',
-        productType: 'Health Insurance',
-        premiumAmount: 25000
-      },
-      {
-        id: 2,
-        name: 'Priya Patel',
-        email: 'priya.patel@gmail.com',
-        phone: '+91-87654-32109',
-        lastQuoteSent: '2024-01-12',
-        nextScheduled: '2024-01-19',
-        status: 'Active',
-        productType: 'Vehicle Insurance',
-        premiumAmount: 18000
-      },
-      {
-        id: 3,
-        name: 'Amit Kumar',
-        email: 'amit.kumar@gmail.com',
-        phone: '+91-76543-21098',
-        lastQuoteSent: '2024-01-10',
-        nextScheduled: '2024-01-17',
-        status: 'Paused',
-        productType: 'Life Insurance',
-        premiumAmount: 35000
-      },
-      {
-        id: 4,
-        name: 'Sneha Reddy',
-        email: 'sneha.reddy@gmail.com',
-        phone: '+91-65432-10987',
-        lastQuoteSent: '2024-01-08',
-        nextScheduled: '2024-01-15',
-        status: 'Active',
-        productType: 'Property Insurance',
-        premiumAmount: 45000
-      }
-    ];
-    setCustomers(mockCustomers);
+    loadData();
   }, []);
 
-  const mockApiCall = async (endpoint, data) => {
+  const loadData = async () => {
     setLoading(true);
-    // Simulate API delay
-    await new Promise(resolve => setTimeout(resolve, 1500));
+    try {
+      const [settingsData, customersData] = await Promise.all([
+        AutoQuoteService.fetchSettings(),
+        AutoQuoteService.fetchCustomers()
+      ]);
+      setSettings(settingsData);
+      setCustomers(Array.isArray(customersData) ? customersData : (customersData?.results || []));
 
-    // Mock 5% failure rate
-    if (Math.random() < 0.05) {
-      throw new Error('Network error');
+      // Load other data if needed or lazy load on tab change
+      if (tabValue === 2) loadAnalytics();
+      if (tabValue === 3) loadNotifications();
+
+    } catch (error) {
+      console.error('Error loading auto-quote data:', error);
+      setSnackbar({
+        open: true,
+        message: 'Failed to load data. Please check your connection.',
+        severity: 'error'
+      });
+    } finally {
+      setLoading(false);
     }
-
-    setLoading(false);
-    return { success: true, message: 'Settings updated successfully' };
   };
+
+  const loadAnalytics = async () => {
+    try {
+      const data = await AutoQuoteService.fetchAnalytics();
+      setAnalytics(data);
+    } catch (error) {
+      console.error('Error loading analytics:', error);
+    }
+  };
+
+  const loadNotifications = async () => {
+    try {
+      const data = await AutoQuoteService.fetchNotifications();
+      setNotifications(data);
+    } catch (error) {
+      console.error('Error loading notifications:', error);
+    }
+  };
+
+  useEffect(() => {
+    if (tabValue === 2 && !analytics) loadAnalytics();
+    if (tabValue === 3 && !notifications) loadNotifications();
+  }, [tabValue]);
 
   const handleSettingsChange = async (field, value) => {
     try {
       const newSettings = { ...settings, [field]: value };
       setSettings(newSettings);
 
-      await mockApiCall('/api/quotes/auto-share/settings', newSettings);
+      // Remove read-only fields before sending to API, BUT keep 'id' as backend seems to need it
+      const { quickStats, created_at, updated_at, ...payload } = newSettings;
+
+      await AutoQuoteService.updateSettings(payload);
 
       setSnackbar({
         open: true,
@@ -196,10 +191,7 @@ const AutoQuoteSharingSettings = () => {
           : customer
       ));
 
-      await mockApiCall('/api/quotes/auto-share/customer-status', {
-        customerId,
-        status: newStatus
-      });
+      await AutoQuoteService.toggleCustomerStatus(customerId, newStatus);
 
       setSnackbar({
         open: true,
@@ -207,6 +199,13 @@ const AutoQuoteSharingSettings = () => {
         severity: 'success'
       });
     } catch (error) {
+      // Revert on failure
+      setCustomers(prev => prev.map(customer =>
+        customer.id === customerId
+          ? { ...customer, status: currentStatus }
+          : customer
+      ));
+
       setSnackbar({
         open: true,
         message: `Failed to update customer status: ${error.message}`,
@@ -218,7 +217,7 @@ const AutoQuoteSharingSettings = () => {
   const handleSendQuoteNow = async (customerId, customerName) => {
     setSendingCustomerId(customerId);
     try {
-      await mockApiCall('/api/quotes/send-now', { customerId });
+      await AutoQuoteService.sendQuoteNow(customerId);
 
       // Update last sent date
       setCustomers(prev => prev.map(customer =>
@@ -286,6 +285,59 @@ const AutoQuoteSharingSettings = () => {
 
   const handleTabChange = (event, newValue) => {
     setTabValue(newValue);
+  };
+
+  const handleRefreshCustomers = async () => {
+    try {
+      setLoading(true);
+      await AutoQuoteService.refreshCustomers();
+      const customersData = await AutoQuoteService.fetchCustomers();
+      setCustomers(Array.isArray(customersData) ? customersData : (customersData?.results || []));
+      setSnackbar({
+        open: true,
+        message: 'Customers refreshed successfully!',
+        severity: 'success'
+      });
+    } catch (error) {
+      setSnackbar({
+        open: true,
+        message: `Failed to refresh customers: ${error.message}`,
+        severity: 'error'
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleNotificationToggle = async (notificationKey) => {
+    try {
+      // Optimistic update
+      const newStatus = !notifications[notificationKey];
+      setNotifications(prev => ({
+        ...prev,
+        [notificationKey]: newStatus
+      }));
+
+      await AutoQuoteService.toggleNotification(notificationKey);
+
+      setSnackbar({
+        open: true,
+        message: 'Notification settings updated!',
+        severity: 'success'
+      });
+    } catch (error) {
+      // Revert
+      const oldStatus = !notifications[notificationKey];
+      setNotifications(prev => ({
+        ...prev,
+        [notificationKey]: oldStatus
+      }));
+      setSnackbar({
+        open: true,
+        message: `Failed to update notification: ${error.message}`,
+        severity: 'error'
+      });
+    }
   };
 
   return (
@@ -501,10 +553,12 @@ const AutoQuoteSharingSettings = () => {
                   Customer Auto-Quote Management
                 </Typography>
               </Box>
+
               <Button
                 variant="outlined"
-                startIcon={<RefreshIcon />}
-                onClick={() => window.location.reload()}
+                startIcon={<RefreshIcon className={loading ? 'spinning' : ''} />}
+                onClick={handleRefreshCustomers}
+                disabled={loading}
               >
                 Refresh
               </Button>
@@ -529,14 +583,14 @@ const AutoQuoteSharingSettings = () => {
                       <TableCell>
                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
                           <Avatar sx={{ bgcolor: theme.palette.primary.main }}>
-                            {customer.name.charAt(0)}
+                            {customer.name && typeof customer.name === 'string' ? customer.name.charAt(0) : '?'}
                           </Avatar>
                           <Box>
                             <Typography variant="subtitle2" fontWeight="600">
                               {customer.name}
                             </Typography>
                             <Typography variant="caption" color="text.secondary">
-                              Premium: ₹{customer.premiumAmount.toLocaleString()}
+                              Premium: ₹{customer.premiumAmount?.toLocaleString()}
                             </Typography>
                           </Box>
                         </Box>
@@ -616,8 +670,12 @@ const AutoQuoteSharingSettings = () => {
         </Card>
       </TabPanel>
 
+
+
+
+
       {/* Analytics Tab */}
-      <TabPanel value={tabValue} index={2}>
+      < TabPanel value={tabValue} index={2} >
         <Grid container spacing={3}>
           <Grid item xs={12} md={6}>
             <Card>
@@ -625,24 +683,28 @@ const AutoQuoteSharingSettings = () => {
                 <Typography variant="h6" fontWeight="600" gutterBottom>
                   📊 Performance Metrics
                 </Typography>
-                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                  <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                    <Typography variant="body2">Total Quotes Sent</Typography>
-                    <Typography variant="h6" color="primary">1,247</Typography>
+                {analytics ? (
+                  <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                      <Typography variant="body2">Total Quotes Sent</Typography>
+                      <Typography variant="h6" color="primary">{analytics.totalQuotesSent?.toLocaleString()}</Typography>
+                    </Box>
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                      <Typography variant="body2">Success Rate</Typography>
+                      <Typography variant="h6" color="success.main">{analytics.successRate}%</Typography>
+                    </Box>
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                      <Typography variant="body2">Response Rate</Typography>
+                      <Typography variant="h6" color="info.main">{analytics.responseRate}%</Typography>
+                    </Box>
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                      <Typography variant="body2">Conversion Rate</Typography>
+                      <Typography variant="h6" color="warning.main">{analytics.conversionRate}%</Typography>
+                    </Box>
                   </Box>
-                  <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                    <Typography variant="body2">Success Rate</Typography>
-                    <Typography variant="h6" color="success.main">94.2%</Typography>
-                  </Box>
-                  <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                    <Typography variant="body2">Response Rate</Typography>
-                    <Typography variant="h6" color="info.main">67.8%</Typography>
-                  </Box>
-                  <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                    <Typography variant="body2">Conversion Rate</Typography>
-                    <Typography variant="h6" color="warning.main">23.5%</Typography>
-                  </Box>
-                </Box>
+                ) : (
+                  <Typography color="text.secondary">Loading analytics...</Typography>
+                )}
               </CardContent>
             </Card>
           </Grid>
@@ -654,36 +716,32 @@ const AutoQuoteSharingSettings = () => {
                   📈 Recent Activity
                 </Typography>
                 <List>
-                  <ListItem>
-                    <ListItemText
-                      primary="Weekly quotes sent"
-                      secondary="Last sent: Today at 9:00 AM"
-                    />
-                    <Chip label="Completed" color="success" size="small" />
-                  </ListItem>
-                  <ListItem>
-                    <ListItemText
-                      primary="Customer responses"
-                      secondary="15 new responses received"
-                    />
-                    <Chip label="Active" color="info" size="small" />
-                  </ListItem>
-                  <ListItem>
-                    <ListItemText
-                      primary="Failed deliveries"
-                      secondary="3 quotes failed to send"
-                    />
-                    <Chip label="Attention" color="warning" size="small" />
-                  </ListItem>
+                  {analytics?.recentActivity?.map((activity, index) => (
+                    <ListItem key={index}>
+                      <ListItemText
+                        primary={activity.title}
+                        secondary={activity.description}
+                      />
+                      <Chip
+                        label={activity.status}
+                        color={activity.statusColor || 'default'}
+                        size="small"
+                      />
+                    </ListItem>
+                  )) || (
+                      <ListItem>
+                        <ListItemText primary="No recent activity available" />
+                      </ListItem>
+                    )}
                 </List>
               </CardContent>
             </Card>
           </Grid>
         </Grid>
-      </TabPanel>
+      </TabPanel >
 
       {/* Notifications Tab */}
-      <TabPanel value={tabValue} index={3}>
+      < TabPanel value={tabValue} index={3} >
         <Card>
           <CardContent>
             <Typography variant="h6" fontWeight="600" gutterBottom>
@@ -697,7 +755,11 @@ const AutoQuoteSharingSettings = () => {
                   secondary="Receive email alerts for quote activities"
                 />
                 <ListItemSecondaryAction>
-                  <Switch defaultChecked color="primary" />
+                  <Switch
+                    checked={notifications?.emailNotifications || false}
+                    onChange={() => handleNotificationToggle('emailNotifications')}
+                    color="primary"
+                  />
                 </ListItemSecondaryAction>
               </ListItem>
 
@@ -707,7 +769,11 @@ const AutoQuoteSharingSettings = () => {
                   secondary="Receive SMS alerts for critical events"
                 />
                 <ListItemSecondaryAction>
-                  <Switch color="primary" />
+                  <Switch
+                    checked={notifications?.smsNotifications || false}
+                    onChange={() => handleNotificationToggle('smsNotifications')}
+                    color="primary"
+                  />
                 </ListItemSecondaryAction>
               </ListItem>
 
@@ -717,7 +783,11 @@ const AutoQuoteSharingSettings = () => {
                   secondary="Daily report of quote sharing activities"
                 />
                 <ListItemSecondaryAction>
-                  <Switch defaultChecked color="primary" />
+                  <Switch
+                    checked={notifications?.dailySummary || false}
+                    onChange={() => handleNotificationToggle('dailySummary')}
+                    color="primary"
+                  />
                 </ListItemSecondaryAction>
               </ListItem>
 
@@ -727,16 +797,20 @@ const AutoQuoteSharingSettings = () => {
                   secondary="Immediate alerts for failed quote deliveries"
                 />
                 <ListItemSecondaryAction>
-                  <Switch defaultChecked color="primary" />
+                  <Switch
+                    checked={notifications?.failureAlerts || false}
+                    onChange={() => handleNotificationToggle('failureAlerts')}
+                    color="primary"
+                  />
                 </ListItemSecondaryAction>
               </ListItem>
             </List>
           </CardContent>
         </Card>
-      </TabPanel>
+      </TabPanel >
 
       {/* Confirmation Dialog */}
-      <Dialog
+      < Dialog
         open={confirmDialog.open}
         onClose={handleCloseConfirmDialog}
         maxWidth="sm"
@@ -767,7 +841,7 @@ const AutoQuoteSharingSettings = () => {
                   <Grid item xs={12}>
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
                       <Avatar sx={{ bgcolor: theme.palette.primary.main }}>
-                        {confirmDialog.customer.name.charAt(0)}
+                        {confirmDialog.customer.name && typeof confirmDialog.customer.name === 'string' ? confirmDialog.customer.name.charAt(0) : '?'}
                       </Avatar>
                       <Box>
                         <Typography variant="subtitle1" fontWeight="600">
@@ -805,7 +879,7 @@ const AutoQuoteSharingSettings = () => {
                       Premium Amount
                     </Typography>
                     <Typography variant="body2" fontWeight="600" color="success.main">
-                      ₹{confirmDialog.customer.premiumAmount.toLocaleString()}
+                      ₹{(confirmDialog.customer.premiumAmount || 0).toLocaleString()}
                     </Typography>
                   </Grid>
 
@@ -856,10 +930,10 @@ const AutoQuoteSharingSettings = () => {
             {sendingCustomerId !== null ? 'Sending...' : 'Send Quote'}
           </Button>
         </DialogActions>
-      </Dialog>
+      </Dialog >
 
       {/* Snackbar for notifications */}
-      <Snackbar
+      < Snackbar
         open={snackbar.open}
         autoHideDuration={6000}
         onClose={() => setSnackbar({ ...snackbar, open: false })}
@@ -871,10 +945,10 @@ const AutoQuoteSharingSettings = () => {
         >
           {snackbar.message}
         </Alert>
-      </Snackbar>
+      </Snackbar >
 
       {/* Add spinning animation for loading icon */}
-      <style>
+      < style >
         {`
           @keyframes spin {
             from { transform: rotate(0deg); }
@@ -884,8 +958,8 @@ const AutoQuoteSharingSettings = () => {
             animation: spin 1s linear infinite;
           }
         `}
-      </style>
-    </Box>
+      </style >
+    </Box >
   );
 };
 

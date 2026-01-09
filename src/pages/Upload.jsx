@@ -35,9 +35,12 @@ import {
   Timeline as TimelineIcon,
   Close as CloseIcon
 } from '@mui/icons-material';
+import { useTranslation } from 'react-i18next';
 import { deduplicateContacts } from '../services/api';
+import jsPDF from 'jspdf';
 
 const Upload = () => {
+  const { t } = useTranslation();
   const theme = useTheme();
   const { getProviders, getActiveProvider } = useProviders();
   const [file, setFile] = useState(null);
@@ -332,17 +335,26 @@ const Upload = () => {
     alert('Template download would start here');
   };
 
-  const handleDownloadFile = (upload) => {
-    // In a real app, this would trigger the actual file download
-    const link = document.createElement('a');
-    link.href = upload.downloadUrl;
-    link.download = upload.filename;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+  const handleDownloadFile = (e, upload) => {
+    e.stopPropagation();
 
-    // Show success message
-    // console.log(`Downloading ${upload.filename}...`);
+    // Generate PDF
+    const doc = new jsPDF();
+
+    doc.setFontSize(16);
+    doc.text('Upload Details', 20, 20);
+
+    doc.setFontSize(12);
+    doc.text(`Filename: ${upload.filename}`, 20, 40);
+    doc.text(`Date: ${new Date(upload.timestamp).toLocaleString()}`, 20, 50);
+    doc.text(`Status: ${upload.status}`, 20, 60);
+    doc.text(`Total Records: ${upload.records}`, 20, 70);
+    doc.text(`Successful: ${upload.successful}`, 20, 80);
+    doc.text(`Failed: ${upload.failed}`, 20, 90);
+
+    // Save the PDF
+    const pdfFilename = upload.filename.replace(/\.[^/.]+$/, "") + ".pdf";
+    doc.save(pdfFilename);
   };
 
   // Campaign handlers
@@ -651,7 +663,7 @@ const Upload = () => {
       <Box>
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
           <Typography variant="h4" sx={{ fontWeight: 600 }}>
-            Upload Policy Data
+            {t('uploadPolicy.title')}
           </Typography>
           <Button
             variant="contained"
@@ -674,7 +686,7 @@ const Upload = () => {
               }
             }}
           >
-            Change Campaign
+            {t('uploadPolicy.buttons.changeCampaign')}
           </Button>
         </Box>
 
@@ -693,12 +705,12 @@ const Upload = () => {
               >
                 <CardContent sx={{ p: 4, height: '100%', display: 'flex', flexDirection: 'column' }}>
                   <Typography variant="h6" gutterBottom sx={{ fontWeight: 600, mb: 2 }}>
-                    Upload New File
+                    {t('uploadPolicy.sections.uploadNew')}
                   </Typography>
 
                   <Box sx={{ mb: 4 }}>
                     <Typography variant="body1" color="text.secondary" gutterBottom>
-                      Upload cases using our template format. Only Excel (.xlsx) or CSV files are supported.
+                      {t('uploadPolicy.descriptions.format')}
                     </Typography>
 
                     <Button
@@ -715,7 +727,7 @@ const Upload = () => {
                         }
                       }}
                     >
-                      Download Template
+                      {t('uploadPolicy.buttons.downloadTemplate')}
                     </Button>
                   </Box>
 
@@ -773,11 +785,11 @@ const Upload = () => {
                             }
                           }}
                         >
-                          {file ? 'Change File' : 'Select File'}
+                          {file ? t('uploadPolicy.buttons.changeFile') : t('uploadPolicy.buttons.selectFile')}
                         </Button>
 
                         <Typography variant="body2" sx={{ mt: 2, color: theme.palette.text.secondary }}>
-                          Drag and drop or click to select
+                          {t('uploadPolicy.descriptions.dragDrop')}
                         </Typography>
                       </Box>
                     </label>
@@ -821,7 +833,7 @@ const Upload = () => {
                           }
                         }}
                       >
-                        Upload and Process File
+                        {t('uploadPolicy.buttons.uploadProcess')}
                       </Button>
                     </Fade>
                   )}
@@ -841,7 +853,7 @@ const Upload = () => {
                         }}
                       />
                       <Typography variant="body2" sx={{ mt: 1, textAlign: 'center', fontWeight: 500 }}>
-                        Uploading... {uploadProgress}%
+                        {t('uploadPolicy.status.uploading')} {uploadProgress}%
                       </Typography>
                     </Box>
                   )}
@@ -857,7 +869,7 @@ const Upload = () => {
                         }}
                         icon={uploadStatus.type === 'success' ? <CheckIcon /> : <ErrorIcon />}
                       >
-                        <AlertTitle>{uploadStatus.type === 'success' ? 'Success' : 'Error'}</AlertTitle>
+                        <AlertTitle>{uploadStatus.type === 'success' ? t('uploadPolicy.status.success') : t('uploadPolicy.status.error')}</AlertTitle>
                         {uploadStatus.message}
                       </Alert>
                     </Grow>
@@ -878,7 +890,7 @@ const Upload = () => {
               >
                 <CardContent sx={{ p: 3, height: '600px', display: 'flex', flexDirection: 'column' }}>
                   <Typography variant="h6" gutterBottom sx={{ fontWeight: 600, mb: 3 }}>
-                    Recent Uploads ({uploadHistory.length})
+                    {t('uploadPolicy.sections.recentUploads')} ({uploadHistory.length})
                   </Typography>
 
                   <Box sx={{
@@ -922,7 +934,7 @@ const Upload = () => {
                                       </Typography>
                                     </Box>
                                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                      <Tooltip title="Create Campaign">
+                                      <Tooltip title={t('uploadPolicy.tooltips.createCampaign')}>
                                         <IconButton
                                           size="small"
                                           onClick={() => handleCreateCampaign(upload)}
@@ -941,10 +953,10 @@ const Upload = () => {
                                           <CampaignIcon fontSize="small" />
                                         </IconButton>
                                       </Tooltip>
-                                      <Tooltip title="Download File">
+                                      <Tooltip title="Download">
                                         <IconButton
                                           size="small"
-                                          onClick={() => handleDownloadFile(upload)}
+                                          onClick={(e) => handleDownloadFile(e, upload)}
                                           sx={{
                                             color: theme.palette.primary.main,
                                             '&:hover': {
@@ -984,7 +996,7 @@ const Upload = () => {
                                       <Grid container spacing={2}>
                                         <Grid item xs={4}>
                                           <Typography variant="body2" color="text.secondary">
-                                            Total Records
+                                            {t('uploadPolicy.stats.totalRecords')}
                                           </Typography>
                                           <Typography variant="h6" sx={{ fontWeight: 600 }}>
                                             {upload.records}
@@ -992,7 +1004,7 @@ const Upload = () => {
                                         </Grid>
                                         <Grid item xs={4}>
                                           <Typography variant="body2" color="success.main">
-                                            Successful
+                                            {t('uploadPolicy.stats.successful')}
                                           </Typography>
                                           <Typography variant="h6" sx={{ fontWeight: 600, color: 'success.main' }}>
                                             {upload.successful}
@@ -1000,7 +1012,7 @@ const Upload = () => {
                                         </Grid>
                                         <Grid item xs={4}>
                                           <Typography variant="body2" color="error.main">
-                                            Failed
+                                            {t('uploadPolicy.stats.failed')}
                                           </Typography>
                                           <Typography variant="h6" sx={{ fontWeight: 600, color: 'error.main' }}>
                                             {upload.failed}
@@ -1033,7 +1045,7 @@ const Upload = () => {
               >
                 <CardContent sx={{ p: 3, height: '600px', display: 'flex', flexDirection: 'column' }}>
                   <Typography variant="h6" gutterBottom sx={{ fontWeight: 600, mb: 3 }}>
-                    Active Campaigns ({activeCampaigns.length})
+                    {t('uploadPolicy.sections.activeCampaigns')} ({activeCampaigns.length})
                   </Typography>
 
                   <Box sx={{
@@ -1066,10 +1078,10 @@ const Upload = () => {
                       }}>
                         <CampaignIcon sx={{ fontSize: 64, color: theme.palette.text.secondary, mb: 2 }} />
                         <Typography variant="h6" color="text.secondary" gutterBottom>
-                          No Active Campaigns
+                          {t('uploadPolicy.messages.noActiveCampaigns')}
                         </Typography>
                         <Typography variant="body2" color="text.secondary">
-                          Create campaigns from completed uploads to engage with your customers
+                          {t('uploadPolicy.descriptions.createCampaign')}
                         </Typography>
                       </Box>
                     ) : (
@@ -1106,7 +1118,7 @@ const Upload = () => {
                                       </Box>
                                       <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
                                         {campaign.status === 'active' ? (
-                                          <Tooltip title="Pause Campaign">
+                                          <Tooltip title={t('uploadPolicy.tooltips.pauseCampaign')}>
                                             <IconButton
                                               size="small"
                                               onClick={() => handleCampaignAction(campaign.id, 'pause')}
@@ -1116,7 +1128,7 @@ const Upload = () => {
                                             </IconButton>
                                           </Tooltip>
                                         ) : (
-                                          <Tooltip title="Resume Campaign">
+                                          <Tooltip title={t('uploadPolicy.tooltips.resumeCampaign')}>
                                             <IconButton
                                               size="small"
                                               onClick={() => handleCampaignAction(campaign.id, 'resume')}
@@ -1126,7 +1138,7 @@ const Upload = () => {
                                             </IconButton>
                                           </Tooltip>
                                         )}
-                                        <Tooltip title="View Details">
+                                        <Tooltip title={t('uploadPolicy.tooltips.viewDetails')}>
                                           <IconButton
                                             size="small"
                                             onClick={() => handleViewCampaignDetails(campaign)}
@@ -1150,7 +1162,7 @@ const Upload = () => {
                                   secondary={
                                     <>
                                       <Typography component="span" variant="body2" color="text.secondary" sx={{ display: 'block', mb: 1 }}>
-                                        Created: {new Date(campaign.createdAt).toLocaleDateString()}
+                                        {t('uploadPolicy.stats.created')}: {new Date(campaign.createdAt).toLocaleDateString()}
                                       </Typography>
                                       <Box sx={{
                                         mt: 1,
@@ -1162,7 +1174,7 @@ const Upload = () => {
                                         <Grid container spacing={2}>
                                           <Grid item xs={6}>
                                             <Typography variant="body2" color="text.secondary">
-                                              Target
+                                              {t('uploadPolicy.stats.target')}
                                             </Typography>
                                             <Typography variant="h6" sx={{ fontWeight: 600 }}>
                                               {campaign.targetCount}
@@ -1170,7 +1182,7 @@ const Upload = () => {
                                           </Grid>
                                           <Grid item xs={6}>
                                             <Typography variant="body2" color="primary.main">
-                                              Sent
+                                              {t('uploadPolicy.stats.sent')}
                                             </Typography>
                                             <Typography variant="h6" sx={{ fontWeight: 600, color: 'primary.main' }}>
                                               {campaign.sent}
@@ -1180,7 +1192,7 @@ const Upload = () => {
                                             <>
                                               <Grid item xs={6}>
                                                 <Typography variant="body2" color="success.main">
-                                                  Opened
+                                                  {t('uploadPolicy.stats.opened')}
                                                 </Typography>
                                                 <Typography variant="h6" sx={{ fontWeight: 600, color: 'success.main' }}>
                                                   {campaign.opened}
@@ -1188,7 +1200,7 @@ const Upload = () => {
                                               </Grid>
                                               <Grid item xs={6}>
                                                 <Typography variant="body2" color="warning.main">
-                                                  Clicked
+                                                  {t('uploadPolicy.stats.clicked')}
                                                 </Typography>
                                                 <Typography variant="h6" sx={{ fontWeight: 600, color: 'warning.main' }}>
                                                   {campaign.clicked}
@@ -1200,7 +1212,7 @@ const Upload = () => {
                                             <>
                                               <Grid item xs={6}>
                                                 <Typography variant="body2" color="success.main">
-                                                  Delivered
+                                                  {t('uploadPolicy.stats.delivered')}
                                                 </Typography>
                                                 <Typography variant="h6" sx={{ fontWeight: 600, color: 'success.main' }}>
                                                   {campaign.delivered}
@@ -1208,7 +1220,7 @@ const Upload = () => {
                                               </Grid>
                                               <Grid item xs={6}>
                                                 <Typography variant="body2" color="info.main">
-                                                  Read
+                                                  {t('uploadPolicy.stats.read')}
                                                 </Typography>
                                                 <Typography variant="h6" sx={{ fontWeight: 600, color: 'info.main' }}>
                                                   {campaign.read}
@@ -1249,7 +1261,7 @@ const Upload = () => {
               </Avatar>
               <Box sx={{ flex: 1 }}>
                 <Typography variant="h6" sx={{ fontWeight: 600 }}>
-                  {isEditMode ? 'Change Campaign' : 'Create New Campaign'}
+                  {isEditMode ? t('uploadPolicy.dialog.editTitle') : t('uploadPolicy.dialog.createTitle')}
                 </Typography>
                 <Typography variant="body2" color="text.secondary">
                   {selectedUpload?.filename} • {selectedUpload?.successful} customers
@@ -1272,16 +1284,16 @@ const Upload = () => {
           <DialogContent sx={{ pt: 2 }}>
             <Stepper activeStep={activeStep} orientation="vertical">
               <Step>
-                <StepLabel>Campaign Details</StepLabel>
+                <StepLabel>{t('uploadPolicy.dialog.details')}</StepLabel>
                 <StepContent>
                   {/* File Upload Section - Only in Edit Mode (Change Campaign) */}
                   {isEditMode && (
                     <Box sx={{ mb: 3 }}>
                       <Typography variant="subtitle1" fontWeight="600" gutterBottom>
-                        Upload New File
+                        {t('uploadPolicy.dialog.uploadNew')}
                       </Typography>
                       <Typography variant="body2" color="text.secondary" gutterBottom>
-                        Upload a new file to replace the current campaign data, or keep the existing file
+                        {t('uploadPolicy.dialog.uploadDescription')}
                       </Typography>
 
                       <Box
@@ -1332,11 +1344,11 @@ const Upload = () => {
                                 borderRadius: 2,
                               }}
                             >
-                              {editModeFile ? 'Change File' : 'Select New File'}
+                              {editModeFile ? t('uploadPolicy.dialog.changeFile') : t('uploadPolicy.dialog.selectNewFile')}
                             </Button>
 
                             <Typography variant="body2" sx={{ mt: 1, color: theme.palette.text.secondary }}>
-                              Upload new data file
+                              {t('uploadPolicy.dialog.uploadNewData')}
                             </Typography>
                           </Box>
                         </label>
@@ -1367,7 +1379,7 @@ const Upload = () => {
                     <Grid item xs={12}>
                       <TextField
                         fullWidth
-                        label="Campaign Name"
+                        label={t('uploadPolicy.dialog.name')}
                         value={campaignData.name}
                         onChange={(e) => setCampaignData(prev => ({ ...prev, name: e.target.value }))}
                         required
@@ -1375,18 +1387,18 @@ const Upload = () => {
                     </Grid>
                     <Grid item xs={12} sm={6}>
                       <FormControl fullWidth>
-                        <InputLabel>Campaign Channel</InputLabel>
+                        <InputLabel>{t('uploadPolicy.dialog.channel')}</InputLabel>
                         <Select
                           multiple
                           value={campaignData.type}
-                          label="Campaign Channel"
+                          label={t('uploadPolicy.dialog.channel')}
                           onChange={(e) => setCampaignData(prev => ({ ...prev, type: e.target.value, template: {} }))}
                           renderValue={(selected) => (
                             <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
                               {selected.map((value) => (
                                 <Chip
                                   key={value}
-                                  label={value === 'bot-calling' ? 'Bot Calling' : value.charAt(0).toUpperCase() + value.slice(1)}
+                                  label={value === 'bot-calling' ? t('uploadPolicy.dialog.botCalling') : value.charAt(0).toUpperCase() + value.slice(1)}
                                   size="small"
                                   icon={
                                     value === 'email' ? <EmailIcon fontSize="small" /> :
@@ -1408,31 +1420,31 @@ const Upload = () => {
                           <MenuItem value="email">
                             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                               <EmailIcon fontSize="small" />
-                              Email Campaign
+                              {t('uploadPolicy.dialog.emailCampaign')}
                             </Box>
                           </MenuItem>
                           <MenuItem value="whatsapp">
                             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                               <WhatsAppIcon fontSize="small" />
-                              WhatsApp Campaign
+                              {t('uploadPolicy.dialog.whatsappCampaign')}
                             </Box>
                           </MenuItem>
                           <MenuItem value="sms">
                             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                               <SmsIcon fontSize="small" />
-                              SMS Campaign
+                              {t('uploadPolicy.dialog.smsCampaign')}
                             </Box>
                           </MenuItem>
                           <MenuItem value="call">
                             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                               <PhoneIcon fontSize="small" />
-                              Call Campaign
+                              {t('uploadPolicy.dialog.callCampaign')}
                             </Box>
                           </MenuItem>
                           <MenuItem value="bot-calling">
                             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                               <PhoneIcon fontSize="small" />
-                              Bot Calling
+                              {t('uploadPolicy.dialog.botCalling')}
                             </Box>
                           </MenuItem>
                         </Select>
@@ -1440,15 +1452,15 @@ const Upload = () => {
                     </Grid>
                     <Grid item xs={12} sm={6}>
                       <FormControl fullWidth>
-                        <InputLabel>Target Audience</InputLabel>
+                        <InputLabel>{t('uploadPolicy.dialog.audience')}</InputLabel>
                         <Select
                           value={campaignData.targetAudience}
-                          label="Target Audience"
+                          label={t('uploadPolicy.dialog.audience')}
                           onChange={(e) => setCampaignData(prev => ({ ...prev, targetAudience: e.target.value }))}
                         >
-                          <MenuItem value="all">All Customers</MenuItem>
-                          <MenuItem value="pending">Pending Renewals Only</MenuItem>
-                          <MenuItem value="expired">Expired Policies Only</MenuItem>
+                          <MenuItem value="all">{t('uploadPolicy.dialog.allCustomers')}</MenuItem>
+                          <MenuItem value="pending">{t('uploadPolicy.dialog.pendingRenewals')}</MenuItem>
+                          <MenuItem value="expired">{t('uploadPolicy.dialog.expiredPolicies')}</MenuItem>
                         </Select>
                       </FormControl>
                     </Grid>
@@ -1458,10 +1470,13 @@ const Upload = () => {
                   {campaignData.type.length > 0 && (
                     <Box sx={{ mt: 3 }}>
                       <Typography variant="subtitle1" fontWeight="600" gutterBottom>
-                        Select Communication Providers
+                        {campaignData.type.length > 1
+                          ? t('uploadPolicy.dialog.chooseTemplatesMulti')
+                          : t('uploadPolicy.dialog.chooseTemplatesSingle')
+                        } {t('uploadPolicy.dialog.providers')}
                       </Typography>
                       <Typography variant="body2" color="text.secondary" gutterBottom>
-                        Choose specific providers for each communication channel
+                        {t('uploadPolicy.dialog.chooseProviders')}
                       </Typography>
 
                       <Grid container spacing={2} sx={{ mt: 1 }}>
@@ -1473,7 +1488,7 @@ const Upload = () => {
                             <Grid item xs={12} md={6} key={channel}>
                               <FormControl fullWidth>
                                 <InputLabel>
-                                  {channel.charAt(0).toUpperCase() + channel.slice(1)} Provider
+                                  {channel.charAt(0).toUpperCase() + channel.slice(1)} {t('uploadPolicy.dialog.provider')}
                                 </InputLabel>
                                 <Select
                                   value={campaignData.providers[channel] || defaultProvider?.id || ''}
@@ -1495,21 +1510,21 @@ const Upload = () => {
                                         }} />
                                         {provider.name}
                                         {provider.isDefault && (
-                                          <Chip label="Default" size="small" sx={{ ml: 1 }} />
+                                          <Chip label={t('uploadPolicy.dialog.providerDefault')} size="small" sx={{ ml: 1 }} />
                                         )}
                                       </Box>
                                     </MenuItem>
                                   ))}
                                   {availableProviders.length === 0 && (
                                     <MenuItem disabled>
-                                      No active {channel} providers configured
+                                      {t('uploadPolicy.dialog.noActiveProviders', { channel })}
                                     </MenuItem>
                                   )}
                                 </Select>
                               </FormControl>
                               {availableProviders.length === 0 && (
                                 <Typography variant="caption" color="error" sx={{ mt: 1, display: 'block' }}>
-                                  Configure {channel} providers in Settings → Providers
+                                  {t('uploadPolicy.dialog.configureProviders', { channel })}
                                 </Typography>
                               )}
                             </Grid>
@@ -1520,27 +1535,24 @@ const Upload = () => {
                   )}
                   <Box sx={{ mt: 2, display: 'flex', gap: 1 }}>
                     <Button onClick={() => setCampaignDialog(false)}>
-                      Cancel
+                      {t('uploadPolicy.dialog.cancel')}
                     </Button>
                     <Button
                       variant="contained"
                       onClick={() => setActiveStep(1)}
                       disabled={!campaignData.name || !campaignData.type}
                     >
-                      {isEditMode ? 'Next: Update Template' : 'Next: Select Template'}
+                      {isEditMode ? t('uploadPolicy.dialog.nextUpdateTemplate') : t('uploadPolicy.dialog.nextSelectTemplate')}
                     </Button>
                   </Box>
                 </StepContent>
               </Step>
 
               <Step>
-                <StepLabel>Template Selection</StepLabel>
+                <StepLabel>{t('uploadPolicy.dialog.templateTitle')}</StepLabel>
                 <StepContent>
                   <Typography variant="body2" color="text.secondary" gutterBottom>
-                    {campaignData.type.length > 1
-                      ? 'Choose templates for each selected campaign type'
-                      : 'Choose from predefined templates or create a custom one'
-                    }
+                    {t('uploadPolicy.dialog.templateSubtitle')}
                   </Typography>
 
                   {campaignData.type.map((type) => (
@@ -1551,14 +1563,14 @@ const Upload = () => {
                         {type === 'sms' && <SmsIcon fontSize="small" />}
                         {type === 'call' && <PhoneIcon fontSize="small" />}
                         {type === 'bot-calling' && <PhoneIcon fontSize="small" />}
-                        {type === 'bot-calling' ? 'Bot Calling' : type.charAt(0).toUpperCase() + type.slice(1)} Template
+                        {type === 'bot-calling' ? t('uploadPolicy.dialog.botCalling') : type.charAt(0).toUpperCase() + type.slice(1)} {t('uploadPolicy.dialog.template')}
                       </Typography>
 
                       <FormControl fullWidth>
-                        <InputLabel>Select {type === 'bot-calling' ? 'Bot Calling' : type.charAt(0).toUpperCase() + type.slice(1)} Template</InputLabel>
+                        <InputLabel>{t('uploadPolicy.dialog.selectTemplate', { channel: type === 'bot-calling' ? t('uploadPolicy.dialog.botCalling') : type.charAt(0).toUpperCase() + type.slice(1) })}</InputLabel>
                         <Select
                           value={campaignData.template[type] || ''}
-                          label={`Select ${type === 'bot-calling' ? 'Bot Calling' : type.charAt(0).toUpperCase() + type.slice(1)} Template`}
+                          label={t('uploadPolicy.dialog.selectTemplate', { channel: type === 'bot-calling' ? t('uploadPolicy.dialog.botCalling') : type.charAt(0).toUpperCase() + type.slice(1) })}
                           onChange={(e) => setCampaignData(prev => ({
                             ...prev,
                             template: { ...prev.template, [type]: e.target.value }
@@ -1586,7 +1598,7 @@ const Upload = () => {
                           border: `1px solid ${theme.palette.divider}`
                         }}>
                           <Typography variant="subtitle2" gutterBottom sx={{ fontWeight: 600 }}>
-                            Template Preview:
+                            {t('uploadPolicy.dialog.templatePreview')}
                           </Typography>
                           {(() => {
                             const template = templates[type]?.find(t => t.id === campaignData.template[type]);
@@ -1610,24 +1622,24 @@ const Upload = () => {
 
                   <Box sx={{ mt: 2, display: 'flex', gap: 1 }}>
                     <Button onClick={() => setActiveStep(0)}>
-                      Back
+                      {t('uploadPolicy.dialog.back')}
                     </Button>
                     <Button
                       variant="contained"
                       onClick={() => setActiveStep(2)}
                       disabled={!campaignData.type.every(type => campaignData.template[type])}
                     >
-                      Next: Basic Schedule
+                      {t('uploadPolicy.dialog.nextBasic')}
                     </Button>
                   </Box>
                 </StepContent>
               </Step>
 
               <Step>
-                <StepLabel>Basic Schedule</StepLabel>
+                <StepLabel>{t('uploadPolicy.dialog.scheduleTitle')}</StepLabel>
                 <StepContent>
                   <FormControl fullWidth sx={{ mb: 2 }}>
-                    <InputLabel>Schedule Type</InputLabel>
+                    <InputLabel>{t('uploadPolicy.dialog.scheduleType')}</InputLabel>
                     <Select
                       value={campaignData.scheduleType}
                       label="Schedule Type"
@@ -1636,13 +1648,13 @@ const Upload = () => {
                       <MenuItem value="immediate">
                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                           <PlayIcon fontSize="small" />
-                          Send Immediately
+                          {t('uploadPolicy.dialog.sendImmediately')}
                         </Box>
                       </MenuItem>
                       <MenuItem value="scheduled">
                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                           <ScheduleIcon fontSize="small" />
-                          Schedule for Later
+                          {t('uploadPolicy.dialog.scheduleLater')}
                         </Box>
                       </MenuItem>
                     </Select>
@@ -1654,7 +1666,7 @@ const Upload = () => {
                         <TextField
                           fullWidth
                           type="date"
-                          label="Schedule Date"
+                          label={t('uploadPolicy.dialog.scheduleDate')}
                           value={campaignData.scheduleDate}
                           onChange={(e) => setCampaignData(prev => ({ ...prev, scheduleDate: e.target.value }))}
                           InputLabelProps={{ shrink: true }}
@@ -1665,7 +1677,7 @@ const Upload = () => {
                         <TextField
                           fullWidth
                           type="time"
-                          label="Schedule Time"
+                          label={t('uploadPolicy.dialog.scheduleTime')}
                           value={campaignData.scheduleTime}
                           onChange={(e) => setCampaignData(prev => ({ ...prev, scheduleTime: e.target.value }))}
                           InputLabelProps={{ shrink: true }}
@@ -1688,7 +1700,7 @@ const Upload = () => {
                       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                         <TimelineIcon fontSize="small" />
                         <Typography variant="body2">
-                          Enable Advanced Scheduling (Multi-channel intervals)
+                          {t('uploadPolicy.dialog.enableAdvanced')}
                         </Typography>
                       </Box>
                     }
@@ -1698,15 +1710,14 @@ const Upload = () => {
                   {campaignData.advancedScheduling.enabled && (
                     <Alert severity="info" sx={{ mb: 2 }}>
                       <Typography variant="body2">
-                        Advanced scheduling allows you to set up multiple communications at different intervals across various channels.
-                        This will be configured in the next step.
+                        {t('uploadPolicy.dialog.advancedInfo')}
                       </Typography>
                     </Alert>
                   )}
 
                   <Box sx={{ mt: 2, display: 'flex', gap: 1 }}>
                     <Button onClick={() => setActiveStep(1)}>
-                      Back
+                      {t('uploadPolicy.dialog.back')}
                     </Button>
                     {campaignData.advancedScheduling.enabled ? (
                       <Button
@@ -1722,7 +1733,7 @@ const Upload = () => {
                         onClick={handleCampaignSubmit}
                         disabled={campaignData.scheduleType === 'scheduled' && (!campaignData.scheduleDate || !campaignData.scheduleTime)}
                       >
-                        {isEditMode ? 'Update Campaign' : 'Create Campaign'}
+                        {isEditMode ? t('uploadPolicy.dialog.update') : t('uploadPolicy.dialog.create')}
                       </Button>
                     )}
                   </Box>
@@ -1730,19 +1741,19 @@ const Upload = () => {
               </Step>
 
               <Step>
-                <StepLabel>Advanced Scheduling</StepLabel>
+                <StepLabel>{t('uploadPolicy.dialog.advanced')}</StepLabel>
                 <StepContent>
                   <Typography variant="body1" sx={{ mb: 2, fontWeight: 600 }}>
-                    Configure Multi-Channel Communication Intervals
+                    {t('uploadPolicy.dialog.advancedSubtitle')}
                   </Typography>
                   <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-                    Set up automated follow-up communications across different channels at specific intervals to maximize customer engagement.
+                    {t('uploadPolicy.dialog.advancedDescription')}
                   </Typography>
 
                   {/* Interval Configuration */}
                   <Box sx={{ mb: 3 }}>
                     <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-                      <Typography variant="h6">Communication Intervals</Typography>
+                      <Typography variant="h6">{t('uploadPolicy.dialog.communicationIntervals')}</Typography>
                       <Button
                         startIcon={<AddIcon />}
                         variant="outlined"
@@ -1769,7 +1780,7 @@ const Upload = () => {
                           }));
                         }}
                       >
-                        Add Interval
+                        {t('uploadPolicy.dialog.addInterval')}
                       </Button>
                     </Box>
 
@@ -1777,7 +1788,7 @@ const Upload = () => {
                       <Paper sx={{ p: 3, textAlign: 'center', bgcolor: 'grey.50' }}>
                         <NotificationsIcon sx={{ fontSize: 48, color: 'text.secondary', mb: 1 }} />
                         <Typography variant="body2" color="text.secondary">
-                          No intervals configured yet. Add your first communication interval above.
+                          {t('uploadPolicy.dialog.noIntervals')}
                         </Typography>
                       </Paper>
                     ) : (
@@ -1803,11 +1814,11 @@ const Upload = () => {
                                 </Avatar>
                                 <Box sx={{ flex: 1 }}>
                                   <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
-                                    {interval.channel === 'bot-calling' ? 'Bot Calling' : interval.channel.charAt(0).toUpperCase() + interval.channel.slice(1)} -
-                                    After {interval.delay} {interval.delayUnit}
+                                    {interval.channel === 'bot-calling' ? t('uploadPolicy.dialog.botCalling') : interval.channel.charAt(0).toUpperCase() + interval.channel.slice(1)} -
+                                    {t('uploadPolicy.dialog.after')} {interval.delay} {interval.delayUnit}
                                   </Typography>
                                   <Typography variant="caption" color="text.secondary">
-                                    {interval.template ? templates[interval.channel]?.find(t => t.id === interval.template)?.name : 'No template selected'}
+                                    {interval.template ? templates[interval.channel]?.find(t => t.id === interval.template)?.name : t('uploadPolicy.dialog.noTemplate')}
                                   </Typography>
                                 </Box>
                                 <FormControlLabel
@@ -1838,10 +1849,10 @@ const Upload = () => {
                               <Grid container spacing={2}>
                                 <Grid item xs={12} md={4}>
                                   <FormControl fullWidth>
-                                    <InputLabel>Channel</InputLabel>
+                                    <InputLabel>{t('uploadPolicy.dialog.channel')}</InputLabel>
                                     <Select
                                       value={interval.channel}
-                                      label="Channel"
+                                      label={t('uploadPolicy.dialog.channel')}
                                       onChange={(e) => {
                                         const updatedIntervals = campaignData.advancedScheduling.intervals.map(int =>
                                           int.id === interval.id ? { ...int, channel: e.target.value, template: '' } : int
@@ -1858,31 +1869,31 @@ const Upload = () => {
                                       <MenuItem value="email">
                                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                                           <EmailIcon fontSize="small" />
-                                          Email
+                                          {t('uploadPolicy.dialog.emailCampaign')}
                                         </Box>
                                       </MenuItem>
                                       <MenuItem value="whatsapp">
                                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                                           <WhatsAppIcon fontSize="small" />
-                                          WhatsApp
+                                          {t('uploadPolicy.dialog.whatsappCampaign')}
                                         </Box>
                                       </MenuItem>
                                       <MenuItem value="sms">
                                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                                           <SmsIcon fontSize="small" />
-                                          SMS
+                                          {t('uploadPolicy.dialog.smsCampaign')}
                                         </Box>
                                       </MenuItem>
                                       <MenuItem value="call">
                                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                                           <PhoneIcon fontSize="small" />
-                                          Call
+                                          {t('uploadPolicy.dialog.callCampaign')}
                                         </Box>
                                       </MenuItem>
                                       <MenuItem value="bot-calling">
                                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                                           <PhoneIcon fontSize="small" />
-                                          Bot Calling
+                                          {t('uploadPolicy.dialog.botCalling')}
                                         </Box>
                                       </MenuItem>
                                     </Select>
@@ -1891,7 +1902,7 @@ const Upload = () => {
                                 <Grid item xs={12} md={4}>
                                   <Box sx={{ display: 'flex', gap: 1 }}>
                                     <TextField
-                                      label="Delay"
+                                      label={t('uploadPolicy.dialog.delay')}
                                       type="number"
                                       value={interval.delay}
                                       onChange={(e) => {
@@ -1910,10 +1921,10 @@ const Upload = () => {
                                       sx={{ width: '70px' }}
                                     />
                                     <FormControl sx={{ minWidth: 100 }}>
-                                      <InputLabel>Unit</InputLabel>
+                                      <InputLabel>{t('uploadPolicy.dialog.unit')}</InputLabel>
                                       <Select
                                         value={interval.delayUnit}
-                                        label="Unit"
+                                        label={t('uploadPolicy.dialog.unit')}
                                         onChange={(e) => {
                                           const updatedIntervals = campaignData.advancedScheduling.intervals.map(int =>
                                             int.id === interval.id ? { ...int, delayUnit: e.target.value } : int
@@ -1927,20 +1938,20 @@ const Upload = () => {
                                           }));
                                         }}
                                       >
-                                        <MenuItem value="minutes">Minutes</MenuItem>
-                                        <MenuItem value="hours">Hours</MenuItem>
-                                        <MenuItem value="days">Days</MenuItem>
-                                        <MenuItem value="weeks">Weeks</MenuItem>
+                                        <MenuItem value="minutes">{t('uploadPolicy.dialog.minutes')}</MenuItem>
+                                        <MenuItem value="hours">{t('uploadPolicy.dialog.hours')}</MenuItem>
+                                        <MenuItem value="days">{t('uploadPolicy.dialog.days')}</MenuItem>
+                                        <MenuItem value="weeks">{t('uploadPolicy.dialog.weeks')}</MenuItem>
                                       </Select>
                                     </FormControl>
                                   </Box>
                                 </Grid>
                                 <Grid item xs={12} md={4}>
                                   <FormControl fullWidth>
-                                    <InputLabel>Template</InputLabel>
+                                    <InputLabel>{t('uploadPolicy.dialog.template')}</InputLabel>
                                     <Select
                                       value={interval.template}
-                                      label="Template"
+                                      label={t('uploadPolicy.dialog.template')}
                                       onChange={(e) => {
                                         const updatedIntervals = campaignData.advancedScheduling.intervals.map(int =>
                                           int.id === interval.id ? { ...int, template: e.target.value } : int
@@ -1964,7 +1975,7 @@ const Upload = () => {
                                 </Grid>
                                 <Grid item xs={12}>
                                   <Typography variant="subtitle2" sx={{ mb: 1 }}>
-                                    Trigger Conditions
+                                    {t('uploadPolicy.dialog.triggerConditions')}
                                   </Typography>
                                   <FormGroup row>
                                     <FormControlLabel
@@ -1988,7 +1999,7 @@ const Upload = () => {
                                           }}
                                         />
                                       }
-                                      label="Send if no response to previous message"
+                                      label={t('uploadPolicy.dialog.sendIfNoResponse')}
                                     />
                                     <FormControlLabel
                                       control={
@@ -2011,7 +2022,7 @@ const Upload = () => {
                                           }}
                                         />
                                       }
-                                      label="Send if no action taken (click/conversion)"
+                                      label={t('uploadPolicy.dialog.sendIfNoAction')}
                                     />
                                   </FormGroup>
                                 </Grid>
@@ -2031,7 +2042,7 @@ const Upload = () => {
                                       }));
                                     }}
                                   >
-                                    Remove Interval
+                                    {t('uploadPolicy.dialog.removeInterval')}
                                   </Button>
                                 </Grid>
                               </Grid>
@@ -2044,7 +2055,7 @@ const Upload = () => {
 
                   <Box sx={{ mt: 3, display: 'flex', gap: 1 }}>
                     <Button onClick={() => setActiveStep(2)}>
-                      Back
+                      {t('uploadPolicy.dialog.back')}
                     </Button>
                     <Button
                       variant="contained"
@@ -2052,7 +2063,7 @@ const Upload = () => {
                       disabled={campaignData.advancedScheduling.intervals.length === 0 ||
                         campaignData.advancedScheduling.intervals.some(int => int.enabled && !int.template)}
                     >
-                      {isEditMode ? 'Update Advanced Campaign' : 'Create Advanced Campaign'}
+                      {isEditMode ? t('uploadPolicy.dialog.updateAdvanced') : t('uploadPolicy.dialog.createAdvanced')}
                     </Button>
                   </Box>
                 </StepContent>
@@ -2081,7 +2092,7 @@ const Upload = () => {
                       {selectedCampaign.name}
                     </Typography>
                     <Typography variant="body2" color="text.secondary">
-                      Campaign Details
+                      {t('uploadPolicy.dialog.campaignDetails')}
                     </Typography>
                   </Box>
                   <Chip

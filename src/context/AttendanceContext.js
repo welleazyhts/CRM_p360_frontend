@@ -78,7 +78,7 @@ export const AttendanceProvider = ({ children }) => {
         setAttendanceData(normalizedRecords);
 
         const todayRecord = normalizedRecords.find(record =>
-          (record.employeeId === currentUser.id || record.employeeId === `EMP00${currentUser.id}`) && // strict check?
+          String(record.employeeId) === String(currentUser.id) &&
           record.date === today
         );
 
@@ -110,7 +110,7 @@ export const AttendanceProvider = ({ children }) => {
       const currentDate = now.toISOString().split('T')[0];
 
       const payload = {
-        employee_id: currentUser.id || 'EMP001', // Fallback or strict ID
+        employee_id: currentUser.id,
         date: currentDate,
         check_in: currentTime,
         status: 'present',
@@ -172,7 +172,7 @@ export const AttendanceProvider = ({ children }) => {
       // It seems it updates TODAY's record for that employee? Or just generic update?
       // I'll assume it handles the logic.
 
-      await attendanceService.update(currentUser.id || 'EMP001', payload);
+      await attendanceService.update(currentUser.id, payload);
 
       await fetchAttendance();
 

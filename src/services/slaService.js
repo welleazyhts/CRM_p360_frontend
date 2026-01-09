@@ -4,38 +4,15 @@
  */
 
 /**
- * Default SLA Templates for different entity types
+ * SLA Service - Business Logic for SLA Tracking
+ * Handles SLA calculations, violations, and compliance tracking
  */
-export const SLA_TEMPLATES = {
-  lead: {
-    firstResponse: { hours: 2, description: 'First response to new lead' },
-    followUp: { hours: 24, description: 'Follow-up after initial contact' },
-    qualification: { days: 3, description: 'Lead qualification completion' },
-    proposal: { days: 7, description: 'Proposal submission' },
-    closing: { days: 30, description: 'Lead closure (won/lost)' }
-  },
-  case: {
-    assignment: { hours: 1, description: 'Case assignment to agent' },
-    firstContact: { hours: 4, description: 'First customer contact' },
-    documentCollection: { days: 5, description: 'Document collection completion' },
-    verification: { days: 3, description: 'Document verification' },
-    resolution: { days: 15, description: 'Case resolution' }
-  },
-  task: {
-    acknowledgment: { hours: 1, description: 'Task acknowledgment' },
-    completion: { days: 2, description: 'Task completion' }
-  },
-  email: {
-    response: { hours: 4, description: 'Email response' },
-    resolution: { days: 2, description: 'Email query resolution' }
-  },
-  claim: {
-    registration: { hours: 2, description: 'Claim registration' },
-    assessment: { days: 7, description: 'Claim assessment' },
-    approval: { days: 14, description: 'Claim approval/rejection' },
-    settlement: { days: 30, description: 'Claim settlement' }
-  }
-};
+
+// SLA_TEMPLATES removed - fetched from API
+
+/**
+ * SLA Priority Multipliers
+ */
 
 /**
  * SLA Priority Multipliers
@@ -208,10 +185,14 @@ export const getApproachingSLA = (items, threshold = 25) => {
  * Create SLA tracking object for an entity
  */
 export const createSLATracking = (entityType, entityId, slaType, startTime, priority = 'medium', customConfig = null) => {
-  const config = customConfig || SLA_TEMPLATES[entityType]?.[slaType];
+  // Use customConfig if provided, otherwise the caller must ensure config is passed. 
+  // We removed SLA_TEMPLATES hardcoded fallback.
+  const config = customConfig;
 
   if (!config) {
-    throw new Error(`SLA configuration not found for ${entityType}.${slaType}`);
+    // Return minimal tracking object or throw error. 
+    // Throwing error is safer to detect missing config issues.
+    throw new Error(`SLA configuration missing for ${entityType}.${slaType}. Please pass config implicitly.`);
   }
 
   const deadline = calculateSLADeadline(startTime, config, priority);
@@ -221,7 +202,7 @@ export const createSLATracking = (entityType, entityId, slaType, startTime, prio
     entityType,
     entityId,
     slaType,
-    description: config.description,
+    description: config.description || 'SLA Tracking',
     startTime,
     deadline,
     priority,
@@ -305,7 +286,7 @@ export const getEscalationLevel = (slaTracking) => {
 };
 
 export default {
-  SLA_TEMPLATES,
+  // SLA_TEMPLATES, // Removed
   PRIORITY_MULTIPLIERS,
   calculateSLADeadline,
   calculateTimeRemaining,

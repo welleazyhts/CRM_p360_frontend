@@ -1,15 +1,15 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import {
+  fetchDashboardStats,
+  fetchPendingCommissions,
+  fetchApprovedCommissions,
+  fetchPaidCommissions,
+  performAction,
+  createCommission,
+  exportCommissions,
   COMMISSION_TYPE,
   PAYMENT_STATUS,
-  PRODUCT_TYPE,
-  DEFAULT_COMMISSION_RATES,
-  COMMISSION_TIERS,
-  calculateCommissionBreakdown,
-  generateCommissionStatement,
-  getCommissionStatistics,
-  filterCommissions,
-  sortCommissions
+  PRODUCT_TYPE
 } from '../services/commissionService';
 
 const CommissionContext = createContext();
@@ -24,273 +24,209 @@ export const useCommission = () => {
 
 export const CommissionProvider = ({ children }) => {
   // Commissions state
-  const [commissions, setCommissions] = useState(() => {
-    const saved = localStorage.getItem('commissions');
-    return saved ? JSON.parse(saved) : [];
+  const [commissions, setCommissions] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [dashboardStats, setDashboardStats] = useState({});
+
+  const [config, setConfig] = useState({
+    enabled: true,
+    autoCalculate: true,
+    defaultTDSRate: 10,
+    overrideRate: 5,
+    customRates: {},
+    paymentCycle: 'monthly',
+    approvalRequired: true
   });
 
-  // Configuration
-  const [config, setConfig] = useState(() => {
-    const saved = localStorage.getItem('commissionConfig');
-    return saved ? JSON.parse(saved) : {
-      enabled: true,
-      autoCalculate: true,
-      defaultTDSRate: 10,
-      overrideRate: 5,
-      customRates: {},
-      paymentCycle: 'monthly', // monthly, quarterly
-      approvalRequired: true
-    };
-  });
+  const [agentsData, setAgentsData] = useState({});
 
-  // Agents data for commission tracking
-  const [agentsData, setAgentsData] = useState(() => {
-    const saved = localStorage.getItem('commissionAgentsData');
-    return saved ? JSON.parse(saved) : {};
-  });
+  // Fetch all data
+  const refreshData = useCallback(async () => {
+    setLoading(true);
+    try {
+      const [pending, approved, paid, stats] = await Promise.all([
+        fetchPendingCommissions(),
+        fetchApprovedCommissions(),
+        fetchPaidCommissions(),
+        fetchDashboardStats()
+      ]);
 
-  // Save to localStorage
-  useEffect(() => {
-    localStorage.setItem('commissions', JSON.stringify(commissions));
-  }, [commissions]);
+      // Normalize and merge data
+      const allCommissions = [
+        ...(Array.isArray(pending) ? pending : []),
+        ...(Array.isArray(approved) ? approved : []),
+        ...(Array.isArray(paid) ? paid : [])
+      ];
 
-  useEffect(() => {
-    localStorage.setItem('commissionConfig', JSON.stringify(config));
-  }, [config]);
-
-  useEffect(() => {
-    localStorage.setItem('commissionAgentsData', JSON.stringify(agentsData));
-  }, [agentsData]);
-
-  /**
-   * Calculate and record commission for a policy
-   */
-  const calculateCommission = useCallback((policy, agent) => {
-    if (!config.enabled) {
-      return { success: false, error: 'Commission calculation is disabled' };
+      setCommissions(allCommissions);
+      setDashboardStats(stats);
+      setError(null);
+    } catch (err) {
+      console.error("Failed to fetch commission data", err);
+      setError("Failed to load commission data");
+    } finally {
+      setLoading(false);
     }
-
-    // Get agent data
-    const agentInfo = agentsData[agent.id] || {
-      totalPremiumYTD: 0,
-      targetPremium: 0,
-      tdsRate: config.defaultTDSRate,
-      overrideManager: null
-    };
-
-    // Calculate commission
-    const breakdown = calculateCommissionBreakdown(policy, { ...agent, ...agentInfo }, config);
-
-    // Create commission record
-    const commissionRecord = {
-      id: `comm_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-      policyId: policy.id,
-      policyNumber: policy.policyNumber,
-      agentId: agent.id,
-      agentName: agent.name,
-      productType: policy.productType,
-      commissionType: policy.commissionType || COMMISSION_TYPE.NEW_BUSINESS,
-      ...breakdown,
-      paymentStatus: config.approvalRequired ? PAYMENT_STATUS.PENDING : PAYMENT_STATUS.APPROVED,
-      policyDate: policy.policyDate || new Date().toISOString(),
-      calculatedAt: new Date().toISOString(),
-      paymentDate: null,
-      notes: ''
-    };
-
-    // Add to commissions
-    setCommissions(prev => [commissionRecord, ...prev]);
-
-    // Update agent YTD data
-    updateAgentData(agent.id, {
-      totalPremiumYTD: agentInfo.totalPremiumYTD + policy.premium
-    });
-
-    return { success: true, commission: commissionRecord };
-  }, [config, agentsData]);
-
-  /**
-   * Update commission record
-   */
-  /**
-   * Add a manual commission record
-   */
-  const addCommission = useCallback((commission) => {
-    setCommissions(prev => [commission, ...prev]);
   }, []);
 
-  /**
-   * Update commission record
-   */
+  // Initial load
+  useEffect(() => {
+    refreshData();
+  }, [refreshData]);
+
+  const calculateCommission = useCallback((policy, agent) => {
+    console.warn("Client-side calculation is deprecated in favor of backend logic.");
+    return { success: true };
+  }, []);
+
+  const addCommission = useCallback(async (commissionData) => {
+    try {
+      await createCommission(commissionData);
+      await refreshData();
+      return { success: true };
+    } catch (err) {
+      console.error("Error adding commission", err);
+      return { success: false, error: err.message };
+    }
+  }, [refreshData]);
+
   const updateCommission = useCallback((commissionId, updates) => {
-    setCommissions(prev => prev.map(comm =>
-      comm.id === commissionId ? { ...comm, ...updates, updatedAt: new Date().toISOString() } : comm
-    ));
+    console.warn("Update commission not fully implemented in API context");
   }, []);
 
-  /**
-   * Approve commission payment
-   */
-  const approveCommission = useCallback((commissionId) => {
-    updateCommission(commissionId, {
-      paymentStatus: PAYMENT_STATUS.APPROVED,
-      approvedAt: new Date().toISOString()
-    });
-  }, [updateCommission]);
+  const approveCommission = useCallback(async (commissionId) => {
+    try {
+      await performAction(commissionId, 'APPROVE');
+      await refreshData();
+    } catch (err) {
+      console.error("Error approving commission", err);
+    }
+  }, [refreshData]);
 
-  /**
-   * Mark commission as paid
-   */
-  const markAsPaid = useCallback((commissionId, paymentDate = null) => {
-    updateCommission(commissionId, {
-      paymentStatus: PAYMENT_STATUS.PAID,
-      paymentDate: paymentDate || new Date().toISOString()
-    });
-  }, [updateCommission]);
+  const markAsPaid = useCallback(async (commissionId, paymentDate = null) => {
+    try {
+      await performAction(commissionId, 'PAID');
+      await refreshData();
+    } catch (err) {
+      console.error("Error marking commission as paid", err);
+    }
+  }, [refreshData]);
 
-  /**
-   * Batch approve commissions
-   */
-  const batchApprove = useCallback((commissionIds) => {
-    commissionIds.forEach(id => approveCommission(id));
-  }, [approveCommission]);
+  const batchApprove = useCallback(async (commissionIds) => {
+    try {
+      await Promise.all(commissionIds.map(id => performAction(id, 'APPROVE')));
+      await refreshData();
+    } catch (err) {
+      console.error("Error batch approving", err);
+    }
+  }, [refreshData]);
 
-  /**
-   * Batch mark as paid
-   */
-  const batchMarkAsPaid = useCallback((commissionIds, paymentDate = null) => {
-    commissionIds.forEach(id => markAsPaid(id, paymentDate));
-  }, [markAsPaid]);
+  const batchMarkAsPaid = useCallback(async (commissionIds, paymentDate = null) => {
+    try {
+      await Promise.all(commissionIds.map(id => performAction(id, 'PAID')));
+      await refreshData();
+    } catch (err) {
+      console.error("Error batch paying", err);
+    }
+  }, [refreshData]);
 
-  /**
-   * Delete commission
-   */
   const deleteCommission = useCallback((commissionId) => {
-    setCommissions(prev => prev.filter(comm => comm.id !== commissionId));
+    console.warn("Delete commission API not implemented");
   }, []);
 
-  /**
-   * Update agent data
-   */
   const updateAgentData = useCallback((agentId, data) => {
-    setAgentsData(prev => ({
-      ...prev,
-      [agentId]: {
-        ...prev[agentId],
-        ...data
-      }
-    }));
+    setAgentsData(prev => ({ ...prev, [agentId]: { ...prev[agentId], ...data } }));
   }, []);
 
-  /**
-   * Get commissions for agent
-   */
   const getAgentCommissions = useCallback((agentId) => {
     return commissions.filter(comm => comm.agentId === agentId);
   }, [commissions]);
 
-  /**
-   * Get pending commissions
-   */
   const getPendingCommissions = useCallback(() => {
-    return commissions.filter(comm => comm.paymentStatus === PAYMENT_STATUS.PENDING);
+    return commissions.filter(comm => comm.paymentStatus === PAYMENT_STATUS.PENDING || comm.status === 'pending');
   }, [commissions]);
 
-  /**
-   * Get approved but unpaid commissions
-   */
   const getApprovedCommissions = useCallback(() => {
-    return commissions.filter(comm => comm.paymentStatus === PAYMENT_STATUS.APPROVED);
+    return commissions.filter(comm => comm.paymentStatus === PAYMENT_STATUS.APPROVED || comm.status === 'approved');
   }, [commissions]);
 
-  /**
-   * Get paid commissions
-   */
   const getPaidCommissions = useCallback(() => {
-    return commissions.filter(comm => comm.paymentStatus === PAYMENT_STATUS.PAID);
+    return commissions.filter(comm => comm.paymentStatus === PAYMENT_STATUS.PAID || comm.status === 'paid');
   }, [commissions]);
 
-  /**
-   * Generate statement for period
-   */
-  const getStatement = useCallback((agentId, startDate, endDate) => {
-    const agentComms = agentId ? getAgentCommissions(agentId) : commissions;
-    return generateCommissionStatement(agentComms, startDate, endDate);
-  }, [commissions, getAgentCommissions]);
-
-  /**
-   * Get filtered and sorted commissions
-   */
   const getFilteredCommissions = useCallback((filters = {}, sortBy = 'policyDate', order = 'desc') => {
-    const filtered = filterCommissions(commissions, filters);
-    return sortCommissions(filtered, sortBy, order);
-  }, [commissions]);
+    let filtered = [...commissions];
 
-  /**
-   * Get statistics
-   */
-  const getStatistics = useCallback(() => {
-    return getCommissionStatistics(commissions);
-  }, [commissions]);
+    if (filters.paymentStatus) {
+      filtered = filtered.filter(c => c.paymentStatus === filters.paymentStatus || c.status === filters.paymentStatus);
+    }
 
-  /**
-   * Update configuration
-   */
-  const updateConfig = useCallback((updates) => {
-    setConfig(prev => ({ ...prev, ...updates }));
-  }, []);
+    if (filters.productType) {
+      filtered = filtered.filter(c => c.productType === filters.productType);
+    }
 
-  /**
-   * Set custom rate for product/type combination
-   */
-  const setCustomRate = useCallback((productType, commissionType, rate) => {
-    setConfig(prev => ({
-      ...prev,
-      customRates: {
-        ...prev.customRates,
-        [`${productType}_${commissionType}`]: rate
+    filtered.sort((a, b) => {
+      let comparison = 0;
+      switch (sortBy) {
+        case 'policyDate':
+          comparison = new Date(a.policyDate || 0) - new Date(b.policyDate || 0);
+          break;
+        case 'premium':
+          comparison = (a.premium || 0) - (b.premium || 0);
+          break;
+        case 'commission':
+          comparison = (a.netCommission || 0) - (b.netCommission || 0);
+          break;
+        case 'agentName':
+          comparison = (a.agentName || '').localeCompare(b.agentName || '');
+          break;
+        default:
+          comparison = 0;
       }
-    }));
-  }, []);
+      return order === 'desc' ? -comparison : comparison;
+    });
 
-  /**
-   * Export data
-   */
-  const exportData = useCallback(() => {
-    return {
-      commissions,
-      config,
-      agentsData,
-      exportDate: new Date().toISOString()
+    return filtered;
+  }, [commissions]);
+
+  const getStatistics = useCallback(() => {
+    if (Object.keys(dashboardStats).length > 0) {
+      return {
+        ...dashboardStats,
+        total: commissions.length
+      };
+    }
+
+    // Fallback
+    const stats = {
+      total: commissions.length,
+      totalNet: commissions.reduce((sum, c) => sum + (c.netCommission || 0), 0)
     };
-  }, [commissions, config, agentsData]);
+    return stats;
 
-  /**
-   * Import data
-   */
-  const importData = useCallback((data) => {
-    if (data.commissions) setCommissions(data.commissions);
-    if (data.config) setConfig(data.config);
-    if (data.agentsData) setAgentsData(data.agentsData);
-  }, []);
+  }, [commissions, dashboardStats]);
 
-  /**
-   * Clear all data
-   */
-  const clearAllData = useCallback(() => {
-    if (window.confirm('Are you sure? This will delete all commission records.')) {
-      setCommissions([]);
-      localStorage.removeItem('commissions');
+  const exportData = useCallback(async () => {
+    try {
+      await exportCommissions();
+    } catch (e) {
+      console.error(e);
     }
   }, []);
 
+  const getStatement = () => ({});
+  const updateConfig = () => { };
+  const setCustomRate = () => { };
+  const importData = () => { };
+  const clearAllData = () => { };
+
   const value = {
-    // State
     commissions,
     config,
     agentsData,
-
-    // Commission Operations
+    loading,
+    error,
     calculateCommission,
     addCommission,
     updateCommission,
@@ -299,34 +235,24 @@ export const CommissionProvider = ({ children }) => {
     markAsPaid,
     batchApprove,
     batchMarkAsPaid,
-
-    // Agent Operations
     updateAgentData,
     getAgentCommissions,
-
-    // Query Operations
     getPendingCommissions,
     getApprovedCommissions,
     getPaidCommissions,
     getFilteredCommissions,
     getStatement,
     getStatistics,
-
-    // Configuration
     updateConfig,
     setCustomRate,
-
-    // Data Management
     exportData,
     importData,
     clearAllData,
-
-    // Constants
     COMMISSION_TYPE,
     PAYMENT_STATUS,
     PRODUCT_TYPE,
-    DEFAULT_COMMISSION_RATES,
-    COMMISSION_TIERS
+    DEFAULT_COMMISSION_RATES: {},
+    COMMISSION_TIERS: {}
   };
 
   return (

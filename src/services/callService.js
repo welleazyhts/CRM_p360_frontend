@@ -1,6 +1,7 @@
 // Call Service - Handles automatic caller number capture and customer lookup
 import customers from '../mock/customerMocks';
 import api from './api';
+import qrcService from './qrcService';
 
 class CallService {
   constructor() {
@@ -17,24 +18,24 @@ class CallService {
     // - Avaya
     // - Cisco CallManager
     // - Cloud telephony providers (Twilio, etc.)
-    
+
     const simulatedIncomingNumbers = [
       '+91 98765 43210',
-      '+91 98765 43211', 
+      '+91 98765 43211',
       '+91 98765 43212',
       '+91 98765 43213',
       '+91 98765 43214'
     ];
-    
+
     const randomNumber = simulatedIncomingNumbers[Math.floor(Math.random() * simulatedIncomingNumbers.length)];
-    
+
     this.activeCall = {
       callerNumber: randomNumber,
       startTime: new Date(),
       callId: `CALL-${Date.now()}`,
       status: 'incoming'
     };
-    
+
     return this.activeCall;
   }
 
@@ -43,7 +44,7 @@ class CallService {
     try {
       // Clean phone number (remove spaces, dashes, country code)
       const cleanNumber = phoneNumber.replace(/[^\d]/g, '').slice(-10);
-      
+
       // Search in customer database
       const customer = customers.find(customer => {
         const customerPhone = customer.phone?.replace(/[^\d]/g, '').slice(-10);
@@ -82,26 +83,42 @@ class CallService {
   // Save call details with tagging information
   async saveCallDetails(callData) {
     try {
+      // Map callData to QRC payload structure
+      const qrcPayload = {
+        communicationMode: callData.communicationMode || 'Call',
+        callType: callData.type || 'Query',
+        resolution: callData.resolution || 'Pending',
+        callReason: callData.reason || callData.callReason || 'General Inquiry',
+        callDateTime: new Date().toISOString(), // Use current time for creation
+        callerName: callData.customerName || callData.callerName || 'Unknown',
+        contactNumber: callData.callerNumber || callData.phone || '',
+        callerEmail: callData.email || '',
+        remarks: `[Duration: ${callData.duration || '0s'}] ${callData.notes || callData.callNotes || ''}`,
+        // Map other fields as remarks or specific fields if backend supports them
+        isSuspiciousCase: false
+      };
+
+      const result = await qrcService.create(qrcPayload);
+
+      // Also keep a local history for session-based features if needed
       const callRecord = {
-        id: `CALL-${Date.now()}`,
+        id: result.id || `CALL-${Date.now()}`,
         ...callData,
         timestamp: new Date().toISOString(),
         duration: this.calculateCallDuration(),
         status: 'completed'
       };
-
-      // In real implementation, this would save to database
       this.callHistory.push(callRecord);
-      
-      // If follow-up is required, schedule it
+
+      // If follow-up is required, schedule it (mock for now as per original)
       if (callData.followUpRequired && callData.followUpDate && callData.followUpTime) {
         await this.scheduleFollowUp(callRecord);
       }
 
       return {
         success: true,
-        callId: callRecord.id,
-        message: 'Call details saved successfully'
+        callId: result.id || callRecord.id,
+        message: 'Call details saved successfully to QRC'
       };
     } catch (error) {
       console.error('Error saving call details:', error);
@@ -116,7 +133,7 @@ class CallService {
   async scheduleFollowUp(callRecord) {
     try {
       const followUpDateTime = new Date(`${callRecord.followUpDate}T${callRecord.followUpTime}`);
-      
+
       const followUpReminder = {
         id: `FOLLOWUP-${Date.now()}`,
         callId: callRecord.id,
@@ -133,7 +150,7 @@ class CallService {
       // 1. Save to database
       // 2. Create calendar event
       // 3. Set up notification/reminder system
-      
+
       return followUpReminder;
     } catch (error) {
       console.error('Error scheduling follow-up:', error);
@@ -146,12 +163,12 @@ class CallService {
     if (!this.activeCall || !this.activeCall.startTime) {
       return '0 mins';
     }
-    
+
     const endTime = new Date();
     const durationMs = endTime - this.activeCall.startTime;
     const durationMins = Math.floor(durationMs / (1000 * 60));
     const durationSecs = Math.floor((durationMs % (1000 * 60)) / 1000);
-    
+
     if (durationMins > 0) {
       return `${durationMins} mins ${durationSecs} secs`;
     } else {
@@ -165,10 +182,10 @@ class CallService {
       this.activeCall.endTime = new Date();
       this.activeCall.duration = this.calculateCallDuration();
       this.activeCall.status = 'ended';
-      
+
       const completedCall = { ...this.activeCall };
       this.activeCall = null;
-      
+
       return completedCall;
     }
     return null;

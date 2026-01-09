@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import trainingService from '../services/trainingService';
+import trainingService from '../services/trainingAnalysisService';
 import {
   Box,
   Container,
@@ -97,10 +97,45 @@ const TrainingManagement = () => {
     try {
       setLoading(true);
       const data = await trainingService.getTrainingModules();
-      setModules(data);
+      // data might be array or { results: [] }
+      const list = Array.isArray(data) ? data : (data.results || []);
+
+      const categoryMap = {
+        'soft_skills': 'Soft Skills',
+        'technical': 'Technical',
+        'product_knowledge': 'Product Knowledge',
+        'compliance': 'Compliance',
+        'process_training': 'Process Training',
+        'portal_training': 'Portal Training',
+      };
+
+      const levelMap = {
+        'beginner': 'Beginner',
+        'intermediate': 'Intermediate',
+        'advanced': 'Advanced',
+      };
+
+      const mappedList = list.map(m => ({
+        ...m,
+        id: m.id,
+        title: m.title || m.module_title || m.moduleTitle || 'Untitled Module',
+        category: categoryMap[m.category] || m.category || 'General',
+        level: levelMap[m.level] || m.level || 'Beginner',
+        duration: m.duration || '0m',
+        enrolledAgents: m.enrolledAgents || m.enrolled || 0,
+        completionRate: m.completionRate || m.completion_rate || 0,
+        documents: m.documents || [],
+        assessments: m.assessments || [],
+        description: m.description || '',
+        status: m.status || 'Active',
+        topics: m.topics || m.topics_covered || [],
+      }));
+
+      setModules(mappedList);
     } catch (error) {
       console.error('Error loading training modules:', error);
       setSnackbar({ open: true, message: 'Failed to load training modules', severity: 'error' });
+      setModules([]);
     } finally {
       setLoading(false);
     }
@@ -109,229 +144,37 @@ const TrainingManagement = () => {
   const loadAgentProgress = async () => {
     try {
       const data = await trainingService.getAgentProgress();
-      setAgentProgress(data);
+      const list = Array.isArray(data) ? data : (data.results || []);
+      const mappedList = list.map((item, index) => ({
+        agentId: item.agent_id || item.agentId || `AG-${index}`,
+        agentName: item.agent_name || item.agentName || 'Unknown Agent',
+        department: item.department || 'N/A',
+        totalModules: item.modules_total || item.totalModules || 0,
+        completedModules: item.modules_completed || item.completedModules || 0,
+        totalHours: item.hours_target || item.totalHours || 0,
+        completedHours: item.hours_completed || item.completedHours || 0,
+        averageScore: item.score || item.averageScore || 0,
+        certificatesEarned: item.certificates || item.certificatesEarned || 0,
+        lastActivity: item.last_activity || item.lastActivity || '-',
+        rank: item.rank || index + 1,
+      }));
+      setAgentProgress(mappedList);
     } catch (error) {
       console.error('Error loading agent progress:', error);
+      setAgentProgress([]);
     }
   };
 
   // Training Modules State
-  const [modules, setModules] = useState([
-    {
-      id: 1,
-      title: 'Insurance Products Deep Dive',
-      category: 'Product Knowledge',
-      level: 'Advanced',
-      duration: '4 hours',
-      enrolledAgents: 15,
-      completionRate: 87,
-      documents: [
-        { id: 1, name: 'Health Insurance Guide.pdf', type: 'pdf', size: '2.5 MB', uploadDate: '2025-01-05' },
-        { id: 2, name: 'Product Overview Video.mp4', type: 'video', size: '45 MB', uploadDate: '2025-01-05' },
-        { id: 3, name: 'Policy Terms.docx', type: 'doc', size: '1.2 MB', uploadDate: '2025-01-06' },
-      ],
-      assessments: 3,
-      passingScore: 80,
-      createdBy: 'Admin',
-      createdDate: '2025-01-05',
-      status: 'Active',
-      description: 'Comprehensive training on all insurance products including health, life, and motor insurance',
-    },
-    {
-      id: 2,
-      title: 'Customer Communication Skills',
-      category: 'Soft Skills',
-      level: 'Intermediate',
-      duration: '3 hours',
-      enrolledAgents: 22,
-      completionRate: 95,
-      documents: [
-        { id: 4, name: 'Communication Techniques.pdf', type: 'pdf', size: '1.8 MB', uploadDate: '2025-01-03' },
-        { id: 5, name: 'Role Play Examples.mp4', type: 'video', size: '32 MB', uploadDate: '2025-01-03' },
-      ],
-      assessments: 2,
-      passingScore: 75,
-      createdBy: 'Admin',
-      createdDate: '2025-01-03',
-      status: 'Active',
-      description: 'Essential communication skills for effective customer interactions and objection handling',
-    },
-    {
-      id: 3,
-      title: 'CRM System Navigation',
-      category: 'Portal Training',
-      level: 'Beginner',
-      duration: '2 hours',
-      enrolledAgents: 30,
-      completionRate: 78,
-      documents: [
-        { id: 6, name: 'CRM User Manual.pdf', type: 'pdf', size: '3.2 MB', uploadDate: '2025-01-01' },
-        { id: 7, name: 'CRM Tutorial.mp4', type: 'video', size: '28 MB', uploadDate: '2025-01-01' },
-        { id: 8, name: 'Quick Reference Guide.pdf', type: 'pdf', size: '800 KB', uploadDate: '2025-01-02' },
-      ],
-      assessments: 1,
-      passingScore: 70,
-      createdBy: 'Admin',
-      createdDate: '2025-01-01',
-      status: 'Active',
-      description: 'Learn how to navigate and utilize all features of our CRM portal effectively',
-    },
-    {
-      id: 4,
-      title: 'Sales Process & Best Practices',
-      category: 'Process Training',
-      level: 'Intermediate',
-      duration: '5 hours',
-      enrolledAgents: 18,
-      completionRate: 72,
-      documents: [
-        { id: 9, name: 'Sales Process Guide.pdf', type: 'pdf', size: '2.1 MB', uploadDate: '2024-12-28' },
-        { id: 10, name: 'Best Practices Video.mp4', type: 'video', size: '52 MB', uploadDate: '2024-12-28' },
-        { id: 11, name: 'Sales Scripts.docx', type: 'doc', size: '1.5 MB', uploadDate: '2024-12-29' },
-      ],
-      assessments: 4,
-      passingScore: 85,
-      createdBy: 'Admin',
-      createdDate: '2024-12-28',
-      status: 'Active',
-      description: 'Complete sales process from lead generation to policy closure with proven techniques',
-    },
-  ]);
+  const [modules, setModules] = useState([]);
+  const [agentProgress, setAgentProgress] = useState([]);
 
-  // Agent Training Progress
-  const [agentProgress, setAgentProgress] = useState([
-    {
-      agentId: 'EMP001',
-      agentName: 'Rajesh Kumar',
-      department: 'Sales',
-      totalModules: 12,
-      completedModules: 10,
-      inProgressModules: 2,
-      totalHours: 48,
-      completedHours: 42,
-      averageScore: 88,
-      certificatesEarned: 8,
-      lastActivity: '2025-01-10',
-      rank: 1,
-    },
-    {
-      agentId: 'EMP002',
-      agentName: 'Priya Sharma',
-      department: 'Sales',
-      totalModules: 12,
-      completedModules: 11,
-      inProgressModules: 1,
-      totalHours: 48,
-      completedHours: 46,
-      averageScore: 92,
-      certificatesEarned: 10,
-      lastActivity: '2025-01-11',
-      rank: 2,
-    },
-    {
-      agentId: 'EMP003',
-      agentName: 'Amit Patel',
-      department: 'Sales',
-      totalModules: 10,
-      completedModules: 7,
-      inProgressModules: 2,
-      totalHours: 40,
-      completedHours: 28,
-      averageScore: 76,
-      certificatesEarned: 5,
-      lastActivity: '2025-01-09',
-      rank: 3,
-    },
-  ]);
+  // Derived states or separate states if needed
+  // We will filter from 'modules' for specific tabs if the API returns everything in one list
+  const processModules = modules.filter(m => m.category === 'process_training' || m.category === 'Process Training');
+  const portalModules = modules.filter(m => m.category === 'portal_training' || m.category === 'Portal Training');
+  const trainingModules = modules.filter(m => !['process_training', 'portal_training', 'Process Training', 'Portal Training'].includes(m.category));
 
-  // Process Training Modules
-  const [processModules] = useState([
-    {
-      id: 'P1',
-      title: 'Lead Qualification Process',
-      description: 'Learn to qualify leads effectively using BANT methodology',
-      duration: '1.5 hours',
-      topics: ['BANT Framework', 'Questioning Techniques', 'Lead Scoring', 'Documentation'],
-      completionRate: 85,
-      enrolled: 25,
-    },
-    {
-      id: 'P2',
-      title: 'Policy Issuance Workflow',
-      description: 'Step-by-step guide for processing and issuing insurance policies',
-      duration: '2 hours',
-      topics: ['Document Verification', 'Premium Calculation', 'Policy Generation', 'Quality Checks'],
-      completionRate: 78,
-      enrolled: 20,
-    },
-    {
-      id: 'P3',
-      title: 'Claims Processing Fundamentals',
-      description: 'Understanding claims workflow from initiation to settlement',
-      duration: '3 hours',
-      topics: ['Claim Registration', 'Document Review', 'Approval Process', 'Settlement'],
-      completionRate: 72,
-      enrolled: 15,
-    },
-    {
-      id: 'P4',
-      title: 'Compliance & Regulatory Guidelines',
-      description: 'Essential compliance requirements and regulatory standards',
-      duration: '2.5 hours',
-      topics: ['IRDAI Regulations', 'Data Protection', 'Ethical Practices', 'Audit Requirements'],
-      completionRate: 90,
-      enrolled: 28,
-    },
-  ]);
-
-  // Portal Training Modules
-  const [portalModules] = useState([
-    {
-      id: 'PT1',
-      title: 'Dashboard & Analytics',
-      description: 'Navigate dashboards and interpret key performance metrics',
-      duration: '1 hour',
-      topics: ['Dashboard Layout', 'KPI Widgets', 'Custom Reports', 'Data Export'],
-      completionRate: 92,
-      enrolled: 30,
-    },
-    {
-      id: 'PT2',
-      title: 'Lead Management System',
-      description: 'Master lead capture, assignment, and tracking features',
-      duration: '1.5 hours',
-      topics: ['Lead Import', 'Lead Assignment', 'Follow-up Tracking', 'Disposition Management'],
-      completionRate: 88,
-      enrolled: 28,
-    },
-    {
-      id: 'PT3',
-      title: 'Call Management Features',
-      description: 'Utilize dialer, recording, and call quality features',
-      duration: '2 hours',
-      topics: ['Dialer Configuration', 'Call Recording', 'Quality Assessment', 'Analytics'],
-      completionRate: 75,
-      enrolled: 22,
-    },
-    {
-      id: 'PT4',
-      title: 'Quote & Policy Management',
-      description: 'Create quotes and manage policy lifecycle in the system',
-      duration: '2.5 hours',
-      topics: ['Quote Generation', 'Premium Calculator', 'Policy Tracking', 'Renewal Management'],
-      completionRate: 82,
-      enrolled: 25,
-    },
-    {
-      id: 'PT5',
-      title: 'Reporting & Insights',
-      description: 'Generate custom reports and analyze performance data',
-      duration: '1.5 hours',
-      topics: ['Report Builder', 'Custom Filters', 'Scheduled Reports', 'Data Visualization'],
-      completionRate: 68,
-      enrolled: 18,
-    },
-  ]);
 
   // Module Form
   const [moduleForm, setModuleForm] = useState({
@@ -342,6 +185,7 @@ const TrainingManagement = () => {
     passingScore: 70,
     description: '',
     status: 'Active',
+    topics: [], // Added for topics_covered
   });
 
   // Document Form
@@ -639,7 +483,7 @@ const TrainingManagement = () => {
                         Total Modules
                       </Typography>
                       <Typography variant="h4" fontWeight="700">
-                        {modules.length}
+                        {(trainingModules || []).length}
                       </Typography>
                     </Box>
                     <Avatar sx={{ bgcolor: 'primary.main', width: 56, height: 56 }}>
@@ -658,7 +502,7 @@ const TrainingManagement = () => {
                         Total Enrollments
                       </Typography>
                       <Typography variant="h4" fontWeight="700">
-                        {modules.reduce((sum, m) => sum + m.enrolledAgents, 0)}
+                        {(trainingModules || []).reduce((sum, m) => sum + (m.enrolledAgents || 0), 0)}
                       </Typography>
                     </Box>
                     <Avatar sx={{ bgcolor: 'success.main', width: 56, height: 56 }}>
@@ -677,7 +521,7 @@ const TrainingManagement = () => {
                         Avg. Completion
                       </Typography>
                       <Typography variant="h4" fontWeight="700">
-                        {Math.round(modules.reduce((sum, m) => sum + m.completionRate, 0) / modules.length)}%
+                        {Math.round((trainingModules || []).reduce((sum, m) => sum + (m.completionRate || 0), 0) / (trainingModules?.length || 1))}%
                       </Typography>
                     </Box>
                     <Avatar sx={{ bgcolor: 'warning.main', width: 56, height: 56 }}>
@@ -696,7 +540,7 @@ const TrainingManagement = () => {
                         Total Documents
                       </Typography>
                       <Typography variant="h4" fontWeight="700">
-                        {modules.reduce((sum, m) => sum + m.documents.length, 0)}
+                        {(trainingModules || []).reduce((sum, m) => sum + (m.documents?.length || 0), 0)}
                       </Typography>
                     </Box>
                     <Avatar sx={{ bgcolor: 'info.main', width: 56, height: 56 }}>
@@ -710,7 +554,7 @@ const TrainingManagement = () => {
 
           {/* Training Modules Grid */}
           <Grid container spacing={3}>
-            {modules.map((module) => (
+            {(trainingModules || []).map((module) => (
               <Grid item xs={12} md={6} lg={4} key={module.id}>
                 <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
                   <CardContent sx={{ flexGrow: 1 }}>
@@ -758,7 +602,7 @@ const TrainingManagement = () => {
                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                           <GroupIcon fontSize="small" color="action" />
                           <Typography variant="body2" color="text.secondary">
-                            {module.enrolledAgents} enrolled
+                            {(Array.isArray(module.enrolledAgents) ? module.enrolledAgents.length : (module.enrolledAgents || 0))} enrolled
                           </Typography>
                         </Box>
                       </Grid>
@@ -766,7 +610,7 @@ const TrainingManagement = () => {
                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                           <DocIcon fontSize="small" color="action" />
                           <Typography variant="body2" color="text.secondary">
-                            {module.documents.length} documents
+                            {(module.documents || []).length} documents
                           </Typography>
                         </Box>
                       </Grid>
@@ -774,7 +618,7 @@ const TrainingManagement = () => {
                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                           <AssessmentIcon fontSize="small" color="action" />
                           <Typography variant="body2" color="text.secondary">
-                            {module.assessments} assessments
+                            {(Array.isArray(module.assessments) ? module.assessments.length : (typeof module.assessments === 'number' ? module.assessments : 0))} assessments
                           </Typography>
                         </Box>
                       </Grid>
@@ -797,13 +641,13 @@ const TrainingManagement = () => {
                       />
                     </Box>
 
-                    {module.documents.length > 0 && (
+                    {(module.documents || []).length > 0 && (
                       <Box sx={{ mt: 2 }}>
                         <Typography variant="body2" fontWeight="600" gutterBottom>
                           Training Materials
                         </Typography>
                         <List dense>
-                          {module.documents.slice(0, 2).map((doc) => (
+                          {(module.documents || []).slice(0, 2).map((doc) => (
                             <ListItem
                               key={doc.id}
                               sx={{ px: 0 }}
@@ -829,9 +673,9 @@ const TrainingManagement = () => {
                             </ListItem>
                           ))}
                         </List>
-                        {module.documents.length > 2 && (
+                        {(module.documents || []).length > 2 && (
                           <Typography variant="caption" color="text.secondary">
-                            +{module.documents.length - 2} more documents
+                            +{(module.documents || []).length - 2} more documents
                           </Typography>
                         )}
                       </Box>
@@ -917,7 +761,7 @@ const TrainingManagement = () => {
                         Topics Covered:
                       </Typography>
                       <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-                        {module.topics.map((topic, index) => (
+                        {(module.topics || module.topics_covered || []).map((topic, index) => (
                           <Chip
                             key={index}
                             label={topic}
@@ -1012,7 +856,7 @@ const TrainingManagement = () => {
                         Topics Covered:
                       </Typography>
                       <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-                        {module.topics.map((topic, index) => (
+                        {(module.topics || module.topics_covered || []).map((topic, index) => (
                           <Chip
                             key={index}
                             label={topic}

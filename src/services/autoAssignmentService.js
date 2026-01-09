@@ -1,9 +1,4 @@
-/**
- * Auto-Assignment Service - Intelligent assignment of leads, cases, and tasks
- * Supports multiple assignment strategies: round-robin, skill-based, load-based, geographic
- */
-
-import api from './api';
+import api, { getApiUrl } from './api';
 
 /**
  * API Integration - Auto Assignment Backend Endpoints
@@ -60,15 +55,14 @@ export const getHistory = async (params = {}) => {
 export const exportHistory = async () => {
   try {
     const token = localStorage.getItem('authToken') || localStorage.getItem('access_token');
+    const url = getApiUrl(`${BASE_PATH}/history/export/`);
 
-    const response = await fetch(
-      `${process.env.REACT_APP_API_BASE_URL || 'http://3.109.128.6:8000/api'}${BASE_PATH}/history/export/`,
-      {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-      }
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+      },
+    }
     );
 
     if (!response.ok) {

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 // No need to import getCaseById here as we're using dynamic import in the useEffect
 import { useParams, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import {
   Box,
   Typography,
@@ -128,6 +129,7 @@ function a11yProps(index) {
 }
 
 const CaseDetails = () => {
+  const { t } = useTranslation();
   const { caseId } = useParams();
   const navigate = useNavigate();
   const { settings } = useSettings();
@@ -314,7 +316,7 @@ const CaseDetails = () => {
   if (loading) {
     return (
       <Box sx={{ p: 3, display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '60vh' }}>
-        <Typography variant="h6">Loading case details...</Typography>
+        <Typography variant="h6">{t('caseDetails.loading')}</Typography>
       </Box>
     );
   }
@@ -330,7 +332,7 @@ const CaseDetails = () => {
   if (!caseData) {
     return (
       <Box sx={{ p: 3, display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '60vh' }}>
-        <Alert severity="warning" sx={{ borderRadius: 2, boxShadow: '0 4px 12px rgba(0,0,0,0.05)' }}>Case not found</Alert>
+        <Alert severity="warning" sx={{ borderRadius: 2, boxShadow: '0 4px 12px rgba(0,0,0,0.05)' }}>{t('caseDetails.notFound')}</Alert>
       </Box>
     );
   }
@@ -562,7 +564,7 @@ const CaseDetails = () => {
           </Zoom>
           <Box sx={{ flexGrow: 1 }}>
             <Typography variant="h4" component="h1" gutterBottom fontWeight="600">
-              Case Details - {caseData.id}
+              {t('caseDetails.title')} - {caseData.id}
             </Typography>
             <Stack direction="row" spacing={2} alignItems="center">
               <Chip
@@ -572,7 +574,7 @@ const CaseDetails = () => {
               />
               <Chip
                 icon={<PriorityHighIcon />}
-                label={caseData.isPriority ? 'Priority' : 'Normal'}
+                label={caseData.isPriority ? t('caseDetails.priority') : t('caseDetails.normal')}
                 color={caseData.isPriority ? 'error' : 'primary'}
                 variant={caseData.isPriority ? 'filled' : 'outlined'}
                 onClick={async () => {
@@ -606,14 +608,14 @@ const CaseDetails = () => {
                 }}
               />
               <Typography variant="body2" color="text.secondary">
-                Last Updated: {new Date(caseData.uploadDate).toLocaleString()}
+                {t('caseDetails.lastUpdated')}: {new Date(caseData.uploadDate).toLocaleString()}
               </Typography>
             </Stack>
           </Box>
           <Stack direction="row" spacing={2}>
             {/* Consolidated View Toggle Button */}
             <Zoom in={loaded} style={{ transitionDelay: '150ms' }}>
-              <Tooltip title={isConsolidatedView ? "Switch to Tab View" : "Switch to Consolidated View"}>
+              <Tooltip title={isConsolidatedView ? t('caseDetails.switchTabView') : t('caseDetails.switchConsolidatedView')}>
                 <Button
                   variant={isConsolidatedView ? "contained" : "outlined"}
                   startIcon={isConsolidatedView ? <ViewModuleIcon /> : <ViewListIcon />}
@@ -635,12 +637,12 @@ const CaseDetails = () => {
                     }
                   }}
                 >
-                  {isConsolidatedView ? 'Tab View' : 'Consolidated View'}
+                  {isConsolidatedView ? t('caseDetails.tabView') : t('caseDetails.consolidatedView')}
                 </Button>
               </Tooltip>
             </Zoom>
             <Zoom in={loaded} style={{ transitionDelay: '200ms' }}>
-              <Tooltip title="Send Renewal Notice or Payment Link">
+              <Tooltip title={t('caseDetails.sendRenewalOrPayment')}>
                 <Button
                   variant="contained"
                   startIcon={<NotificationsIcon />}
@@ -658,7 +660,7 @@ const CaseDetails = () => {
                     }
                   }}
                 >
-                  Send Communication
+                  {t('caseDetails.sendCommunication')}
                 </Button>
               </Tooltip>
             </Zoom>
@@ -681,7 +683,7 @@ const CaseDetails = () => {
                     }
                   }}
                 >
-                  Edit Case
+                  {t('caseDetails.editCase')}
                 </Button>
               </Zoom>
             )}
@@ -727,14 +729,14 @@ const CaseDetails = () => {
                 }
               }}
             >
-              <Tab icon={<InfoIcon />} label="Overview & Policy" {...a11yProps(0)} />
-              <Tab icon={<GroupIcon />} label="Policy Members" {...a11yProps(1)} />
-              <Tab icon={<SettingsIcon />} label="Preferences" {...a11yProps(2)} />
-              <Tab icon={<LightbulbIcon />} label="Insights" {...a11yProps(3)} />
-              <Tab icon={<AssessmentIcon />} label="Analytics" {...a11yProps(4)} />
-              <Tab icon={<StarRateIcon />} label="Offers" {...a11yProps(5)} />
-              <Tab icon={<MonetizationOnIcon />} label="Outstanding Amounts" {...a11yProps(6)} />
-              <Tab icon={<HistoryIcon />} label="History & Timeline" {...a11yProps(7)} />
+              <Tab icon={<InfoIcon />} label={t('caseDetails.tabs.overview')} {...a11yProps(0)} />
+              <Tab icon={<GroupIcon />} label={t('caseDetails.tabs.members')} {...a11yProps(1)} />
+              <Tab icon={<SettingsIcon />} label={t('caseDetails.tabs.preferences')} {...a11yProps(2)} />
+              <Tab icon={<LightbulbIcon />} label={t('caseDetails.tabs.insights')} {...a11yProps(3)} />
+              <Tab icon={<AssessmentIcon />} label={t('caseDetails.tabs.analytics')} {...a11yProps(4)} />
+              <Tab icon={<StarRateIcon />} label={t('caseDetails.tabs.offers')} {...a11yProps(5)} />
+              <Tab icon={<MonetizationOnIcon />} label={t('caseDetails.tabs.outstanding')} {...a11yProps(6)} />
+              <Tab icon={<HistoryIcon />} label={t('caseDetails.tabs.history')} {...a11yProps(7)} />
             </Tabs>
           </Box>
         )}
@@ -768,7 +770,7 @@ const CaseDetails = () => {
                       <Box>
                         <Typography variant="h6" fontWeight="600">{caseData.customerName}</Typography>
                         <Typography variant="body2" color="text.secondary">
-                          Customer Details
+                          {t('caseDetails.customerDetails.title')}
                         </Typography>
                       </Box>
                     </Box>
@@ -801,7 +803,7 @@ const CaseDetails = () => {
                               disabled={verificationStatus.email.verifying}
                               startIcon={verificationStatus.email.verifying ? <CircularProgress size={16} /> : <VerifiedIcon />}
                             >
-                              {verificationStatus.email.verifying ? 'Verifying...' : 'Verify'}
+                              {verificationStatus.email.verifying ? t('caseDetails.customerDetails.verifying') : t('caseDetails.customerDetails.verify')}
                             </Button>
                           )}
                         </Box>
@@ -823,7 +825,7 @@ const CaseDetails = () => {
                                 icon={<CheckCircleIcon />}
                               />
                               <Typography variant="caption" color="text.secondary" display="block">
-                                Verified on {formatVerificationDate(verificationStatus.phone.verifiedAt)}
+                                {t('caseDetails.customerDetails.verifiedOn', { date: formatVerificationDate(verificationStatus.phone.verifiedAt) })}
                               </Typography>
                             </Box>
                           ) : (
@@ -834,7 +836,7 @@ const CaseDetails = () => {
                               disabled={verificationStatus.phone.verifying}
                               startIcon={verificationStatus.phone.verifying ? <CircularProgress size={16} /> : <VerifiedIcon />}
                             >
-                              {verificationStatus.phone.verifying ? 'Verifying...' : 'Verify'}
+                              {verificationStatus.phone.verifying ? t('caseDetails.customerDetails.verifying') : t('caseDetails.customerDetails.verify')}
                             </Button>
                           )}
                         </Box>
@@ -856,7 +858,7 @@ const CaseDetails = () => {
                                 icon={<CheckCircleIcon />}
                               />
                               <Typography variant="caption" color="text.secondary" display="block">
-                                Verified on {formatVerificationDate(verificationStatus.pan.verifiedAt)}
+                                {t('caseDetails.customerDetails.verifiedOn', { date: formatVerificationDate(verificationStatus.pan.verifiedAt) })}
                               </Typography>
                             </Box>
                           ) : (
@@ -867,7 +869,7 @@ const CaseDetails = () => {
                               disabled={verificationStatus.pan.verifying}
                               startIcon={verificationStatus.pan.verifying ? <CircularProgress size={16} /> : <VerifiedIcon />}
                             >
-                              {verificationStatus.pan.verifying ? 'Verifying...' : 'Verify'}
+                              {verificationStatus.pan.verifying ? t('caseDetails.customerDetails.verifying') : t('caseDetails.customerDetails.verify')}
                             </Button>
                           )}
                         </Box>
@@ -898,7 +900,7 @@ const CaseDetails = () => {
                   <CardContent sx={{ p: 3 }}>
                     <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
                       <DescriptionIcon sx={{ mr: 1, color: theme.palette.primary.main }} />
-                      <Typography variant="h6" fontWeight="600">Policy Information</Typography>
+                      <Typography variant="h6" fontWeight="600">{t('caseDetails.policyInfo.title')}</Typography>
                     </Box>
                     <Divider sx={{ mb: 3 }} />
                     <Grid container spacing={4}>
@@ -906,13 +908,13 @@ const CaseDetails = () => {
                         <Stack spacing={2.5}>
                           <Box>
                             <Typography variant="subtitle2" color="text.secondary" gutterBottom sx={{ mb: 0.5 }}>
-                              Policy Number
+                              {t('caseDetails.policyInfo.policyNumber')}
                             </Typography>
                             <Typography variant="body1" fontWeight="500">{caseData.policyNumber}</Typography>
                           </Box>
                           <Box>
                             <Typography variant="subtitle2" color="text.secondary" gutterBottom sx={{ mb: 0.5 }}>
-                              Policy Type
+                              {t('caseDetails.policyInfo.policyType')}
                             </Typography>
                             <Typography variant="body1" fontWeight="500">{caseData.policyDetails.type}</Typography>
                           </Box>
@@ -922,7 +924,7 @@ const CaseDetails = () => {
                         <Stack spacing={2.5}>
                           <Box>
                             <Typography variant="subtitle2" color="text.secondary" gutterBottom sx={{ mb: 0.5 }}>
-                              Premium
+                              {t('caseDetails.policyInfo.premium')}
                             </Typography>
                             <Typography variant="body1" fontWeight="500">
                               ₹{caseData.policyDetails.premium.toLocaleString()}
@@ -930,7 +932,7 @@ const CaseDetails = () => {
                           </Box>
                           <Box>
                             <Typography variant="subtitle2" color="text.secondary" gutterBottom sx={{ mb: 0.5 }}>
-                              Expiry Date
+                              {t('caseDetails.policyInfo.expiryDate')}
                             </Typography>
                             <Typography variant="body1" fontWeight="500">
                               {new Date(caseData.policyDetails.expiryDate).toLocaleDateString()}
@@ -942,7 +944,7 @@ const CaseDetails = () => {
                         <Stack spacing={2.5}>
                           <Box>
                             <Typography variant="subtitle2" color="text.secondary" gutterBottom sx={{ mb: 0.5 }}>
-                              Annual Income
+                              {t('caseDetails.policyInfo.annualIncome')}
                             </Typography>
                             <Typography variant="body1" fontWeight="500">
                               ₹{(caseData.policyDetails.premium * 8).toLocaleString()}
@@ -950,7 +952,7 @@ const CaseDetails = () => {
                           </Box>
                           <Box>
                             <Typography variant="subtitle2" color="text.secondary" gutterBottom sx={{ mb: 0.5 }}>
-                              Channel Partner
+                              {t('caseDetails.policyInfo.channelPartner')}
                             </Typography>
                             <Typography variant="body1" fontWeight="500">
                               {caseData.policyDetails.type === 'Health' ? 'Corporate Sales - Rajesh Kumar' :
@@ -966,7 +968,7 @@ const CaseDetails = () => {
                           {caseData.policyProposer && (
                             <Box>
                               <Typography variant="subtitle2" color="text.secondary" gutterBottom sx={{ mb: 0.5 }}>
-                                Policy Proposer
+                                {t('caseDetails.policyInfo.policyProposer')}
                               </Typography>
                               <Typography variant="body1" fontWeight="500">
                                 {caseData.policyProposer.name}
@@ -976,7 +978,7 @@ const CaseDetails = () => {
                           {caseData.lifeAssured && (
                             <Box>
                               <Typography variant="subtitle2" color="text.secondary" gutterBottom sx={{ mb: 0.5 }}>
-                                Life Assured
+                                {t('caseDetails.policyInfo.lifeAssured')}
                               </Typography>
                               <Typography variant="body1" fontWeight="500">
                                 {caseData.lifeAssured.name}
@@ -1022,7 +1024,7 @@ const CaseDetails = () => {
                           {/* Health Insurance Section */}
                           <Grid item xs={12} md={6}>
                             <Typography variant="subtitle1" fontWeight="600" sx={{ mb: 2, display: 'flex', alignItems: 'center' }}>
-                              <HealthAndSafetyIcon fontSize="small" sx={{ mr: 1 }} /> Health Insurance (Corporate/Group)
+                              <HealthAndSafetyIcon fontSize="small" sx={{ mr: 1 }} /> {t('caseDetails.policyFeatures.health')}
                             </Typography>
                             <Stack spacing={1.5} sx={{ ml: 1 }}>
                               <Typography variant="body2">Sum Insured: ₹1L–₹10L; family floater available.</Typography>
@@ -1038,7 +1040,7 @@ const CaseDetails = () => {
                           {/* Wellness Benefits Section */}
                           <Grid item xs={12} md={6}>
                             <Typography variant="subtitle1" fontWeight="600" sx={{ mb: 2, display: 'flex', alignItems: 'center' }}>
-                              <WorkspacePremiumIcon fontSize="small" sx={{ mr: 1 }} /> Wellness Benefits
+                              <WorkspacePremiumIcon fontSize="small" sx={{ mr: 1 }} /> {t('caseDetails.policyFeatures.wellness')}
                             </Typography>
                             <Stack spacing={1.5} sx={{ ml: 1 }}>
                               <Typography variant="body2">Health Checkups: Annual, 35+ parameters.</Typography>
@@ -1052,7 +1054,7 @@ const CaseDetails = () => {
                           {/* Preventive Care Section */}
                           <Grid item xs={12} md={6}>
                             <Typography variant="subtitle1" fontWeight="600" sx={{ mb: 2, display: 'flex', alignItems: 'center' }}>
-                              <LocalOfferIcon fontSize="small" sx={{ mr: 1 }} /> Preventive Care
+                              <LocalOfferIcon fontSize="small" sx={{ mr: 1 }} /> {t('caseDetails.policyFeatures.preventive')}
                             </Typography>
                             <Stack spacing={1.5} sx={{ ml: 1 }}>
                               <Typography variant="body2">Chronic Condition Support: Diabetes, hypertension, etc.</Typography>
@@ -1066,7 +1068,7 @@ const CaseDetails = () => {
                           {/* OPD, Dental & Vision Section */}
                           <Grid item xs={12} md={6}>
                             <Typography variant="subtitle1" fontWeight="600" sx={{ mb: 2, display: 'flex', alignItems: 'center' }}>
-                              <AssignmentIcon fontSize="small" sx={{ mr: 1 }} /> OPD, Dental & Vision
+                              <AssignmentIcon fontSize="small" sx={{ mr: 1 }} /> {t('caseDetails.policyFeatures.opd')}
                             </Typography>
                             <Stack spacing={1.5} sx={{ ml: 1 }}>
                               <Typography variant="body2">OPD Cover: ₹2.5K–₹15K annually.</Typography>
@@ -1079,7 +1081,7 @@ const CaseDetails = () => {
                           {/* Value-Added Services Section */}
                           <Grid item xs={12} md={6}>
                             <Typography variant="subtitle1" fontWeight="600" sx={{ mb: 2, display: 'flex', alignItems: 'center' }}>
-                              <AccountBalanceIcon fontSize="small" sx={{ mr: 1 }} /> Value-Added Services
+                              <AccountBalanceIcon fontSize="small" sx={{ mr: 1 }} /> {t('caseDetails.policyFeatures.valueAdded')}
                             </Typography>
                             <Stack spacing={1.5} sx={{ ml: 1 }}>
                               <Typography variant="body2">Second Opinions: Global/National access.</Typography>
@@ -1096,7 +1098,7 @@ const CaseDetails = () => {
                           {/* Auto Insurance Section */}
                           <Grid item xs={12} md={6}>
                             <Typography variant="subtitle1" fontWeight="600" sx={{ mb: 2, display: 'flex', alignItems: 'center' }}>
-                              <DirectionsCarIcon fontSize="small" sx={{ mr: 1 }} /> Vehicle Insurance
+                              <DirectionsCarIcon fontSize="small" sx={{ mr: 1 }} /> {t('caseDetails.policyFeatures.vehicle')}
                             </Typography>
                             <Stack spacing={1.5} sx={{ ml: 1 }}>
                               <Typography variant="body2">Comprehensive Coverage: Own damage + third-party liability.</Typography>
@@ -1109,7 +1111,7 @@ const CaseDetails = () => {
 
                           <Grid item xs={12} md={6}>
                             <Typography variant="subtitle1" fontWeight="600" sx={{ mb: 2, display: 'flex', alignItems: 'center' }}>
-                              <LocalOfferIcon fontSize="small" sx={{ mr: 1 }} /> Additional Benefits
+                              <LocalOfferIcon fontSize="small" sx={{ mr: 1 }} /> {t('caseDetails.policyFeatures.additional')}
                             </Typography>
                             <Stack spacing={1.5} sx={{ ml: 1 }}>
                               <Typography variant="body2">Key Replacement: Coverage for lost or damaged keys.</Typography>
@@ -1127,7 +1129,7 @@ const CaseDetails = () => {
                           {/* Life Insurance Section */}
                           <Grid item xs={12} md={6}>
                             <Typography variant="subtitle1" fontWeight="600" sx={{ mb: 2, display: 'flex', alignItems: 'center' }}>
-                              <WorkspacePremiumIcon fontSize="small" sx={{ mr: 1 }} /> Life Insurance
+                              <WorkspacePremiumIcon fontSize="small" sx={{ mr: 1 }} /> {t('caseDetails.policyFeatures.life')}
                             </Typography>
                             <Stack spacing={1.5} sx={{ ml: 1 }}>
                               <Typography variant="body2">Term Coverage: Up to ₹2 Crore sum assured.</Typography>
@@ -1140,7 +1142,7 @@ const CaseDetails = () => {
 
                           <Grid item xs={12} md={6}>
                             <Typography variant="subtitle1" fontWeight="600" sx={{ mb: 2, display: 'flex', alignItems: 'center' }}>
-                              <AccountBalanceIcon fontSize="small" sx={{ mr: 1 }} /> Investment Benefits
+                              <AccountBalanceIcon fontSize="small" sx={{ mr: 1 }} /> {t('caseDetails.policyFeatures.investment')}
                             </Typography>
                             <Stack spacing={1.5} sx={{ ml: 1 }}>
                               <Typography variant="body2">Guaranteed Returns: 5-6% annual guaranteed returns.</Typography>
@@ -1158,7 +1160,7 @@ const CaseDetails = () => {
                           {/* Home Insurance Section */}
                           <Grid item xs={12} md={6}>
                             <Typography variant="subtitle1" fontWeight="600" sx={{ mb: 2, display: 'flex', alignItems: 'center' }}>
-                              <HomeIcon fontSize="small" sx={{ mr: 1 }} /> Home Insurance
+                              <HomeIcon fontSize="small" sx={{ mr: 1 }} /> {t('caseDetails.policyFeatures.home')}
                             </Typography>
                             <Stack spacing={1.5} sx={{ ml: 1 }}>
                               <Typography variant="body2">Structure Coverage: Up to ₹5 Crore building value.</Typography>
@@ -1171,7 +1173,7 @@ const CaseDetails = () => {
 
                           <Grid item xs={12} md={6}>
                             <Typography variant="subtitle1" fontWeight="600" sx={{ mb: 2, display: 'flex', alignItems: 'center' }}>
-                              <LocalOfferIcon fontSize="small" sx={{ mr: 1 }} /> Additional Protections
+                              <LocalOfferIcon fontSize="small" sx={{ mr: 1 }} /> {t('caseDetails.policyFeatures.protection')}
                             </Typography>
                             <Stack spacing={1.5} sx={{ ml: 1 }}>
                               <Typography variant="body2">Liability Coverage: For third-party injuries on property.</Typography>
@@ -1209,7 +1211,7 @@ const CaseDetails = () => {
                     <CardContent sx={{ p: 3 }}>
                       <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
                         <PersonIcon sx={{ mr: 1, color: theme.palette.primary.main }} />
-                        <Typography variant="h6" fontWeight="600">Policy Members Details</Typography>
+                        <Typography variant="h6" fontWeight="600">{t('caseDetails.members.title')}</Typography>
                         <Chip
                           label={`${caseData.policyMembers.length} Members`}
                           size="small"
@@ -1400,7 +1402,7 @@ const CaseDetails = () => {
                                 {caseData.policyMembers.length}
                               </Typography>
                               <Typography variant="body2" color="text.secondary">
-                                Total Members
+                                {t('caseDetails.members.totalMembers')}
                               </Typography>
                             </Box>
                           </Grid>
@@ -1410,7 +1412,7 @@ const CaseDetails = () => {
                                 ₹{caseData.policyDetails.premium.toLocaleString()}
                               </Typography>
                               <Typography variant="body2" color="text.secondary">
-                                Annual Premium
+                                {t('caseDetails.members.annualPremium')}
                               </Typography>
                             </Box>
                           </Grid>
@@ -1420,7 +1422,7 @@ const CaseDetails = () => {
                                 {caseData.policyMembers.reduce((total, member) => total + (member.claimHistory?.length || 0), 0)}
                               </Typography>
                               <Typography variant="body2" color="text.secondary">
-                                Total Claims
+                                {t('caseDetails.members.totalClaims')}
                               </Typography>
                             </Box>
                           </Grid>
@@ -1433,7 +1435,7 @@ const CaseDetails = () => {
                                 }, 0).toLocaleString()}
                               </Typography>
                               <Typography variant="body2" color="text.secondary">
-                                Recent Claims Value
+                                {t('caseDetails.members.recentClaimsValue')}
                               </Typography>
                             </Box>
                           </Grid>
@@ -1464,7 +1466,7 @@ const CaseDetails = () => {
                   <CardContent sx={{ p: 3 }}>
                     <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
                       <WorkspacePremiumIcon sx={{ mr: 1, color: theme.palette.primary.main }} />
-                      <Typography variant="h6" fontWeight="600">Other Policies</Typography>
+                      <Typography variant="h6" fontWeight="600">{t('caseDetails.otherPolicies.title')}</Typography>
                     </Box>
                     <Divider sx={{ mb: 3 }} />
                     <Grid container spacing={3}>
@@ -1562,14 +1564,14 @@ const CaseDetails = () => {
                   <CardContent sx={{ p: 3 }}>
                     <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
                       <AssignmentIcon sx={{ mr: 1, color: theme.palette.primary.main }} />
-                      <Typography variant="h6" fontWeight="600">Coverage Details</Typography>
+                      <Typography variant="h6" fontWeight="600">{t('caseDetails.coverage.title')}</Typography>
                     </Box>
                     <Divider sx={{ mb: 3 }} />
 
                     {/* Primary Coverage */}
                     <Box sx={{ mb: 4 }}>
                       <Typography variant="subtitle1" sx={{ mb: 2, fontWeight: 'medium', color: 'primary.main' }}>
-                        Primary Coverage
+                        {t('caseDetails.coverage.primaryCoverage')}
                       </Typography>
                       <Grid container spacing={3}>
                         <Grid item xs={12} md={3}>
@@ -1579,7 +1581,7 @@ const CaseDetails = () => {
                                 ₹{(caseData.policyDetails.premium * 20).toLocaleString()}
                               </Typography>
                               <Typography variant="subtitle2">
-                                Sum Insured
+                                {t('caseDetails.coverage.sumInsured')}
                               </Typography>
                             </Box>
                           </Card>
@@ -1591,7 +1593,7 @@ const CaseDetails = () => {
                                 ₹{Math.round(caseData.policyDetails.premium * 0.05).toLocaleString()}
                               </Typography>
                               <Typography variant="subtitle2" color="text.secondary">
-                                Deductible
+                                {t('caseDetails.coverage.deductible')}
                               </Typography>
                             </Box>
                           </Card>
@@ -1603,7 +1605,7 @@ const CaseDetails = () => {
                                 100%
                               </Typography>
                               <Typography variant="subtitle2" color="text.secondary">
-                                Coverage Ratio
+                                {t('caseDetails.coverage.coverageRatio')}
                               </Typography>
                             </Box>
                           </Card>
@@ -1615,7 +1617,7 @@ const CaseDetails = () => {
                                 24/7
                               </Typography>
                               <Typography variant="subtitle2" color="text.secondary">
-                                Support Coverage
+                                {t('caseDetails.coverage.supportCoverage')}
                               </Typography>
                             </Box>
                           </Card>
@@ -1626,7 +1628,7 @@ const CaseDetails = () => {
                     {/* Coverage Types - Dynamic based on Policy Type */}
                     <Box sx={{ mb: 4 }}>
                       <Typography variant="subtitle1" sx={{ mb: 2, fontWeight: 'medium', color: 'primary.main' }}>
-                        Coverage Types & Limits
+                        {t('caseDetails.coverage.typesAndLimits')}
                       </Typography>
                       <Grid container spacing={2}>
                         {/* Auto/Vehicle Insurance Coverage */}
@@ -1635,7 +1637,7 @@ const CaseDetails = () => {
                             <Grid item xs={12} md={6}>
                               <Box sx={{ p: 2, bgcolor: 'background.default', borderRadius: 2, border: '1px solid', borderColor: 'divider' }}>
                                 <Typography variant="subtitle2" sx={{ fontWeight: 'bold', mb: 2, color: 'text.primary' }}>
-                                  🚗 Vehicle Protection
+                                  🚗 {t('caseDetails.coverage.vehicleProtection')}
                                 </Typography>
                                 <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
                                   <Typography variant="body2" color="text.secondary">Comprehensive Coverage:</Typography>
@@ -1659,7 +1661,7 @@ const CaseDetails = () => {
                             <Grid item xs={12} md={6}>
                               <Box sx={{ p: 2, bgcolor: 'background.default', borderRadius: 2, border: '1px solid', borderColor: 'divider' }}>
                                 <Typography variant="subtitle2" sx={{ fontWeight: 'bold', mb: 2, color: 'text.primary' }}>
-                                  👥 Liability Coverage
+                                  👥 {t('caseDetails.coverage.liabilityCoverage')}
                                 </Typography>
                                 <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
                                   <Typography variant="body2" color="text.secondary">Third Party Liability:</Typography>
@@ -1688,7 +1690,7 @@ const CaseDetails = () => {
                             <Grid item xs={12} md={6}>
                               <Box sx={{ p: 2, bgcolor: 'background.default', borderRadius: 2, border: '1px solid', borderColor: 'divider' }}>
                                 <Typography variant="subtitle2" sx={{ fontWeight: 'bold', mb: 2, color: 'text.primary' }}>
-                                  ⚕️ Medical Coverage
+                                  ⚕️ {t('caseDetails.coverage.medicalCoverage')}
                                 </Typography>
                                 <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
                                   <Typography variant="body2" color="text.secondary">Individual Sum Insured:</Typography>
@@ -1712,7 +1714,7 @@ const CaseDetails = () => {
                             <Grid item xs={12} md={6}>
                               <Box sx={{ p: 2, bgcolor: 'background.default', borderRadius: 2, border: '1px solid', borderColor: 'divider' }}>
                                 <Typography variant="subtitle2" sx={{ fontWeight: 'bold', mb: 2, color: 'text.primary' }}>
-                                  🤱 Special Benefits
+                                  🤱 {t('caseDetails.coverage.specialBenefits')}
                                 </Typography>
                                 <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
                                   <Typography variant="body2" color="text.secondary">Maternity Coverage:</Typography>
@@ -1741,7 +1743,7 @@ const CaseDetails = () => {
                             <Grid item xs={12} md={6}>
                               <Box sx={{ p: 2, bgcolor: 'background.default', borderRadius: 2, border: '1px solid', borderColor: 'divider' }}>
                                 <Typography variant="subtitle2" sx={{ fontWeight: 'bold', mb: 2, color: 'text.primary' }}>
-                                  💰 Life Coverage
+                                  💰 {t('caseDetails.coverage.lifeCoverage')}
                                 </Typography>
                                 <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
                                   <Typography variant="body2" color="text.secondary">Death Benefit:</Typography>
@@ -1765,7 +1767,7 @@ const CaseDetails = () => {
                             <Grid item xs={12} md={6}>
                               <Box sx={{ p: 2, bgcolor: 'background.default', borderRadius: 2, border: '1px solid', borderColor: 'divider' }}>
                                 <Typography variant="subtitle2" sx={{ fontWeight: 'bold', mb: 2, color: 'text.primary' }}>
-                                  📈 Investment Benefits
+                                  📈 {t('caseDetails.coverage.investmentBenefits')}
                                 </Typography>
                                 <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
                                   <Typography variant="body2" color="text.secondary">Maturity Benefit:</Typography>
@@ -1794,7 +1796,7 @@ const CaseDetails = () => {
                             <Grid item xs={12} md={6}>
                               <Box sx={{ p: 2, bgcolor: 'background.default', borderRadius: 2, border: '1px solid', borderColor: 'divider' }}>
                                 <Typography variant="subtitle2" sx={{ fontWeight: 'bold', mb: 2, color: 'text.primary' }}>
-                                  🏠 Property Coverage
+                                  🏠 {t('caseDetails.coverage.propertyCoverage')}
                                 </Typography>
                                 <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
                                   <Typography variant="body2" color="text.secondary">Building Coverage:</Typography>
@@ -1818,7 +1820,7 @@ const CaseDetails = () => {
                             <Grid item xs={12} md={6}>
                               <Box sx={{ p: 2, bgcolor: 'background.default', borderRadius: 2, border: '1px solid', borderColor: 'divider' }}>
                                 <Typography variant="subtitle2" sx={{ fontWeight: 'bold', mb: 2, color: 'text.primary' }}>
-                                  🌪️ Natural Disasters
+                                  🌪️ {t('caseDetails.coverage.naturalDisasters')}
                                 </Typography>
                                 <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
                                   <Typography variant="body2" color="text.secondary">Fire & Lightning:</Typography>
@@ -1846,7 +1848,7 @@ const CaseDetails = () => {
                     {/* Additional Benefits & Riders - Dynamic based on Policy Type */}
                     <Box sx={{ mb: 4 }}>
                       <Typography variant="subtitle1" sx={{ mb: 2, fontWeight: 'medium', color: 'primary.main' }}>
-                        Additional Benefits & Riders
+                        {t('caseDetails.benefits.title')}
                       </Typography>
                       <Grid container spacing={2}>
                         {/* Auto Insurance Benefits */}
@@ -1855,7 +1857,7 @@ const CaseDetails = () => {
                             <Grid item xs={12} md={4}>
                               <Card variant="outlined" sx={{ p: 2, textAlign: 'center', bgcolor: 'success.light', color: 'success.contrastText' }}>
                                 <Typography variant="h6" sx={{ fontWeight: 'bold', mb: 1 }}>
-                                  🛡️ Enhanced Protection
+                                  🛡️ {t('caseDetails.benefits.enhancedProtection')}
                                 </Typography>
                                 <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
                                   <Chip label="No Claim Bonus: 50%" size="small" />
@@ -1869,7 +1871,7 @@ const CaseDetails = () => {
                             <Grid item xs={12} md={4}>
                               <Card variant="outlined" sx={{ p: 2, textAlign: 'center', bgcolor: 'info.light', color: 'info.contrastText' }}>
                                 <Typography variant="h6" sx={{ fontWeight: 'bold', mb: 1 }}>
-                                  🔧 Add-on Covers
+                                  🔧 {t('caseDetails.benefits.addOnCovers')}
                                 </Typography>
                                 <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
                                   <Chip label="Engine Protection" size="small" />
@@ -1883,7 +1885,7 @@ const CaseDetails = () => {
                             <Grid item xs={12} md={4}>
                               <Card variant="outlined" sx={{ p: 2, textAlign: 'center', bgcolor: 'warning.light', color: 'warning.contrastText' }}>
                                 <Typography variant="h6" sx={{ fontWeight: 'bold', mb: 1 }}>
-                                  💰 Financial Benefits
+                                  💰 {t('caseDetails.benefits.financialBenefits')}
                                 </Typography>
                                 <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
                                   <Chip label="Cashless Garages: 4500+" size="small" />
@@ -1902,7 +1904,7 @@ const CaseDetails = () => {
                             <Grid item xs={12} md={4}>
                               <Card variant="outlined" sx={{ p: 2, textAlign: 'center', bgcolor: 'success.light', color: 'success.contrastText' }}>
                                 <Typography variant="h6" sx={{ fontWeight: 'bold', mb: 1 }}>
-                                  🏥 Health Add-ons
+                                  🏥 {t('caseDetails.benefits.healthAddons')}
                                 </Typography>
                                 <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
                                   <Chip label="Annual Health Check-up" size="small" />
@@ -1916,7 +1918,7 @@ const CaseDetails = () => {
                             <Grid item xs={12} md={4}>
                               <Card variant="outlined" sx={{ p: 2, textAlign: 'center', bgcolor: 'info.light', color: 'info.contrastText' }}>
                                 <Typography variant="h6" sx={{ fontWeight: 'bold', mb: 1 }}>
-                                  👨‍⚕️ Wellness Benefits
+                                  👨‍⚕️ {t('caseDetails.benefits.wellnessBenefits')}
                                 </Typography>
                                 <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
                                   <Chip label="Telemedicine" size="small" />
@@ -1930,7 +1932,7 @@ const CaseDetails = () => {
                             <Grid item xs={12} md={4}>
                               <Card variant="outlined" sx={{ p: 2, textAlign: 'center', bgcolor: 'warning.light', color: 'warning.contrastText' }}>
                                 <Typography variant="h6" sx={{ fontWeight: 'bold', mb: 1 }}>
-                                  💰 Financial Benefits
+                                  💰 {t('caseDetails.benefits.financialBenefits')}
                                 </Typography>
                                 <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
                                   <Chip label="Tax Benefits: 80D" size="small" />
@@ -1949,7 +1951,7 @@ const CaseDetails = () => {
                             <Grid item xs={12} md={4}>
                               <Card variant="outlined" sx={{ p: 2, textAlign: 'center', bgcolor: 'success.light', color: 'success.contrastText' }}>
                                 <Typography variant="h6" sx={{ fontWeight: 'bold', mb: 1 }}>
-                                  💎 Premium Features
+                                  💎 {t('caseDetails.benefits.premiumFeatures')}
                                 </Typography>
                                 <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
                                   <Chip label="Guaranteed Returns" size="small" />
@@ -1963,7 +1965,7 @@ const CaseDetails = () => {
                             <Grid item xs={12} md={4}>
                               <Card variant="outlined" sx={{ p: 2, textAlign: 'center', bgcolor: 'info.light', color: 'info.contrastText' }}>
                                 <Typography variant="h6" sx={{ fontWeight: 'bold', mb: 1 }}>
-                                  🛡️ Protection Riders
+                                  🛡️ {t('caseDetails.benefits.protectionRiders')}
                                 </Typography>
                                 <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
                                   <Chip label="Accidental Death Benefit" size="small" />
@@ -1977,7 +1979,7 @@ const CaseDetails = () => {
                             <Grid item xs={12} md={4}>
                               <Card variant="outlined" sx={{ p: 2, textAlign: 'center', bgcolor: 'warning.light', color: 'warning.contrastText' }}>
                                 <Typography variant="h6" sx={{ fontWeight: 'bold', mb: 1 }}>
-                                  💰 Tax & Investment
+                                  💰 {t('caseDetails.benefits.taxInvestment')}
                                 </Typography>
                                 <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
                                   <Chip label="Tax Benefits: 80C" size="small" />
@@ -1996,7 +1998,7 @@ const CaseDetails = () => {
                             <Grid item xs={12} md={4}>
                               <Card variant="outlined" sx={{ p: 2, textAlign: 'center', bgcolor: 'success.light', color: 'success.contrastText' }}>
                                 <Typography variant="h6" sx={{ fontWeight: 'bold', mb: 1 }}>
-                                  🏠 Property Protection
+                                  🏠 {t('caseDetails.benefits.propertyProtection')}
                                 </Typography>
                                 <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
                                   <Chip label="Replacement Cost Cover" size="small" />
@@ -2010,7 +2012,7 @@ const CaseDetails = () => {
                             <Grid item xs={12} md={4}>
                               <Card variant="outlined" sx={{ p: 2, textAlign: 'center', bgcolor: 'info.light', color: 'info.contrastText' }}>
                                 <Typography variant="h6" sx={{ fontWeight: 'bold', mb: 1 }}>
-                                  🔧 Additional Covers
+                                  🔧 {t('caseDetails.benefits.additionalCovers')}
                                 </Typography>
                                 <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
                                   <Chip label="Electrical Equipment" size="small" />
@@ -2024,7 +2026,7 @@ const CaseDetails = () => {
                             <Grid item xs={12} md={4}>
                               <Card variant="outlined" sx={{ p: 2, textAlign: 'center', bgcolor: 'warning.light', color: 'warning.contrastText' }}>
                                 <Typography variant="h6" sx={{ fontWeight: 'bold', mb: 1 }}>
-                                  💰 Financial Benefits
+                                  💰 {t('caseDetails.benefits.financialBenefits')}
                                 </Typography>
                                 <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
                                   <Chip label="No Claim Bonus: 20%" size="small" />
@@ -2042,7 +2044,7 @@ const CaseDetails = () => {
                     {/* Coverage Exclusions - Dynamic based on Policy Type */}
                     <Box>
                       <Typography variant="subtitle1" sx={{ mb: 2, fontWeight: 'medium', color: 'error.main' }}>
-                        Important Exclusions
+                        {t('caseDetails.exclusions.title')}
                       </Typography>
                       <Card variant="outlined" sx={{ p: 2, bgcolor: alpha(theme.palette.error.main, 0.05), border: '1px solid', borderColor: 'error.light' }}>
                         <Grid container spacing={2}>
@@ -2051,7 +2053,7 @@ const CaseDetails = () => {
                             <>
                               <Grid item xs={12} md={6}>
                                 <Typography variant="subtitle2" sx={{ fontWeight: 'bold', mb: 1, color: 'error.main' }}>
-                                  ❌ Not Covered
+                                  ❌ {t('caseDetails.exclusions.notCovered')}
                                 </Typography>
                                 <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
                                   <Typography variant="body2" color="text.secondary">• Driving under influence of alcohol/drugs</Typography>
@@ -2062,7 +2064,7 @@ const CaseDetails = () => {
                               </Grid>
                               <Grid item xs={12} md={6}>
                                 <Typography variant="subtitle2" sx={{ fontWeight: 'bold', mb: 1, color: 'warning.main' }}>
-                                  ⚠️ Conditions Apply
+                                  ⚠️ {t('caseDetails.exclusions.conditionsApply')}
                                 </Typography>
                                 <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
                                   <Typography variant="body2" color="text.secondary">• Valid driving license required</Typography>
@@ -2079,7 +2081,7 @@ const CaseDetails = () => {
                             <>
                               <Grid item xs={12} md={6}>
                                 <Typography variant="subtitle2" sx={{ fontWeight: 'bold', mb: 1, color: 'error.main' }}>
-                                  ❌ Not Covered
+                                  ❌ {t('caseDetails.exclusions.notCovered')}
                                 </Typography>
                                 <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
                                   <Typography variant="body2" color="text.secondary">• Pre-existing conditions (first 2 years)</Typography>
@@ -2090,7 +2092,7 @@ const CaseDetails = () => {
                               </Grid>
                               <Grid item xs={12} md={6}>
                                 <Typography variant="subtitle2" sx={{ fontWeight: 'bold', mb: 1, color: 'warning.main' }}>
-                                  ⚠️ Conditions Apply
+                                  ⚠️ {t('caseDetails.exclusions.conditionsApply')}
                                 </Typography>
                                 <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
                                   <Typography variant="body2" color="text.secondary">• Waiting period for specific treatments</Typography>
@@ -2107,7 +2109,7 @@ const CaseDetails = () => {
                             <>
                               <Grid item xs={12} md={6}>
                                 <Typography variant="subtitle2" sx={{ fontWeight: 'bold', mb: 1, color: 'error.main' }}>
-                                  ❌ Not Covered
+                                  ❌ {t('caseDetails.exclusions.notCovered')}
                                 </Typography>
                                 <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
                                   <Typography variant="body2" color="text.secondary">• Suicide within first year</Typography>
@@ -2118,7 +2120,7 @@ const CaseDetails = () => {
                               </Grid>
                               <Grid item xs={12} md={6}>
                                 <Typography variant="subtitle2" sx={{ fontWeight: 'bold', mb: 1, color: 'warning.main' }}>
-                                  ⚠️ Conditions Apply
+                                  ⚠️ {t('caseDetails.exclusions.conditionsApply')}
                                 </Typography>
                                 <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
                                   <Typography variant="body2" color="text.secondary">• Premium payment continuity required</Typography>
@@ -2135,7 +2137,7 @@ const CaseDetails = () => {
                             <>
                               <Grid item xs={12} md={6}>
                                 <Typography variant="subtitle2" sx={{ fontWeight: 'bold', mb: 1, color: 'error.main' }}>
-                                  ❌ Not Covered
+                                  ❌ {t('caseDetails.exclusions.notCovered')}
                                 </Typography>
                                 <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
                                   <Typography variant="body2" color="text.secondary">• War, terrorism, nuclear risks</Typography>
@@ -2146,7 +2148,7 @@ const CaseDetails = () => {
                               </Grid>
                               <Grid item xs={12} md={6}>
                                 <Typography variant="subtitle2" sx={{ fontWeight: 'bold', mb: 1, color: 'warning.main' }}>
-                                  ⚠️ Conditions Apply
+                                  ⚠️ {t('caseDetails.exclusions.conditionsApply')}
                                 </Typography>
                                 <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
                                   <Typography variant="body2" color="text.secondary">• Property security measures required</Typography>
@@ -2184,7 +2186,7 @@ const CaseDetails = () => {
                   <CardContent sx={{ p: 3 }}>
                     <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
                       <TimelineIcon sx={{ mr: 1, color: theme.palette.primary.main }} />
-                      <Typography variant="h6" fontWeight="600">Case Flow</Typography>
+                      <Typography variant="h6" fontWeight="600">{t('caseDetails.caseFlow.title')}</Typography>
                     </Box>
                     <Divider sx={{ mb: 3 }} />
                     <Stepper
@@ -2227,7 +2229,7 @@ const CaseDetails = () => {
                   <CardContent sx={{ p: 3 }}>
                     <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
                       <ChatIcon sx={{ mr: 1, color: theme.palette.primary.main }} />
-                      <Typography variant="h6" fontWeight="600">Add Comment</Typography>
+                      <Typography variant="h6" fontWeight="600">{t('caseDetails.comments.title')}</Typography>
                     </Box>
                     <Divider sx={{ mb: 3 }} />
                     <Box sx={{ display: 'flex', gap: 2 }}>
@@ -2235,7 +2237,7 @@ const CaseDetails = () => {
                         fullWidth
                         multiline
                         rows={2}
-                        placeholder="Add a comment..."
+                        placeholder={t('caseDetails.comments.placeholder')}
                         value={comment}
                         onChange={(e) => setComment(e.target.value)}
                         InputProps={{
@@ -2286,7 +2288,7 @@ const CaseDetails = () => {
                           }
                         }}
                       >
-                        Add Comment
+                        {t('caseDetails.comments.button')}
                       </Button>
                     </Box>
                   </CardContent>
@@ -2313,7 +2315,7 @@ const CaseDetails = () => {
                   <CardContent sx={{ p: 3 }}>
                     <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
                       <SettingsIcon sx={{ mr: 1, color: theme.palette.primary.main }} />
-                      <Typography variant="h6" fontWeight="600">Customer Preferences</Typography>
+                      <Typography variant="h6" fontWeight="600">{t('caseDetails.preferences.title')}</Typography>
                     </Box>
                     <Divider sx={{ mb: 3 }} />
 
@@ -2324,17 +2326,17 @@ const CaseDetails = () => {
                           <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
                             <ChatIcon color="primary" sx={{ mr: 1 }} />
                             <Typography variant="subtitle1" sx={{ fontWeight: 'medium' }}>
-                              Communication Preferences
+                              {t('caseDetails.preferences.communication')}
                             </Typography>
                           </Box>
                           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
                             <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                               <Box sx={{ display: 'flex', alignItems: 'center' }}>
                                 <EmailIcon color="action" sx={{ mr: 1, fontSize: 20 }} />
-                                <Typography variant="body2">Email</Typography>
+                                <Typography variant="body2">{t('caseDetails.preferences.email')}</Typography>
                               </Box>
                               <Chip
-                                label="Preferred"
+                                label={t('caseDetails.preferences.preferred')}
                                 size="small"
                                 color="primary"
                                 sx={{ fontWeight: 'medium', borderRadius: 5 }}
@@ -2344,10 +2346,10 @@ const CaseDetails = () => {
                             <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                               <Box sx={{ display: 'flex', alignItems: 'center' }}>
                                 <PhoneIcon color="action" sx={{ mr: 1, fontSize: 20 }} />
-                                <Typography variant="body2">Phone Call</Typography>
+                                <Typography variant="body2">{t('caseDetails.preferences.phone')}</Typography>
                               </Box>
                               <Chip
-                                label="Backup"
+                                label={t('caseDetails.preferences.backup')}
                                 size="small"
                                 variant="outlined"
                                 sx={{ fontWeight: 'medium', borderRadius: 5 }}
@@ -2357,10 +2359,10 @@ const CaseDetails = () => {
                             <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                               <Box sx={{ display: 'flex', alignItems: 'center' }}>
                                 <WhatsAppIcon color="action" sx={{ mr: 1, fontSize: 20 }} />
-                                <Typography variant="body2">WhatsApp</Typography>
+                                <Typography variant="body2">{t('caseDetails.preferences.whatsapp')}</Typography>
                               </Box>
                               <Chip
-                                label="Accepted"
+                                label={t('caseDetails.preferences.accepted')}
                                 size="small"
                                 variant="outlined"
                                 color="success"
@@ -2371,10 +2373,10 @@ const CaseDetails = () => {
                             <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                               <Box sx={{ display: 'flex', alignItems: 'center' }}>
                                 <SmsIcon color="action" sx={{ mr: 1, fontSize: 20 }} />
-                                <Typography variant="body2">SMS</Typography>
+                                <Typography variant="body2">{t('caseDetails.preferences.sms')}</Typography>
                               </Box>
                               <Chip
-                                label="Preferred"
+                                label={t('caseDetails.preferences.preferred')}
                                 size="small"
                                 color="primary"
                                 sx={{ fontWeight: 'medium', borderRadius: 5 }}
@@ -2384,10 +2386,10 @@ const CaseDetails = () => {
                             <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                               <Box sx={{ display: 'flex', alignItems: 'center' }}>
                                 <SmartToyIcon color="action" sx={{ mr: 1, fontSize: 20 }} />
-                                <Typography variant="body2">AI Call</Typography>
+                                <Typography variant="body2">{t('caseDetails.preferences.aiCall')}</Typography>
                               </Box>
                               <Chip
-                                label="Accepted"
+                                label={t('caseDetails.preferences.accepted')}
                                 size="small"
                                 variant="outlined"
                                 color="info"
@@ -2398,10 +2400,10 @@ const CaseDetails = () => {
                             <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                               <Box sx={{ display: 'flex', alignItems: 'center' }}>
                                 <MailOutlineIcon color="action" sx={{ mr: 1, fontSize: 20 }} />
-                                <Typography variant="body2">Postal Mail</Typography>
+                                <Typography variant="body2">{t('caseDetails.preferences.postalMail')}</Typography>
                               </Box>
                               <Chip
-                                label="Opted Out"
+                                label={t('caseDetails.preferences.optedOut')}
                                 size="small"
                                 variant="outlined"
                                 color="error"
@@ -5526,7 +5528,7 @@ const CaseDetails = () => {
                           <Box>
                             <Typography variant="h6" fontWeight="600">{caseData.customerName}</Typography>
                             <Typography variant="body2" color="text.secondary">
-                              Customer Details
+                              {t('caseDetails.customerDetails.title')}
                             </Typography>
                           </Box>
                         </Box>
@@ -5581,7 +5583,7 @@ const CaseDetails = () => {
                                     icon={<CheckCircleIcon />}
                                   />
                                   <Typography variant="caption" color="text.secondary" display="block">
-                                    Verified on {formatVerificationDate(verificationStatus.phone.verifiedAt)}
+                                    {t('caseDetails.customerDetails.verifiedOn', { date: formatVerificationDate(verificationStatus.phone.verifiedAt) })}
                                   </Typography>
                                 </Box>
                               ) : (

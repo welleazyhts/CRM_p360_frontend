@@ -3,7 +3,7 @@
  * Handles settings, agents CRUD, strategies, and import/export
  */
 
-import api from './api';
+import api, { getApiUrl } from './api';
 
 const SETTINGS_BASE_PATH = '/auto-assignment';
 
@@ -105,15 +105,14 @@ export const toggleAgentActivation = async (agentId) => {
 export const exportSettings = async () => {
     try {
         const token = localStorage.getItem('authToken') || localStorage.getItem('access_token');
+        const url = getApiUrl(`${SETTINGS_BASE_PATH}/export/`);
 
-        const response = await fetch(
-            `${process.env.REACT_APP_API_BASE_URL || 'http://3.109.128.6:8000/api'}${SETTINGS_BASE_PATH}/export/`,
-            {
-                method: 'GET',
-                headers: {
-                    'Authorization': `Bearer ${token}`,
-                },
-            }
+        const response = await fetch(url, {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+            },
+        }
         );
 
         if (!response.ok) {

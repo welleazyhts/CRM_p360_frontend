@@ -51,15 +51,20 @@ import {
   Note as NoteIcon,
   Business as BusinessIcon,
 } from '@mui/icons-material';
+import { CircularProgress } from '@mui/material';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { LocalizationProvider, DateTimePicker } from '@mui/x-date-pickers';
+import { useTranslation } from 'react-i18next';
 
-import qrcService from '../services/qrcService';// <-- service import
+import qrcService from '../services/qrcService';
 
 const QRCManagement = () => {
+  const { t } = useTranslation();
   const theme = useTheme();
   const [openDialog, setOpenDialog] = useState(false);
   const [entries, setEntries] = useState([]);
+  const [stats, setStats] = useState(null);
+  const [loading, setLoading] = useState(false);
   const [selectedEntry, setSelectedEntry] = useState(null);
   const [currentTab, setCurrentTab] = useState(0);
   const [searchTerm, setSearchTerm] = useState('');
@@ -67,6 +72,7 @@ const QRCManagement = () => {
 
   // Form state
   const [formData, setFormData] = useState({
+    id: null,
     communicationMode: 'Call',
     caller: 'Customer',
     callType: 'Query',
@@ -82,7 +88,7 @@ const QRCManagement = () => {
     city: '',
     contactNumber: '',
     remarks: '',
-    callId: '',
+    callId: '', // Display ID
     isSuspiciousCase: false
   });
 
@@ -140,48 +146,85 @@ const QRCManagement = () => {
     return val; // fallback to original if not a date
   };
 
+  // Debounced search term
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState(searchTerm);
+
   useEffect(() => {
-    // Fetch real data from backend via qrcService.list()
-    // If the call fails, fall back to a small local mock so UI still shows something.
-    const fetchEntries = async () => {
-      try {
-        const res = await qrcService.list();
-        // normalize any date fields for display
-        if (Array.isArray(res)) {
-          const normalized = res.map((item) => ({
-            ...item,
-            callDateTime: _formatDateTimeForDisplay(item.callDateTime),
-          }));
-          setEntries(normalized);
-        } else if (res && Array.isArray(res.results)) {
-          // handle paginated responses like { results: [...] }
-          const normalized = res.results.map((item) => ({
-            ...item,
-            callDateTime: _formatDateTimeForDisplay(item.callDateTime),
-          }));
-          setEntries(normalized);
-        } else {
-          // unexpected structure: set empty array
-          setEntries([]);
-        }
-      } catch (err) {
-        console.error('Failed to load QRC entries from API:', err);
+    const timer = setTimeout(() => {
+      setDebouncedSearchTerm(searchTerm);
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
+
+  useEffect(() => {
+    fetchEntries();
+    fetchStats();
+  }, [debouncedSearchTerm, filterType]);
+
+  const fetchStats = async () => {
+    try {
+      const data = await qrcService.getDashboardStats();
+      setStats(data);
+    } catch (err) {
+      console.error('Failed to fetch stats:', err);
+    }
+  };
+
+  const fetchEntries = async () => {
+    setLoading(true);
+    try {
+      let res;
+      if (debouncedSearchTerm) {
+        // Assuming backend uses 'search' or 'q' param. Using 'search' as common Django DRF pattern
+        res = await qrcService.search({ search: debouncedSearchTerm });
+      } else if (filterType !== 'all') {
+        res = await qrcService.filter({ call_type: filterType });
+      } else {
+        res = await qrcService.list();
+      }
+
+      // normalize any date fields for display
+      if (Array.isArray(res)) {
+        const normalized = res.map((item) => ({
+          ...item,
+          callDateTime: _formatDateTimeForDisplay(item.callDateTime),
+        }));
+        setEntries(normalized);
+      } else if (res && Array.isArray(res.results)) {
+        // handle paginated responses like { results: [...] }
+        const normalized = res.results.map((item) => ({
+          ...item,
+          callDateTime: _formatDateTimeForDisplay(item.callDateTime),
+        }));
+        setEntries(normalized);
+      } else {
+        // unexpected structure: set empty array
         setEntries([]);
       }
-    };
-
-    fetchEntries();
-  }, []);
+    } catch (err) {
+      console.error('Failed to load QRC entries from API:', err);
+      setEntries([]);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleFormSubmit = async () => {
     // prepare payload - keep keys same as formData; qrcService will handle date conversion
     const payload = {
       ...formData,
     };
+
+    // Check for ID in either selectedEntry (if persistent) or formData (state)
+    const entryId = selectedEntry?.id !== undefined ? selectedEntry.id : formData?.id;
+
+    // Remove ID from payload to avoid sending it in the body
+    const { id, ...cleanPayload } = payload;
+
     try {
-      if (selectedEntry && selectedEntry.id) {
-        // update via API
-        const updated = await qrcService.update(selectedEntry.id, payload);
+      if (entryId !== null && entryId !== undefined) {
+        // update via API using Partial Update (PATCH)
+        const updated = await qrcService.partialUpdate(entryId, cleanPayload);
         // normalize date for display, and merge with formData to ensure UI updates immediately with user input
         // even if backend response is partial.
         const normalized = {
@@ -190,7 +233,7 @@ const QRCManagement = () => {
           ...updated, // Backend data overrides if present
           callDateTime: _formatDateTimeForDisplay(updated.callDateTime || formData.callDateTime)
         };
-        setEntries(prev => prev.map(entry => (entry.id === selectedEntry.id ? normalized : entry)));
+        setEntries(prev => prev.map(entry => (entry.id === entryId ? normalized : entry)));
       } else {
         // create via API
         const created = await qrcService.create(payload);
@@ -205,7 +248,7 @@ const QRCManagement = () => {
       resetForm();
     } catch (err) {
       console.error('Failed to save entry to API:', err);
-      alert('Failed to save entry. Please try again.');
+      alert(t('qrc.messages.saveError'));
     }
   };
 
@@ -221,13 +264,17 @@ const QRCManagement = () => {
     } catch (e) {
       // leave as-is
     }
+    // Ensure ID is explicitly in formData
+    if (entry.id !== undefined && entry.id !== null) {
+      prepared.id = entry.id;
+    }
     setFormData(prepared);
     setOpenDialog(true);
   };
 
   const handleDelete = async (id) => {
     // Add confirmation dialog
-    if (!window.confirm('Are you sure you want to delete this entry?')) {
+    if (!window.confirm(t('qrc.messages.deleteConfirm'))) {
       return;
     }
 
@@ -236,12 +283,13 @@ const QRCManagement = () => {
       setEntries(entries.filter(entry => entry.id !== id));
     } catch (err) {
       console.error('Failed to delete entry via API:', err);
-      alert('Failed to delete entry. Please try again.');
+      alert(t('qrc.messages.deleteError'));
     }
   };
 
   const resetForm = () => {
     setFormData({
+      id: null,
       communicationMode: 'Call',
       caller: 'Customer',
       callType: 'Query',
@@ -291,13 +339,8 @@ const QRCManagement = () => {
     }
   };
 
-  const filteredEntries = entries.filter(entry => {
-    const matchesSearch = Object.values(entry).some(value =>
-      value?.toString().toLowerCase().includes(searchTerm.toLowerCase())
-    );
-    const matchesType = filterType === 'all' || (entry.callType && entry.callType.toLowerCase() === filterType);
-    return matchesSearch && matchesType;
-  });
+  // Optimized: No client-side filtering needed as we use server-side now
+  const displayEntries = entries;
 
   return (
     <Box sx={{ p: 3 }}>
@@ -305,10 +348,10 @@ const QRCManagement = () => {
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
         <Box>
           <Typography variant="h4" fontWeight="600" gutterBottom>
-            QRC Management
+            {t('qrc.title')}
           </Typography>
           <Typography variant="body1" color="text.secondary">
-            Manage Queries, Requests, and Complaints
+            {t('qrc.subtitle')}
           </Typography>
         </Box>
         <Button
@@ -319,7 +362,7 @@ const QRCManagement = () => {
             setOpenDialog(true);
           }}
         >
-          Add New Entry
+          {t('qrc.buttons.addNew')}
         </Button>
       </Box>
 
@@ -330,7 +373,7 @@ const QRCManagement = () => {
             <Grid item xs={12} md={4}>
               <TextField
                 fullWidth
-                placeholder="Search..."
+                placeholder={t('qrc.filters.searchPlaceholder')}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 InputProps={{
@@ -344,16 +387,16 @@ const QRCManagement = () => {
             </Grid>
             <Grid item xs={12} md={4}>
               <FormControl fullWidth>
-                <InputLabel>Filter by Type</InputLabel>
+                <InputLabel>{t('qrc.filters.filterByType')}</InputLabel>
                 <Select
                   value={filterType}
-                  label="Filter by Type"
+                  label={t('qrc.filters.filterByType')}
                   onChange={(e) => setFilterType(e.target.value)}
                 >
-                  <MenuItem value="all">All Types</MenuItem>
-                  <MenuItem value="query">Queries</MenuItem>
-                  <MenuItem value="request">Requests</MenuItem>
-                  <MenuItem value="complaint">Complaints</MenuItem>
+                  <MenuItem value="all">{t('qrc.filters.allTypes')}</MenuItem>
+                  <MenuItem value="query">{t('qrc.filters.queries')}</MenuItem>
+                  <MenuItem value="request">{t('qrc.filters.requests')}</MenuItem>
+                  <MenuItem value="complaint">{t('qrc.filters.complaints')}</MenuItem>
                 </Select>
               </FormControl>
             </Grid>
@@ -361,70 +404,123 @@ const QRCManagement = () => {
         </CardContent>
       </Card>
 
+      {/* Dashboard Stats */}
+      {stats && (
+        <Grid container spacing={2} sx={{ mb: 3 }}>
+          <Grid item xs={12} md={3}>
+            <Card sx={{ bgcolor: alpha(theme.palette.primary.main, 0.1), border: `1px solid ${theme.palette.primary.main}` }}>
+              <CardContent>
+                <Typography color="textSecondary" gutterBottom>Total Cases</Typography>
+                <Typography variant="h4" color="primary">{stats.total || 0}</Typography>
+              </CardContent>
+            </Card>
+          </Grid>
+          <Grid item xs={12} md={3}>
+            <Card sx={{ bgcolor: alpha(theme.palette.warning.main, 0.1), border: `1px solid ${theme.palette.warning.main}` }}>
+              <CardContent>
+                <Typography color="textSecondary" gutterBottom>Pending</Typography>
+                <Typography variant="h4" color="warning.main">{stats.pending || 0}</Typography>
+              </CardContent>
+            </Card>
+          </Grid>
+          <Grid item xs={12} md={3}>
+            <Card sx={{ bgcolor: alpha(theme.palette.success.main, 0.1), border: `1px solid ${theme.palette.success.main}` }}>
+              <CardContent>
+                <Typography color="textSecondary" gutterBottom>Resolved</Typography>
+                <Typography variant="h4" color="success.main">{stats.resolved || 0}</Typography>
+              </CardContent>
+            </Card>
+          </Grid>
+          <Grid item xs={12} md={3}>
+            <Card sx={{ bgcolor: alpha(theme.palette.error.main, 0.1), border: `1px solid ${theme.palette.error.main}` }}>
+              <CardContent>
+                <Typography color="textSecondary" gutterBottom>Escalated</Typography>
+                <Typography variant="h4" color="error.main">{stats.escalated || 0}</Typography>
+              </CardContent>
+            </Card>
+          </Grid>
+        </Grid>
+      )}
+
       {/* List View */}
       <Card>
         <TableContainer>
           <Table>
             <TableHead>
               <TableRow>
-                <TableCell>ID</TableCell>
-                <TableCell>Date & Time</TableCell>
-                <TableCell>Type</TableCell>
-                <TableCell>Caller Details</TableCell>
-                <TableCell>Reason</TableCell>
-                <TableCell>CSR</TableCell>
-                <TableCell>Status</TableCell>
-                <TableCell align="center">Actions</TableCell>
+                <TableCell>{t('qrc.table.id')}</TableCell>
+                <TableCell>{t('qrc.table.dateTime')}</TableCell>
+                <TableCell>{t('qrc.table.type')}</TableCell>
+                <TableCell>{t('qrc.table.callerDetails')}</TableCell>
+                <TableCell>{t('qrc.table.reason')}</TableCell>
+                <TableCell>{t('qrc.table.csr')}</TableCell>
+                <TableCell>{t('qrc.table.status')}</TableCell>
+                <TableCell align="center">{t('qrc.table.actions')}</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
-              {filteredEntries.map((entry) => (
-                <TableRow key={entry.id} hover>
-                  <TableCell>{entry.callId}</TableCell>
-                  <TableCell>{entry.callDateTime}</TableCell>
-                  <TableCell>
-                    <Stack direction="row" spacing={1} alignItems="center">
-                      {getTypeIcon(entry.callType || 'Query')}
-                      <Typography variant="body2">{entry.callType || 'Unknown'}</Typography>
-                    </Stack>
-                  </TableCell>
-                  <TableCell>
-                    <Box>
-                      <Typography variant="subtitle2">{entry.callerName || 'N/A'}</Typography>
-                      <Typography variant="caption" color="text.secondary">
-                        {entry.contactNumber || 'N/A'}
-                      </Typography>
-                    </Box>
-                  </TableCell>
-                  <TableCell>{entry.callReason || 'N/A'}</TableCell>
-                  <TableCell>{entry.csrName || 'N/A'}</TableCell>
-                  <TableCell>
-                    <Chip
-                      label={entry.resolution || 'Pending'}
-                      size="small"
-                      sx={{
-                        backgroundColor: alpha(getStatusColor(entry.resolution), 0.1),
-                        color: getStatusColor(entry.resolution),
-                        fontWeight: 600
-                      }}
-                    />
-                  </TableCell>
-                  <TableCell align="center">
-                    <Stack direction="row" spacing={1} justifyContent="center">
-                      <Tooltip title="Edit">
-                        <IconButton size="small" onClick={() => handleEdit(entry)}>
-                          <EditIcon />
-                        </IconButton>
-                      </Tooltip>
-                      <Tooltip title="Delete">
-                        <IconButton size="small" onClick={() => handleDelete(entry.id)}>
-                          <DeleteIcon />
-                        </IconButton>
-                      </Tooltip>
-                    </Stack>
+              {loading ? (
+                <TableRow>
+                  <TableCell colSpan={8} align="center" sx={{ py: 5 }}>
+                    <CircularProgress />
+                    <Typography sx={{ mt: 2 }}>Loading...</Typography>
                   </TableCell>
                 </TableRow>
-              ))}
+              ) : displayEntries.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={8} align="center" sx={{ py: 5 }}>
+                    <Typography color="text.secondary">No entries found</Typography>
+                  </TableCell>
+                </TableRow>
+              ) : (
+                displayEntries.map((entry) => (
+                  <TableRow key={entry.id} hover>
+                    <TableCell>{entry.callId}</TableCell>
+                    <TableCell>{entry.callDateTime}</TableCell>
+                    <TableCell>
+                      <Stack direction="row" spacing={1} alignItems="center">
+                        {getTypeIcon(entry.callType || 'Query')}
+                        <Typography variant="body2">{t(`qrc.enums.callType.${(entry.callType || 'query').toLowerCase()}`, { defaultValue: entry.callType || 'Unknown' })}</Typography>
+                      </Stack>
+                    </TableCell>
+                    <TableCell>
+                      <Box>
+                        <Typography variant="subtitle2">{entry.callerName || 'N/A'}</Typography>
+                        <Typography variant="caption" color="text.secondary">
+                          {entry.contactNumber || 'N/A'}
+                        </Typography>
+                      </Box>
+                    </TableCell>
+                    <TableCell>{t(`qrc.enums.callReason.${(entry.callReason || '').replace(/ /g, '').replace(/^(.)/, (c) => c.toLowerCase())}`, { defaultValue: entry.callReason || 'N/A' })}</TableCell>
+                    <TableCell>{entry.csrName || 'N/A'}</TableCell>
+                    <TableCell>
+                      <Chip
+                        label={t(`qrc.enums.resolution.${(entry.resolution || 'pending').toLowerCase()}`, { defaultValue: entry.resolution })}
+                        size="small"
+                        sx={{
+                          backgroundColor: alpha(getStatusColor(entry.resolution), 0.1),
+                          color: getStatusColor(entry.resolution),
+                          fontWeight: 600
+                        }}
+                      />
+                    </TableCell>
+                    <TableCell align="center">
+                      <Stack direction="row" spacing={1} justifyContent="center">
+                        <Tooltip title={t('qrc.buttons.edit')}>
+                          <IconButton size="small" onClick={() => handleEdit(entry)}>
+                            <EditIcon />
+                          </IconButton>
+                        </Tooltip>
+                        <Tooltip title={t('qrc.buttons.delete')}>
+                          <IconButton size="small" onClick={() => handleDelete(entry.id)}>
+                            <DeleteIcon />
+                          </IconButton>
+                        </Tooltip>
+                      </Stack>
+                    </TableCell>
+                  </TableRow>
+                )))
+              }
             </TableBody>
           </Table>
         </TableContainer>
@@ -438,20 +534,20 @@ const QRCManagement = () => {
         fullWidth
       >
         <DialogTitle>
-          {selectedEntry ? 'Edit Entry' : 'Add New Entry'}
+          {selectedEntry ? t('qrc.dialog.editTitle') : t('qrc.dialog.addTitle')}
         </DialogTitle>
         <DialogContent>
           <Grid container spacing={2} sx={{ mt: 1 }}>
             <Grid item xs={12} md={6}>
               <FormControl fullWidth>
-                <InputLabel>Communication Mode</InputLabel>
+                <InputLabel>{t('qrc.dialog.communicationMode')}</InputLabel>
                 <Select
                   value={formData.communicationMode}
-                  label="Communication Mode"
+                  label={t('qrc.dialog.communicationMode')}
                   onChange={(e) => setFormData({ ...formData, communicationMode: e.target.value })}
                 >
                   {communicationModes.map(mode => (
-                    <MenuItem key={mode} value={mode}>{mode}</MenuItem>
+                    <MenuItem key={mode} value={mode}>{t(`qrc.enums.communicationMode.${mode.replace(/ /g, '').replace(/^(.)/, (c) => c.toLowerCase())}`, { defaultValue: mode })}</MenuItem>
                   ))}
                 </Select>
               </FormControl>
@@ -459,29 +555,29 @@ const QRCManagement = () => {
 
             <Grid item xs={12} md={6}>
               <FormControl fullWidth>
-                <InputLabel>Caller Type</InputLabel>
+                <InputLabel>{t('qrc.dialog.callerType')}</InputLabel>
                 <Select
                   value={formData.caller}
-                  label="Caller Type"
+                  label={t('qrc.dialog.callerType')}
                   onChange={(e) => setFormData({ ...formData, caller: e.target.value })}
                 >
-                  <MenuItem value="Customer">Customer</MenuItem>
-                  <MenuItem value="Agent">Agent</MenuItem>
-                  <MenuItem value="Employee">Employee</MenuItem>
+                  <MenuItem value="Customer">{t('qrc.enums.caller.customer')}</MenuItem>
+                  <MenuItem value="Agent">{t('qrc.enums.caller.agent')}</MenuItem>
+                  <MenuItem value="Employee">{t('qrc.enums.caller.employee')}</MenuItem>
                 </Select>
               </FormControl>
             </Grid>
 
             <Grid item xs={12} md={6}>
               <FormControl fullWidth>
-                <InputLabel>Call Type</InputLabel>
+                <InputLabel>{t('qrc.dialog.callType')}</InputLabel>
                 <Select
                   value={formData.callType}
-                  label="Call Type"
+                  label={t('qrc.dialog.callType')}
                   onChange={(e) => setFormData({ ...formData, callType: e.target.value })}
                 >
                   {callTypes.map(type => (
-                    <MenuItem key={type} value={type}>{type}</MenuItem>
+                    <MenuItem key={type} value={type}>{t(`qrc.enums.callType.${type.toLowerCase()}`, { defaultValue: type })}</MenuItem>
                   ))}
                 </Select>
               </FormControl>
@@ -489,14 +585,14 @@ const QRCManagement = () => {
 
             <Grid item xs={12} md={6}>
               <FormControl fullWidth>
-                <InputLabel>Resolution Status</InputLabel>
+                <InputLabel>{t('qrc.dialog.resolutionStatus')}</InputLabel>
                 <Select
                   value={formData.resolution}
-                  label="Resolution Status"
+                  label={t('qrc.dialog.resolutionStatus')}
                   onChange={(e) => setFormData({ ...formData, resolution: e.target.value })}
                 >
                   {resolutions.map(resolution => (
-                    <MenuItem key={resolution} value={resolution}>{resolution}</MenuItem>
+                    <MenuItem key={resolution} value={resolution}>{t(`qrc.enums.resolution.${resolution.toLowerCase()}`, { defaultValue: resolution })}</MenuItem>
                   ))}
                 </Select>
               </FormControl>
@@ -504,14 +600,14 @@ const QRCManagement = () => {
 
             <Grid item xs={12} md={6}>
               <FormControl fullWidth>
-                <InputLabel>Call Reason</InputLabel>
+                <InputLabel>{t('qrc.dialog.callReason')}</InputLabel>
                 <Select
                   value={formData.callReason}
-                  label="Call Reason"
+                  label={t('qrc.dialog.callReason')}
                   onChange={(e) => setFormData({ ...formData, callReason: e.target.value })}
                 >
                   {callReasons.map(reason => (
-                    <MenuItem key={reason} value={reason}>{reason}</MenuItem>
+                    <MenuItem key={reason} value={reason}>{t(`qrc.enums.callReason.${reason.replace(/ /g, '').replace(/^(.)/, (c) => c.toLowerCase())}`, { defaultValue: reason })}</MenuItem>
                   ))}
                 </Select>
               </FormControl>
@@ -520,7 +616,7 @@ const QRCManagement = () => {
             <Grid item xs={12} md={6}>
               <LocalizationProvider dateAdapter={AdapterDateFns}>
                 <DateTimePicker
-                  label="Call Date and Time"
+                  label={t('qrc.dialog.callDateTime')}
                   value={formData.callDateTime}
                   onChange={(newValue) => setFormData({ ...formData, callDateTime: newValue })}
                   renderInput={(params) => <TextField {...params} fullWidth />}
@@ -531,7 +627,7 @@ const QRCManagement = () => {
             <Grid item xs={12} md={6}>
               <TextField
                 fullWidth
-                label="Name of the Caller"
+                label={t('qrc.dialog.callerName')}
                 value={formData.callerName}
                 onChange={(e) => setFormData({ ...formData, callerName: e.target.value })}
               />
@@ -540,7 +636,7 @@ const QRCManagement = () => {
             <Grid item xs={12} md={6}>
               <TextField
                 fullWidth
-                label="TA/Case Code"
+                label={t('qrc.dialog.taCode')}
                 value={formData.taCode}
                 onChange={(e) => setFormData({ ...formData, taCode: e.target.value })}
               />
@@ -548,10 +644,10 @@ const QRCManagement = () => {
 
             <Grid item xs={12} md={6}>
               <FormControl fullWidth>
-                <InputLabel>CSR's Name</InputLabel>
+                <InputLabel>{t('qrc.dialog.csrName')}</InputLabel>
                 <Select
                   value={formData.csrName}
-                  label="CSR's Name"
+                  label={t('qrc.dialog.csrName')}
                   onChange={(e) => setFormData({ ...formData, csrName: e.target.value })}
                 >
                   {csrList.map(csr => (
@@ -563,10 +659,10 @@ const QRCManagement = () => {
 
             <Grid item xs={12} md={6}>
               <FormControl fullWidth>
-                <InputLabel>IC Name</InputLabel>
+                <InputLabel>{t('qrc.dialog.icName')}</InputLabel>
                 <Select
                   value={formData.icName}
-                  label="IC Name"
+                  label={t('qrc.dialog.icName')}
                   onChange={(e) => setFormData({ ...formData, icName: e.target.value })}
                 >
                   {icNames.map(ic => (
@@ -579,7 +675,7 @@ const QRCManagement = () => {
             <Grid item xs={12} md={6}>
               <TextField
                 fullWidth
-                label="Caller's Email ID"
+                label={t('qrc.dialog.callerEmail')}
                 type="email"
                 value={formData.callerEmail}
                 onChange={(e) => setFormData({ ...formData, callerEmail: e.target.value })}
@@ -588,10 +684,10 @@ const QRCManagement = () => {
 
             <Grid item xs={12} md={6}>
               <FormControl fullWidth>
-                <InputLabel>State</InputLabel>
+                <InputLabel>{t('qrc.dialog.state')}</InputLabel>
                 <Select
                   value={formData.state}
-                  label="State"
+                  label={t('qrc.dialog.state')}
                   onChange={(e) => setFormData({ ...formData, state: e.target.value })}
                 >
                   {states.map(state => (
@@ -604,7 +700,7 @@ const QRCManagement = () => {
             <Grid item xs={12} md={6}>
               <TextField
                 fullWidth
-                label="City"
+                label={t('qrc.dialog.city')}
                 value={formData.city}
                 onChange={(e) => setFormData({ ...formData, city: e.target.value })}
               />
@@ -613,7 +709,7 @@ const QRCManagement = () => {
             <Grid item xs={12} md={6}>
               <TextField
                 fullWidth
-                label="Contact Number"
+                label={t('qrc.dialog.contactNumber')}
                 value={formData.contactNumber}
                 onChange={(e) => setFormData({ ...formData, contactNumber: e.target.value })}
               />
@@ -622,7 +718,7 @@ const QRCManagement = () => {
             <Grid item xs={12}>
               <TextField
                 fullWidth
-                label="Remarks"
+                label={t('qrc.dialog.remarks')}
                 multiline
                 rows={4}
                 value={formData.remarks}
@@ -638,7 +734,7 @@ const QRCManagement = () => {
                     onChange={(e) => setFormData({ ...formData, isSuspiciousCase: false })}
                   />
                 }
-                label="No"
+                label={t('qrc.dialog.no')}
               />
               <FormControlLabel
                 control={
@@ -647,18 +743,18 @@ const QRCManagement = () => {
                     onChange={(e) => setFormData({ ...formData, isSuspiciousCase: true })}
                   />
                 }
-                label="Yes"
+                label={t('qrc.dialog.yes')}
               />
               <Typography variant="caption" color="text.secondary" sx={{ ml: 1 }}>
-                Suspicious Case?
+                {t('qrc.dialog.suspiciousCase')}
               </Typography>
             </Grid>
           </Grid>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setOpenDialog(false)}>Cancel</Button>
+          <Button onClick={() => setOpenDialog(false)}>{t('qrc.buttons.cancel')}</Button>
           <Button onClick={handleFormSubmit} variant="contained">
-            {selectedEntry ? 'Update' : 'Save'}
+            {selectedEntry ? t('qrc.buttons.update') : t('qrc.buttons.save')}
           </Button>
         </DialogActions>
       </Dialog>

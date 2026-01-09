@@ -42,6 +42,21 @@
     "valid": "Valid",
     "failed": "Failed",
     "saving": "Saving...",
+    "policies": {
+      "life": "Life Insurance",
+      "health": "Health Insurance",
+      "vehicle": "Vehicle Insurance",
+      "home": "Home Insurance",
+      "travel": "Travel Insurance",
+      "business": "Business Insurance"
+    },
+    "caseStatus": {
+      "lapsed": "Lapsed",
+      "cancelled": "Cancelled",
+      "onHold": "On Hold",
+      "followUp": "Follow Up",
+      "failed": "Failed"
+    },
     "languages": {
       "English": "English",
       "Hindi": "Hindi",
@@ -163,7 +178,48 @@
     "contacts": "Contacts",
     "bulk": {
       "completed": "Completed",
-      "upload": "Upload"
+      "upload": "Upload",
+      "selected": "lead(s) selected",
+      "pinToTop": "Pin to Top",
+      "unpin": "Unpin",
+      "manualAssign": "Manual Assign",
+      "languageMatch": "Language Match",
+      "autoAssignPremium": "Auto Assign Premium",
+      "pushToDialer": "Push to Dialer",
+      "pushToVahan": "Push to Vahan",
+      "archiveSelected": "Archive Selected",
+      "verifying": "Verifying...",
+      "assignTitle": "Bulk Assign Leads",
+      "assignContent": "Assign {{count}} selected lead(s) to an agent:",
+      "selectAgent": "Select Agent",
+      "assignButton": "Assign Leads"
+    },
+    "table": {
+      "name": "Lead",
+      "company": "Company",
+      "score": "Score",
+      "value": "Value",
+      "lastContact": "Last Contact",
+      "vahan": "Vahan",
+      "status": "Status",
+      "actions": {
+        "title": "Actions",
+        "callLead": "Call Lead",
+        "viewDetails": "View Details",
+        "quickUpdate": "Quick Update",
+        "moreActions": "More Actions",
+        "sendEmail": "Send Email",
+        "archive": "Archive"
+      },
+      "never": "Never",
+      "vahanStatus": {
+        "verified": "Verified",
+        "failed": "Failed",
+        "verifiedOn": "Verified on {{date}}",
+        "verificationFailed": "Verification failed",
+        "clickToVerify": "Click to verify vehicle",
+        "notAvailable": "N/A"
+      }
     },
     "assigned": {
       "subtitle": "{{count}} of {{total}} leads",
@@ -463,6 +519,7 @@
       "title": "Duplicate Leads",
       "subtitle": "Manage duplicate leads identified during data upload",
       "exportReport": "Export Report",
+      "scanNow": "Scan Now",
       "searchPlaceholder": "Search by phone, email, or batch...",
       "duplicateType": "Duplicate Type",
       "sortBy": "Sort By",
@@ -1206,22 +1263,6 @@
         "specialization": "Specialization",
         "currentWorkload": "Current: {{count}} leads"
       },
-      "bulk": {
-        "selected": "lead(s) selected",
-        "pinToTop": "Pin to Top",
-        "unpin": "Unpin",
-        "manualAssign": "Manual Assign",
-        "languageMatch": "Language Match",
-        "autoAssignPremium": "Auto Assign Premium",
-        "pushToDialer": "Push to Dialer",
-        "pushToVahan": "Push to Vahan",
-        "archiveSelected": "Archive Selected",
-        "verifying": "Verifying...",
-        "assignTitle": "Bulk Assign Leads",
-        "assignContent": "Assign {{count}} selected lead(s) to an agent:",
-        "selectAgent": "Select Agent",
-        "assignButton": "Assign Leads"
-      },
       "quickUpdate": {
         "title": "Quick Update - {{name}}",
         "saveButton": "Save Updates"
@@ -1572,5 +1613,1103 @@
     "failedDetailsTitle": "Failed Records Details",
     "dataPreview": "Data Preview",
     "noHistory": "No upload history available"
+  },
+  "leadMIS": {
+    "title": "Lead MIS Report",
+    "tabs": {
+      "statusDistribution": "Status Distribution",
+      "performanceAnalysis": "Performance Analysis",
+      "trends": "Trends & Patterns",
+      "duplicates": "Duplicate Analysis",
+      "renewals": "Pre-Expiry Renewals",
+      "cscProductivity": "CSC Productivity",
+      "lostReasons": "Lost Reasons Analysis",
+      "conversion": "Conversion Reports",
+      "pivot": "Pivot Reports",
+      "cscLoadTracking": "CSC Load Tracking",
+      "dailyInsurerMIS": "Daily Insurer MIS",
+      "premiumRegisters": "Premium Registers",
+      "capacityPlanning": "Capacity Planning CSC",
+      "workloadDistribution": "Workload Distribution"
+    },
+    "filters": {
+      "title": "Filters",
+      "dateRange": "Date Range",
+      "agents": "Agents",
+      "sources": "Sources",
+      "status": "Status",
+      "refresh": "Refresh Data",
+      "reset": "Reset Filters",
+      "exportExcel": "Export Excel",
+      "exportPDF": "Export PDF",
+      "month": "Month",
+      "region": "Region",
+      "performance": "Performance",
+      "insurer": "Insurer",
+      "policyType": "Policy Type",
+      "team": "Team",
+      "lostReason": "Lost Reason",
+      "productType": "Product Type",
+      "duplicates": "Duplicate Type",
+      "groupBy": "Group By"
+    },
+    "charts": {
+      "leadsByStatus": "Leads by Status",
+      "leadsBySource": "Leads by Source",
+      "leadsTrend": "Leads Trend",
+      "agentPerformance": "Agent Performance",
+      "conversionByProduct": "Conversion by Product",
+      "lostReasons": "Lost Reasons Distribution",
+      "cscProductivity": "CSC Productivity Score"
+    },
+    "table": {
+      "agent": "Agent",
+      "totalLeads": "Total Leads",
+      "converted": "Converted",
+      "conversionRate": "Conversion Rate",
+      "revenue": "Revenue",
+      "cscName": "CSC Name",
+      "calls": "Calls",
+      "policies": "Policies",
+      "score": "Score",
+      "region": "Region",
+      "reason": "Reason",
+      "count": "Count",
+      "percentage": "Percentage",
+      "leadId": "Lead ID",
+      "customer": "Customer",
+      "lostDate": "Lost Date",
+      "premium": "Premium (₹)",
+      "policyNumber": "Policy Number",
+      "expiryDate": "Expiry Date",
+      "daysToExpiry": "Days to Expiry",
+      "group": "Group ID",
+      "confidence": "Confidence",
+      "matchType": "Match Type",
+      "leadsCount": "Leads Count",
+      "status": "Status",
+      "actions": "Actions",
+      "name": "Name",
+      "email": "Email",
+      "phone": "Phone",
+      "source": "Source",
+      "policyId": "Policy ID",
+      "customerName": "Customer Name",
+      "assignedAgent": "Assigned Agent",
+      "lastContact": "Last Contact",
+      "performance": "Performance",
+      "progress": "Progress",
+      "recoveryRate": "Recovery Rate",
+      "topReason": "Top Reason",
+      "lostRevenue": "Lost Revenue",
+      "csc": "CSC",
+      "efficiency": "Efficiency",
+      "avgPerAgent": "Avg Per Agent",
+      "claims": "Claims",
+      "claimRatio": "Claim Ratio",
+      "marketShare": "Market Share",
+      "tenure": "Tenure",
+      "renewalRate": "Renewal Rate",
+      "satisfaction": "Satisfaction",
+      "notes": "Notes"
+    },
+    "duplicateAnalysis": {
+      "title": "Duplicate Lead Analysis",
+      "description": "Leads are grouped by matching criteria. Use actions to merge, mark as valid, or delete duplicates.",
+      "totalGroups": "Total Duplicate Groups",
+      "affectedLeads": "Affected Leads",
+      "highConfidence": "High Confidence",
+      "potentialSavings": "Potential Savings",
+      "noDuplicates": "No duplicate leads found",
+      "allUnique": "All leads appear to be unique based on current criteria",
+      "merge": "Merge",
+      "valid": "Valid",
+      "delete": "Delete"
+    },
+    "renewals": {
+      "title": "Pre-Expiry Renewal Report",
+      "description": "Policies expiring within the next 60 days requiring renewal action.",
+      "expiringSoon": "Expiring Soon",
+      "renewed": "Renewed",
+      "totalPremium": "Total Premium",
+      "pending": "Pending",
+      "status": {
+        "pending": "Pending",
+        "contacted": "Contacted",
+        "proposal": "Proposal Sent",
+        "renewed": "Renewed",
+        "negotiation": "Negotiation"
+      }
+    },
+    "cscProductivity": {
+      "title": "CSC Productivity Report",
+      "description": "Comprehensive performance analysis of Customer Service Center representatives.",
+      "totalCSCs": "Total CSCs",
+      "totalCalls": "Total Calls",
+      "totalPolicies": "Total Policies",
+      "avgConversion": "Avg Conversion",
+      "performanceDist": "CSC Performance Distribution",
+      "conversionRates": "CSC Conversion Rates"
+    },
+    "lostReasons": {
+      "title": "Lost Reasons Analysis",
+      "totalLost": "Total Lost Leads",
+      "topReason": "Top Reason",
+      "lostRevenue": "Lost Revenue",
+      "recoveryRate": "Recovery Rate"
+    },
+    "conversionReports": {
+      "overall": "Overall Conversion",
+      "bestPerformer": "Best Performer",
+      "totalConverted": "Total Converted",
+      "revenue": "Conversion Revenue",
+      "agentVsRate": "Agent vs Conversion Rate",
+      "monthlyTrend": "Monthly Conversion Trend",
+      "agentTableTitle": "Agent-wise Conversion Details",
+      "agentTableDesc": "Comprehensive conversion tracking with agent performance metrics.",
+      "productTableTitle": "Product-wise Conversion Analysis",
+      "productTableDesc": "Conversion performance breakdown by insurance product categories.",
+      "primaryProduct": "Primary Product",
+      "avgDealValue": "Avg Deal Value"
+    },
+    "pivotReports": {
+      "totalRecords": "Total Records",
+      "topPerformer": "Top Performer",
+      "avgPerformance": "Avg Performance",
+      "groupBy": "Group By",
+      "dateRange": "Date Range",
+      "productFilter": "Product Filter",
+      "distribution": "Distribution",
+      "policyCount": "Policy Count Comparison",
+      "analysisTitle": "Pivot Analysis",
+      "analysisDesc": "Dynamic pivot report grouped by {{group}} with comprehensive metrics and performance indicators.",
+      "insurerName": "Insurer Name",
+      "cscLocation": "CSC Location",
+      "policyTenure": "Policy Tenure",
+      "agents": "Agents",
+      "avgPerAgent": "Avg Per Agent",
+      "efficiency": "Efficiency",
+      "avgPremium": "Avg Premium"
+    },
+    "premiumRegisters": {
+      "title": "Premium Registers - Tenure Breakdown",
+      "filters": {
+        "insurer": "Insurer",
+        "policyType": "Policy Type",
+        "tenure": "Tenure"
+      },
+      "table": {
+        "insurer": "Insurer",
+        "policyType": "Policy Type",
+        "tenure": "Tenure",
+        "totalPolicies": "Total Policies",
+        "totalPremium": "Total Premium",
+        "avgPremium": "Average Premium"
+      },
+      "chart": "Premium Distribution by Tenure"
+    },
+    "dailyMIS": {
+      "title": "Daily Insurer MIS Data",
+      "chart": "Daily Premium Trend",
+      "filters": {
+        "conversion": "Filter by Conversion"
+      },
+      "cards": {
+        "policiesSold": "Policies Sold",
+        "leadsGenerated": "Leads Generated"
+      }
+    },
+    "capacityPlanning": {
+      "tableTitle": "CSC Capacity Analysis",
+      "warning": "Staffing Shortfall: Add {{count}} CSCs to meet capacity requirements",
+      "cards": {
+        "requiredCSCs": "Required CSCs",
+        "shortfall": "Shortfall"
+      },
+      "charts": {
+        "availableVsRequired": "Available vs Required CSCs",
+        "workloadDistribution": "Workload Distribution by Region"
+      },
+      "table": {
+        "assignedLeads": "Assigned Leads",
+        "capacity": "Capacity",
+        "utilization": "Utilization %"
+      },
+      "status": {
+        "overloaded": "Overloaded",
+        "optimal": "Optimal",
+        "underutilized": "Under-utilized",
+        "available": "Available",
+        "atCapacity": "At Capacity",
+        "balanced": "Balanced"
+      }
+    },
+    "workload": {
+      "avgUtilization": "Average Utilization",
+      "overloadedCSCs": "Overloaded CSCs",
+      "chart": "CSC Workload Distribution",
+      "share": "Workload Share",
+      "tableTitle": "Detailed CSC Performance",
+      "team": "Team",
+      "assigned": "Assigned",
+      "completed": "Completed"
+    },
+    "cscLoad": {
+      "tableTitle": "CSC Load Tracking Data",
+      "avgCalls": "Average Calls per CSC",
+      "meetingTarget": "% Meeting Target"
+    },
+    "performance": {
+      "excellent": "Excellent",
+      "good": "Good",
+      "average": "Average",
+      "needsImprovement": "Needs Improvement"
+    },
+    "detailedReport": {
+      "title": "Detailed MIS Report",
+      "generatedOn": "Report Generated On",
+      "period": "Period",
+      "thisMonth": "This Month",
+      "downloadExcel": "Download Excel",
+      "downloadPDF": "Download PDF"
+    },
+    "messages": {
+      "noData": "No data available",
+      "loading": "Loading data...",
+      "failed": "Failed to load MIS data",
+      "noRecordsFound": "No records found for the selected filters.",
+      "trySelecting": "Try selecting different filters.",
+      "noCSCRecords": "No CSC records found for the selected filters.",
+      "noCSCPerformance": "No CSC performance records found for the selected filters."
+    }
+  },
+  "quoteManagement": {
+    "title": "Quote Management",
+    "subtitle": "Create, manage, and track insurance quotes",
+    "newQuote": "New Quote",
+    "filter": {
+      "searchPlaceholder": "Search by customer name, quote ID, or product...",
+      "status": "Filter by Status",
+      "all": "All Quotes",
+      "reset": "Reset"
+    },
+    "status": {
+      "draft": "Draft",
+      "pending": "Pending",
+      "approved": "Approved",
+      "converted": "Converted",
+      "rejected": "Rejected",
+      "lost": "Lost"
+    },
+    "stats": {
+      "totalQuotes": "Total Quotes",
+      "pendingApproval": "Pending Approval",
+      "converted": "Converted",
+      "totalValue": "Total Value",
+      "drafts": "drafts",
+      "approved": "approved",
+      "rate": "rate",
+      "avg": "Avg"
+    },
+    "tabs": {
+      "allQuotes": "All Quotes",
+      "createQuote": "Create Quote",
+      "activityHistory": "Activity"
+    },
+    "cards": {
+      "lead": "Lead",
+      "coverage": "Coverage",
+      "premium": "Premium",
+      "conversionProbability": "Conversion Probability",
+      "raised": "Raised",
+      "validTill": "Valid till",
+      "attachments": "attachment(s)",
+      "viewDetails": "View Details"
+    },
+    "empty": {
+      "title": "No quotes found",
+      "adjustParams": "Try adjusting your search or filter criteria",
+      "createFirst": "Create your first quote to get started",
+      "createButton": "Create Quote",
+      "noHistory": "No activity history yet"
+    },
+    "form": {
+      "createTitle": "Create New Quote",
+      "editTitle": "Edit Quote",
+      "steps": {
+        "customerInfo": "Customer Info",
+        "productDetails": "Product Details",
+        "pricing": "Pricing"
+      },
+      "customer": {
+        "title": "Customer Information",
+        "name": "Customer Name",
+        "leadId": "Lead ID",
+        "leadIdPlaceholder": "Auto-generated if left empty",
+        "email": "Customer Email",
+        "phone": "Customer Phone"
+      },
+      "product": {
+        "title": "Product Information",
+        "type": "Product Type",
+        "plan": "Product / Plan"
+      },
+      "pricing": {
+        "title": "Coverage & Pricing",
+        "coverage": "Coverage Amount",
+        "sumInsured": "Sum Insured",
+        "premium": "Premium (Annual)",
+        "totalQuote": "Total Quote Amount",
+        "tenure": "Policy Tenure",
+        "validity": "Quote Validity Period",
+        "age": "Age of Insured"
+      },
+      "remarks": {
+        "label": "Remarks / Notes",
+        "placeholder": "Add any additional information or special conditions..."
+      },
+      "infoAlert": "After creating the quote, you can send it to the customer via email and track its status through the quote management dashboard.",
+      "buttons": {
+        "reset": "Reset Form",
+        "update": "Update Quote",
+        "submit": "Submit Quote"
+      }
+    },
+    "dialog": {
+      "details": "Quote Details",
+      "customerInfo": "Customer Information",
+      "productDetails": "Product Details",
+      "financialDetails": "Financial Details",
+      "timeline": "Quote Timeline",
+      "activityLog": "Activity Log",
+      "policyNumber": "Policy Number",
+      "attachments": "Attachments",
+      "buttons": {
+        "close": "Close",
+        "print": "Print",
+        "download": "Download PDF",
+        "send": "Send to Customer"
+      },
+      "labels": {
+        "name": "Customer Name",
+        "leadId": "Lead ID",
+        "email": "Email",
+        "phone": "Phone",
+        "productType": "Product Type",
+        "planName": "Plan Name",
+        "tenure": "Policy Tenure",
+        "version": "Version",
+        "coverage": "Coverage Amount",
+        "premium": "Premium (Annual)",
+        "totalQuote": "Total Quote",
+        "raisedDate": "Raised Date",
+        "raisedBy": "Raised By",
+        "lastUpdated": "Last Updated",
+        "validUntil": "Valid Until"
+      }
+    },
+    "menu": {
+      "submitApproval": "Submit for Approval",
+      "approve": "Approve Quote",
+      "reject": "Reject Quote",
+      "convert": "Convert to Policy",
+      "markLost": "Mark as Lost",
+      "edit": "Edit Quote",
+      "duplicate": "Duplicate Quote",
+      "send": "Send to Customer",
+      "download": "Download PDF",
+      "print": "Print Quote",
+      "delete": "Delete Quote"
+    },
+    "delete": {
+      "title": "Delete Quote",
+      "confirmation": "Are you sure you want to delete this quote?",
+      "warning": "This action cannot be undone.",
+      "cancel": "Cancel",
+      "confirm": "Delete",
+      "quoteId": "Quote ID",
+      "customer": "Customer",
+      "amount": "Amount"
+    },
+    "emailPreview": {
+      "title": "Email Preview",
+      "from": "From",
+      "to": "To",
+      "subject": "Subject",
+      "preview": "EMAIL PREVIEW",
+      "ready": "Email is ready to be sent to",
+      "close": "Close",
+      "confirm": "Confirm & Send Email"
+    }
+  },
+  "paymentLinks": {
+    "title": "Payment Link Management",
+    "subtitle": "Create and manage payment links for insurance premiums",
+    "buttons": {
+      "refresh": "Refresh",
+      "create": "Create Payment Link",
+      "createLink": "Create Link",
+      "cancel": "Cancel",
+      "close": "Close",
+      "send": "Send Link",
+      "sendReminder": "Send Reminder"
+    },
+    "stats": {
+      "totalLinks": "Total Links",
+      "totalAmount": "Total Amount",
+      "pending": "Pending",
+      "successful": "Successful",
+      "conversionRate": "Conversion Rate",
+      "collected": "collected",
+      "pendingAmount": "pending"
+    },
+    "filters": {
+      "searchPlaceholder": "Search by customer name, phone, link ID, or policy number...",
+      "status": "Status Filter",
+      "allStatus": "All Status"
+    },
+    "tabs": {
+      "all": "All",
+      "pending": "Pending",
+      "paid": "Paid",
+      "others": "Others"
+    },
+    "table": {
+      "linkId": "Link ID",
+      "customerDetails": "Customer Details",
+      "amount": "Amount",
+      "type": "Type",
+      "status": "Status",
+      "created": "Created",
+      "expiry": "Expiry",
+      "actions": "Actions",
+      "noPolicy": "No policy",
+      "paid": "Paid",
+      "transactionId": "Transaction ID",
+      "paidAt": "Paid At"
+    },
+    "tooltips": {
+      "view": "View Details",
+      "copy": "Copy Link",
+      "send": "Send Link",
+      "reminder": "Send Reminder",
+      "cancel": "Cancel Link"
+    },
+    "dialogs": {
+      "createTitle": "Create New Payment Link",
+      "viewTitle": "Payment Link Details",
+      "sendTitle": "Send Payment Link",
+      "reminderTitle": "Send Payment Reminder",
+      "selectChannels": "Select channels to send payment link:",
+      "selectChannelsReminder": "Select channels to send payment reminder:",
+      "channels": {
+        "sms": "SMS",
+        "email": "Email",
+        "whatsapp": "WhatsApp"
+      },
+      "url": "Payment URL"
+    },
+    "form": {
+      "customerName": "Customer Name",
+      "customerPhone": "Customer Phone",
+      "customerEmail": "Customer Email",
+      "amount": "Amount",
+      "description": "Description",
+      "policyNumber": "Policy Number",
+      "leadId": "Lead ID",
+      "paymentType": "Payment Type",
+      "paymentProvider": "Payment Provider",
+      "expiryDays": "Expiry (Days)"
+    },
+    "messages": {
+      "copySuccess": "Payment link copied to clipboard!",
+      "cancelConfirm": "Are you sure you want to cancel this payment link?"
+    },
+    "status": {
+      "Pending": "Pending",
+      "Paid": "Paid",
+      "Failed": "Failed",
+      "Expired": "Expired",
+      "Cancelled": "Cancelled"
+    },
+    "type": {
+      "Premium": "Premium",
+      "Renewal": "Renewal",
+      "Endorsement": "Endorsement",
+      "Inspection": "Inspection",
+      "Other": "Other"
+    }
+  },
+  "reminders": {
+    "title": "Reminder Management",
+    "subtitle": "Manage and track all your follow-up reminders",
+    "buttons": {
+      "refresh": "Refresh",
+      "create": "Create Reminder",
+      "cancel": "Cancel",
+      "sendEmail": "Send via Email",
+      "sendSMS": "Send via SMS",
+      "sendWhatsapp": "Send via WhatsApp",
+      "complete": "Complete",
+      "snooze": "Snooze 2h",
+      "delete": "Delete"
+    },
+    "stats": {
+      "total": "Total Reminders",
+      "pending": "Pending",
+      "overdue": "Overdue",
+      "dueToday": "Due Today"
+    },
+    "filters": {
+      "searchPlaceholder": "Search reminders by title or lead name..."
+    },
+    "tabs": {
+      "all": "All",
+      "pending": "Pending",
+      "overdue": "Overdue",
+      "completed": "Completed"
+    },
+    "table": {
+      "type": "Type",
+      "title": "Title",
+      "lead": "Lead",
+      "dueDate": "Due Date",
+      "priority": "Priority",
+      "status": "Status",
+      "notifyVia": "Notify Via",
+      "actions": "Actions"
+    },
+    "dialogs": {
+      "createTitle": "Create New Reminder",
+      "notifyVia": "Notify Via",
+      "msgSent": "Notification sent successfully!",
+      "deleteConfirm": "Are you sure you want to delete this reminder?"
+    },
+    "form": {
+      "title": "Title",
+      "description": "Description",
+      "type": "Type",
+      "priority": "Priority",
+      "leadId": "Lead ID",
+      "leadName": "Lead Name",
+      "dueDate": "Due Date",
+      "dueTime": "Due Time",
+      "recurring": "Recurring Reminder",
+      "recurringInterval": "Recurring Interval",
+      "channels": {
+        "email": "Email",
+        "sms": "SMS",
+        "whatsapp": "WhatsApp",
+        "inApp": "In-App"
+      },
+      "intervals": {
+        "daily": "Daily",
+        "weekly": "Weekly",
+        "monthly": "Monthly"
+      }
+    },
+    "types": {
+      "call": "Call",
+      "follow_up": "Follow-up",
+      "quote": "Quote",
+      "document": "Document",
+      "payment": "Payment",
+      "renewal": "Renewal",
+      "custom": "Custom"
+    },
+    "priorities": {
+      "high": "High",
+      "medium": "Medium",
+      "low": "Low"
+    },
+    "status": {
+      "pending": "Pending",
+      "completed": "Completed",
+      "snoozed": "Snoozed",
+      "overdue": "Overdue",
+      "cancelled": "Cancelled"
+    }
+  },
+  "pipeline": {
+    "title": "Sales Pipeline",
+    "buttons": {
+      "addLead": "Add Lead",
+      "addStage": "Add Stage",
+      "refresh": "Refresh",
+      "resetFilters": "Reset Filters",
+      "save": "Save",
+      "update": "Update",
+      "cancel": "Cancel",
+      "edit": "Edit",
+      "delete": "Delete"
+    },
+    "metrics": {
+      "totalLeads": "Total Leads",
+      "totalValue": "Pipeline Value",
+      "wonDeals": "Won Deals",
+      "wonValue": "Won Value",
+      "conversionRate": "Conversion Rate"
+    },
+    "filters": {
+      "searchPlaceholder": "Search leads...",
+      "filterByStage": "Filter by Stage",
+      "allStages": "All Stages"
+    },
+    "pipelineSelector": {
+      "label": "Pipeline",
+      "default": "Default Pipeline"
+    },
+    "stage": {
+      "leads": "leads",
+      "addTitle": "Add Stage",
+      "editTitle": "Edit Stage",
+      "nameLabel": "Stage Name",
+      "deleteConfirm": "Delete stage? This cannot be undone."
+    },
+    "leadCard": {
+      "assignedTo": "Assigned to:",
+      "expectedClose": "Expected close:"
+    },
+    "dialog": {
+      "addTitle": "Add New Lead",
+      "editTitle": "Edit Lead",
+      "detailsTitle": "Lead Details",
+      "firstName": "First Name",
+      "lastName": "Last Name",
+      "email": "Email",
+      "phone": "Phone",
+      "company": "Company",
+      "position": "Position",
+      "value": "Value (₹)",
+      "expectedCloseDate": "Expected Close Date",
+      "stage": "Stage",
+      "priority": "Priority",
+      "assignedTo": "Assigned To",
+      "notes": "Notes"
+    },
+    "history": {
+      "title": "Policy History",
+      "subtitle": "Previous policies and premium details",
+      "policyNumber": "Policy Number",
+      "type": "Type",
+      "period": "Period",
+      "premium": "Premium",
+      "status": "Status",
+      "coverage": "Coverage",
+      "totalPremium": "Total Premium Value",
+      "activePolicies": "Active Policies",
+      "totalPolicies": "Total Policies"
+    },
+    "messages": {
+      "noPipeline": "No pipeline selected",
+      "stageUpdated": "Stage updated",
+      "stageAdded": "Stage added",
+      "stageDeleted": "Stage deleted",
+      "errorDeleting": "Error deleting stage",
+      "reordered": "Stages reordered",
+      "leadMoved": "Lead moved to new stage",
+      "leadUpdated": "Lead updated successfully!",
+      "leadAdded": "Lead added successfully!"
+    },
+    "priority": {
+      "low": "Low",
+      "medium": "Medium",
+      "high": "High",
+      "urgent": "Urgent"
+    },
+    "stages": {
+      "new": "New Leads",
+      "contacted": "Contacted",
+      "qualified": "Qualified",
+      "proposal": "Proposal",
+      "negotiation": "Negotiation",
+      "closed-won": "Closed Won",
+      "closed-lost": "Closed Lost"
+    },
+    "status": {
+      "active": "Active",
+      "expired": "Expired"
+    }
+  },
+  "qrc": {
+    "title": "QRC Management",
+    "subtitle": "Manage Queries, Requests, and Complaints",
+    "buttons": {
+      "addNew": "Add New Entry",
+      "edit": "Edit",
+      "delete": "Delete",
+      "cancel": "Cancel",
+      "save": "Save",
+      "update": "Update"
+    },
+    "filters": {
+      "searchPlaceholder": "Search...",
+      "filterByType": "Filter by Type",
+      "allTypes": "All Types",
+      "queries": "Queries",
+      "requests": "Requests",
+      "complaints": "Complaints"
+    },
+    "table": {
+      "id": "ID",
+      "dateTime": "Date & Time",
+      "type": "Type",
+      "callerDetails": "Caller Details",
+      "reason": "Reason",
+      "csr": "CSR",
+      "status": "Status",
+      "actions": "Actions"
+    },
+    "dialog": {
+      "addTitle": "Add New Entry",
+      "editTitle": "Edit Entry",
+      "communicationMode": "Communication Mode",
+      "callerType": "Caller Type",
+      "callType": "Call Type",
+      "resolutionStatus": "Resolution Status",
+      "callReason": "Call Reason",
+      "callDateTime": "Call Date and Time",
+      "callerName": "Name of the Caller",
+      "taCode": "TA/Case Code",
+      "csrName": "CSR's Name",
+      "icName": "IC Name",
+      "callerEmail": "Caller's Email ID",
+      "state": "State",
+      "city": "City",
+      "contactNumber": "Contact Number",
+      "remarks": "Remarks",
+      "suspiciousCase": "Suspicious Case?",
+      "yes": "Yes",
+      "no": "No"
+    },
+    "messages": {
+      "deleteConfirm": "Are you sure you want to delete this entry?",
+      "saveError": "Failed to save entry. Please try again.",
+      "deleteError": "Failed to delete entry. Please try again."
+    },
+    "enums": {
+      "communicationMode": {
+        "call": "Call",
+        "email": "Email",
+        "whatsapp": "WhatsApp",
+        "inPerson": "In Person"
+      },
+      "caller": {
+        "customer": "Customer",
+        "agent": "Agent",
+        "employee": "Employee"
+      },
+      "callType": {
+        "query": "Query",
+        "request": "Request",
+        "complaint": "Complaint"
+      },
+      "resolution": {
+        "resolved": "Resolved",
+        "pending": "Pending",
+        "escalated": "Escalated",
+        "closed": "Closed"
+      },
+      "callReason": {
+        "policyInformation": "Policy Information",
+        "premiumPayment": "Premium Payment",
+        "claimStatus": "Claim Status",
+        "documentRequest": "Document Request",
+        "complaint": "Complaint",
+        "generalInquiry": "General Inquiry",
+        "technicalIssue": "Technical Issue"
+      }
+    },
+    "days": {
+      "mon": "Mon",
+      "tue": "Tue",
+      "wed": "Wed",
+      "thu": "Thu",
+      "fri": "Fri",
+      "sat": "Sat",
+      "sun": "Sun"
+    }
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "stats": {
+      "totalCases": "Total Cases",
+      "inProgress": "In Progress",
+      "renewed": "Renewed",
+      "pendingAction": "Pending Action",
+      "errors": "Errors",
+      "paymentCollected": "Payment Collected",
+      "paymentPending": "Payment Pending",
+      "newCases": "New Cases",
+      "completedRenewals": "Completed Renewals"
+    },
+    "filters": {
+      "dateRange": "Date Range",
+      "policyType": "Policy Type",
+      "caseStatus": "Case Status",
+      "team": "Team",
+      "teamMember": "Team Member",
+      "teamMembers": "Team Members",
+      "all": "All",
+      "today": "Today",
+      "week": "This Week",
+      "month": "This Month",
+      "quarter": "This Quarter",
+      "year": "This Year",
+      "custom": "Custom Range",
+      "apply": "Apply",
+      "activeFilters": "Active Filters",
+      "closed": "Closed"
+    },
+    "charts": {
+      "trends": "Renewal Trends",
+      "channelPerformance": "Channel Performance",
+      "regionPerformance": "Region Performance",
+      "managerPerformance": "Manager Performance",
+      "communicationAnalysis": "Communication Analysis",
+      "costAnalysis": "Cost Analysis",
+      "paymentAnalysis": "Payment Analysis",
+      "collectionMode": "Collection Mode",
+      "customerRetention": "Customer Retention",
+      "caseVolume": "Case Volume",
+      "caseVolumeDesc": "Comparison of new cases and completed renewals",
+      "successRate": "Success Rate Trend",
+      "successRateDesc": "Percentage of successful renewals over time"
+    },
+    "misExport": {
+      "title": "MIS Export",
+      "exportData": "Export Data",
+      "collapseExport": "Collapse Export",
+      "generateExport": "Generate Export",
+      "exporting": "Exporting...",
+      "dataType": "Data Type",
+      "format": "Export Format",
+      "preview": "Export Preview",
+      "estimatedSize": "Estimated Size"
+    },
+    "channelManagement": {
+      "title": "Channel & Hierarchy Management",
+      "tabs": {
+        "communication": "Communication Channel",
+        "distribution": "Distribution Channel",
+        "hierarchy": "Hierarchy",
+        "analytics": "Analytics"
+      },
+      "communication": {
+        "title": "Communication Channel Management",
+        "subtitle": "Manage and monitor all customer communication channels",
+        "addChannel": "Add Channel",
+        "costPerLead": "Cost/Lead",
+        "efficiency": "Efficiency",
+        "revenue": "Revenue",
+        "currentCases": "Current Cases",
+        "renewed": "Renewed",
+        "conversionRate": "Conversion Rate"
+      },
+      "distribution": {
+        "title": "Distribution Channel Management",
+        "subtitle": "Manage distribution partners, agents, and sales channels",
+        "addChannel": "Add Distribution Channel",
+        "currentPolicies": "Current Policies",
+        "renewalRate": "Renewal Rate",
+        "commissionRate": "Commission Rate",
+        "partnerSince": "Partner Since"
+      },
+      "hierarchy": {
+        "title": "Organizational Hierarchy",
+        "subtitle": "Manage organizational structure and reporting hierarchy",
+        "addNode": "Add Node",
+        "cases": "Cases",
+        "budgetUtilization": "Budget Utilization",
+        "targetAchievement": "Target Achievement"
+      },
+      "analytics": {
+        "title": "Channel & Hierarchy Analytics",
+        "performanceComparison": "Channel Performance Comparison",
+        "efficiencyVsCost": "Efficiency vs Cost analysis across channels",
+        "regionalPerformance": "Regional Performance Overview",
+        "performanceMetrics": "Performance metrics across different regions"
+      }
+    },
+    "data": {
+      "channels": {
+        "online": "Online Portal",
+        "mobile": "Mobile App",
+        "branch": "Branch Office",
+        "agent": "Agent Visit",
+        "phone": "Phone Call",
+        "broker": "Broker",
+        "bank": "Bank Partnership",
+        "corporate": "Corporate",
+        "direct": "Direct Sales",
+        "call_center": "Call Center",
+        "agent_network": "Agent Network"
+      },
+      "hierarchy": {
+        "region": "Region",
+        "state": "State",
+        "branch": "Branch",
+        "department": "Department",
+        "team": "Team",
+        "north": "North Region",
+        "west": "West Region",
+        "south": "South Region",
+        "east": "East Region"
+      },
+      "paymentModes": {
+        "upi": "UPI/Digital",
+        "net_banking": "Net Banking",
+        "credit_card": "Credit Card",
+        "debit_card": "Debit Card",
+        "cash": "Cash",
+        "branch_cash": "Branch Cash",
+        "agent_collection": "Agent Collection"
+      },
+      "paymentTypes": {
+        "annual": "Annual Premium",
+        "quarterly": "Quarterly Premium",
+        "monthly": "Monthly Premium",
+        "one_time": "One-time Payment"
+      },
+      "communication": {
+        "ai_call": "AI Call",
+        "whatsapp": "WhatsApp",
+        "tele_caller": "Tele Caller",
+        "sms": "SMS"
+      },
+      "dueDate": {
+        "before": "Before Due Date",
+        "on": "On Due Date",
+        "after": "After Due Date"
+      },
+      "retention": {
+        "retained": "Retained Customers",
+        "churned": "Churned Customers",
+        "premium": "Premium",
+        "standard": "Standard",
+        "basic": "Basic"
+      }
+    },
+    "campaigns": {
+      "title": "Renewals Campaign Tracking",
+      "activeCampaigns": "Active Renewal Campaigns",
+      "subtitle": "Real-time tracking of all renewal marketing campaigns",
+      "target": "Target",
+      "sent": "Sent",
+      "openRate": "Open Rate",
+      "clickRate": "Click Rate",
+      "deliveryRate": "Delivery Rate",
+      "readRate": "Read Rate",
+      "conversions": "Conversions",
+      "created": "Created",
+      "pause": "Pause Campaign",
+      "resume": "Resume Campaign",
+      "viewDetails": "View Details"
+    }
+  },
+  "uploadPolicy": {
+    "title": "Upload Policy Data",
+    "buttons": {
+      "changeCampaign": "Change Campaign",
+      "downloadTemplate": "Download Template",
+      "changeFile": "Change File",
+      "selectFile": "Select File",
+      "uploadProcess": "Upload and Process File"
+    },
+    "sections": {
+      "uploadNew": "Upload New File",
+      "recentUploads": "Recent Uploads",
+      "activeCampaigns": "Active Campaigns"
+    },
+    "descriptions": {
+      "format": "Upload cases using our template format. Only Excel (.xlsx) or CSV files are supported.",
+      "dragDrop": "Drag and drop or click to select",
+      "createCampaign": "Create campaigns from completed uploads to engage with your customers"
+    },
+    "stats": {
+      "totalRecords": "Total Records",
+      "successful": "Successful",
+      "failed": "Failed",
+      "target": "Target",
+      "sent": "Sent",
+      "opened": "Opened",
+      "clicked": "Clicked",
+      "delivered": "Delivered",
+      "read": "Read",
+      "created": "Created"
+    },
+    "messages": {
+      "noActiveCampaigns": "No Active Campaigns"
+    },
+    "dialog": {
+      "createTitle": "Create New Campaign",
+      "editTitle": "Change Campaign",
+      "details": "Campaign Details",
+      "name": "Campaign Name",
+      "channel": "Campaign Channel",
+      "audience": "Target Audience",
+      "providers": "Select Communication Providers",
+      "templateTitle": "Template Selection",
+      "templateSubtitle": "Choose templates for each selected campaign type",
+      "templatePreview": "Template Preview:",
+      "nextBasic": "Next: Basic Schedule",
+      "scheduleTitle": "Basic Schedule",
+      "scheduleType": "Schedule Type",
+      "advanced": "Advanced Scheduling",
+      "advancedSubtitle": "Configure Multi-Channel Communication Intervals",
+      "intervals": "Communication Intervals",
+      "addInterval": "Add Interval",
+      "noIntervals": "No intervals configured yet. Add your first communication interval above.",
+      "create": "Create Campaign",
+      "update": "Update Campaign",
+      "nextAdvanced": "Next: Advanced Schedule",
+      "createAdvanced": "Create Advanced Campaign",
+      "updateAdvanced": "Update Advanced Campaign",
+      "back": "Back",
+      "cancel": "Cancel",
+      "uploadNew": "Upload New File",
+      "uploadDescription": "Upload a new file to replace the current campaign data, or keep the existing file",
+      "changeFile": "Change File",
+      "selectNewFile": "Select New File",
+      "uploadNewData": "Upload new data file",
+      "emailCampaign": "Email Campaign",
+      "whatsappCampaign": "WhatsApp Campaign",
+      "smsCampaign": "SMS Campaign",
+      "callCampaign": "Call Campaign",
+      "botCalling": "Bot Calling",
+      "allCustomers": "All Customers",
+      "pendingRenewals": "Pending Renewals Only",
+      "expiredPolicies": "Expired Policies Only",
+      "chooseProviders": "Choose specific providers for each communication channel",
+      "provider": "Provider",
+      "providerDefault": "Default",
+      "noActiveProviders": "No active {{channel}} providers configured",
+      "configureProviders": "Configure {{channel}} providers in Settings → Providers",
+      "chooseTemplatesMulti": "Choose templates for each selected campaign type",
+      "chooseTemplatesSingle": "Choose from predefined templates or create a custom one",
+      "template": "Template",
+      "selectTemplate": "Select {{channel}} Template",
+      "sendImmediately": "Send Immediately",
+      "scheduleLater": "Schedule for Later",
+      "scheduleDate": "Schedule Date",
+      "scheduleTime": "Schedule Time",
+      "enableAdvanced": "Enable Advanced Scheduling (Multi-channel intervals)",
+      "advancedInfo": "Advanced scheduling allows you to set up multiple communications at different intervals across various channels. This will be configured in the next step.",
+      "advancedDescription": "Set up automated follow-up communications across different channels at specific intervals to maximize customer engagement.",
+      "communicationIntervals": "Communication Intervals",
+      "after": "After",
+      "noTemplate": "No template selected",
+      "delay": "Delay",
+      "unit": "Unit",
+      "minutes": "Minutes",
+      "hours": "Hours",
+      "days": "Days",
+      "weeks": "Weeks",
+      "triggerConditions": "Trigger Conditions",
+      "sendIfNoResponse": "Send if no response to previous message",
+      "sendIfNoAction": "Send if no action taken (click/conversion)",
+      "removeInterval": "Remove Interval",
+      "campaignDetails": "Campaign Details"
+    }
   }
 }

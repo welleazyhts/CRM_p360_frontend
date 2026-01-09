@@ -22,62 +22,71 @@ export const SLAProvider = ({ children }) => {
   const [error, setError] = useState(null);
 
   // SLA Configuration State
-  const [slaConfig, setSlaConfig] = useState(() => {
-    const saved = localStorage.getItem('slaConfig');
-    if (saved) {
-      try {
-        return JSON.parse(saved);
-      } catch (e) {
-        console.error('Error parsing saved SLA config:', e);
-      }
-    }
-    // Default configuration
-    return {
-      enabled: true,
-      templates: {
-        lead: {
-          firstResponse: { hours: 2, description: 'Time to first response for new leads' },
-          followUp: { hours: 24, description: 'Time between follow-ups' },
-          resolution: { days: 7, description: 'Time to resolve lead inquiry' }
-        },
-        case: {
-          firstResponse: { hours: 4, description: 'Time to first response for cases' },
-          resolution: { days: 5, description: 'Time to resolve case' },
-          escalation: { hours: 48, description: 'Time before escalation' }
-        },
-        task: {
-          completion: { days: 3, description: 'Time to complete task' },
-          overdue: { hours: 24, description: 'Time before marking overdue' }
-        },
-        email: {
-          response: { hours: 8, description: 'Time to respond to emails' },
-          resolution: { days: 2, description: 'Time to resolve email inquiry' }
-        },
-        claim: {
-          acknowledgment: { hours: 24, description: 'Time to acknowledge claim' },
-          processing: { days: 10, description: 'Time to process claim' },
-          resolution: { days: 30, description: 'Time to resolve claim' }
-        }
-      },
-      notifications: {
-        enabled: true,
-        warning: 25,
-        critical: 10,
-        breach: true
-      },
-      escalation: {
-        enabled: true,
-        levels: [
-          { threshold: 25, action: 'notify_manager', description: 'Notify manager when 25% time remains' },
-          { threshold: 10, action: 'escalate_to_senior', description: 'Escalate to senior when 10% time remains' },
-          { threshold: -24, action: 'critical_escalation', description: 'Critical escalation 24h after breach' }
-        ]
-      },
-      autoAssignment: {
-        enabled: false
-      }
-    };
+  const [slaConfig, setSlaConfig] = useState({
+    enabled: false,
+    templates: {},
+    notifications: { enabled: false, warning: 25, critical: 10, breach: true },
+    escalation: { enabled: false, levels: [] },
+    autoAssignment: { enabled: false }
   });
+
+  /**
+   * Fetch all SLA settings from backend
+   */
+  const fetchSettings = useCallback(async () => {
+    setLoading(true);
+    try {
+      // Parallel fetch for all settings
+      const [globalRes, notificationsRes, escalationRes, templatesRes] = await Promise.all([
+        slaAPI.settings.getGlobal().catch(e => ({ enabled: false })), // Fallback if 404
+        slaAPI.settings.getNotifications().catch(e => ({ enabled: false, warning: 25, critical: 10, breach: true })),
+        slaAPI.settings.getEscalationRules().catch(e => ({ enabled: false, levels: [] })),
+        slaAPI.templates.getAll().catch(e => ([]))
+      ]);
+
+      // Transform templates array to object structure expected by UI { entity: { type: config } }
+      const templatesObj = {};
+      // Check if templatesRes is array or has results
+      const templatesList = Array.isArray(templatesRes) ? templatesRes : (templatesRes.results || []);
+
+      templatesList.forEach(t => {
+        if (!templatesObj[t.entity_type]) templatesObj[t.entity_type] = {};
+        templatesObj[t.entity_type][t.sla_type] = {
+          id: t.id,
+          hours: t.duration_unit === 'hours' ? t.duration_value : 0,
+          days: t.duration_unit === 'days' ? t.duration_value : 0,
+          minutes: t.duration_unit === 'minutes' ? t.duration_value : 0,
+          description: t.description,
+          ...t
+        };
+      });
+
+      setSlaConfig({
+        enabled: globalRes.is_enabled || globalRes.enabled || false,
+        notifications: {
+          enabled: notificationsRes.is_enabled || false,
+          warning: notificationsRes.warning_threshold || 25,
+          critical: notificationsRes.critical_threshold || 10,
+          breach: notificationsRes.notify_on_breach || false
+        },
+        escalation: {
+          enabled: escalationRes.is_enabled || false,
+          levels: escalationRes.rules || escalationRes.levels || []
+        },
+        autoAssignment: { enabled: false }, // Not in current API?
+        templates: templatesObj
+      });
+
+      setTemplates(templatesList);
+
+    } catch (err) {
+      // console.error('Error fetching SLA settings:', err);
+      // Keep defaults or show error
+      setError('Failed to load SLA settings from server.');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
   /**
    * Fetch all templates
@@ -167,7 +176,7 @@ export const SLAProvider = ({ children }) => {
       return response;
     } catch (err) {
       setError('Backend database error: SLA features unavailable.');
-      console.warn('SLA Dashboard failed (likely DB migration issue):', err);
+      // console.warn('SLA Dashboard failed (likely DB migration issue):', err);
       // Set empty data to prevent UI crash
       setDashboardData({
         policies: [],
@@ -195,7 +204,7 @@ export const SLAProvider = ({ children }) => {
       return response;
     } catch (err) {
       setError(err.message);
-      console.error('Error creating template:', err);
+      // console.error('Error creating template:', err);
       throw err;
     } finally {
       setLoading(false);
@@ -203,7 +212,7 @@ export const SLAProvider = ({ children }) => {
   }, [fetchTemplates]);
 
   /**
-   * Update template
+   * Update template - This is for CRUD, not the settings update
    */
   const updateTemplate = useCallback(async (id, data) => {
     setLoading(true);
@@ -541,49 +550,95 @@ export const SLAProvider = ({ children }) => {
     }
   }, [fetchPolicies]);
 
+  // Initial fetch
+  useEffect(() => {
+    fetchSettings();
+  }, [fetchSettings]);
+
   /**
    * Update SLA Configuration
    */
-  const updateSLAConfig = useCallback((updates) => {
-    setSlaConfig(prev => {
-      const newConfig = { ...prev, ...updates };
-      localStorage.setItem('slaConfig', JSON.stringify(newConfig));
-      return newConfig;
-    });
-  }, []);
+  const updateSLAConfig = useCallback(async (updates) => {
+    try {
+      if (updates.enabled !== undefined) {
+        await slaAPI.settings.updateGlobal({ is_enabled: updates.enabled });
+      }
+
+      if (updates.notifications) {
+        await slaAPI.settings.updateNotifications({
+          is_enabled: updates.notifications.enabled,
+          warning_threshold: updates.notifications.warning,
+          critical_threshold: updates.notifications.critical,
+          notify_on_breach: updates.notifications.breach
+        });
+      }
+
+      // Optimistic update
+      setSlaConfig(prev => ({ ...prev, ...updates }));
+    } catch (err) {
+      console.error('Error updating SLA config:', err);
+      setError('Failed to save settings.');
+      // Revert fetch?
+      fetchSettings();
+    }
+  }, [fetchSettings]);
 
   /**
    * Update SLA Templates
    */
-  const updateSLATemplates = useCallback((entityType, slaType, config) => {
-    setSlaConfig(prev => {
-      const newConfig = {
-        ...prev,
-        templates: {
-          ...prev.templates,
-          [entityType]: {
-            ...prev.templates[entityType],
-            [slaType]: config
-          }
-        }
-      };
-      localStorage.setItem('slaConfig', JSON.stringify(newConfig));
-      return newConfig;
-    });
-  }, []);
+  const updateSLATemplates = useCallback(async (entityType, slaType, config) => {
+    try {
+      // Find template ID if possible
+      const template = slaConfig.templates[entityType]?.[slaType];
+      if (template?.id) {
+        // Construct API payload
+        const payload = {
+          duration_value: config.hours || config.days || config.minutes,
+          duration_unit: config.hours ? 'hours' : (config.days ? 'days' : 'minutes'),
+          description: config.description
+        };
+        await slaAPI.templates.update(template.id, payload);
+
+        // Refresh
+        fetchSettings();
+      }
+    } catch (err) {
+      console.error('Error updating SLA template:', err);
+      setError('Failed to update template.');
+    }
+  }, [slaConfig, fetchSettings]);
+
+  /**
+   * Restore Defaults
+   */
+  const restoreDefaultTemplates = useCallback(async () => {
+    try {
+      await slaAPI.templates.restoreDefaults();
+      fetchSettings();
+    } catch (err) {
+      console.error('Error restoring defaults:', err);
+      setError('Failed to restore defaults.');
+    }
+  }, [fetchSettings]);
 
   /**
    * Clear all SLA trackings
    */
-  const clearAllSLATrackings = useCallback(() => {
-    setDashboardData(prev => ({
-      ...prev,
-      trackings: [],
-      policies: [],
-      violations: [],
-      approaching: [],
-      metrics: { total: 0, active: 0, complianceRate: 100, met: 0, breachRate: 0 }
-    }));
+  const clearAllSLATrackings = useCallback(async () => {
+    try {
+      await slaAPI.settings.dangerZone('clear_all');
+      setDashboardData(prev => ({
+        ...prev,
+        trackings: [],
+        policies: [],
+        violations: [],
+        approaching: [],
+        metrics: { total: 0, active: 0, complianceRate: 100, met: 0, breachRate: 0 }
+      }));
+    } catch (err) {
+      console.error('Error clearing trackings:', err);
+      alert('Failed to clear trackings');
+    }
   }, []);
 
   // Derive helper data for potential missing backend structure
@@ -662,6 +717,8 @@ export const SLAProvider = ({ children }) => {
     updateSLAConfig,
     updateSLATemplates,
     clearAllSLATrackings,
+    restoreDefaultTemplates,
+    fetchSettings,
     exportSLAData
   };
 

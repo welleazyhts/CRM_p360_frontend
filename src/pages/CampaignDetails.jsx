@@ -46,10 +46,12 @@ import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip,
   ResponsiveContainer, LineChart, Line, PieChart, Pie, Cell
 } from 'recharts';
+import { useTranslation } from 'react-i18next';
 
 const CampaignDetails = () => {
   const { campaignId } = useParams();
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const theme = useTheme();
   const [loaded, setLoaded] = useState(false);
   const [activeTab, setActiveTab] = useState(0);
@@ -179,16 +181,16 @@ const CampaignDetails = () => {
         <Grid item xs={12} md={4}>
           <Card sx={{ height: '100%' }}>
             <CardContent>
-              <Typography variant="h6" gutterBottom>Campaign Status</Typography>
+              <Typography variant="h6" gutterBottom>{t('campaignDetails.status.label')}</Typography>
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
                 <Chip
-                  label={campaign.status?.toUpperCase() || 'UNKNOWN'}
+                  label={t(`campaignDetails.status.${campaign.status}`) || campaign.status?.toUpperCase()}
                   color={getStatusColor(campaign.status)}
                   size="large"
                 />
                 {campaign.status === 'active' && (
                   <Chip
-                    label={`${campaign.progress || 0}% Complete`}
+                    label={`${campaign.progress || 0}% ${t('campaignDetails.status.completed')}`}
                     color="info"
                     variant="outlined"
                   />
@@ -196,7 +198,7 @@ const CampaignDetails = () => {
               </Box>
 
               <Typography variant="body2" color="text.secondary" gutterBottom>
-                Campaign Progress
+                {t('campaignDetails.status.progress')}
               </Typography>
               <LinearProgress
                 variant="determinate"
@@ -205,13 +207,13 @@ const CampaignDetails = () => {
               />
 
               <Typography variant="body2" color="text.secondary">
-                <strong>Created:</strong> {campaign.createdDate ? new Date(campaign.createdDate).toLocaleDateString() : 'N/A'}
+                <strong>{t('campaignDetails.status.created')}:</strong> {campaign.createdDate ? new Date(campaign.createdDate).toLocaleDateString() : 'N/A'}
               </Typography>
               <Typography variant="body2" color="text.secondary">
-                <strong>Launched:</strong> {campaign.launchDate ? new Date(campaign.launchDate).toLocaleDateString() : 'N/A'}
+                <strong>{t('campaignDetails.status.launched')}:</strong> {campaign.launchDate ? new Date(campaign.launchDate).toLocaleDateString() : 'N/A'}
               </Typography>
               <Typography variant="body2" color="text.secondary">
-                <strong>Last Modified:</strong> {campaign.lastModified ? new Date(campaign.lastModified).toLocaleDateString() : 'N/A'}
+                <strong>{t('campaignDetails.status.lastModified')}:</strong> {campaign.lastModified ? new Date(campaign.lastModified).toLocaleDateString() : 'N/A'}
               </Typography>
             </CardContent>
           </Card>
@@ -221,20 +223,20 @@ const CampaignDetails = () => {
         <Grid item xs={12} md={4}>
           <Card sx={{ height: '100%' }}>
             <CardContent>
-              <Typography variant="h6" gutterBottom>Audience & Channels</Typography>
+              <Typography variant="h6" gutterBottom>{t('campaignDetails.audience.title')}</Typography>
 
               <Typography variant="body2" color="text.secondary" gutterBottom>
-                Target Audience
+                {t('campaignDetails.audience.targetAudience')}
               </Typography>
               <Typography variant="body1" fontWeight="600" sx={{ mb: 2 }}>
-                {campaign.audience || 'All Customers'}
+                {campaign.audience || t('campaignDetails.audience.allCustomers')}
               </Typography>
               <Typography variant="h5" color="primary" fontWeight="600" sx={{ mb: 2 }}>
-                {campaign.audienceSize?.toLocaleString() || '0'} contacts
+                {campaign.audienceSize?.toLocaleString() || '0'} {t('campaignDetails.audience.size')}
               </Typography>
 
               <Typography variant="body2" color="text.secondary" gutterBottom>
-                Communication Channels
+                {t('campaignDetails.audience.channels')}
               </Typography>
               <Box sx={{ display: 'flex', gap: 1, mb: 2 }}>
                 {campaign.channels?.map((channel) => (
@@ -253,7 +255,7 @@ const CampaignDetails = () => {
               </Box>
 
               <Typography variant="body2" color="text.secondary" gutterBottom>
-                Campaign Tags
+                {t('campaignDetails.audience.tags')}
               </Typography>
               <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
                 {campaign.tags?.map((tag, index) => (
@@ -268,7 +270,7 @@ const CampaignDetails = () => {
         <Grid item xs={12} md={4}>
           <Card sx={{ height: '100%' }}>
             <CardContent>
-              <Typography variant="h6" gutterBottom>Key Metrics</Typography>
+              <Typography variant="h6" gutterBottom>{t('campaignDetails.metrics.keyMetrics')}</Typography>
 
               <Grid container spacing={2}>
                 <Grid item xs={6}>
@@ -277,7 +279,7 @@ const CampaignDetails = () => {
                       {metrics.sent?.toLocaleString() || '0'}
                     </Typography>
                     <Typography variant="caption" color="text.secondary">
-                      Messages Sent
+                      {t('campaignDetails.metrics.sent')}
                     </Typography>
                   </Box>
                 </Grid>
@@ -287,7 +289,7 @@ const CampaignDetails = () => {
                       {metrics.delivered?.toLocaleString() || '0'}
                     </Typography>
                     <Typography variant="caption" color="text.secondary">
-                      Delivered
+                      {t('campaignDetails.metrics.delivered')}
                     </Typography>
                   </Box>
                 </Grid>
@@ -297,7 +299,7 @@ const CampaignDetails = () => {
                       {metrics.opened?.toLocaleString() || '0'}
                     </Typography>
                     <Typography variant="caption" color="text.secondary">
-                      Opened
+                      {t('campaignDetails.metrics.opened')}
                     </Typography>
                   </Box>
                 </Grid>
@@ -307,7 +309,7 @@ const CampaignDetails = () => {
                       {metrics.clicked?.toLocaleString() || '0'}
                     </Typography>
                     <Typography variant="caption" color="text.secondary">
-                      Clicked
+                      {t('campaignDetails.metrics.clicked')}
                     </Typography>
                   </Box>
                 </Grid>
@@ -316,13 +318,13 @@ const CampaignDetails = () => {
               <Divider sx={{ my: 2 }} />
 
               <Typography variant="body2" color="text.secondary">
-                <strong>Conversion Rate:</strong> {metrics.sent ? ((metrics.converted || 0) / metrics.sent * 100).toFixed(2) : '0.00'}%
+                <strong>{t('campaignDetails.metrics.conversionRate')}:</strong> {metrics.sent ? ((metrics.converted || 0) / metrics.sent * 100).toFixed(2) : '0.00'}%
               </Typography>
               <Typography variant="body2" color="text.secondary">
-                <strong>Open Rate:</strong> {metrics.delivered ? ((metrics.opened || 0) / metrics.delivered * 100).toFixed(2) : '0.00'}%
+                <strong>{t('campaignDetails.metrics.openRate')}:</strong> {metrics.delivered ? ((metrics.opened || 0) / metrics.delivered * 100).toFixed(2) : '0.00'}%
               </Typography>
               <Typography variant="body2" color="text.secondary">
-                <strong>Click Rate:</strong> {metrics.opened ? ((metrics.clicked || 0) / metrics.opened * 100).toFixed(2) : '0.00'}%
+                <strong>{t('campaignDetails.metrics.clickRate')}:</strong> {metrics.opened ? ((metrics.clicked || 0) / metrics.opened * 100).toFixed(2) : '0.00'}%
               </Typography>
             </CardContent>
           </Card>
@@ -346,17 +348,17 @@ const CampaignDetails = () => {
         <Grid item xs={12}>
           <Card>
             <CardContent>
-              <Typography variant="h6" gutterBottom>Channel Performance</Typography>
+              <Typography variant="h6" gutterBottom>{t('campaignDetails.charts.channelPerformance')}</Typography>
               <ResponsiveContainer width="100%" height={300}>
                 <BarChart data={channelData}>
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis dataKey="channel" />
                   <YAxis />
                   <RechartsTooltip />
-                  <Bar dataKey="sent" fill="#8884d8" name="Sent" />
-                  <Bar dataKey="delivered" fill="#82ca9d" name="Delivered" />
-                  <Bar dataKey="opened" fill="#ffc658" name="Opened" />
-                  <Bar dataKey="clicked" fill="#ff7300" name="Clicked" />
+                  <Bar dataKey="sent" fill="#8884d8" name={t('campaignDetails.metrics.sent')} />
+                  <Bar dataKey="delivered" fill="#82ca9d" name={t('campaignDetails.metrics.delivered')} />
+                  <Bar dataKey="opened" fill="#ffc658" name={t('campaignDetails.metrics.opened')} />
+                  <Bar dataKey="clicked" fill="#ff7300" name={t('campaignDetails.metrics.clicked')} />
                 </BarChart>
               </ResponsiveContainer>
             </CardContent>
@@ -366,33 +368,33 @@ const CampaignDetails = () => {
         <Grid item xs={12} md={6}>
           <Card>
             <CardContent>
-              <Typography variant="h6" gutterBottom>Delivery Status</Typography>
+              <Typography variant="h6" gutterBottom>{t('campaignDetails.charts.deliveryStatus')}</Typography>
               <List>
                 <ListItem>
                   <ListItemIcon><CheckCircleIcon color="success" /></ListItemIcon>
                   <ListItemText
-                    primary="Successfully Delivered"
+                    primary={t('campaignDetails.metrics.delivered')}
                     secondary={`${metrics.delivered?.toLocaleString() || '0'} messages`}
                   />
                 </ListItem>
                 <ListItem>
                   <ListItemIcon><TrendingDownIcon color="error" /></ListItemIcon>
                   <ListItemText
-                    primary="Bounced"
+                    primary={t('campaignDetails.metrics.bounced')}
                     secondary={`${metrics.bounced?.toLocaleString() || '0'} messages`}
                   />
                 </ListItem>
                 <ListItem>
                   <ListItemIcon><BlockIcon color="warning" /></ListItemIcon>
                   <ListItemText
-                    primary="Failed"
+                    primary={t('campaignDetails.metrics.failed')}
                     secondary={`${metrics.failed?.toLocaleString() || '0'} messages`}
                   />
                 </ListItem>
                 <ListItem>
                   <ListItemIcon><SecurityIcon color="info" /></ListItemIcon>
                   <ListItemText
-                    primary="Unsubscribed"
+                    primary={t('campaignDetails.metrics.unsubscribed')}
                     secondary={`${metrics.unsubscribed?.toLocaleString() || '0'} users`}
                   />
                 </ListItem>
@@ -404,33 +406,33 @@ const CampaignDetails = () => {
         <Grid item xs={12} md={6}>
           <Card>
             <CardContent>
-              <Typography variant="h6" gutterBottom>Engagement Metrics</Typography>
+              <Typography variant="h6" gutterBottom>{t('campaignDetails.charts.engagementMetrics')}</Typography>
               <List>
                 <ListItem>
                   <ListItemIcon><VisibilityIcon color="primary" /></ListItemIcon>
                   <ListItemText
-                    primary="Open Rate"
+                    primary={t('campaignDetails.metrics.openRate')}
                     secondary={`${metrics.delivered ? ((metrics.opened || 0) / metrics.delivered * 100).toFixed(2) : '0.00'}%`}
                   />
                 </ListItem>
                 <ListItem>
                   <ListItemIcon><TouchAppIcon color="secondary" /></ListItemIcon>
                   <ListItemText
-                    primary="Click-Through Rate"
+                    primary={t('campaignDetails.metrics.clickRate')}
                     secondary={`${metrics.opened ? ((metrics.clicked || 0) / metrics.opened * 100).toFixed(2) : '0.00'}%`}
                   />
                 </ListItem>
                 <ListItem>
                   <ListItemIcon><TrendingUpIcon color="success" /></ListItemIcon>
                   <ListItemText
-                    primary="Conversion Rate"
+                    primary={t('campaignDetails.metrics.conversionRate')}
                     secondary={`${metrics.sent ? ((metrics.converted || 0) / metrics.sent * 100).toFixed(2) : '0.00'}%`}
                   />
                 </ListItem>
                 <ListItem>
                   <ListItemIcon><GroupIcon color="info" /></ListItemIcon>
                   <ListItemText
-                    primary="Total Conversions"
+                    primary={t('campaignDetails.metrics.converted')}
                     secondary={`${metrics.converted?.toLocaleString() || '0'} users`}
                   />
                 </ListItem>
@@ -451,33 +453,33 @@ const CampaignDetails = () => {
         <Grid item xs={12} md={6}>
           <Card>
             <CardContent>
-              <Typography variant="h6" gutterBottom>Consent Management</Typography>
+              <Typography variant="h6" gutterBottom>{t('campaignDetails.compliance.consentManagement')}</Typography>
               <List>
                 <ListItem>
                   <ListItemIcon><VerifiedIcon color="success" /></ListItemIcon>
                   <ListItemText
-                    primary="Email Consent"
+                    primary={t('campaignDetails.compliance.emailConsent')}
                     secondary={`${consent.email?.toLocaleString() || '0'} users opted in`}
                   />
                 </ListItem>
                 <ListItem>
                   <ListItemIcon><VerifiedIcon color="success" /></ListItemIcon>
                   <ListItemText
-                    primary="SMS Consent"
+                    primary={t('campaignDetails.compliance.smsConsent')}
                     secondary={`${consent.sms?.toLocaleString() || '0'} users opted in`}
                   />
                 </ListItem>
                 <ListItem>
                   <ListItemIcon><VerifiedIcon color="success" /></ListItemIcon>
                   <ListItemText
-                    primary="WhatsApp Consent"
+                    primary={t('campaignDetails.compliance.whatsappConsent')}
                     secondary={`${consent.whatsapp?.toLocaleString() || '0'} users opted in`}
                   />
                 </ListItem>
                 <ListItem>
                   <ListItemIcon><BlockIcon color="warning" /></ListItemIcon>
                   <ListItemText
-                    primary="Opted Out"
+                    primary={t('campaignDetails.compliance.optedOut')}
                     secondary={`${consent.opted_out?.toLocaleString() || '0'} users`}
                   />
                 </ListItem>
@@ -489,7 +491,7 @@ const CampaignDetails = () => {
         <Grid item xs={12} md={6}>
           <Card>
             <CardContent>
-              <Typography variant="h6" gutterBottom>Compliance Status</Typography>
+              <Typography variant="h6" gutterBottom>{t('campaignDetails.compliance.complianceStatus')}</Typography>
               <List>
                 <ListItem>
                   <ListItemIcon>
@@ -499,8 +501,8 @@ const CampaignDetails = () => {
                     }
                   </ListItemIcon>
                   <ListItemText
-                    primary="DLT Template Approved"
-                    secondary={compliance.dltApproved ? "All templates approved" : "Pending approval"}
+                    primary={t('campaignDetails.compliance.dltApproved')}
+                    secondary={compliance.dltApproved ? t('campaignDetails.compliance.allApproved') : t('campaignDetails.compliance.pendingApproval')}
                   />
                 </ListItem>
                 <ListItem>
@@ -511,8 +513,8 @@ const CampaignDetails = () => {
                     }
                   </ListItemIcon>
                   <ListItemText
-                    primary="Consent Verified"
-                    secondary={compliance.consentVerified ? "All consents verified" : "Verification pending"}
+                    primary={t('campaignDetails.compliance.consentVerified')}
+                    secondary={compliance.consentVerified ? t('campaignDetails.compliance.allVerified') : t('campaignDetails.compliance.verificationPending')}
                   />
                 </ListItem>
                 <ListItem>
@@ -523,8 +525,8 @@ const CampaignDetails = () => {
                     }
                   </ListItemIcon>
                   <ListItemText
-                    primary="DND Registry Checked"
-                    secondary={compliance.dndChecked ? "DND check completed" : "DND check pending"}
+                    primary={t('campaignDetails.compliance.dndChecked')}
+                    secondary={compliance.dndChecked ? t('campaignDetails.compliance.dndCompleted') : t('campaignDetails.compliance.dndPending')}
                   />
                 </ListItem>
                 <ListItem>
@@ -535,8 +537,8 @@ const CampaignDetails = () => {
                     }
                   </ListItemIcon>
                   <ListItemText
-                    primary="Data Retention Compliant"
-                    secondary={compliance.dataRetentionCompliant ? "Compliant with data retention policies" : "Non-compliant"}
+                    primary={t('campaignDetails.compliance.retentionCompliant')}
+                    secondary={compliance.dataRetentionCompliant ? t('campaignDetails.compliance.compliantPolicy') : t('campaignDetails.compliance.nonCompliant')}
                   />
                 </ListItem>
               </List>
@@ -550,7 +552,7 @@ const CampaignDetails = () => {
   const TimelineTab = () => (
     <Card>
       <CardContent>
-        <Typography variant="h6" gutterBottom>Campaign Timeline</Typography>
+        <Typography variant="h6" gutterBottom>{t('campaignDetails.timeline.title')}</Typography>
         <List>
           {campaign.timeline?.map((event, index) => (
             <ListItem key={index}>
@@ -576,7 +578,7 @@ const CampaignDetails = () => {
   if (!campaign) {
     return (
       <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '50vh' }}>
-        <Typography>Loading campaign details...</Typography>
+        <Typography>{t('campaignDetails.loading')}</Typography>
       </Box>
     );
   }
@@ -615,7 +617,7 @@ const CampaignDetails = () => {
                 color="warning"
                 onClick={() => handleCampaignAction('pause')}
               >
-                Pause
+                {t('campaignDetails.buttons.pause')}
               </Button>
             )}
             {campaign.status === 'paused' && (
@@ -625,7 +627,7 @@ const CampaignDetails = () => {
                 color="success"
                 onClick={() => handleCampaignAction('resume')}
               >
-                Resume
+                {t('campaignDetails.buttons.resume')}
               </Button>
             )}
             <Button
@@ -633,14 +635,14 @@ const CampaignDetails = () => {
               variant="outlined"
               onClick={() => setEditDialog(true)}
             >
-              Edit
+              {t('campaignDetails.buttons.edit')}
             </Button>
             <Button
               startIcon={<DownloadIcon />}
               variant="contained"
               onClick={handleExportCampaign}
             >
-              Export Report
+              {t('campaignDetails.buttons.export')}
             </Button>
           </Box>
         </Box>
@@ -653,10 +655,10 @@ const CampaignDetails = () => {
             variant="scrollable"
             scrollButtons="auto"
           >
-            <Tab label="Overview" />
-            <Tab label="Analytics" />
-            <Tab label="Compliance" />
-            <Tab label="Timeline" />
+            <Tab label={t('campaignDetails.tabs.overview')} />
+            <Tab label={t('campaignDetails.tabs.analytics')} />
+            <Tab label={t('campaignDetails.tabs.compliance')} />
+            <Tab label={t('campaignDetails.tabs.timeline')} />
           </Tabs>
         </Paper>
 
@@ -684,7 +686,7 @@ const CampaignDetails = () => {
         >
           <DialogTitle>
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <Typography variant="h6">Edit Campaign</Typography>
+              <Typography variant="h6">{t('campaignDetails.buttons.edit')} Campaign</Typography>
               <IconButton onClick={() => setEditDialog(false)}>
                 <CloseIcon />
               </IconButton>
@@ -712,24 +714,24 @@ const CampaignDetails = () => {
               </Grid>
               <Grid item xs={12} md={6}>
                 <FormControl fullWidth>
-                  <InputLabel>Status</InputLabel>
+                  <InputLabel>{t('campaignDetails.status.label')}</InputLabel>
                   <Select
                     value={campaign?.status || 'draft'}
                     onChange={(e) => setCampaign(prev => ({ ...prev, status: e.target.value }))}
-                    label="Status"
+                    label={t('campaignDetails.status.label')}
                   >
-                    <MenuItem value="draft">Draft</MenuItem>
-                    <MenuItem value="scheduled">Scheduled</MenuItem>
-                    <MenuItem value="active">Active</MenuItem>
-                    <MenuItem value="paused">Paused</MenuItem>
-                    <MenuItem value="completed">Completed</MenuItem>
+                    <MenuItem value="draft">{t('campaignDetails.status.draft')}</MenuItem>
+                    <MenuItem value="scheduled">{t('campaignDetails.status.scheduled')}</MenuItem>
+                    <MenuItem value="active">{t('campaignDetails.status.active')}</MenuItem>
+                    <MenuItem value="paused">{t('campaignDetails.status.paused')}</MenuItem>
+                    <MenuItem value="completed">{t('campaignDetails.status.completed')}</MenuItem>
                   </Select>
                 </FormControl>
               </Grid>
             </Grid>
           </DialogContent>
           <DialogActions>
-            <Button onClick={() => setEditDialog(false)}>Cancel</Button>
+            <Button onClick={() => setEditDialog(false)}>{t('campaignDetails.buttons.cancel')}</Button>
             <Button
               variant="contained"
               onClick={() => {
@@ -737,7 +739,7 @@ const CampaignDetails = () => {
                 alert('Campaign updated successfully!');
               }}
             >
-              Save Changes
+              {t('campaignDetails.buttons.saveChanges')}
             </Button>
           </DialogActions>
         </Dialog>

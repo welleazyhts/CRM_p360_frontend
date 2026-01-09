@@ -21,13 +21,26 @@ import { useCustomerManagement } from '../context/CustomerManagementContext';
 import BulkUpload from '../components/common/BulkUpload';
 import FailedRecordsViewer from '../components/common/FailedRecordsViewer';
 import { useDedupe } from '../context/DedupeContext';
+import {
+  searchCustomers as apiSearchCustomers,
+  refreshDatabase,
+  filterCustomers as apiFilterCustomers
+} from '../services/CustomerService';
 
 const CustomerDatabase = () => {
   const theme = useTheme();
   const navigate = useNavigate();
-  const { customers, addCustomer, updateCustomer, deleteCustomer } = useCustomerManagement();
+  const { customers, setCustomers, addCustomer, updateCustomer, deleteCustomer } = useCustomerManagement();
   const { checkDuplicate } = useDedupe();
+
+  // Use filteredCustomers for display. Initialize with loaded customers.
   const [filteredCustomers, setFilteredCustomers] = useState([]);
+
+  // Update local state when context customers change (initial load)
+  useEffect(() => {
+    setFilteredCustomers(customers);
+  }, [customers]);
+
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [searchTerm, setSearchTerm] = useState('');
@@ -70,59 +83,57 @@ const CustomerDatabase = () => {
     lastContact: ''
   });
 
-  useEffect(() => {
-    setPage(0);
-    filterCustomers();
-  }, [customers, searchTerm, filters]);
-
-  const filterCustomers = () => {
-    let filtered = [...customers];
-
-    // Search filter
-    if (searchTerm) {
-      const q = searchTerm.toLowerCase();
-      filtered = filtered.filter(customer => {
-        const nameMatch = (customer.name || '').toLowerCase().includes(q);
-        const emailMatch = (customer.email || '').toLowerCase().includes(q);
-        const policyNumberMatch = (customer.policyNumber || '').toLowerCase().includes(q);
-        const policiesMatch = Array.isArray(customer.policies) && customer.policies.some(p => (p.policyNumber || '').toLowerCase().includes(q));
-        return nameMatch || emailMatch || policyNumberMatch || policiesMatch;
-      });
+  // Handle Search
+  const handleSearch = async () => {
+    if (!searchTerm.trim()) {
+      // If empty, just reset to all customers (or call refresh logic)
+      setFilteredCustomers(customers);
+      return;
     }
-
-    // Product type filter
-    if (filters.productType !== 'all') {
-      filtered = filtered.filter(customer => customer.productType === filters.productType);
+    try {
+      const results = await apiSearchCustomers(searchTerm);
+      setFilteredCustomers(results);
+    } catch (error) {
+      console.error('Search failed:', error);
+      setSnackbar({ open: true, message: 'Search failed', severity: 'error' });
     }
-
-    // Status filter
-    if (filters.status !== 'all') {
-      filtered = filtered.filter(customer => customer.status === filters.status);
-    }
-
-    // Age range filter
-    filtered = filtered.filter(customer =>
-      customer.age >= filters.ageRange[0] && customer.age <= filters.ageRange[1]
-    );
-
-    // Policy status filter
-    if (filters.policyStatus !== 'all') {
-      filtered = filtered.filter(customer => customer.policyStatus === filters.policyStatus);
-    }
-
-    // Gender filter
-    if (filters.gender !== 'all') {
-      filtered = filtered.filter(customer => customer.gender === filters.gender);
-    }
-
-    // Premium range filter
-    filtered = filtered.filter(customer =>
-      customer.premiumAmount >= filters.premiumRange[0] &&
-      customer.premiumAmount <= filters.premiumRange[1]
-    );
-
-    setFilteredCustomers(filtered);
   };
+
+  // Handle Refresh
+  const handleRefresh = async () => {
+    try {
+      setSearchTerm('');
+      // Call refresh API
+      await refreshDatabase();
+      // Then explicitly reload context/list
+      // Ideally context should reload, but if context reload isn't exposed, we might need a force reload or fetch directly
+      // Assuming context listens to changes or we fetch manually to update local view
+      const { fetchCustomers } = await import('../services/CustomerService');
+      const latest = await fetchCustomers();
+      setCustomers(latest); // Update context
+      setFilteredCustomers(latest);
+      setSnackbar({ open: true, message: 'Database refreshed successfully', severity: 'success' });
+    } catch (error) {
+      console.error('Refresh failed:', error);
+      setSnackbar({ open: true, message: 'Refresh failed', severity: 'error' });
+    }
+  };
+
+  // Handle Filters
+  const applyFilters = async () => {
+    try {
+      const results = await apiFilterCustomers(filters);
+      setFilteredCustomers(results);
+      setFilterDialogOpen(false);
+    } catch (error) {
+      console.error('Filter failed:', error);
+      setSnackbar({ open: true, message: 'Filtering failed', severity: 'error' });
+    }
+  };
+
+  // Replace default client-side filterCustomers with effect only for initial load checks?
+  // Actually, we replaced the useEffect that called filterCustomers.
+  // We don't need a separate filterCustomers function anymore, we use handleSearch and applyFilters.
 
   const handleChangePage = (event, newPage) => {
     setPage(newPage);
@@ -254,7 +265,7 @@ const CustomerDatabase = () => {
             <Button
               variant="outlined"
               startIcon={<RefreshIcon />}
-              onClick={() => setSearchTerm('')}
+              onClick={handleRefresh}
             >
               Refresh
             </Button>
@@ -279,6 +290,8 @@ const CustomerDatabase = () => {
 
         {/* Stats Cards */}
         <Grid container spacing={3} sx={{ mb: 4 }}>
+          {/* ... (Stats content unchanged) ... */}
+          {/* Re-using existing stats logic based on full 'customers' list which is context based */}
           <Grid item xs={12} sm={6} md={3}>
             <Card sx={{ background: `linear-gradient(135deg, ${alpha(theme.palette.primary.main, 0.9)}, ${alpha(theme.palette.primary.dark, 0.7)})` }}>
               <CardContent>
@@ -319,7 +332,7 @@ const CustomerDatabase = () => {
             <Card sx={{ background: `linear-gradient(135deg, ${alpha(theme.palette.info.main, 0.9)}, ${alpha(theme.palette.info.dark, 0.7)})` }}>
               <CardContent>
                 <Typography variant="h4" color="white" fontWeight="bold">
-                  �{(customers.reduce((sum, c) => sum + c.premiumAmount, 0) / 1000).toFixed(0)}K
+                  ₹{(customers.reduce((sum, c) => sum + c.premiumAmount, 0) / 1000).toFixed(0)}K
                 </Typography>
                 <Typography variant="body2" sx={{ color: 'white', opacity: 0.9 }}>
                   Total Premium
@@ -338,12 +351,20 @@ const CustomerDatabase = () => {
                 placeholder="Search by name, email, or policy number..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') handleSearch();
+                }}
                 InputProps={{
                   startAdornment: (
                     <InputAdornment position="start">
-                      <SearchIcon />
+                      <SearchIcon color="action" />
                     </InputAdornment>
                   ),
+                  endAdornment: (
+                    <InputAdornment position="end">
+                      <Button size="small" onClick={handleSearch}>Search</Button>
+                    </InputAdornment>
+                  )
                 }}
               />
             </Grid>
@@ -557,7 +578,7 @@ const CustomerDatabase = () => {
                   >
                     <MenuItem value="Male">Male</MenuItem>
                     <MenuItem value="Female">Female</MenuItem>
-                    <MenuItem value="Other">Other</MenuItem>
+                    <MenuItem value="Others">Others</MenuItem>
                   </Select>
                 </FormControl>
               </Grid>
@@ -593,11 +614,11 @@ const CustomerDatabase = () => {
                     value={formData.productType}
                     onChange={(e) => setFormData({ ...formData, productType: e.target.value })}
                   >
-                    <MenuItem value="Health Insurance">Health Insurance</MenuItem>
-                    <MenuItem value="Life Insurance">Life Insurance</MenuItem>
-                    <MenuItem value="Vehicle Insurance">Vehicle Insurance</MenuItem>
-                    <MenuItem value="Property Insurance">Property Insurance</MenuItem>
-                    <MenuItem value="Travel Insurance">Travel Insurance</MenuItem>
+                    <MenuItem value="health">Health Insurance</MenuItem>
+                    <MenuItem value="life">Life Insurance</MenuItem>
+                    <MenuItem value="vehicle">Vehicle Insurance</MenuItem>
+                    <MenuItem value="property">Property Insurance</MenuItem>
+                    <MenuItem value="travel">Travel Insurance</MenuItem>
                   </Select>
                 </FormControl>
               </Grid>
@@ -617,9 +638,9 @@ const CustomerDatabase = () => {
                     value={formData.policyStatus}
                     onChange={(e) => setFormData({ ...formData, policyStatus: e.target.value })}
                   >
-                    <MenuItem value="Active">Active</MenuItem>
-                    <MenuItem value="Expired">Expired</MenuItem>
-                    <MenuItem value="Pending">Pending</MenuItem>
+                    <MenuItem value="active">Active</MenuItem>
+                    <MenuItem value="expired">Expired</MenuItem>
+                    <MenuItem value="pending">Pending</MenuItem>
                   </Select>
                 </FormControl>
               </Grid>
@@ -640,8 +661,8 @@ const CustomerDatabase = () => {
                     value={formData.status}
                     onChange={(e) => setFormData({ ...formData, status: e.target.value })}
                   >
-                    <MenuItem value="Active">Active</MenuItem>
-                    <MenuItem value="Inactive">Inactive</MenuItem>
+                    <MenuItem value="active">Active</MenuItem>
+                    <MenuItem value="inactive">Inactive</MenuItem>
                   </Select>
                 </FormControl>
               </Grid>
@@ -669,11 +690,11 @@ const CustomerDatabase = () => {
                     onChange={(e) => setFilters({ ...filters, productType: e.target.value })}
                   >
                     <MenuItem value="all">All Products</MenuItem>
-                    <MenuItem value="Health Insurance">Health Insurance</MenuItem>
-                    <MenuItem value="Life Insurance">Life Insurance</MenuItem>
-                    <MenuItem value="Vehicle Insurance">Vehicle Insurance</MenuItem>
-                    <MenuItem value="Property Insurance">Property Insurance</MenuItem>
-                    <MenuItem value="Travel Insurance">Travel Insurance</MenuItem>
+                    <MenuItem value="health">Health Insurance</MenuItem>
+                    <MenuItem value="life">Life Insurance</MenuItem>
+                    <MenuItem value="vehicle">Vehicle Insurance</MenuItem>
+                    <MenuItem value="property">Property Insurance</MenuItem>
+                    <MenuItem value="travel">Travel Insurance</MenuItem>
                   </Select>
                 </FormControl>
               </Grid>
@@ -686,8 +707,8 @@ const CustomerDatabase = () => {
                     onChange={(e) => setFilters({ ...filters, status: e.target.value })}
                   >
                     <MenuItem value="all">All Status</MenuItem>
-                    <MenuItem value="Active">Active</MenuItem>
-                    <MenuItem value="Inactive">Inactive</MenuItem>
+                    <MenuItem value="active">Active</MenuItem>
+                    <MenuItem value="inactive">Inactive</MenuItem>
                   </Select>
                 </FormControl>
               </Grid>
@@ -700,9 +721,9 @@ const CustomerDatabase = () => {
                     onChange={(e) => setFilters({ ...filters, policyStatus: e.target.value })}
                   >
                     <MenuItem value="all">All Policy Status</MenuItem>
-                    <MenuItem value="Active">Active</MenuItem>
-                    <MenuItem value="Expired">Expired</MenuItem>
-                    <MenuItem value="Pending">Pending</MenuItem>
+                    <MenuItem value="active">Active</MenuItem>
+                    <MenuItem value="expired">Expired</MenuItem>
+                    <MenuItem value="pending">Pending</MenuItem>
                   </Select>
                 </FormControl>
               </Grid>
@@ -717,7 +738,7 @@ const CustomerDatabase = () => {
                     <MenuItem value="all">All Genders</MenuItem>
                     <MenuItem value="Male">Male</MenuItem>
                     <MenuItem value="Female">Female</MenuItem>
-                    <MenuItem value="Other">Other</MenuItem>
+                    <MenuItem value="Others">Others</MenuItem>
                   </Select>
                 </FormControl>
               </Grid>
@@ -756,10 +777,12 @@ const CustomerDatabase = () => {
                 gender: 'all',
                 premiumRange: [0, 100000]
               });
+              // Reload full list logic
+              handleRefresh();
             }}>
               Reset
             </Button>
-            <Button variant="contained" onClick={() => setFilterDialogOpen(false)}>
+            <Button variant="contained" onClick={applyFilters}>
               Apply Filters
             </Button>
           </DialogActions>

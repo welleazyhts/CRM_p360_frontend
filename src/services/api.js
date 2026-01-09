@@ -2,7 +2,8 @@
 // For now, it's just a placeholder with mock implementations
 
 // Base URL for API calls - configured from environment variable
-const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://3.109.128.6:8000/api';
+// Base URL for API calls - configured from environment variable
+export const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://3.109.128.6:8000/api';
 
 /**
  * Helper function to construct full API URL
@@ -20,6 +21,18 @@ export const getApiUrl = (endpoint) => {
   return `${API_BASE_URL}${cleanEndpoint}`;
 };
 
+// Auth API calls
+export const loginUser = async (credentials) => {
+  return api.post('/auth/login/', credentials);
+};
+
+export const registerUser = async (userData) => {
+  return api.post('/auth/register/', userData);
+};
+
+/**
+ * Get auth token from localStorage
+ */
 /**
  * Get auth token from localStorage
  */
@@ -28,141 +41,190 @@ const getAuthToken = () => {
 };
 
 /**
- * Create a default API client with real HTTP requests
+ * Get refresh token from localStorage
  */
+const getRefreshToken = () => {
+  return localStorage.getItem('refreshToken');
+};
+
+/**
+ * Service to refresh the access token
+ */
+export const refreshUserToken = async (refreshToken) => {
+  // Determine the base URL directly to avoid circular dependency or issues with getApiUrl if it changed
+  // But getApiUrl is safe here as it's a pure helper string function in this file
+  const url = getApiUrl('/auth/token/refresh/');
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ refresh: refreshToken })
+  });
+
+  if (!response.ok) {
+    throw new Error('Refresh failed');
+  }
+
+  return response.json();
+};
+
+let isRefreshing = false;
+let failedQueue = [];
+
+const processQueue = (error, token = null) => {
+  failedQueue.forEach(prom => {
+    if (error) {
+      prom.reject(error);
+    } else {
+      prom.resolve(token);
+    }
+  });
+  failedQueue = [];
+};
+
+/**
+ * Internal helper to execute HTTP requests with auth token and refresh logic
+ */
+const executeRequest = async (method, endpoint, data = null, config = {}) => {
+  const url = getApiUrl(endpoint);
+  const { params, ...restConfig } = config;
+
+  // Headers setup
+  const headers = {
+    'Content-Type': 'application/json',
+    ...restConfig.headers
+  };
+
+  // Attach token if available (except for login/register/refresh endpoints which are public or handle their own auth)
+  // We check endpoint strings to avoid attaching tokens unnecessarily or circularly
+  const isPublicEndpoint = endpoint.includes('/auth/login/') || endpoint.includes('/auth/register/') || endpoint.includes('/auth/token/refresh/');
+
+  if (!isPublicEndpoint) {
+    const token = getAuthToken();
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+  }
+
+  // Query Params setup
+  let queryString = '';
+  if (params) {
+    const searchParams = new URLSearchParams();
+    Object.entries(params).forEach(([key, value]) => {
+      if (value !== undefined && value !== null) {
+        searchParams.append(key, value);
+      }
+    });
+    const qs = searchParams.toString();
+    if (qs) queryString = `?${qs}`;
+  }
+
+  const fetchOptions = {
+    method,
+    headers,
+    ...restConfig
+  };
+
+  if (data && (method === 'POST' || method === 'PUT' || method === 'PATCH')) {
+    fetchOptions.body = JSON.stringify(data);
+  }
+
+  try {
+    const response = await fetch(`${url}${queryString}`, fetchOptions);
+
+    // Handle 401 Unauthorized - Token Expiry
+    if (response.status === 401 && !isPublicEndpoint) {
+      if (isRefreshing) {
+        return new Promise((resolve, reject) => {
+          failedQueue.push({ resolve, reject });
+        }).then(() => {
+          return executeRequest(method, endpoint, data, config);
+        }).catch(err => {
+          throw err;
+        });
+      }
+
+      isRefreshing = true;
+
+      try {
+        const refreshToken = getRefreshToken();
+        if (!refreshToken) {
+          throw new Error('No refresh token available');
+        }
+
+        const refreshResponse = await refreshUserToken(refreshToken);
+
+        // Update tokens
+        const newAccess = refreshResponse.access || refreshResponse.access_token || (refreshResponse.data && refreshResponse.data.access);
+        const newRefresh = refreshResponse.refresh || refreshResponse.refresh_token || (refreshResponse.data && refreshResponse.data.refresh);
+
+        if (newAccess) {
+          localStorage.setItem('authToken', newAccess);
+          if (newRefresh) localStorage.setItem('refreshToken', newRefresh);
+
+          processQueue(null, newAccess);
+          // Retry original request
+          return executeRequest(method, endpoint, data, config);
+        } else {
+          throw new Error('Refreshed token not found in response');
+        }
+
+      } catch (refreshError) {
+        processQueue(refreshError, null);
+        // Clear auth and redirect to login
+        console.error('Session expired, logging out:', refreshError);
+        localStorage.removeItem('authToken');
+        localStorage.removeItem('refreshToken');
+        localStorage.removeItem('userEmail');
+
+        if (!window.location.pathname.includes('/login')) {
+          window.location.href = '/login';
+        }
+
+        throw new Error('Session expired');
+      } finally {
+        isRefreshing = false;
+      }
+    }
+
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({}));
+      const errorMessage = error.message || error.detail || JSON.stringify(error);
+      // Special handling based on method if needed (like console logging for POST)
+      if (method === 'POST') console.error('[API Error] POST', endpoint, error, response.status);
+
+      throw new Error(errorMessage && errorMessage !== '{}' ? errorMessage : `HTTP ${response.status}: ${response.statusText}`);
+    }
+
+    // Return Data Handling
+    // DELETE might be empty
+    if (method === 'DELETE' && response.status === 204) {
+      return { data: {} };
+    }
+
+    const text = await response.text();
+    const responseData = text ? JSON.parse(text) : {};
+    return { data: responseData }; // Maintain expected format { data: ... } for existing callers
+
+  } catch (error) {
+    throw error;
+  }
+};
+
 /**
  * Create a default API client with real HTTP requests
  */
 const realApi = {
-  get: async (endpoint, config = {}) => {
-    const url = getApiUrl(endpoint);
-    const { params, ...restConfig } = config;
+  get: (endpoint, config = {}) => executeRequest('GET', endpoint, null, config),
 
-    // Build query string from params
-    let queryString = '';
-    if (params) {
-      const searchParams = new URLSearchParams();
-      Object.entries(params).forEach(([key, value]) => {
-        if (value !== undefined && value !== null) {
-          searchParams.append(key, value);
-        }
-      });
-      const qs = searchParams.toString();
-      if (qs) queryString = `?${qs}`;
-    }
+  post: (endpoint, data, config = {}) => executeRequest('POST', endpoint, data, config),
 
-    const response = await fetch(`${url}${queryString}`, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${getAuthToken()}`,
-        ...restConfig.headers
-      },
-      ...restConfig
-    });
+  put: (endpoint, data, config = {}) => executeRequest('PUT', endpoint, data, config),
 
-    if (!response.ok) {
-      const error = await response.json().catch(() => ({}));
-      throw new Error(error.message || error.detail || `HTTP ${response.status}: ${response.statusText}`);
-    }
+  patch: (endpoint, data, config = {}) => executeRequest('PATCH', endpoint, data, config),
 
-    const data = await response.json();
-    return { data };
-  },
-
-  post: async (endpoint, data, config = {}) => {
-    const url = getApiUrl(endpoint);
-
-    const response = await fetch(url, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${getAuthToken()}`,
-        ...config.headers
-      },
-      body: JSON.stringify(data),
-      ...config
-    });
-
-    if (!response.ok) {
-      const error = await response.json().catch(() => ({}));
-      console.error('[API Error] POST', endpoint, error, response.status);
-      throw new Error(error.message || error.detail || `HTTP ${response.status}: ${response.statusText}`);
-    }
-
-    const responseData = await response.json();
-    return { data: responseData };
-  },
-
-  put: async (endpoint, data, config = {}) => {
-    const url = getApiUrl(endpoint);
-
-    const response = await fetch(url, {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${getAuthToken()}`,
-        ...config.headers
-      },
-      body: JSON.stringify(data),
-      ...config
-    });
-
-    if (!response.ok) {
-      const error = await response.json().catch(() => ({}));
-      throw new Error(error.message || error.detail || `HTTP ${response.status}: ${response.statusText}`);
-    }
-
-    const responseData = await response.json();
-    return { data: responseData };
-  },
-
-  patch: async (endpoint, data, config = {}) => {
-    const url = getApiUrl(endpoint);
-
-    const response = await fetch(url, {
-      method: 'PATCH',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${getAuthToken()}`,
-        ...config.headers
-      },
-      body: JSON.stringify(data),
-      ...config
-    });
-
-    if (!response.ok) {
-      const error = await response.json().catch(() => ({}));
-      throw new Error(error.message || error.detail || `HTTP ${response.status}: ${response.statusText}`);
-    }
-
-    const responseData = await response.json();
-    return { data: responseData };
-  },
-
-  delete: async (endpoint, config = {}) => {
-    const url = getApiUrl(endpoint);
-
-    const response = await fetch(url, {
-      method: 'DELETE',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${getAuthToken()}`,
-        ...config.headers
-      },
-      ...config
-    });
-
-    if (!response.ok) {
-      const error = await response.json().catch(() => ({}));
-      throw new Error(error.message || error.detail || `HTTP ${response.status}: ${response.statusText}`);
-    }
-
-    // DELETE might return empty response
-    const text = await response.text();
-    const responseData = text ? JSON.parse(text) : {};
-    return { data: responseData };
-  }
+  delete: (endpoint, config = {}) => executeRequest('DELETE', endpoint, null, config)
 };
 
 /**
@@ -294,12 +356,36 @@ const mockClient = {
   post: async (endpoint, data, config = {}) => {
     console.log(`[MOCK API] POST ${endpoint}`, data);
     await new Promise(resolve => setTimeout(resolve, 500));
+
+    if (endpoint.includes('/auth/login/')) {
+      return {
+        data: {
+          access: 'mock-access-token-' + Date.now(),
+          refresh: 'mock-refresh-token-' + Date.now(),
+          user: {
+            id: 'mock-user-1',
+            email: data.email,
+            role: 'admin'
+          }
+        }
+      };
+    }
+
+    if (endpoint.includes('/task_management/update/')) {
+      return { data: { success: true, ...data } };
+    }
+
     return { data: { ...data, id: 'MOCK_ID_' + Date.now(), success: true } };
   },
 
   put: async (endpoint, data, config = {}) => {
     console.log(`[MOCK API] PUT ${endpoint}`, data);
     await new Promise(resolve => setTimeout(resolve, 500));
+
+    if (endpoint.includes('/task_management/update/')) {
+      return { data: { success: true, ...data } };
+    }
+
     return { data: { ...data, success: true } };
   },
 
@@ -316,7 +402,7 @@ const mockClient = {
   }
 };
 
-const api = process.env.REACT_APP_USE_MOCKS === 'true' ? mockClient : realApi;
+export const api = process.env.REACT_APP_USE_MOCKS === 'true' ? mockClient : realApi;
 
 
 // Provider configuration endpoints
@@ -2130,54 +2216,7 @@ export const validateProviderConfig = (channel, providerType, config) => {
   return { isValid: errors.length === 0, errors };
 };
 
-// =====================================================================================
-// USER REGISTRATION API FUNCTIONS
-// =====================================================================================
 
-/**
- * Register a new user with company and industry information
- * @param {Object} registrationData - User registration data
- * @returns {Promise<Object>} Registration result
- */
-export const registerUser = async (registrationData) => {
-  try {
-    // In a real app, this would call the API endpoint
-    // return apiRequest('/auth/register', {
-    //   method: 'POST',
-    //   body: JSON.stringify(registrationData)
-    // });
-
-    // Mock implementation with validation
-    await new Promise(resolve => setTimeout(resolve, 1500));
-
-    // Simulate email already exists error (10% chance)
-    if (Math.random() < 0.1) {
-      throw new Error('An account with this email already exists');
-    }
-
-    // Simulate successful registration
-    return {
-      success: true,
-      userId: `USER-${Date.now()}`,
-      companyId: `COMPANY-${Date.now()}`,
-      message: 'Registration successful! Please check your email to verify your account.',
-      user: {
-        firstName: registrationData.firstName,
-        lastName: registrationData.lastName,
-        email: registrationData.email,
-        company: {
-          name: registrationData.companyName,
-          industry: registrationData.industry,
-          numberOfUsers: registrationData.numberOfUsers,
-          additionalFields: registrationData.additionalFields
-        }
-      }
-    };
-  } catch (error) {
-    console.error('Registration error:', error);
-    throw error;
-  }
-};
 
 /**
  * Check if email is already registered
@@ -2260,5 +2299,6 @@ export const resendVerificationEmail = async (email) => {
     throw error;
   }
 };
+
 
 export default api;

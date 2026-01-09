@@ -1,252 +1,190 @@
 import api from './api';
 
-const delay = (ms = 500) => new Promise(res => setTimeout(res, ms));
-
-// In-memory fallback storage
-let mockInsurers = [];
-let mockProducts = [];
-
 // Insurer operations
 export const fetchInsurers = async () => {
   try {
-    const response = await api.get('/insurers');
-    if (response.data && Array.isArray(response.data)) return response.data;
-    throw new Error('No data from API');
+    const response = await api.get('/insurers/list/');
+    // Handle pagination or direct array
+    const data = response.data;
+    if (Array.isArray(data)) return data;
+    if (data && Array.isArray(data.results)) return data.results;
+    if (data && Array.isArray(data.data)) return data.data; // Some APIs wrap in data field
+    return [];
   } catch (error) {
-    console.error('Error fetching insurers, using mock:', error);
-    await delay(200);
-    return [...mockInsurers];
-  }
-};
-
-export const fetchProducts = async () => {
-  try {
-    const response = await api.get('/products');
-    if (response.data && Array.isArray(response.data)) return response.data;
-    throw new Error('No data from API');
-  } catch (error) {
-    console.error('Error fetching products, using mock:', error);
-    await delay(200);
-    return [...mockProducts];
-  }
-};
-
-export const fetchAll = async () => {
-  try {
-    const response = await api.get('/insurers-products');
-    if (response.data) return response.data;
-    throw new Error('No data from API');
-  } catch (error) {
-    console.error('Error fetching all, using mock:', error);
-    await delay(200);
-    return {
-      insurers: [...mockInsurers],
-      products: [...mockProducts]
-    };
+    console.error('Error fetching insurers:', error);
+    throw error;
   }
 };
 
 export const addInsurer = async (insurerData) => {
   try {
-    const response = await api.post('/insurers', insurerData);
-    if (response.data) return response.data;
-    throw new Error('No data from API');
+    const response = await api.post('/insurers/create/', insurerData);
+    return response.data;
   } catch (error) {
-    console.error('Error adding insurer, using mock:', error);
-    await delay(300);
-    const newInsurer = {
-      id: insurerData.id || `insurer-${Date.now()}`,
-      ...insurerData,
-      integrationStatus: insurerData.integrationStatus || 'pending',
-      lastSyncedAt: insurerData.lastSyncedAt || new Date().toISOString(),
-      createdAt: new Date().toISOString()
-    };
-    mockInsurers.push(newInsurer);
-    return newInsurer;
-  }
-};
-
-export const updateInsurer = async (insurerId, updates) => {
-  try {
-    const response = await api.put(`/insurers/${insurerId}`, updates);
-    if (response.data) return response.data;
-    throw new Error('No data from API');
-  } catch (error) {
-    console.error('Error updating insurer, using mock:', error);
-    await delay(200);
-    const idx = mockInsurers.findIndex(i => i.id === insurerId);
-    if (idx === -1) throw new Error('Insurer not found');
-    mockInsurers[idx] = { ...mockInsurers[idx], ...updates, updatedAt: new Date().toISOString() };
-    return mockInsurers[idx];
-  }
-};
-
-export const deleteInsurer = async (insurerId) => {
-  try {
-    const response = await api.delete(`/insurers/${insurerId}`);
-    return response.data || { success: true };
-  } catch (error) {
-    console.error('Error deleting insurer, using mock:', error);
-    await delay(200);
-    const using = mockProducts.filter(p => p.insurerId === insurerId);
-    if (using.length > 0) {
-      return { success: false, error: `Cannot delete - ${using.length} product(s) reference this insurer` };
-    }
-    mockInsurers = mockInsurers.filter(i => i.id !== insurerId);
-    return { success: true };
+    console.error('Error adding insurer:', error);
+    throw error;
   }
 };
 
 export const testInsurerConnection = async (insurerId) => {
   try {
-    const response = await api.post(`/insurers/${insurerId}/test`);
-    if (response.data) return response.data;
-    throw new Error('No data from API');
+    const response = await api.post(`/insurers/test-connection/${insurerId}/`, { mock: true }); // Found mock: true in Postman body, might need it or dynamic
+    return response.data;
   } catch (error) {
-    console.error('Error testing insurer connection, using mock:', error);
-    await delay(1500);
-    const idx = mockInsurers.findIndex(i => i.id === insurerId);
-    if (idx === -1) return { success: false, error: 'Insurer not found' };
-    const success = Math.random() > 0.25;
-    mockInsurers[idx].integrationStatus = success ? 'connected' : 'error';
-    mockInsurers[idx].lastSyncedAt = new Date().toISOString();
-    return success ? { success: true, message: 'Connection successful' } : { success: false, error: 'Connection failed' };
+    console.error('Error testing insurer connection:', error);
+    throw error;
+  }
+};
+
+export const updateInsurer = async (insurerId, updates) => {
+  try {
+    const response = await api.patch(`/insurers/update/${insurerId}/`, updates);
+    return response.data;
+  } catch (error) {
+    console.error('Error updating insurer:', error);
+    throw error;
+  }
+};
+
+export const deleteInsurer = async (insurerId) => {
+  try {
+    const response = await api.delete(`/insurers/delete/${insurerId}/`);
+    return response.data;
+  } catch (error) {
+    console.error('Error deleting insurer:', error);
+    throw error;
+  }
+};
+
+export const toggleInsurer = async (insurerId) => {
+  try {
+    const response = await api.patch(`/insurers/toggle/${insurerId}/`);
+    return response.data;
+  } catch (error) {
+    console.error('Error toggling insurer:', error);
+    throw error;
   }
 };
 
 // Product operations
 export const addProduct = async (productData) => {
   try {
-    const response = await api.post('/products', productData);
-    if (response.data) return response.data;
-    throw new Error('No data from API');
+    const response = await api.post('/insurers/products/create/', productData);
+    return response.data;
   } catch (error) {
-    console.error('Error adding product, using mock:', error);
-    await delay(300);
-    const newProduct = {
-      id: productData.id || `prod-${Date.now()}`,
-      ...productData,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
-    };
-    mockProducts.push(newProduct);
-    return newProduct;
+    console.error('Error adding product:', error);
+    throw error;
   }
 };
 
-export const updateProduct = async (productId, updates) => {
+export const fetchProducts = async () => {
   try {
-    const response = await api.put(`/products/${productId}`, updates);
-    if (response.data) return response.data;
-    throw new Error('No data from API');
+    const response = await api.get('/insurers/products/list/');
+    const data = response.data;
+    if (Array.isArray(data)) return data;
+    if (data && Array.isArray(data.results)) return data.results;
+    if (data && Array.isArray(data.data)) return data.data;
+    return [];
   } catch (error) {
-    console.error('Error updating product, using mock:', error);
-    await delay(200);
-    const idx = mockProducts.findIndex(p => p.id === productId);
-    if (idx === -1) throw new Error('Product not found');
-    mockProducts[idx] = { ...mockProducts[idx], ...updates, updatedAt: new Date().toISOString() };
-    return mockProducts[idx];
-  }
-};
-
-export const deleteProduct = async (productId) => {
-  try {
-    const response = await api.delete(`/products/${productId}`);
-    return response.data || { success: true };
-  } catch (error) {
-    console.error('Error deleting product, using mock:', error);
-    await delay(200);
-    mockProducts = mockProducts.filter(p => p.id !== productId);
-    return { success: true };
+    console.error('Error fetching products:', error);
+    throw error;
   }
 };
 
 export const duplicateProduct = async (productId) => {
   try {
-    const response = await api.post(`/products/${productId}/duplicate`);
-    if (response.data) return response.data;
-    throw new Error('No data from API');
+    const response = await api.post(`/insurers/products/copy/${productId}/`);
+    return response.data;
   } catch (error) {
-    console.error('Error duplicating product, using mock:', error);
-    await delay(250);
-    const prod = mockProducts.find(p => p.id === productId);
-    if (!prod) return { success: false, error: 'Product not found' };
-    const dup = {
-      ...prod,
-      id: `prod-${Date.now()}`,
-      name: `${prod.name} (Copy)`,
-      status: 'inactive',
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
-    };
-    mockProducts.push(dup);
-    return { success: true, product: dup };
+    console.error('Error duplicating product:', error);
+    throw error;
   }
 };
 
-// Query operations
-export const getInsurerById = async (insurerId) => {
+export const toggleProduct = async (productId) => {
   try {
-    const response = await api.get(`/insurers/${insurerId}`);
-    if (response.data) return response.data;
-    throw new Error('No data from API');
+    const response = await api.patch(`/insurers/products/toggle/${productId}/`);
+    return response.data;
   } catch (error) {
-    console.error('Error fetching insurer by id, using mock:', error);
-    await delay(100);
-    return mockInsurers.find(i => i.id === insurerId) || null;
+    console.error('Error toggling product:', error);
+    throw error;
   }
 };
 
-export const getProductById = async (productId) => {
+export const updateProduct = async (productId, updates) => {
   try {
-    const response = await api.get(`/products/${productId}`);
-    if (response.data) return response.data;
-    throw new Error('No data from API');
+    const response = await api.patch(`/insurers/products/update/${productId}/`, updates);
+    return response.data;
   } catch (error) {
-    console.error('Error fetching product by id, using mock:', error);
-    await delay(100);
-    return mockProducts.find(p => p.id === productId) || null;
+    console.error('Error updating product:', error);
+    throw error;
   }
 };
 
-export const getProductsByInsurer = async (insurerId) => {
+export const deleteProduct = async (productId) => {
   try {
-    const response = await api.get(`/products/by-insurer/${insurerId}`);
-    if (response.data) return response.data;
-    throw new Error('No data from API');
+    const response = await api.delete(`/insurers/products/delete/${productId}/`);
+    return response.data;
   } catch (error) {
-    console.error('Error fetching products by insurer, using mock:', error);
-    await delay(100);
-    return mockProducts.filter(p => p.insurerId === insurerId);
+    console.error('Error deleting product:', error);
+    throw error;
   }
 };
 
-export const getProductsByCategory = async (category) => {
-  try {
-    const response = await api.get(`/products/by-category/${category}`);
-    if (response.data) return response.data;
-    throw new Error('No data from API');
-  } catch (error) {
-    console.error('Error fetching products by category, using mock:', error);
-    await delay(100);
-    return mockProducts.filter(p => p.category === category);
-  }
-};
-
+// Dashboard/Stats
 export const getStatistics = async () => {
   try {
-    const response = await api.get('/insurers-products/stats');
-    if (response.data) return response.data;
-    throw new Error('No data from API');
+    const response = await api.get('/insurers/stats/');
+    return response.data;
   } catch (error) {
-    console.error('Error fetching statistics, using mock:', error);
-    await delay(150);
-    return {
-      totalInsurers: mockInsurers.length,
-      activeInsurers: mockInsurers.filter(i => i.status === 'active').length,
-      connectedInsurers: mockInsurers.filter(i => i.integrationStatus === 'connected').length,
-      totalProducts: mockProducts.length,
-      activeProducts: mockProducts.filter(p => p.status === 'active').length
-    };
+    console.error('Error fetching statistics:', error);
+    throw error;
   }
+};
+
+// Composite fetch for convenience, if needed, or we can just fetch separately in the UI
+export const fetchAll = async () => {
+  try {
+    const [insurers, products, stats] = await Promise.all([
+      fetchInsurers(),
+      fetchProducts(),
+      getStatistics()
+    ]);
+    return {
+      insurers,
+      products,
+      stats
+    };
+  } catch (error) {
+    console.error('Error fetching all data:', error);
+    throw error;
+  }
+};
+
+export const getInsurerById = async (insurerId) => {
+  // There isn't a direct "get by id" in the Postman collection,
+  // so we might need tof etch all and find, OR assume the standard pattern if supported.
+  // For now, let's fetch all and filter to be safe, or just rely on the list we have in state.
+  // However, usually detailed view might need a specific call.
+  // Given the collection, let's try reading from list.
+  const insurers = await fetchInsurers();
+  return insurers.find(i => i.id === insurerId || i.id === parseInt(insurerId));
+};
+
+export default {
+  fetchInsurers,
+  addInsurer,
+  testInsurerConnection,
+  updateInsurer,
+  deleteInsurer,
+  toggleInsurer,
+  addProduct,
+  fetchProducts,
+  duplicateProduct,
+  toggleProduct,
+  updateProduct,
+  deleteProduct,
+  getStatistics,
+  fetchAll,
+  getInsurerById
 };

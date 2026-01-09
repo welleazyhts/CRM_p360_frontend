@@ -55,190 +55,47 @@ import {
   Close as CloseIcon
 } from '@mui/icons-material';
 import InputAdornment from '@mui/material/InputAdornment';
-import { listPipelines, getPipeline, addStage, updateStage, deleteStage, reorderStages } from '../services/pipelineService';
+import {
+  listPipelineItems,
+  createPipelineItem,
+  updatePipelineItem,
+  partiallyUpdatePipelineItem,
+  deletePipelineItem,
+  filterByStage,
+  searchPipelineItems,
+  getPipelineSummary,
+  getDashboardStats,
+  resetFilters
+} from '../services/pipelineService';
+import { leadService } from '../services/leadService';
+import { useTranslation } from 'react-i18next';
 
-// Default mock pipeline stages (will be replaced by service data when available)
+// Default stages based on Postman collection endpoints
 const defaultPipelineStages = [
-  { id: 'new', name: 'New Leads', color: '#A4D7E1', order: 1 },
+  { id: 'new_lead', name: 'New Leads', color: '#A4D7E1', order: 1 },
   { id: 'contacted', name: 'Contacted', color: '#B3EBD5', order: 2 },
   { id: 'qualified', name: 'Qualified', color: '#F2C94C', order: 3 },
-  { id: 'proposal', name: 'Proposal', color: '#E0F7FA', order: 4 },
+  { id: 'proposal_sent', name: 'Proposal', color: '#00ACC1', order: 4 },
   { id: 'negotiation', name: 'Negotiation', color: '#6B8E23', order: 5 },
-  { id: 'closed-won', name: 'Closed Won', color: '#4CAF50', order: 6 },
-  { id: 'closed-lost', name: 'Closed Lost', color: '#F44336', order: 7 }
+  { id: 'closed_won', name: 'Closed Won', color: '#4CAF50', order: 6 },
+  { id: 'closed_lost', name: 'Closed Lost', color: '#F44336', order: 7 }
 ];
-
-// Mock leads data with pipeline stages
-const mockPipelineLeads = [
-  {
-    id: 1,
-    firstName: 'John',
-    lastName: 'Smith',
-    email: 'john.smith@email.com',
-    phone: '+1-555-0123',
-    company: 'Tech Solutions Inc.',
-    position: 'CEO',
-    value: 50000,
-    expectedCloseDate: '2024-02-15',
-    lastContactDate: '2024-01-15',
-    assignedTo: 'Sarah Johnson',
-    assignedToId: 'sarah.johnson',
-    stage: 'new',
-    priority: 'High',
-    notes: 'Interested in premium insurance package.',
-    tags: ['Premium', 'Enterprise'],
-    createdAt: '2024-01-10'
-  },
-  {
-    id: 2,
-    firstName: 'Emily',
-    lastName: 'Davis',
-    email: 'emily.davis@company.com',
-    phone: '+1-555-0456',
-    company: 'Healthcare Plus',
-    position: 'HR Director',
-    value: 35000,
-    expectedCloseDate: '2024-02-20',
-    lastContactDate: '2024-01-12',
-    assignedTo: 'Mike Wilson',
-    assignedToId: 'mike.wilson',
-    stage: 'contacted',
-    priority: 'Medium',
-    notes: 'Follow up scheduled for next week.',
-    tags: ['Healthcare', 'Medium'],
-    createdAt: '2024-01-08'
-  },
-  {
-    id: 3,
-    firstName: 'Michael',
-    lastName: 'Johnson',
-    email: 'michael.j@enterprise.com',
-    phone: '+1-555-0789',
-    company: 'Enterprise Corp',
-    position: 'CFO',
-    value: 75000,
-    expectedCloseDate: '2024-03-01',
-    lastContactDate: '2024-01-14',
-    assignedTo: 'Sarah Johnson',
-    assignedToId: 'sarah.johnson',
-    stage: 'qualified',
-    priority: 'High',
-    notes: 'Budget approved, ready for proposal.',
-    tags: ['Enterprise', 'High Value'],
-    createdAt: '2024-01-05'
-  },
-  {
-    id: 4,
-    firstName: 'Sarah',
-    lastName: 'Williams',
-    email: 'sarah.w@startup.com',
-    phone: '+1-555-0321',
-    company: 'StartupXYZ',
-    position: 'Founder',
-    value: 25000,
-    expectedCloseDate: '2024-02-28',
-    lastContactDate: '2024-01-16',
-    assignedTo: 'Mike Wilson',
-    assignedToId: 'mike.wilson',
-    stage: 'proposal',
-    priority: 'Medium',
-    notes: 'Proposal sent, waiting for feedback.',
-    tags: ['Startup', 'Small'],
-    createdAt: '2024-01-12'
-  },
-  {
-    id: 5,
-    firstName: 'David',
-    lastName: 'Brown',
-    email: 'david.b@retail.com',
-    phone: '+1-555-0654',
-    company: 'Retail Chain',
-    position: 'Operations Manager',
-    value: 40000,
-    expectedCloseDate: '2024-02-25',
-    lastContactDate: '2024-01-17',
-    assignedTo: 'Sarah Johnson',
-    assignedToId: 'sarah.johnson',
-    stage: 'negotiation',
-    priority: 'High',
-    notes: 'Negotiating terms and pricing.',
-    tags: ['Retail', 'Chain'],
-    createdAt: '2024-01-09'
-  },
-  {
-    id: 6,
-    firstName: 'Lisa',
-    lastName: 'Garcia',
-    email: 'lisa.g@tech.com',
-    phone: '+1-555-0987',
-    company: 'Tech Innovations',
-    position: 'CTO',
-    value: 60000,
-    expectedCloseDate: '2024-01-30',
-    lastContactDate: '2024-01-18',
-    assignedTo: 'Mike Wilson',
-    assignedToId: 'mike.wilson',
-    stage: 'closed-won',
-    priority: 'High',
-    notes: 'Deal closed successfully!',
-    tags: ['Tech', 'Won'],
-    createdAt: '2024-01-03'
-  }
-];
-
-// Mock customer history data
-const mockCustomerHistory = {
-  'lisa.g@tech.com': [
-    {
-      id: 'POL001',
-      policyNumber: 'TECH2024001',
-      type: 'Health Insurance',
-      startDate: '2024-01-01',
-      endDate: '2024-12-31',
-      premium: 45000,
-      status: 'Active',
-      coverage: '₹5,00,000',
-      details: 'Group Health Insurance for 50 employees'
-    },
-    {
-      id: 'POL002',
-      policyNumber: 'TECH2023001',
-      type: 'Cyber Insurance',
-      startDate: '2023-01-01',
-      endDate: '2023-12-31',
-      premium: 35000,
-      status: 'Expired',
-      coverage: '₹2,00,000',
-      details: 'Data breach and cyber liability coverage'
-    }
-  ],
-  'john.doe@example.com': [
-    {
-      id: 'POL003',
-      policyNumber: 'AUTO2024001',
-      type: 'Vehicle Insurance',
-      startDate: '2024-03-01',
-      endDate: '2025-02-28',
-      premium: 25000,
-      status: 'Active',
-      coverage: '₹1,50,000',
-      details: 'Commercial fleet insurance - 5 vehicles'
-    }
-  ]
-};
 
 const SalesPipeline = () => {
+  const { t } = useTranslation();
   const theme = useTheme();
-  const [leads, setLeads] = useState(mockPipelineLeads);
-  const [filteredLeads, setFilteredLeads] = useState(mockPipelineLeads);
-  const [pipelineStages, setPipelineStages] = useState(defaultPipelineStages);
-  const [pipelines, setPipelines] = useState([]);
-  const [selectedPipelineId, setSelectedPipelineId] = useState(null);
 
-  // Stage dialog state
+  // State
+  const [leads, setLeads] = useState([]);
+  const [filteredLeads, setFilteredLeads] = useState([]);
+  const [pipelineStages, setPipelineStages] = useState(defaultPipelineStages);
+  // Removed multi-pipeline state (backend is single pipeline)
+
+  // Stage dialog state (Keeping for UI interaction, though creating stages might not persist via API)
   const [stageDialogOpen, setStageDialogOpen] = useState(false);
   const [stageEditing, setStageEditing] = useState(null);
   const [stageName, setStageName] = useState('');
+
   const [selectedLead, setSelectedLead] = useState(null);
   const [openDialog, setOpenDialog] = useState(false);
   const [editingLead, setEditingLead] = useState(null);
@@ -248,144 +105,16 @@ const SalesPipeline = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [customerHistory, setCustomerHistory] = useState([]);
 
-  // Load customer history when a lead is selected
-  useEffect(() => {
-    if (selectedLead) {
-      const history = mockCustomerHistory[selectedLead.email] || [];
-      setCustomerHistory(history);
-    } else {
-      setCustomerHistory([]);
-    }
-  }, [selectedLead]);
+  // Metrics from API
+  const [metrics, setMetrics] = useState({
+    total_leads: 0,
+    total_value: 0,
+    won_leads: 0,
+    won_value: 0,
+    conversion_rate: 0
+  });
 
-  // Load pipelines and stages from pipelineService
-  useEffect(() => {
-    let mounted = true;
-    const load = async () => {
-      try {
-        const res = await listPipelines({ page: 1, limit: 10 });
-        if (!mounted) return;
-        const fetched = res.pipelines || [];
-        setPipelines(fetched);
-        if (fetched.length > 0) setSelectedPipelineId(fetched[0].id);
-        // If there is at least one pipeline, load its stages
-        if (fetched.length > 0) {
-          try {
-            const p = await getPipeline(fetched[0].id);
-            if (!mounted) return;
-            if (p && p.stages) {
-              // Map stages to UI shape with color placeholders
-              const mapped = p.stages.map((s, idx) => ({
-                id: s.id,
-                name: s.name,
-                color: ['#A4D7E1', '#B3EBD5', '#F2C94C', '#E0F7FA', '#6B8E23', '#4CAF50', '#F44336'][idx % 7],
-                order: s.order || idx + 1
-              }));
-              setPipelineStages(mapped);
-            }
-          } catch (e) {
-            // ignore pipeline fetch error, keep defaults
-          }
-        }
-      } catch (e) {
-        // keep defaults on error
-      }
-    };
-    load();
-    return () => { mounted = false; };
-  }, []);
-
-  // Stage CRUD handlers
-  const handleOpenStageDialog = (stage = null) => {
-    setStageEditing(stage);
-    setStageName(stage ? stage.name : '');
-    setStageDialogOpen(true);
-  };
-
-  const handleCloseStageDialog = () => {
-    setStageDialogOpen(false);
-    setStageEditing(null);
-    setStageName('');
-  };
-
-  const handleSaveStage = async () => {
-    if (!selectedPipelineId) {
-      setSnackbar({ open: true, message: 'No pipeline selected', severity: 'error' });
-      return;
-    }
-    try {
-      if (stageEditing) {
-        const updated = await updateStage(selectedPipelineId, stageEditing.id, { name: stageName });
-        setPipelineStages(prev => prev.map(s => s.id === updated.id ? { ...s, name: updated.name } : s));
-        setSnackbar({ open: true, message: 'Stage updated', severity: 'success' });
-      } else {
-        const created = await addStage(selectedPipelineId, { name: stageName });
-        setPipelineStages(prev => [...prev, { id: created.id, name: created.name, color: '#E0F7FA', order: created.order || prev.length + 1 }]);
-        setSnackbar({ open: true, message: 'Stage added', severity: 'success' });
-      }
-    } catch (e) {
-      setSnackbar({ open: true, message: `Error saving stage: ${e.message}`, severity: 'error' });
-    } finally {
-      handleCloseStageDialog();
-    }
-  };
-
-  const handleDeleteStage = async (stageId) => {
-    if (!selectedPipelineId) {
-      setSnackbar({ open: true, message: 'No pipeline selected', severity: 'error' });
-      return;
-    }
-    if (!window.confirm('Delete stage? This cannot be undone.')) return;
-    try {
-      await deleteStage(selectedPipelineId, stageId);
-      setPipelineStages(prev => prev.filter(s => s.id !== stageId));
-      setSnackbar({ open: true, message: 'Stage deleted', severity: 'success' });
-    } catch (e) {
-      setSnackbar({ open: true, message: `Error deleting stage: ${e.message}`, severity: 'error' });
-    }
-  };
-
-  const handleSelectPipeline = async (id) => {
-    setSelectedPipelineId(id);
-    try {
-      const p = await getPipeline(id);
-      if (p && p.stages) {
-        const mapped = p.stages.map((s, idx) => ({ id: s.id, name: s.name, color: ['#A4D7E1', '#B3EBD5', '#F2C94C', '#E0F7FA', '#6B8E23', '#4CAF50', '#F44336'][idx % 7], order: s.order || idx + 1 }));
-        setPipelineStages(mapped);
-      }
-    } catch (e) {
-      setSnackbar({ open: true, message: 'Failed to load pipeline stages', severity: 'warning' });
-    }
-  };
-
-  const handleMoveStage = async (stageId, direction) => {
-    const idx = pipelineStages.findIndex(s => s.id === stageId);
-    if (idx === -1) return;
-    const targetIdx = direction === 'up' ? idx - 1 : idx + 1;
-    if (targetIdx < 0 || targetIdx >= pipelineStages.length) return;
-    const newStages = pipelineStages.slice();
-    // swap order
-    const a = newStages[idx];
-    const b = newStages[targetIdx];
-    const aOrder = a.order || idx + 1;
-    const bOrder = b.order || targetIdx + 1;
-    a.order = bOrder;
-    b.order = aOrder;
-    newStages[idx] = b;
-    newStages[targetIdx] = a;
-    newStages.sort((x, y) => (x.order || 0) - (y.order || 0));
-    setPipelineStages(newStages);
-    // persist order
-    try {
-      const orderPayload = newStages.map(s => ({ id: s.id, order: s.order }));
-      await reorderStages(selectedPipelineId, orderPayload);
-      setSnackbar({ open: true, message: 'Stages reordered', severity: 'success' });
-    } catch (e) {
-      setSnackbar({ open: true, message: 'Failed to persist reorder', severity: 'warning' });
-    }
-  };
-
-  // Form state
+  // Missing form state
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
@@ -393,65 +122,205 @@ const SalesPipeline = () => {
     phone: '',
     company: '',
     position: '',
-    value: '',
+    value: 0,
     expectedCloseDate: '',
     assignedTo: '',
     assignedToId: '',
-    stage: 'new',
+    stage: 'new_lead',
     priority: 'Medium',
     notes: '',
     tags: []
   });
 
-  // Mock users for assignment
-  const users = [
-    { id: 'sarah.johnson', name: 'Sarah Johnson' },
-    { id: 'mike.wilson', name: 'Mike Wilson' },
-    { id: 'jane.doe', name: 'Jane Doe' },
-    { id: 'bob.smith', name: 'Bob Smith' }
-  ];
+  const priorityOptions = ['High', 'Medium', 'Low'];
 
-  const priorityOptions = ['Low', 'Medium', 'High', 'Urgent'];
-  // Filter leads based on search and filter
+  // Placeholder for users
+  const [users, setUsers] = useState([]);
+
   useEffect(() => {
-    let filtered = leads;
+    const loadUsers = async () => {
+      try {
+        const userList = await leadService.getAvailableUsers();
+        if (Array.isArray(userList)) {
+          setUsers(userList);
+        }
+      } catch (err) {
+        console.error("Failed to load users", err);
+      }
+    };
+    loadUsers();
+  }, []);
 
-    // Search filter
+  const getLeadsByStage = (stageId) => {
+    // If we are searching, we still want to filter by search term, so we use filteredLeads BUT ignore the stage filter logic from useEffect if we are manually placing them in columns
+    // Actually, simpler: If filter is ACTIVE (not all), we are showing only that column. 
+    // The previous issue was probably that 'filteredLeads' had nothing if logic was wrong.
+    // Let's use 'leads' (all leads) and apply search filter manually here, or just use filteredLeads if the UE logic is correct.
+    // The user moved columns. If I select "Qualified" filter, filteredLeads only has Qualified leads. 
+    // If I map over ALL stages, other stages have 0 leads.
+    // User wants: If I select "Qualified", ONLY "Qualified" column should show (implemented above) AND it should have data.
+
+    // For safety, let's filter from the master search-filtered list if needed, or just rely on filteredLeads if the column filter logic matches.
+    // Let's rely on filteredLeads which already has the stage filter applied.
+    // wait.. if I select "Qualified", filteredLeads ONLY has qualified. 
+    // Then getLeadsByStage('new_lead') returns empty. That's correct for hidden columns.
+    // getLeadsByStage('qualified') returns leads. That's correct.
+    // So the previous logic was likely fine, but maybe the state update was lagging or 'filter' value mismatch (name vs id).
+
+    // Let's ensure we use the same key for filtering.
+    // The Select uses 'stage.name' as value. My lead.stage uses 'stage.id'.
+    // If I filter by "Qualified" (name), the useEffect: l.stage === filter (id vs name mismatch).
+
+    // FIX in useEffect:
+    return leads.filter(lead => {
+      const matchesStage = lead.stage === stageId;
+      const matchesSearch = !searchTerm || (
+        (lead.firstName && lead.firstName.toLowerCase().includes(searchTerm.toLowerCase())) ||
+        (lead.lastName && lead.lastName.toLowerCase().includes(searchTerm.toLowerCase())) ||
+        (lead.company && lead.company.toLowerCase().includes(searchTerm.toLowerCase()))
+      );
+      return matchesStage && matchesSearch;
+    });
+  };
+
+  // Helpers for mapping
+  const mapLeadFromBackend = (item) => ({
+    id: item.id,
+    firstName: item.first_name,
+    lastName: item.last_name,
+    email: item.email,
+    phone: item.phone,
+    company: item.company,
+    position: item.position,
+    value: parseFloat(item.value) || 0,
+    expectedCloseDate: item.expected_close_date,
+    stage: item.stage, // e.g., 'negotiation'
+    priority: item.priority, // e.g., 'high'
+    notes: item.notes,
+    assignedTo: item.assigned_to_name || 'Unknown', // Backend might need to send this or we map ID
+    assignedToId: item.assigned_to,
+    createdAt: item.created_at,
+    tags: [] // Backend doesn't seem to have tags in standard body, keeping empty or mapping if available
+  });
+
+  const mapLeadToBackend = (data) => ({
+    first_name: data.firstName,
+    last_name: data.lastName,
+    email: data.email,
+    phone: data.phone,
+    company: data.company,
+    position: data.position,
+    value: data.value,
+    expected_close_date: data.expectedCloseDate,
+    stage: data.stage,
+    priority: data.priority ? data.priority.toLowerCase() : 'medium',
+    notes: data.notes,
+    assigned_to: data.assignedToId || null // Send null if no user selected
+  });
+
+  // Load customer history when a lead is selected (Mock for now)
+  useEffect(() => {
+    if (selectedLead) {
+      // Placeholder: in real app, fetch history
+      setCustomerHistory([]);
+    } else {
+      setCustomerHistory([]);
+    }
+  }, [selectedLead]);
+
+  // Load Initial Data
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  const fetchData = async () => {
+    setLoading(true);
+    try {
+      const [items, summaryData, statsData] = await Promise.allSettled([
+        listPipelineItems(),
+        getPipelineSummary(),
+        getDashboardStats()
+      ]);
+
+      if (items.status === 'fulfilled') {
+        const responseData = items.value;
+        // Handle both array and paginated response (DRF style)
+        const leadsArray = Array.isArray(responseData)
+          ? responseData
+          : (responseData && Array.isArray(responseData.results) ? responseData.results : []);
+
+        const mapped = leadsArray.map(item => ({
+          ...mapLeadFromBackend(item),
+          // Ensure stage exists, fallback to 'new_lead' if missing/null
+          stage: item.stage || 'new_lead'
+        }));
+        setLeads(mapped);
+        setFilteredLeads(mapped);
+
+        // Calculate metrics client-side to ensure they appear even if API stats are missing/zero
+        const totalLeads = mapped.length;
+        const totalValue = mapped.reduce((sum, l) => sum + (l.value || 0), 0);
+        const wonLeadsList = mapped.filter(l => l.stage === 'closed_won');
+        const wonLeads = wonLeadsList.length;
+        const wonValue = wonLeadsList.reduce((sum, l) => sum + (l.value || 0), 0);
+        const conversionRate = totalLeads > 0 ? (wonLeads / totalLeads) * 100 : 0;
+
+        setMetrics({
+          total_leads: totalLeads,
+          total_value: totalValue,
+          won_leads: wonLeads,
+          won_value: wonValue,
+          conversion_rate: parseFloat(conversionRate.toFixed(1))
+        });
+      }
+
+      // If we want to use API stats data, we can merge it, but client calculation is often more reliable for immediate feedback
+      // So we skip overriding with potentially empty API stats for now or prioritize client stats.
+
+    } catch (error) {
+      console.error('Error loading pipeline data:', error);
+      setSnackbar({ open: true, message: 'Failed to load pipeline data', severity: 'error' });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Filter & Search Logic
+  useEffect(() => {
+    let result = leads;
+
+    // Filter by stage
+    if (filter !== 'all') {
+      result = result.filter(l => l.stage === filter);
+    }
+
+    // Filter by search
     if (searchTerm) {
-      filtered = filtered.filter(lead =>
-        lead.firstName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        lead.lastName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        lead.company.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        lead.email.toLowerCase().includes(searchTerm.toLowerCase())
+      const lower = searchTerm.toLowerCase();
+      result = result.filter(l =>
+        (l.firstName && l.firstName.toLowerCase().includes(lower)) ||
+        (l.lastName && l.lastName.toLowerCase().includes(lower)) ||
+        (l.company && l.company.toLowerCase().includes(lower)) ||
+        (l.email && l.email.toLowerCase().includes(lower))
       );
     }
 
-    // Stage filter
-    if (filter !== 'all') {
-      const stageId = pipelineStages.find(s => s.name === filter)?.id;
-      if (stageId) {
-        filtered = filtered.filter(lead => lead.stage === stageId);
-      }
-    }
+    setFilteredLeads(result);
+  }, [leads, filter, searchTerm]);
 
-    setFilteredLeads(filtered);
-  }, [leads, searchTerm, filter, pipelineStages]);
-
-  // Get leads by stage
-  const getLeadsByStage = (stageId) => {
-    return filteredLeads.filter(lead => lead.stage === stageId);
+  // Stage CRUD handlers removed as backend uses standard stages
+  const handleOpenStageDialog = (stage = null) => {
+    // Optional: allow viewing stage details or editing name strictly for UI? 
+    // For now disabling stage editing to match API simplicity
+    setSnackbar({ open: true, message: 'Stage management not available in this version', severity: 'info' });
   };
 
-  // Get stage info
-
-
-  // Calculate stage totals
+  // Calculate stage totals (client-side from fetched leads)
   const getStageTotal = (stageId) => {
     const stageLeads = getLeadsByStage(stageId);
     return stageLeads.reduce((total, lead) => total + (lead.value || 0), 0);
   };
 
-  // Drag and drop handlers
   const handleDragStart = (e, lead) => {
     e.dataTransfer.setData('text/plain', JSON.stringify(lead));
   };
@@ -472,7 +341,7 @@ const SalesPipeline = () => {
     }
   };
 
-  const handleDrop = (e, newStage) => {
+  const handleDrop = async (e, newStage) => {
     e.preventDefault();
     const element = e.currentTarget;
     if (element && element.style) {
@@ -480,15 +349,35 @@ const SalesPipeline = () => {
     }
 
     try {
-      const lead = JSON.parse(e.dataTransfer.getData('text/plain'));
-      if (lead.stage !== newStage) {
+      const leadData = JSON.parse(e.dataTransfer.getData('text/plain'));
+      if (leadData.stage !== newStage) {
+        // Optimistic Update
+        const oldStage = leadData.stage;
         const updatedLeads = leads.map(l =>
-          l.id === lead.id
-            ? { ...l, stage: newStage, updatedAt: new Date().toISOString().split('T')[0] }
+          l.id === leadData.id
+            ? { ...l, stage: newStage }
             : l
         );
         setLeads(updatedLeads);
-        setSnackbar({ open: true, message: 'Lead moved to new stage', severity: 'success' });
+
+        // API Call
+        try {
+          await partiallyUpdatePipelineItem(leadData.id, { stage: newStage });
+          setSnackbar({ open: true, message: t('pipeline.messages.leadMoved'), severity: 'success' });
+          // Refresh stats
+          const stats = await getDashboardStats();
+          if (stats) setMetrics(prev => ({ ...prev, ...stats }));
+        } catch (err) {
+          // Revert on error
+          console.error(err);
+          const revertedLeads = leads.map(l =>
+            l.id === leadData.id
+              ? { ...l, stage: oldStage }
+              : l
+          );
+          setLeads(revertedLeads);
+          setSnackbar({ open: true, message: 'Failed to move lead', severity: 'error' });
+        }
       }
     } catch (error) {
       console.error('Error moving lead:', error);
@@ -500,6 +389,20 @@ const SalesPipeline = () => {
   const handleLeadClick = (lead) => {
     setSelectedLead(lead);
     setOpenDialog(true);
+  };
+
+  const handleDeleteLead = async (id) => {
+    if (!window.confirm(t('pipeline.messages.deleteConfirm') || 'Are you sure you want to delete this lead?')) return;
+    try {
+      await deletePipelineItem(id);
+      setLeads(prev => prev.filter(l => l.id !== id));
+      setFilteredLeads(prev => prev.filter(l => l.id !== id));
+      setSnackbar({ open: true, message: t('pipeline.messages.leadDeleted') || 'Lead deleted', severity: 'success' });
+      fetchData();
+    } catch (error) {
+      console.error('Error deleting lead:', error);
+      setSnackbar({ open: true, message: 'Failed to delete lead', severity: 'error' });
+    }
   };
 
   // Handle lead edit
@@ -515,45 +418,60 @@ const SalesPipeline = () => {
       value: lead.value,
       expectedCloseDate: lead.expectedCloseDate,
       assignedTo: lead.assignedTo,
-      assignedToId: lead.assignedToId,
+      // If assignedToId is missing or object, try to extract from lead or find in users
+      assignedToId: (typeof lead.assignedToId === 'object' ? lead.assignedToId?.id : lead.assignedToId) ||
+        (typeof lead.assigned_to === 'object' ? lead.assigned_to?.id : lead.assigned_to) || '',
       stage: lead.stage,
       priority: lead.priority,
       notes: lead.notes,
-      tags: lead.tags
+      tags: lead.tags || []
     });
     setOpenDialog(true);
   };
 
   // Handle save lead
-  const handleSaveLead = () => {
-    setLoading(true);
+  const handleSaveLead = async () => {
+    // Validate assignedTo
+    if (!formData.assignedToId) {
+      setSnackbar({ open: true, message: 'Please select an assigned user', severity: 'error' });
+      return;
+    }
 
-    setTimeout(() => {
-      if (editingLead) {
-        // Update existing lead
-        const updatedLeads = leads.map(lead =>
-          lead.id === editingLead.id
-            ? { ...lead, ...formData, updatedAt: new Date().toISOString().split('T')[0] }
-            : lead
-        );
-        setLeads(updatedLeads);
-        setSnackbar({ open: true, message: 'Lead updated successfully!', severity: 'success' });
-      } else {
-        // Add new lead
-        const newLead = {
-          id: Math.max(...leads.map(l => l.id)) + 1,
-          ...formData,
-          createdAt: new Date().toISOString().split('T')[0],
-          updatedAt: new Date().toISOString().split('T')[0],
-          lastContactDate: null
-        };
-        setLeads([...leads, newLead]);
-        setSnackbar({ open: true, message: 'Lead added successfully!', severity: 'success' });
+    // Check if user exists in the list (optional safety)
+    const isValidUser = users.some(u => u.id === formData.assignedToId);
+    if (!isValidUser && users.length > 0) {
+      // If users were loaded but the ID is not found, it's invalid. 
+      // If users list is empty (failed to load), we might skip this check or warn.
+      setSnackbar({ open: true, message: 'Invalid assigned user selected', severity: 'error' });
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const payload = mapLeadToBackend(formData);
+
+      // Double check payload assigned_to is not object
+      if (typeof payload.assigned_to === 'object' && payload.assigned_to !== null) {
+        payload.assigned_to = payload.assigned_to.id;
       }
 
-      setLoading(false);
+      if (editingLead) {
+        await updatePipelineItem(editingLead.id, payload);
+        setSnackbar({ open: true, message: t('pipeline.messages.leadUpdated'), severity: 'success' });
+      } else {
+        await createPipelineItem(payload);
+        setSnackbar({ open: true, message: t('pipeline.messages.leadAdded'), severity: 'success' });
+      }
       handleCloseDialog();
-    }, 1000);
+      fetchData(); // Reload all data/stats
+    } catch (error) {
+      console.error('Error saving lead:', error);
+      // Extract error message if available
+      const errMsg = error.response?.data?.errors?.assigned_to?.[0] || 'Failed to save lead';
+      setSnackbar({ open: true, message: errMsg, severity: 'error' });
+    } finally {
+      setLoading(false);
+    }
   };
 
   // Handle close dialog
@@ -565,22 +483,23 @@ const SalesPipeline = () => {
 
   // Get priority color
   const getPriorityColor = (priority) => {
+    const p = (priority || '').toLowerCase();
     const colors = {
-      'Low': theme.palette.success.main,
-      'Medium': theme.palette.warning.main,
-      'High': theme.palette.error.main,
-      'Urgent': theme.palette.error.dark
+      'low': theme.palette.success.main,
+      'medium': theme.palette.warning.main,
+      'high': theme.palette.error.main,
+      'urgent': theme.palette.error.dark
     };
-    return colors[priority] || theme.palette.grey[500];
+    return colors[p] || theme.palette.grey[500];
   };
 
-  // Calculate pipeline metrics
+  // Use metrics from API
   const pipelineMetrics = {
-    totalLeads: leads.length,
-    totalValue: leads.reduce((total, lead) => total + (lead.value || 0), 0),
-    wonLeads: leads.filter(lead => lead.stage === 'closed-won').length,
-    wonValue: leads.filter(lead => lead.stage === 'closed-won').reduce((total, lead) => total + (lead.value || 0), 0),
-    conversionRate: leads.length > 0 ? (leads.filter(lead => lead.stage === 'closed-won').length / leads.length * 100).toFixed(1) : 0
+    totalLeads: metrics.total_leads || 0,
+    totalValue: metrics.total_value || 0,
+    wonLeads: metrics.won_leads || metrics.closed_won_count || 0,
+    wonValue: metrics.won_value || metrics.closed_won_value || 0,
+    conversionRate: metrics.conversion_rate || 0
   };
 
   return (
@@ -588,7 +507,7 @@ const SalesPipeline = () => {
       {/* Header */}
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
         <Typography variant="h4" fontWeight="600" color="primary">
-          Sales Pipeline
+          {t('pipeline.title')}
         </Typography>
         <Button
           variant="contained"
@@ -606,7 +525,7 @@ const SalesPipeline = () => {
               expectedCloseDate: '',
               assignedTo: '',
               assignedToId: '',
-              stage: 'new',
+              stage: 'new_lead',
               priority: 'Medium',
               notes: '',
               tags: []
@@ -614,37 +533,11 @@ const SalesPipeline = () => {
             setOpenDialog(true);
           }}
         >
-          Add Lead
+          {t('pipeline.buttons.addLead')}
         </Button>
       </Box>
 
-      {/* Pipeline selector + stage management */}
-      <Card className="healthcare-card" sx={{ mb: 3, p: 2 }}>
-        <Grid container spacing={2} alignItems="center">
-          <Grid item xs={12} md={6}>
-            <FormControl fullWidth>
-              <InputLabel>Pipeline</InputLabel>
-              <Select
-                value={selectedPipelineId || ''}
-                label="Pipeline"
-                onChange={(e) => handleSelectPipeline(e.target.value)}
-              >
-                {pipelines.length === 0 && (
-                  <MenuItem value="">Default Pipeline</MenuItem>
-                )}
-                {pipelines.map(p => (
-                  <MenuItem key={p.id} value={p.id}>{p.name}</MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-          </Grid>
-          <Grid item xs={12} md={6} sx={{ display: 'flex', gap: 1, justifyContent: 'flex-end' }}>
-            <Button variant="outlined" startIcon={<AddIcon />} onClick={() => handleOpenStageDialog(null)}>
-              Add Stage
-            </Button>
-          </Grid>
-        </Grid>
-      </Card>
+
 
       {/* Pipeline Metrics */}
       <Grid container spacing={3} sx={{ mb: 3 }}>
@@ -655,7 +548,7 @@ const SalesPipeline = () => {
                 {pipelineMetrics.totalLeads}
               </Typography>
               <Typography variant="body2" color="text.secondary">
-                Total Leads
+                {t('pipeline.metrics.totalLeads')}
               </Typography>
             </CardContent>
           </Card>
@@ -667,7 +560,7 @@ const SalesPipeline = () => {
                 ₹{pipelineMetrics.totalValue.toLocaleString()}
               </Typography>
               <Typography variant="body2" color="text.secondary">
-                Pipeline Value
+                {t('pipeline.metrics.totalValue')}
               </Typography>
             </CardContent>
           </Card>
@@ -679,7 +572,7 @@ const SalesPipeline = () => {
                 {pipelineMetrics.wonLeads}
               </Typography>
               <Typography variant="body2" color="text.secondary">
-                Won Deals
+                {t('pipeline.metrics.wonDeals')}
               </Typography>
             </CardContent>
           </Card>
@@ -691,7 +584,7 @@ const SalesPipeline = () => {
                 ₹{pipelineMetrics.wonValue.toLocaleString()}
               </Typography>
               <Typography variant="body2" color="text.secondary">
-                Won Value
+                {t('pipeline.metrics.wonValue')}
               </Typography>
             </CardContent>
           </Card>
@@ -703,7 +596,7 @@ const SalesPipeline = () => {
                 {pipelineMetrics.conversionRate}%
               </Typography>
               <Typography variant="body2" color="text.secondary">
-                Conversion Rate
+                {t('pipeline.metrics.conversionRate')}
               </Typography>
             </CardContent>
           </Card>
@@ -717,7 +610,7 @@ const SalesPipeline = () => {
             <Grid item xs={12} md={6}>
               <TextField
                 fullWidth
-                placeholder="Search leads..."
+                placeholder={t('pipeline.filters.searchPlaceholder')}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 InputProps={{
@@ -727,15 +620,15 @@ const SalesPipeline = () => {
             </Grid>
             <Grid item xs={12} md={3}>
               <FormControl fullWidth>
-                <InputLabel>Filter by Stage</InputLabel>
+                <InputLabel>{t('pipeline.filters.filterByStage')}</InputLabel>
                 <Select
                   value={filter}
-                  label="Filter by Stage"
+                  label={t('pipeline.filters.filterByStage')}
                   onChange={(e) => setFilter(e.target.value)}
                 >
-                  <MenuItem value="all">All Stages</MenuItem>
+                  <MenuItem value="all">{t('pipeline.filters.allStages')}</MenuItem>
                   {pipelineStages.map(stage => (
-                    <MenuItem key={stage.id} value={stage.name}>{stage.name}</MenuItem>
+                    <MenuItem key={stage.id} value={stage.id}>{t(`pipeline.stages.${stage.id}`, { defaultValue: stage.name })}</MenuItem>
                   ))}
                 </Select>
               </FormControl>
@@ -750,7 +643,7 @@ const SalesPipeline = () => {
                   setFilter('all');
                 }}
               >
-                Reset Filters
+                {t('pipeline.buttons.resetFilters')}
               </Button>
             </Grid>
           </Grid>
@@ -759,223 +652,205 @@ const SalesPipeline = () => {
 
       {/* Pipeline Stages */}
       <Box sx={{ display: 'flex', gap: 2, overflowX: 'auto', pb: 2 }}>
-        {pipelineStages.map((stage) => {
-          const stageLeads = getLeadsByStage(stage.id);
-          const stageTotal = getStageTotal(stage.id);
+        {pipelineStages
+          .filter(stage => filter === 'all' || stage.name === filter || stage.id === filter)
+          .map((stage) => {
+            const stageLeads = getLeadsByStage(stage.id);
+            const stageTotal = getStageTotal(stage.id);
 
-          return (
-            <Paper
-              key={stage.id}
-              sx={{
-                minWidth: 300,
-                maxWidth: 300,
-                backgroundColor: alpha(stage.color, 0.1),
-                border: `2px solid ${alpha(stage.color, 0.3)}`,
-                borderRadius: 2
-              }}
-            >
-              {/* Stage Header */}
-              <Box sx={{ p: 2, borderBottom: `1px solid ${alpha(stage.color, 0.2)}` }}>
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <Box>
-                    <Typography variant="h6" fontWeight="600" color={stage.color}>
-                      {stage.name}
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary">
-                      {stageLeads.length} leads • ₹{stageTotal.toLocaleString()}
-                    </Typography>
-                  </Box>
-                  <Box>
-                    <IconButton size="small" onClick={(e) => { e.stopPropagation(); handleMoveStage(stage.id, 'up'); }}>
-                      <ArrowUpwardIcon fontSize="small" />
-                    </IconButton>
-                    <IconButton size="small" onClick={(e) => { e.stopPropagation(); handleMoveStage(stage.id, 'down'); }}>
-                      <ArrowDownwardIcon fontSize="small" />
-                    </IconButton>
-                    <IconButton size="small" onClick={(e) => { e.stopPropagation(); handleOpenStageDialog(stage); }}>
-                      <EditIcon fontSize="small" />
-                    </IconButton>
-                    <IconButton size="small" onClick={(e) => { e.stopPropagation(); handleDeleteStage(stage.id); }}>
-                      <DeleteIcon fontSize="small" />
-                    </IconButton>
+            return (
+              <Paper
+                key={stage.id}
+                sx={{
+                  minWidth: 360,
+                  maxWidth: 360,
+                  backgroundColor: alpha(stage.color, 0.1),
+                  border: `2px solid ${alpha(stage.color, 0.3)}`,
+                  borderRadius: 2
+                }}
+              >
+                {/* Stage Header */}
+                <Box sx={{ p: 2, borderBottom: `1px solid ${alpha(stage.color, 0.2)}` }}>
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <Box>
+                      <Typography variant="h6" fontWeight="600" color={stage.color}>
+                        {t(`pipeline.stages.${stage.id}`, { defaultValue: stage.name })}
+                      </Typography>
+                      <Typography variant="body2" color="text.secondary">
+                        {stageLeads.length} {t('pipeline.stage.leads')} • ₹{stageTotal.toLocaleString()}
+                      </Typography>
+                    </Box>
+                    <Box>
+                      {/* Stage management custom buttons removed */}
+                    </Box>
                   </Box>
                 </Box>
-              </Box>
 
-              {/* Stage Leads */}
-              <Box
-                sx={{ p: 1, minHeight: 400 }}
-                onDragOver={handleDragOver}
-                onDragLeave={handleDragLeave}
-                onDrop={(e) => handleDrop(e, stage.id)}
-              >
-                {stageLeads.map((lead) => (
-                  <Card
-                    key={lead.id}
-                    sx={{
-                      mb: 1,
-                      cursor: 'grab',
-                      '&:hover': {
-                        boxShadow: 2,
-                        transform: 'translateY(-2px)',
-                        transition: 'all 0.2s ease-in-out'
-                      },
-                      '&:active': {
-                        cursor: 'grabbing'
-                      }
-                    }}
-                    onClick={() => handleLeadClick(lead)}
-                    draggable
-                    onDragStart={(e) => handleDragStart(e, lead)}
-                  >
-                    <CardContent sx={{ p: 2 }}>
-                      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 1 }}>
-                        <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                          <Avatar sx={{ mr: 2, bgcolor: theme.palette.primary.main }}>
-                            {lead.firstName.charAt(0)}{lead.lastName.charAt(0)}
-                          </Avatar>
-                          <Box>
-                            <Typography variant="subtitle2" fontWeight="600">
-                              {lead.firstName} {lead.lastName}
-                            </Typography>
+                {/* Stage Leads */}
+                <Box
+                  sx={{ p: 1, minHeight: 400 }}
+                  onDragOver={handleDragOver}
+                  onDragLeave={handleDragLeave}
+                  onDrop={(e) => handleDrop(e, stage.id)}
+                >
+                  {stageLeads.map((lead) => {
+                    // Calculate next stages logic
+                    const currentStageIndex = pipelineStages.findIndex(s => s.id === lead.stage);
+                    // Get next 2 stages if available, otherwise just remaining stages
+                    let quickMoveStages = [];
+                    if (currentStageIndex !== -1 && currentStageIndex < pipelineStages.length - 1) {
+                      quickMoveStages = pipelineStages.slice(currentStageIndex + 1, currentStageIndex + 3);
+                    } else {
+                      // If last stage or not found, show 'new_lead' or others
+                      quickMoveStages = pipelineStages.filter(s => s.id !== lead.stage).slice(0, 2);
+                    }
+
+                    return (
+                      <Card
+                        key={lead.id}
+                        sx={{
+                          mb: 1,
+                          cursor: 'grab',
+                          '&:hover': {
+                            boxShadow: 2,
+                            transform: 'translateY(-2px)',
+                            transition: 'all 0.2s ease-in-out'
+                          },
+                          '&:active': {
+                            cursor: 'grabbing'
+                          }
+                        }}
+                        onClick={() => handleLeadClick(lead)}
+                        draggable
+                        onDragStart={(e) => handleDragStart(e, lead)}
+                      >
+                        <CardContent sx={{ p: 2 }}>
+                          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 1 }}>
+                            <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                              <Avatar sx={{ mr: 2, bgcolor: theme.palette.primary.main }}>
+                                {lead.firstName && lead.firstName.charAt(0)}{lead.lastName && lead.lastName.charAt(0)}
+                              </Avatar>
+                              <Box>
+                                <Typography variant="subtitle2" fontWeight="600">
+                                  {lead.firstName} {lead.lastName}
+                                </Typography>
+                                <Typography variant="body2" color="text.secondary">
+                                  {lead.email}
+                                </Typography>
+                                <Typography variant="body2" color="text.secondary">
+                                  {lead.phone}
+                                </Typography>
+                              </Box>
+                            </Box>
+                            <Box sx={{ minWidth: 65, display: 'flex', justifyContent: 'flex-end' }}>
+                              <IconButton
+                                size="small"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleEditLead(lead);
+                                }}
+                              >
+                                <EditIcon fontSize="small" />
+                              </IconButton>
+                              <IconButton
+                                size="small"
+                                color="error"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleDeleteLead(lead.id);
+                                }}
+                              >
+                                <DeleteIcon fontSize="small" />
+                              </IconButton>
+                            </Box>
+                          </Box>
+
+                          <Box sx={{ mt: 2 }}>
+                            <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+                              <BusinessIcon fontSize="small" sx={{ mr: 1, color: 'text.secondary' }} />
+                              <Typography variant="body2" fontWeight="500">
+                                {lead.company}
+                              </Typography>
+                            </Box>
                             <Typography variant="body2" color="text.secondary">
-                              {lead.email}
-                            </Typography>
-                            <Typography variant="body2" color="text.secondary">
-                              {lead.phone}
+                              {lead.position}
                             </Typography>
                           </Box>
-                        </Box>
-                        <Box>
-                          <IconButton
-                            size="small"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleEditLead(lead);
-                            }}
-                          >
-                            <EditIcon fontSize="small" />
-                          </IconButton>
-                        </Box>
-                      </Box>
 
-                      <Box sx={{ mt: 2 }}>
-                        <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-                          <BusinessIcon fontSize="small" sx={{ mr: 1, color: 'text.secondary' }} />
-                          <Typography variant="body2" fontWeight="500">
-                            {lead.company}
-                          </Typography>
-                        </Box>
-                        <Typography variant="body2" color="text.secondary">
-                          {lead.position}
-                        </Typography>
-                      </Box>
-
-                      <Box sx={{ mt: 2, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                        <Chip
-                          label={lead.priority}
-                          size="small"
-                          sx={{
-                            backgroundColor: alpha(getPriorityColor(lead.priority), 0.1),
-                            color: getPriorityColor(lead.priority),
-                            borderRadius: 1
-                          }}
-                        />
-                        <Typography variant="body2" fontWeight="600" color="primary">
-                          ₹{lead.value?.toLocaleString() || '0'}
-                        </Typography>
-                      </Box>
-
-                      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
-                        <Typography variant="h6" color="primary" fontWeight="600">
-                          ₹{lead.value?.toLocaleString() || '0'}
-                        </Typography>
-                        <Chip
-                          label={lead.priority}
-                          size="small"
-                          sx={{
-                            backgroundColor: alpha(getPriorityColor(lead.priority), 0.1),
-                            color: getPriorityColor(lead.priority),
-                            border: `1px solid ${alpha(getPriorityColor(lead.priority), 0.3)}`
-                          }}
-                        />
-                      </Box>
-
-                      <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-                        Assigned to: {lead.assignedTo}
-                      </Typography>
-
-                      {lead.expectedCloseDate && (
-                        <Typography variant="caption" color="text.secondary">
-                          Expected close: {new Date(lead.expectedCloseDate).toLocaleDateString()}
-                        </Typography>
-                      )}
-
-                      {/* Stage Change Buttons */}
-                      <Box sx={{ display: 'flex', gap: 0.5, mt: 1 }}>
-                        {pipelineStages
-                          .filter(s => s.id !== lead.stage)
-                          .slice(0, 2)
-                          .map((nextStage) => (
-                            <Button
-                              key={nextStage.id}
+                          <Box sx={{ mt: 2, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                            <Chip
+                              label={t(`pipeline.priority.${lead.priority.toLowerCase()}`, { defaultValue: lead.priority })}
                               size="small"
-                              variant="outlined"
                               sx={{
-                                minWidth: 'auto',
-                                px: 1,
-                                fontSize: '0.7rem',
-                                borderColor: alpha(nextStage.color, 0.3),
-                                color: nextStage.color,
-                                '&:hover': {
-                                  borderColor: nextStage.color,
-                                  backgroundColor: alpha(nextStage.color, 0.1)
-                                }
+                                backgroundColor: alpha(getPriorityColor(lead.priority), 0.1),
+                                color: getPriorityColor(lead.priority),
+                                borderRadius: 1
                               }}
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                const mockDragEvent = {
-                                  preventDefault: () => { },
-                                  dataTransfer: {
-                                    getData: () => JSON.stringify(lead)
-                                  }
-                                };
-                                handleDrop(mockDragEvent, nextStage.id);
-                              }}
-                            >
-                              {nextStage.name}
-                            </Button>
-                          ))}
-                      </Box>
-                    </CardContent>
-                  </Card>
-                ))}
-              </Box>
-            </Paper>
-          );
-        })}
+                            />
+                            <Typography variant="body2" fontWeight="600" color="primary">
+                              ₹{lead.value?.toLocaleString() || '0'}
+                            </Typography>
+                          </Box>
+
+                          {/* Removed duplicate Box (lines 889-902 in original) as it showed duplicate data */}
+
+                          <Typography variant="body2" color="text.secondary" sx={{ mb: 1, mt: 1 }}>
+                            {t('pipeline.leadCard.assignedTo')} {lead.assignedTo}
+                          </Typography>
+
+                          {lead.expectedCloseDate && (
+                            <Typography variant="caption" color="text.secondary">
+                              {t('pipeline.leadCard.expectedClose')} {new Date(lead.expectedCloseDate).toLocaleDateString()}
+                            </Typography>
+                          )}
+
+                          {/* Stage Change Buttons */}
+                          <Box sx={{ display: 'flex', gap: 0.5, mt: 1 }}>
+                            {quickMoveStages
+                              .map((nextStage) => (
+                                <Button
+                                  key={nextStage.id}
+                                  size="small"
+                                  variant="outlined"
+                                  sx={{
+                                    minWidth: 'auto',
+                                    px: 1,
+                                    fontSize: '0.7rem',
+                                    borderColor: alpha(nextStage.color, 0.3),
+                                    color: nextStage.color,
+                                    '&:hover': {
+                                      borderColor: nextStage.color,
+                                      backgroundColor: alpha(nextStage.color, 0.1)
+                                    }
+                                  }}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    const mockDragEvent = {
+                                      preventDefault: () => { },
+                                      dataTransfer: {
+                                        getData: () => JSON.stringify(lead)
+                                      }
+                                    };
+                                    handleDrop(mockDragEvent, nextStage.id);
+                                  }}
+                                >
+                                  {t(`pipeline.stages.${nextStage.id}`, { defaultValue: nextStage.name })}
+                                </Button>
+                              ))}
+                          </Box>
+                        </CardContent>
+                      </Card>
+                    );
+                  })}
+                </Box>
+              </Paper>
+            );
+          })}
       </Box>
 
       {/* Lead Details/Edit Dialog */}
       {/* Stage Add/Edit Dialog */}
-      <Dialog open={stageDialogOpen} onClose={handleCloseStageDialog} maxWidth="sm" fullWidth>
-        <DialogTitle>{stageEditing ? 'Edit Stage' : 'Add Stage'}</DialogTitle>
-        <DialogContent>
-          <TextField
-            fullWidth
-            label="Stage Name"
-            value={stageName}
-            onChange={(e) => setStageName(e.target.value)}
-            sx={{ mt: 1 }}
-          />
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={handleCloseStageDialog}>Cancel</Button>
-          <Button variant="contained" onClick={handleSaveStage} disabled={!stageName.trim()}>
-            {stageEditing ? 'Update' : 'Create'}
-          </Button>
-        </DialogActions>
-      </Dialog>
+
       <Dialog
         open={openDialog}
         onClose={handleCloseDialog}
@@ -996,7 +871,7 @@ const SalesPipeline = () => {
           borderBottom: `1px solid ${theme.palette.divider}`
         }}>
           <Typography variant="h6">
-            {editingLead ? 'Edit Lead' : selectedLead ? 'Lead Details' : 'Add New Lead'}
+            {editingLead ? t('pipeline.dialog.editTitle') : selectedLead ? t('pipeline.dialog.detailsTitle') : t('pipeline.dialog.addTitle')}
           </Typography>
           <IconButton onClick={handleCloseDialog} size="small">
             <CloseIcon />
@@ -1004,10 +879,11 @@ const SalesPipeline = () => {
         </DialogTitle>
         <DialogContent sx={{ mt: 2 }}>
           <Grid container spacing={3}>
+            {/* Form Fields ... */}
             <Grid item xs={12} sm={6}>
               <TextField
                 fullWidth
-                label="First Name"
+                label={t('pipeline.dialog.firstName')}
                 value={formData.firstName}
                 onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
                 disabled={!editingLead && selectedLead}
@@ -1017,7 +893,7 @@ const SalesPipeline = () => {
             <Grid item xs={12} sm={6}>
               <TextField
                 fullWidth
-                label="Last Name"
+                label={t('pipeline.dialog.lastName')}
                 value={formData.lastName}
                 onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
                 disabled={!editingLead && selectedLead}
@@ -1027,7 +903,7 @@ const SalesPipeline = () => {
             <Grid item xs={12} sm={6}>
               <TextField
                 fullWidth
-                label="Email"
+                label={t('pipeline.dialog.email')}
                 type="email"
                 value={formData.email}
                 onChange={(e) => setFormData({ ...formData, email: e.target.value })}
@@ -1038,7 +914,7 @@ const SalesPipeline = () => {
             <Grid item xs={12} sm={6}>
               <TextField
                 fullWidth
-                label="Phone"
+                label={t('pipeline.dialog.phone')}
                 value={formData.phone}
                 onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                 disabled={!editingLead && selectedLead}
@@ -1047,7 +923,7 @@ const SalesPipeline = () => {
             <Grid item xs={12} sm={6}>
               <TextField
                 fullWidth
-                label="Company"
+                label={t('pipeline.dialog.company')}
                 value={formData.company}
                 onChange={(e) => setFormData({ ...formData, company: e.target.value })}
                 disabled={!editingLead && selectedLead}
@@ -1056,7 +932,7 @@ const SalesPipeline = () => {
             <Grid item xs={12} sm={6}>
               <TextField
                 fullWidth
-                label="Position"
+                label={t('pipeline.dialog.position')}
                 value={formData.position}
                 onChange={(e) => setFormData({ ...formData, position: e.target.value })}
                 disabled={!editingLead && selectedLead}
@@ -1065,7 +941,7 @@ const SalesPipeline = () => {
             <Grid item xs={12} sm={6}>
               <TextField
                 fullWidth
-                label="Value (₹)"
+                label={t('pipeline.dialog.value')}
                 type="number"
                 value={formData.value}
                 onChange={(e) => setFormData({ ...formData, value: parseFloat(e.target.value) || 0 })}
@@ -1080,7 +956,7 @@ const SalesPipeline = () => {
             <Grid item xs={12} sm={6}>
               <TextField
                 fullWidth
-                label="Expected Close Date"
+                label={t('pipeline.dialog.expectedCloseDate')}
                 type="date"
                 value={formData.expectedCloseDate}
                 onChange={(e) => setFormData({ ...formData, expectedCloseDate: e.target.value })}
@@ -1090,40 +966,40 @@ const SalesPipeline = () => {
             </Grid>
             <Grid item xs={12} sm={6}>
               <FormControl fullWidth>
-                <InputLabel>Stage</InputLabel>
+                <InputLabel>{t('pipeline.dialog.stage')}</InputLabel>
                 <Select
                   value={formData.stage}
-                  label="Stage"
+                  label={t('pipeline.dialog.stage')}
                   onChange={(e) => setFormData({ ...formData, stage: e.target.value })}
                   disabled={!editingLead && selectedLead}
                 >
                   {pipelineStages.map(stage => (
-                    <MenuItem key={stage.id} value={stage.id}>{stage.name}</MenuItem>
+                    <MenuItem key={stage.id} value={stage.id}>{t(`pipeline.stages.${stage.id}`, { defaultValue: stage.name })}</MenuItem>
                   ))}
                 </Select>
               </FormControl>
             </Grid>
             <Grid item xs={12} sm={6}>
               <FormControl fullWidth>
-                <InputLabel>Priority</InputLabel>
+                <InputLabel>{t('pipeline.dialog.priority')}</InputLabel>
                 <Select
                   value={formData.priority}
-                  label="Priority"
+                  label={t('pipeline.dialog.priority')}
                   onChange={(e) => setFormData({ ...formData, priority: e.target.value })}
                   disabled={!editingLead && selectedLead}
                 >
                   {priorityOptions.map(priority => (
-                    <MenuItem key={priority} value={priority}>{priority}</MenuItem>
+                    <MenuItem key={priority} value={priority}>{t(`pipeline.priority.${priority.toLowerCase()}`, { defaultValue: priority })}</MenuItem>
                   ))}
                 </Select>
               </FormControl>
             </Grid>
             <Grid item xs={12} sm={6}>
               <FormControl fullWidth>
-                <InputLabel>Assigned To</InputLabel>
+                <InputLabel>{t('pipeline.dialog.assignedTo')}</InputLabel>
                 <Select
                   value={formData.assignedToId}
-                  label="Assigned To"
+                  label={t('pipeline.dialog.assignedTo')}
                   onChange={(e) => {
                     const user = users.find(u => u.id === e.target.value);
                     setFormData({
@@ -1143,7 +1019,7 @@ const SalesPipeline = () => {
             <Grid item xs={12}>
               <TextField
                 fullWidth
-                label="Notes"
+                label={t('pipeline.dialog.notes')}
                 multiline
                 rows={3}
                 value={formData.notes}
@@ -1159,22 +1035,22 @@ const SalesPipeline = () => {
                   <Divider sx={{ my: 3 }} />
                   <Box sx={{ mb: 2 }}>
                     <Typography variant="h6" fontWeight="600" color="primary.main">
-                      Policy History
+                      {t('pipeline.history.title')}
                     </Typography>
                     <Typography variant="body2" color="text.secondary">
-                      Previous policies and premium details
+                      {t('pipeline.history.subtitle')}
                     </Typography>
                   </Box>
                   <TableContainer component={Paper} variant="outlined" sx={{ borderRadius: 2 }}>
                     <Table size="small">
                       <TableHead>
                         <TableRow>
-                          <TableCell>Policy Number</TableCell>
-                          <TableCell>Type</TableCell>
-                          <TableCell>Period</TableCell>
-                          <TableCell align="right">Premium</TableCell>
-                          <TableCell>Status</TableCell>
-                          <TableCell>Coverage</TableCell>
+                          <TableCell>{t('pipeline.history.policyNumber')}</TableCell>
+                          <TableCell>{t('pipeline.history.type')}</TableCell>
+                          <TableCell>{t('pipeline.history.period')}</TableCell>
+                          <TableCell align="right">{t('pipeline.history.premium')}</TableCell>
+                          <TableCell>{t('pipeline.history.status')}</TableCell>
+                          <TableCell>{t('pipeline.history.coverage')}</TableCell>
                         </TableRow>
                       </TableHead>
                       <TableBody>
@@ -1206,7 +1082,7 @@ const SalesPipeline = () => {
                             </TableCell>
                             <TableCell>
                               <Chip
-                                label={policy.status}
+                                label={t(`pipeline.status.${policy.status.toLowerCase()}`, { defaultValue: policy.status })}
                                 size="small"
                                 color={policy.status === 'Active' ? 'success' : 'default'}
                                 sx={{ borderRadius: 1 }}
@@ -1235,19 +1111,19 @@ const SalesPipeline = () => {
                   >
                     <Grid container spacing={2}>
                       <Grid item xs={12} sm={4}>
-                        <Typography variant="body2" color="text.secondary">Total Premium Value</Typography>
+                        <Typography variant="body2" color="text.secondary">{t('pipeline.history.totalPremium')}</Typography>
                         <Typography variant="h6" color="primary.main" fontWeight="600">
                           ₹{customerHistory.reduce((sum, policy) => sum + policy.premium, 0).toLocaleString()}
                         </Typography>
                       </Grid>
                       <Grid item xs={12} sm={4}>
-                        <Typography variant="body2" color="text.secondary">Active Policies</Typography>
+                        <Typography variant="body2" color="text.secondary">{t('pipeline.history.activePolicies')}</Typography>
                         <Typography variant="h6" fontWeight="600">
                           {customerHistory.filter(policy => policy.status === 'Active').length}
                         </Typography>
                       </Grid>
                       <Grid item xs={12} sm={4}>
-                        <Typography variant="body2" color="text.secondary">Total Policies</Typography>
+                        <Typography variant="body2" color="text.secondary">{t('pipeline.history.totalPolicies')}</Typography>
                         <Typography variant="h6" fontWeight="600">
                           {customerHistory.length}
                         </Typography>
@@ -1261,7 +1137,7 @@ const SalesPipeline = () => {
         </DialogContent>
         <DialogActions sx={{ p: 2.5, borderTop: `1px solid ${theme.palette.divider}` }}>
           <Button onClick={handleCloseDialog}>
-            Cancel
+            {t('pipeline.buttons.cancel')}
           </Button>
           {editingLead && (
             <Button
@@ -1276,7 +1152,7 @@ const SalesPipeline = () => {
                 }
               }}
             >
-              {loading ? <CircularProgress size={24} /> : 'Update'}
+              {loading ? <CircularProgress size={24} /> : t('pipeline.buttons.update')}
             </Button>
           )}
           {!editingLead && !selectedLead && (
@@ -1292,7 +1168,7 @@ const SalesPipeline = () => {
                 }
               }}
             >
-              {loading ? <CircularProgress size={24} /> : 'Save'}
+              {loading ? <CircularProgress size={24} /> : t('pipeline.buttons.save')}
             </Button>
           )}
         </DialogActions>

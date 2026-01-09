@@ -494,8 +494,8 @@ const WorkflowBuilder = () => {
                     execution.status === 'completed'
                       ? theme.palette.success.main
                       : execution.status === 'failed'
-                      ? theme.palette.error.main
-                      : theme.palette.grey[300],
+                        ? theme.palette.error.main
+                        : theme.palette.grey[300],
                     0.3
                   )}`,
                   transition: 'all 0.2s ease',
@@ -517,16 +517,16 @@ const WorkflowBuilder = () => {
                           execution.status === 'completed'
                             ? theme.palette.success.main
                             : execution.status === 'failed'
-                            ? theme.palette.error.main
-                            : theme.palette.info.main,
+                              ? theme.palette.error.main
+                              : theme.palette.info.main,
                           0.1
                         ),
                         color:
                           execution.status === 'completed'
                             ? 'success.main'
                             : execution.status === 'failed'
-                            ? 'error.main'
-                            : 'info.main',
+                              ? 'error.main'
+                              : 'info.main',
                       }}
                     >
                       {execution.status === 'completed' ? (
@@ -800,7 +800,13 @@ const WorkflowBuilder = () => {
             <PauseIcon sx={{ mr: 1 }} /> Pause
           </MenuItem>
         )}
-        <MenuItem onClick={() => selectedWorkflow && handleDelete(selectedWorkflow.id)}>
+        <MenuItem onClick={() => {
+          if (selectedWorkflow && selectedWorkflow.id) {
+            handleDelete(selectedWorkflow.id);
+          } else {
+            console.error('No ID for selected workflow', selectedWorkflow);
+          }
+        }}>
           <DeleteIcon sx={{ mr: 1 }} color="error" /> Delete
         </MenuItem>
       </Menu>
@@ -1031,7 +1037,7 @@ const WorkflowBuilder = () => {
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setDetailsDialogOpen(false)}>Close</Button>
-              {selectedWorkflow && selectedWorkflow.status === WORKFLOW_STATUS.ACTIVE && (
+          {selectedWorkflow && selectedWorkflow.status === WORKFLOW_STATUS.ACTIVE && (
             <Button
               variant="contained"
               startIcon={<RunIcon />}
@@ -1061,16 +1067,16 @@ const WorkflowBuilder = () => {
                   selectedExecution?.status === 'completed'
                     ? theme.palette.success.main
                     : selectedExecution?.status === 'failed'
-                    ? theme.palette.error.main
-                    : theme.palette.info.main,
+                      ? theme.palette.error.main
+                      : theme.palette.info.main,
                   0.1
                 ),
                 color:
                   selectedExecution?.status === 'completed'
                     ? 'success.main'
                     : selectedExecution?.status === 'failed'
-                    ? 'error.main'
-                    : 'info.main',
+                      ? 'error.main'
+                      : 'info.main',
               }}
             >
               {selectedExecution?.status === 'completed' ? (
@@ -1115,10 +1121,10 @@ const WorkflowBuilder = () => {
                   <Typography variant="body2" fontWeight="600">
                     {selectedExecution.completedAt
                       ? `${Math.round(
-                          (new Date(selectedExecution.completedAt) -
-                            new Date(selectedExecution.startedAt)) /
-                            1000
-                        )}s`
+                        (new Date(selectedExecution.completedAt) -
+                          new Date(selectedExecution.startedAt)) /
+                        1000
+                      )}s`
                       : 'Running...'}
                   </Typography>
                 </Grid>
@@ -1149,7 +1155,7 @@ const WorkflowBuilder = () => {
               </Typography>
 
               {selectedExecution.result?.executionLog &&
-              selectedExecution.result.executionLog.length > 0 ? (
+                selectedExecution.result.executionLog.length > 0 ? (
                 <Box sx={{ mt: 2 }}>
                   <Timeline>
                     {selectedExecution.result.executionLog.map((log, index) => (
@@ -1165,8 +1171,8 @@ const WorkflowBuilder = () => {
                               log.status === 'success'
                                 ? 'success'
                                 : log.status === 'error'
-                                ? 'error'
-                                : 'primary'
+                                  ? 'error'
+                                  : 'primary'
                             }
                           />
                           {index < selectedExecution.result.executionLog.length - 1 && (

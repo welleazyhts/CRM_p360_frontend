@@ -1,4 +1,5 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import DispositionService from '../services/DispositionService';
 
 const DispositionContext = createContext();
 
@@ -10,376 +11,191 @@ export const useDisposition = () => {
   return context;
 };
 
-// Initial Dispositions
-const INITIAL_DISPOSITIONS = [
-  {
-    id: 'disp-001',
-    name: 'Interested',
-    category: 'open',
-    description: 'Lead shows interest in the product',
-    color: '#4CAF50',
-    icon: 'ThumbUp',
-    active: true,
-    order: 1,
-    slaHours: 24,
-    autoActions: {
-      sendEmail: true,
-      sendSMS: false,
-      createTask: true,
-      notifyManager: false
-    },
-    subDispositions: [
-      {
-        id: 'sub-001',
-        name: 'Needs Quote',
-        description: 'Customer requested a quote',
-        active: true,
-        order: 1,
-        requiresFollowUp: true,
-        followUpDays: 2
-      },
-      {
-        id: 'sub-002',
-        name: 'Comparing Options',
-        description: 'Customer is comparing with other insurers',
-        active: true,
-        order: 2,
-        requiresFollowUp: true,
-        followUpDays: 3
-      },
-      {
-        id: 'sub-003',
-        name: 'Ready to Buy',
-        description: 'Customer ready to purchase',
-        active: true,
-        order: 3,
-        requiresFollowUp: true,
-        followUpDays: 1
-      }
-    ]
-  },
-  {
-    id: 'disp-002',
-    name: 'Not Interested',
-    category: 'lost',
-    description: 'Lead not interested in the product',
-    color: '#F44336',
-    icon: 'ThumbDown',
-    active: true,
-    order: 2,
-    slaHours: 0,
-    autoActions: {
-      sendEmail: false,
-      sendSMS: false,
-      createTask: false,
-      notifyManager: false
-    },
-    subDispositions: [
-      {
-        id: 'sub-004',
-        name: 'Already Insured',
-        description: 'Customer already has insurance',
-        active: true,
-        order: 1,
-        requiresFollowUp: false
-      },
-      {
-        id: 'sub-005',
-        name: 'Too Expensive',
-        description: 'Customer finds premium too high',
-        active: true,
-        order: 2,
-        requiresFollowUp: false
-      },
-      {
-        id: 'sub-006',
-        name: 'Not Required',
-        description: 'Customer does not need insurance',
-        active: true,
-        order: 3,
-        requiresFollowUp: false
-      }
-    ]
-  },
-  {
-    id: 'disp-003',
-    name: 'Call Back',
-    category: 'open',
-    description: 'Customer requested a callback',
-    color: '#FF9800',
-    icon: 'PhoneCallback',
-    active: true,
-    order: 3,
-    slaHours: 4,
-    autoActions: {
-      sendEmail: false,
-      sendSMS: true,
-      createTask: true,
-      notifyManager: false
-    },
-    subDispositions: [
-      {
-        id: 'sub-007',
-        name: 'Specific Time',
-        description: 'Customer mentioned specific callback time',
-        active: true,
-        order: 1,
-        requiresFollowUp: true,
-        followUpDays: 0
-      },
-      {
-        id: 'sub-008',
-        name: 'After Few Days',
-        description: 'Customer wants callback after some days',
-        active: true,
-        order: 2,
-        requiresFollowUp: true,
-        followUpDays: 5
-      }
-    ]
-  },
-  {
-    id: 'disp-004',
-    name: 'Not Reachable',
-    category: 'open',
-    description: 'Unable to reach the customer',
-    color: '#9E9E9E',
-    icon: 'PhoneMissed',
-    active: true,
-    order: 4,
-    slaHours: 12,
-    autoActions: {
-      sendEmail: false,
-      sendSMS: true,
-      createTask: true,
-      notifyManager: false
-    },
-    subDispositions: [
-      {
-        id: 'sub-009',
-        name: 'Switched Off',
-        description: 'Phone is switched off',
-        active: true,
-        order: 1,
-        requiresFollowUp: true,
-        followUpDays: 1
-      },
-      {
-        id: 'sub-010',
-        name: 'Not Responding',
-        description: 'No response to calls',
-        active: true,
-        order: 2,
-        requiresFollowUp: true,
-        followUpDays: 2
-      },
-      {
-        id: 'sub-011',
-        name: 'Busy',
-        description: 'Line is busy',
-        active: true,
-        order: 3,
-        requiresFollowUp: true,
-        followUpDays: 0
-      },
-      {
-        id: 'sub-012',
-        name: 'Wrong Number',
-        description: 'Incorrect phone number',
-        active: true,
-        order: 4,
-        requiresFollowUp: false
-      }
-    ]
-  },
-  {
-    id: 'disp-005',
-    name: 'Converted',
-    category: 'won',
-    description: 'Lead converted to customer',
-    color: '#2196F3',
-    icon: 'CheckCircle',
-    active: true,
-    order: 5,
-    slaHours: 0,
-    autoActions: {
-      sendEmail: true,
-      sendSMS: true,
-      createTask: false,
-      notifyManager: true
-    },
-    subDispositions: [
-      {
-        id: 'sub-013',
-        name: 'Payment Completed',
-        description: 'Full payment received',
-        active: true,
-        order: 1,
-        requiresFollowUp: false
-      },
-      {
-        id: 'sub-014',
-        name: 'Policy Issued',
-        description: 'Policy documents issued',
-        active: true,
-        order: 2,
-        requiresFollowUp: false
-      }
-    ]
-  },
-  {
-    id: 'disp-006',
-    name: 'DNC',
-    category: 'lost',
-    description: 'Do Not Call - Customer opted out',
-    color: '#000000',
-    icon: 'Block',
-    active: true,
-    order: 6,
-    slaHours: 0,
-    autoActions: {
-      sendEmail: false,
-      sendSMS: false,
-      createTask: false,
-      notifyManager: true
-    },
-    subDispositions: [
-      {
-        id: 'sub-015',
-        name: 'Requested DNC',
-        description: 'Customer requested to be added to DNC',
-        active: true,
-        order: 1,
-        requiresFollowUp: false
-      },
-      {
-        id: 'sub-016',
-        name: 'Regulatory DNC',
-        description: 'Number in government DNC registry',
-        active: true,
-        order: 2,
-        requiresFollowUp: false
-      }
-    ]
-  }
-];
-
 export const DispositionProvider = ({ children }) => {
   const [dispositions, setDispositions] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
 
-  // Load from localStorage on mount
-  useEffect(() => {
-    const saved = localStorage.getItem('dispositions');
-    if (saved) {
-      setDispositions(JSON.parse(saved));
-    } else {
-      setDispositions(INITIAL_DISPOSITIONS);
-      localStorage.setItem('dispositions', JSON.stringify(INITIAL_DISPOSITIONS));
+  // Fetch dispositions on mount
+  const refreshDispositions = useCallback(async () => {
+    setLoading(true);
+    try {
+      const data = await DispositionService.fetchDispositions();
+      // Ensure data is array
+      setDispositions(Array.isArray(data) ? data : []);
+      setError(null);
+    } catch (err) {
+      console.error("Failed to load dispositions", err);
+      setError("Failed to load dispositions");
+      // Fallback to empty if API fails
+      setDispositions([]);
+    } finally {
+      setLoading(false);
     }
   }, []);
 
-  // Save to localStorage whenever dispositions change
   useEffect(() => {
-    if (dispositions.length > 0) {
-      localStorage.setItem('dispositions', JSON.stringify(dispositions));
-    }
-  }, [dispositions]);
+    refreshDispositions();
+  }, [refreshDispositions]);
 
   // ============ DISPOSITION FUNCTIONS ============
 
-  const addDisposition = (dispositionData) => {
-    const newDisposition = {
-      ...dispositionData,
-      id: `disp-${Date.now()}`,
-      subDispositions: dispositionData.subDispositions || []
-    };
-    setDispositions(prev => [...prev, newDisposition]);
-    return { success: true, disposition: newDisposition };
+  const addDisposition = async (dispositionData) => {
+    try {
+      const newDisposition = await DispositionService.addDisposition(dispositionData);
+      setDispositions(prev => [...prev, newDisposition]);
+      return { success: true, disposition: newDisposition };
+    } catch (err) {
+      console.error("Error adding disposition:", err);
+      return { success: false, error: err.message };
+    }
   };
 
-  const updateDisposition = (dispId, updates) => {
-    setDispositions(prev => prev.map(disp =>
-      disp.id === dispId ? { ...disp, ...updates } : disp
-    ));
-    return { success: true };
-  };
-
-  const deleteDisposition = (dispId) => {
-    if (window.confirm('Are you sure? This will also delete all sub-dispositions.')) {
-      setDispositions(prev => prev.filter(disp => disp.id !== dispId));
+  const updateDisposition = async (dispId, updates) => {
+    try {
+      const updatedDisp = await DispositionService.updateDisposition(dispId, updates);
+      setDispositions(prev => prev.map(disp =>
+        disp.id === dispId ? updatedDisp : disp
+      ));
       return { success: true };
+    } catch (err) {
+      console.error("Error updating disposition:", err);
+      return { success: false, error: err.message };
+    }
+  };
+
+  const deleteDisposition = async (dispId) => {
+    if (window.confirm('Are you sure? This will also delete all sub-dispositions.')) {
+      try {
+        await DispositionService.deleteDisposition(dispId);
+        setDispositions(prev => prev.filter(disp => disp.id !== dispId));
+        return { success: true };
+      } catch (err) {
+        console.error("Error deleting disposition:", err);
+        return { success: false, error: err.message };
+      }
     }
     return { success: false };
   };
 
-  const reorderDispositions = (newOrder) => {
+  const reorderDispositions = async (newOrder) => {
+    // Optimistic update
+    const originalOrder = [...dispositions];
     setDispositions(newOrder);
-    return { success: true };
+
+    try {
+      await DispositionService.reorderDispositions(newOrder);
+      return { success: true };
+    } catch (err) {
+      console.error("Error reordering dispositions:", err);
+      setDispositions(originalOrder); // Revert on failure
+      return { success: false, error: err.message };
+    }
   };
 
-  const toggleDisposition = (dispId) => {
-    setDispositions(prev => prev.map(disp =>
-      disp.id === dispId ? { ...disp, active: !disp.active } : disp
-    ));
-    return { success: true };
+  const toggleDisposition = async (dispId) => {
+    // Find current status to toggle
+    const disp = dispositions.find(d => d.id === dispId);
+    if (!disp) return { success: false };
+
+    try {
+      const updatedDisp = await DispositionService.toggleDisposition(dispId, !disp.active);
+      setDispositions(prev => prev.map(d =>
+        d.id === dispId ? { ...d, active: updatedDisp.active !== undefined ? updatedDisp.active : !d.active } : d
+      ));
+      return { success: true };
+    } catch (err) {
+      console.error("Error toggling disposition:", err);
+      return { success: false, error: err.message };
+    }
   };
 
   // ============ SUB-DISPOSITION FUNCTIONS ============
 
-  const addSubDisposition = (dispId, subDispData) => {
-    const newSubDisp = {
-      ...subDispData,
-      id: `sub-${Date.now()}`
-    };
+  const addSubDisposition = async (dispId, subDispData) => {
+    try {
+      const newSubDisp = await DispositionService.addSubDisposition(dispId, subDispData);
 
-    setDispositions(prev => prev.map(disp =>
-      disp.id === dispId
-        ? { ...disp, subDispositions: [...disp.subDispositions, newSubDisp] }
-        : disp
-    ));
+      setDispositions(prev => prev.map(disp => {
+        if (disp.id === dispId) {
+          const currentSubs = disp.subDispositions || [];
+          return { ...disp, subDispositions: [...currentSubs, newSubDisp] };
+        }
+        return disp;
+      }));
 
-    return { success: true, subDisposition: newSubDisp };
+      return { success: true, subDisposition: newSubDisp };
+    } catch (err) {
+      console.error("Error adding sub-disposition:", err);
+      return { success: false, error: err.message };
+    }
   };
 
-  const updateSubDisposition = (dispId, subDispId, updates) => {
-    setDispositions(prev => prev.map(disp =>
-      disp.id === dispId
-        ? {
+  const updateSubDisposition = async (dispId, subDispId, updates) => {
+    try {
+      const updatedSub = await DispositionService.updateSubDisposition(dispId, subDispId, updates);
+
+      setDispositions(prev => prev.map(disp => {
+        if (disp.id === dispId) {
+          return {
             ...disp,
-            subDispositions: disp.subDispositions.map(sub =>
-              sub.id === subDispId ? { ...sub, ...updates } : sub
+            subDispositions: (disp.subDispositions || []).map(sub =>
+              sub.id === subDispId ? updatedSub : sub
+            )
+          };
+        }
+        return disp;
+      }));
+
+      return { success: true };
+    } catch (err) {
+      console.error("Error updating sub-disposition:", err);
+      return { success: false, error: err.message };
+    }
+  };
+
+  const deleteSubDisposition = async (dispId, subDispId) => {
+    try {
+      await DispositionService.deleteSubDisposition(dispId, subDispId);
+
+      setDispositions(prev => prev.map(disp =>
+        disp.id === dispId
+          ? {
+            ...disp,
+            subDispositions: (disp.subDispositions || []).filter(sub => sub.id !== subDispId)
+          }
+          : disp
+      ));
+      return { success: true };
+    } catch (err) {
+      console.error("Error deleting sub-disposition:", err);
+      return { success: false, error: err.message };
+    }
+  };
+
+  const toggleSubDisposition = async (dispId, subDispId) => {
+    try {
+      const disp = dispositions.find(d => d.id === dispId);
+      const sub = disp?.subDispositions?.find(s => s.id === subDispId);
+      if (!sub) return { success: false };
+
+      const updatedSub = await DispositionService.toggleSubDisposition(dispId, subDispId, !sub.active);
+
+      setDispositions(prev => prev.map(d =>
+        d.id === dispId
+          ? {
+            ...d,
+            subDispositions: (d.subDispositions || []).map(s =>
+              s.id === subDispId ? { ...s, active: updatedSub.active !== undefined ? updatedSub.active : !s.active } : s
             )
           }
-        : disp
-    ));
-    return { success: true };
-  };
-
-  const deleteSubDisposition = (dispId, subDispId) => {
-    setDispositions(prev => prev.map(disp =>
-      disp.id === dispId
-        ? {
-            ...disp,
-            subDispositions: disp.subDispositions.filter(sub => sub.id !== subDispId)
-          }
-        : disp
-    ));
-    return { success: true };
-  };
-
-  const toggleSubDisposition = (dispId, subDispId) => {
-    setDispositions(prev => prev.map(disp =>
-      disp.id === dispId
-        ? {
-            ...disp,
-            subDispositions: disp.subDispositions.map(sub =>
-              sub.id === subDispId ? { ...sub, active: !sub.active } : sub
-            )
-          }
-        : disp
-    ));
-    return { success: true };
+          : d
+      ));
+      return { success: true };
+    } catch (err) {
+      console.error("Error toggling sub-disposition:", err);
+      return { success: false, error: err.message };
+    }
   };
 
   // ============ QUERY FUNCTIONS ============
@@ -398,7 +214,7 @@ export const DispositionProvider = ({ children }) => {
 
   const getSubDisposition = (dispId, subDispId) => {
     const disp = getDispositionById(dispId);
-    return disp?.subDispositions.find(sub => sub.id === subDispId);
+    return disp?.subDispositions?.find(sub => sub.id === subDispId);
   };
 
   const getAllSubDispositions = (dispId) => {
@@ -411,11 +227,11 @@ export const DispositionProvider = ({ children }) => {
   const getStatistics = () => {
     const totalDisp = dispositions.length;
     const activeDisp = dispositions.filter(d => d.active).length;
-    const totalSubDisp = dispositions.reduce((sum, d) => sum + d.subDispositions.length, 0);
-    const activeSubDisp = dispositions.reduce(
-      (sum, d) => sum + d.subDispositions.filter(s => s.active).length,
-      0
-    );
+
+    // Safety check for subDispositions being undefined
+    const subDispositions = dispositions.flatMap(d => d.subDispositions || []);
+    const totalSubDisp = subDispositions.length;
+    const activeSubDisp = subDispositions.filter(s => s.active).length;
 
     return {
       totalDispositions: totalDisp,
@@ -434,6 +250,8 @@ export const DispositionProvider = ({ children }) => {
     // State
     dispositions,
     loading,
+    error,
+    refreshDispositions,
 
     // Disposition Functions
     addDisposition,

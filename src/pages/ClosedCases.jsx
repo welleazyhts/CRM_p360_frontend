@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   Box, Typography, TextField, InputAdornment,
   Table, TableBody, TableCell, TableContainer, TableHead,
@@ -26,6 +27,7 @@ import { useTheme } from '@mui/material/styles';
 import * as XLSX from 'xlsx';
 
 const ClosedCases = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   // const { settings } = useSettings();
   const theme = useTheme();
@@ -592,7 +594,7 @@ const ClosedCases = () => {
           mb: 4
         }}>
           <Typography variant="h4" fontWeight="600">
-            Closed Cases
+            {t('closedCases.title', 'Closed Cases')}
           </Typography>
 
           <Box sx={{ display: 'flex', gap: 2 }}>
@@ -615,7 +617,7 @@ const ClosedCases = () => {
                   }
                 }}
               >
-                Filters
+                {t('closedCases.filterButton', 'Filters')}
               </Button>
             </Zoom>
 
@@ -636,7 +638,7 @@ const ClosedCases = () => {
                   }
                 }}
               >
-                Export
+                {t('closedCases.export', 'Export')}
               </Button>
             </Zoom>
           </Box>
@@ -691,12 +693,12 @@ const ClosedCases = () => {
               <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
                 <CheckCircleOutlineIcon sx={{ mr: 1, color: theme.palette.success.main }} />
                 <Typography variant="h6" fontWeight="600">
-                  Search Closed Cases
+                  {t('closedCases.searchTitle', 'Search Closed Cases')}
                 </Typography>
               </Box>
               <Divider sx={{ mb: 2 }} />
               <TextField
-                placeholder="Search by Case ID, Customer Name or Policy Number (comma-separated for multiple values)"
+                placeholder={t('closedCases.searchPlaceholder', 'Search by Case ID, Customer Name or Policy Number (comma-separated for multiple values)')}
                 variant="outlined"
                 fullWidth
                 value={searchTerm}
@@ -786,26 +788,26 @@ const ClosedCases = () => {
                       letterSpacing: '0.02em'
                     }
                   }}>
-                    <TableCell sx={{ fontWeight: 'bold', py: 3, width: 180, textAlign: 'center' }}>Actions</TableCell>
-                    <TableCell sx={{ fontWeight: 'bold', py: 3, width: 140 }}>Case ID</TableCell>
-                    <TableCell sx={{ fontWeight: 'bold', py: 3, width: 180 }}>Customer Name</TableCell>
-                    <TableCell sx={{ fontWeight: 'bold', py: 3, width: 150 }}>Profile</TableCell>
-                    <TableCell sx={{ fontWeight: 'bold', py: 3, width: 150 }}>Mobile</TableCell>
-                    <TableCell sx={{ fontWeight: 'bold', py: 3, width: 130 }}>Language</TableCell>
-                    <TableCell sx={{ fontWeight: 'bold', py: 3, width: 160 }}>Policy Number</TableCell>
-                    <TableCell sx={{ fontWeight: 'bold', py: 3, width: 200 }}>Product Name</TableCell>
-                    <TableCell sx={{ fontWeight: 'bold', py: 3, width: 140 }}>Category</TableCell>
-                    <TableCell sx={{ fontWeight: 'bold', py: 3, width: 170 }}>Channel</TableCell>
-                    <TableCell sx={{ fontWeight: 'bold', py: 3, width: 140 }}>Batch ID</TableCell>
-                    <TableCell sx={{ fontWeight: 'bold', py: 3, width: 130 }}>Status</TableCell>
-                    <TableCell sx={{ fontWeight: 'bold', py: 3, width: 150 }}>Policy Status</TableCell>
-                    <TableCell sx={{ fontWeight: 'bold', py: 3, width: 160 }}>Agent</TableCell>
-                    <TableCell sx={{ fontWeight: 'bold', py: 3, width: 120, textAlign: 'center' }}>Priority</TableCell>
-                    <TableCell sx={{ fontWeight: 'bold', py: 3, width: 150 }}>Last Action</TableCell>
-                    <TableCell sx={{ fontWeight: 'bold', py: 3, width: 120, textAlign: 'center' }}>Calls</TableCell>
-                    <TableCell sx={{ fontWeight: 'bold', py: 3, width: 150 }}>Renewal Date</TableCell>
-                    <TableCell sx={{ fontWeight: 'bold', py: 3, width: 140 }}>Closed Date</TableCell>
-                    <TableCell sx={{ fontWeight: 'bold', py: 3, width: 140 }}>Upload Date</TableCell>
+                    <TableCell sx={{ fontWeight: 'bold', py: 3, width: 180, textAlign: 'center' }}>{t('closedCases.table.actions', 'Actions')}</TableCell>
+                    <TableCell sx={{ fontWeight: 'bold', py: 3, width: 140 }}>{t('closedCases.table.caseId', 'Case ID')}</TableCell>
+                    <TableCell sx={{ fontWeight: 'bold', py: 3, width: 180 }}>{t('closedCases.table.customerName', 'Customer Name')}</TableCell>
+                    <TableCell sx={{ fontWeight: 'bold', py: 3, width: 150 }}>{t('closedCases.table.profile', 'Profile')}</TableCell>
+                    <TableCell sx={{ fontWeight: 'bold', py: 3, width: 150 }}>{t('closedCases.table.mobile', 'Mobile')}</TableCell>
+                    <TableCell sx={{ fontWeight: 'bold', py: 3, width: 130 }}>{t('closedCases.table.language', 'Language')}</TableCell>
+                    <TableCell sx={{ fontWeight: 'bold', py: 3, width: 160 }}>{t('closedCases.table.policyNumber', 'Policy Number')}</TableCell>
+                    <TableCell sx={{ fontWeight: 'bold', py: 3, width: 200 }}>{t('closedCases.table.productName', 'Product Name')}</TableCell>
+                    <TableCell sx={{ fontWeight: 'bold', py: 3, width: 140 }}>{t('closedCases.table.category', 'Category')}</TableCell>
+                    <TableCell sx={{ fontWeight: 'bold', py: 3, width: 170 }}>{t('closedCases.table.channel', 'Channel')}</TableCell>
+                    <TableCell sx={{ fontWeight: 'bold', py: 3, width: 140 }}>{t('closedCases.table.batchId', 'Batch ID')}</TableCell>
+                    <TableCell sx={{ fontWeight: 'bold', py: 3, width: 130 }}>{t('closedCases.table.status', 'Status')}</TableCell>
+                    <TableCell sx={{ fontWeight: 'bold', py: 3, width: 150 }}>{t('closedCases.table.policyStatus', 'Policy Status')}</TableCell>
+                    <TableCell sx={{ fontWeight: 'bold', py: 3, width: 160 }}>{t('closedCases.table.agent', 'Agent')}</TableCell>
+                    <TableCell sx={{ fontWeight: 'bold', py: 3, width: 120, textAlign: 'center' }}>{t('closedCases.table.priority', 'Priority')}</TableCell>
+                    <TableCell sx={{ fontWeight: 'bold', py: 3, width: 150 }}>{t('closedCases.table.lastAction', 'Last Action')}</TableCell>
+                    <TableCell sx={{ fontWeight: 'bold', py: 3, width: 120, textAlign: 'center' }}>{t('closedCases.table.totalCalls', 'Calls')}</TableCell>
+                    <TableCell sx={{ fontWeight: 'bold', py: 3, width: 150 }}>{t('closedCases.table.renewalDate', 'Renewal Date')}</TableCell>
+                    <TableCell sx={{ fontWeight: 'bold', py: 3, width: 140 }}>{t('closedCases.table.closedDate', 'Closed Date')}</TableCell>
+                    <TableCell sx={{ fontWeight: 'bold', py: 3, width: 140 }}>{t('closedCases.table.uploadDate', 'Upload Date')}</TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
@@ -1134,7 +1136,7 @@ const ClosedCases = () => {
             <ListItemIcon>
               <TableViewIcon color="primary" />
             </ListItemIcon>
-            <ListItemText primary="Export as XLS" />
+            <ListItemText primary={t('closedCases.exportAsXls', 'Export as XLS')} />
           </MenuItem>
           <MenuItem
             onClick={exportToCSV}
@@ -1150,7 +1152,7 @@ const ClosedCases = () => {
             <ListItemIcon>
               <InsertDriveFileIcon color="secondary" />
             </ListItemIcon>
-            <ListItemText primary="Export as CSV" />
+            <ListItemText primary={t('closedCases.exportAsCsv', 'Export as CSV')} />
           </MenuItem>
         </Menu>
 
@@ -1173,14 +1175,14 @@ const ClosedCases = () => {
           }}
         >
           <Typography variant="subtitle2" sx={{ px: 1, pb: 2, fontWeight: 600 }}>
-            Filter Closed Cases
+            {t('closedCases.filters.title', 'Filter Closed Cases')}
           </Typography>
           <MenuItem sx={{ py: 1.5 }}>
             <FormControl fullWidth size="small">
-              <InputLabel>Agent</InputLabel>
+              <InputLabel>{t('closedCases.filters.agent', 'Agent')}</InputLabel>
               <Select
                 value={agentFilter}
-                label="Agent"
+                label={t('closedCases.filters.agent', 'Agent')}
                 onChange={handleAgentFilterChange}
                 sx={{
                   borderRadius: 2,
@@ -1192,21 +1194,21 @@ const ClosedCases = () => {
                   },
                 }}
               >
-                <MenuItem value="all">All Agents</MenuItem>
-                <MenuItem value="Priya Patel">Priya Patel</MenuItem>
-                <MenuItem value="Rajesh Kumar">Rajesh Kumar</MenuItem>
-                <MenuItem value="Ananya Reddy">Ananya Reddy</MenuItem>
-                <MenuItem value="Amit Shah">Amit Shah</MenuItem>
+                <MenuItem value="all">{t('closedCases.filters.allAgents', 'All Agents')}</MenuItem>
+                <MenuItem value="Priya Patel">{t('closedCases.filters.agents.Priya Patel', 'Priya Patel')}</MenuItem>
+                <MenuItem value="Rajesh Kumar">{t('closedCases.filters.agents.Rajesh Kumar', 'Rajesh Kumar')}</MenuItem>
+                <MenuItem value="Ananya Reddy">{t('closedCases.filters.agents.Ananya Reddy', 'Ananya Reddy')}</MenuItem>
+                <MenuItem value="Amit Shah">{t('closedCases.filters.agents.Amit Shah', 'Amit Shah')}</MenuItem>
               </Select>
             </FormControl>
           </MenuItem>
 
           <MenuItem sx={{ py: 1.5 }}>
             <FormControl fullWidth size="small">
-              <InputLabel>Date</InputLabel>
+              <InputLabel>{t('closedCases.filters.date', 'Date')}</InputLabel>
               <Select
                 value={dateFilter}
-                label="Date"
+                label={t('closedCases.filters.date', 'Date')}
                 onChange={handleDateFilterChange}
                 sx={{
                   borderRadius: 2,
@@ -1218,11 +1220,11 @@ const ClosedCases = () => {
                   },
                 }}
               >
-                <MenuItem value="all">All Dates</MenuItem>
-                <MenuItem value="today">Today</MenuItem>
-                <MenuItem value="yesterday">Yesterday</MenuItem>
-                <MenuItem value="lastWeek">Last 7 Days</MenuItem>
-                <MenuItem value="lastMonth">Last 30 Days</MenuItem>
+                <MenuItem value="all">{t('closedCases.filters.allDates', 'All Dates')}</MenuItem>
+                <MenuItem value="today">{t('closedCases.filters.today', 'Today')}</MenuItem>
+                <MenuItem value="yesterday">{t('closedCases.filters.yesterday', 'Yesterday')}</MenuItem>
+                <MenuItem value="lastWeek">{t('closedCases.filters.lastWeek', 'Last 7 Days')}</MenuItem>
+                <MenuItem value="lastMonth">{t('closedCases.filters.lastMonth', 'Last 30 Days')}</MenuItem>
               </Select>
             </FormControl>
           </MenuItem>
@@ -1244,7 +1246,7 @@ const ClosedCases = () => {
                 }
               }}
             >
-              Apply Filters
+              {t('closedCases.filters.apply', 'Apply Filters')}
             </Button>
           </Box>
         </Menu>

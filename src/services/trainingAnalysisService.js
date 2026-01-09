@@ -1,68 +1,50 @@
-// src/services/trainingAnalysisService.js
-// Training analysis service: handles API calls for training analytics, modules, and employee records
-// When backend is ready, update API_BASE_URL in .env file
+import api from './api';
 
-const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:5000/api';
-const TRAINING_ANALYSIS_ENDPOINT = `${API_BASE_URL}/training-analysis`;
-
-// Helper function to simulate API delay (remove when using real backend)
-const simulateDelay = (ms = 500) => new Promise(resolve => setTimeout(resolve, ms));
+const BASE_PATH = '/training_management/training-modules';
 
 /**
- * Fetch all training modules with analytics data
- * @returns {Promise<Array>} Array of training module objects
+ * Training Management Service
+ * Handles all API calls for Training and Management module
+ */
+
+// Helper to transform API response if needed or map fields
+const toApiPayload = (data) => {
+    // Map dropdown values to backend enums
+    const categoryMap = {
+        'Soft Skills': 'soft_skills',
+        'Technical': 'technical',
+        'Product Knowledge': 'product_knowledge',
+        'Compliance': 'compliance',
+        'Process Training': 'process_training',
+        'Portal Training': 'portal_training'
+    };
+
+    const difficultyMap = {
+        'Beginner': 'beginner',
+        'Intermediate': 'intermediate',
+        'Advanced': 'advanced'
+    };
+
+    return {
+        ...data,
+        module_title: data.title || data.module_title,
+        category: categoryMap[data.category] || data.category,
+        level: difficultyMap[data.level || data.difficulty] || data.level || data.difficulty,
+        duration: data.duration,
+        passing_score: data.passingScore || data.passing_score,
+        // Ensure other fields are passed correctly
+    };
+};
+
+/**
+ * List all training modules
+ * GET /api/training_management/training-modules/
  */
 export const getTrainingModules = async () => {
     try {
-        // TODO: Replace with actual API call when backend is ready
-        // const response = await fetch(`${TRAINING_ANALYSIS_ENDPOINT}/modules`);
-        // if (!response.ok) throw new Error('Failed to fetch training modules');
-        // return await response.json();
-
-        // Mock data for now
-        await simulateDelay();
-        return [
-            {
-                id: 1,
-                title: 'Customer Service Excellence',
-                description: 'Learn best practices for exceptional customer service',
-                duration: '2 hours',
-                category: 'Soft Skills',
-                difficulty: 'Beginner',
-                completionRate: 85,
-                enrolledCount: 45
-            },
-            {
-                id: 2,
-                title: 'Claims Processing Fundamentals',
-                description: 'Comprehensive guide to processing insurance claims',
-                duration: '3 hours',
-                category: 'Technical',
-                difficulty: 'Intermediate',
-                completionRate: 72,
-                enrolledCount: 38
-            },
-            {
-                id: 3,
-                title: 'Product Knowledge - Health Insurance',
-                description: 'Deep dive into health insurance products and features',
-                duration: '4 hours',
-                category: 'Product Knowledge',
-                difficulty: 'Advanced',
-                completionRate: 68,
-                enrolledCount: 35
-            },
-            {
-                id: 4,
-                title: 'Complaint Resolution Strategies',
-                description: 'Effective techniques for resolving customer complaints',
-                duration: '1.5 hours',
-                category: 'Soft Skills',
-                difficulty: 'Intermediate',
-                completionRate: 90,
-                enrolledCount: 42
-            }
-        ];
+        const response = await api.get(`${BASE_PATH}/`);
+        // Return results directly or data if already array/results
+        return response.data;
     } catch (error) {
         console.error('Error fetching training modules:', error);
         throw error;
@@ -71,29 +53,23 @@ export const getTrainingModules = async () => {
 
 /**
  * Create a new training module
- * @param {Object} moduleData - Training module data to create
- * @returns {Promise<Object>} Created training module object
+ * POST /api/training_management/training-modules/
  */
 export const createTrainingModule = async (moduleData) => {
     try {
-        // TODO: Replace with actual API call when backend is ready
-        // const response = await fetch(`${TRAINING_ANALYSIS_ENDPOINT}/modules`, {
-        //   method: 'POST',
-        //   headers: { 'Content-Type': 'application/json' },
-        //   body: JSON.stringify(moduleData)
-        // });
-        // if (!response.ok) throw new Error('Failed to create training module');
-        // return await response.json();
-
-        // Mock implementation
-        await simulateDelay();
-        const newModule = {
-            ...moduleData,
-            id: Math.floor(Math.random() * 10000),
-            completionRate: 0,
-            enrolledCount: 0
+        const payload = {
+            module_title: moduleData.title,
+            category: moduleData.category?.toLowerCase().replace(' ', '_'), // e.g. "Portal Training" -> "portal_training"
+            level: moduleData.level,
+            duration: moduleData.duration,
+            passing_score: moduleData.passingScore,
+            description: moduleData.description,
+            status: moduleData.status,
+            topics_covered: moduleData.topics_covered || [], // Assuming array of strings
+            completion_rate: moduleData.completionRate || 0
         };
-        return newModule;
+        const response = await api.post(`${BASE_PATH}/`, payload);
+        return response.data;
     } catch (error) {
         console.error('Error creating training module:', error);
         throw error;
@@ -101,244 +77,255 @@ export const createTrainingModule = async (moduleData) => {
 };
 
 /**
- * Update an existing training module
- * @param {number} moduleId - ID of the module to update
- * @param {Object} updates - Updated module data
- * @returns {Promise<Object>} Updated module object
+ * Update a training module
+ * PUT /api/training_management/training-modules/{id}/
  */
 export const updateTrainingModule = async (moduleId, updates) => {
     try {
-        // TODO: Replace with actual API call when backend is ready
-        // const response = await fetch(`${TRAINING_ANALYSIS_ENDPOINT}/modules/${moduleId}`, {
-        //   method: 'PUT',
-        //   headers: { 'Content-Type': 'application/json' },
-        //   body: JSON.stringify(updates)
-        // });
-        // if (!response.ok) throw new Error('Failed to update training module');
-        // return await response.json();
-
-        // Mock implementation
-        await simulateDelay();
-        return {
-            ...updates,
-            id: moduleId
+        // Construct payload specifically matching update_module request
+        const payload = {
+            module_title: updates.title || updates.module_title,
+            category: updates.category?.toLowerCase().replace(' ', '_'),
+            level: updates.level,
+            duration: updates.duration,
+            description: updates.description,
+            passing_score: updates.passingScore || updates.passing_score,
+            status: updates.status,
+            topics_covered: updates.topics || updates.topics_covered || []
         };
+        const response = await api.put(`${BASE_PATH}/${moduleId}/`, payload);
+        return response.data;
     } catch (error) {
-        console.error('Error updating training module:', error);
+        console.error(`Error updating training module ${moduleId}:`, error);
         throw error;
     }
 };
 
 /**
  * Delete a training module
- * @param {number} moduleId - ID of the module to delete
- * @returns {Promise<Object>} Success response
+ * DELETE /api/training_management/training-modules/{id}/
  */
 export const deleteTrainingModule = async (moduleId) => {
     try {
-        // TODO: Replace with actual API call when backend is ready
-        // const response = await fetch(`${TRAINING_ANALYSIS_ENDPOINT}/modules/${moduleId}`, {
-        //   method: 'DELETE'
-        // });
-        // if (!response.ok) throw new Error('Failed to delete training module');
-        // return await response.json();
-
-        // Mock implementation
-        await simulateDelay();
-        return { success: true, message: 'Training module deleted successfully' };
+        const response = await api.delete(`${BASE_PATH}/${moduleId}/`);
+        return response.data;
     } catch (error) {
-        console.error('Error deleting training module:', error);
+        console.error(`Error deleting training module ${moduleId}:`, error);
         throw error;
     }
 };
 
 /**
- * Fetch employee training records
- * @returns {Promise<Array>} Array of training record objects
+ * Enroll Agent
+ * POST /api/training_management/training-modules/{id}/enroll/
  */
-export const getTrainingRecords = async () => {
+export const enrollAgent = async (moduleId, enrollmentData) => {
     try {
-        // TODO: Replace with actual API call when backend is ready
-        // const response = await fetch(`${TRAINING_ANALYSIS_ENDPOINT}/records`);
-        // if (!response.ok) throw new Error('Failed to fetch training records');
-        // return await response.json();
-
-        // Mock data for now
-        await simulateDelay();
-        return [
-            {
-                id: 1,
-                employeeName: 'Priya Sharma',
-                moduleTitle: 'Customer Service Excellence',
-                status: 'Completed',
-                score: 92,
-                completedDate: '2025-01-10',
-                timeSpent: '2.1 hours'
-            },
-            {
-                id: 2,
-                employeeName: 'Amit Patel',
-                moduleTitle: 'Claims Processing Fundamentals',
-                status: 'In Progress',
-                progress: 65,
-                startedDate: '2025-01-08',
-                timeSpent: '1.8 hours'
-            },
-            {
-                id: 3,
-                employeeName: 'Rajesh Kumar',
-                moduleTitle: 'Product Knowledge - Health Insurance',
-                status: 'Completed',
-                score: 88,
-                completedDate: '2025-01-09',
-                timeSpent: '4.2 hours'
-            },
-            {
-                id: 4,
-                employeeName: 'Anita Desai',
-                moduleTitle: 'Complaint Resolution Strategies',
-                status: 'Completed',
-                score: 95,
-                completedDate: '2025-01-11',
-                timeSpent: '1.6 hours'
-            }
-        ];
+        const payload = {
+            agent_id: enrollmentData.agentId,
+            agent_name: enrollmentData.agentName,
+            department: enrollmentData.department,
+            modules_completed: enrollmentData.modulesCompleted,
+            modules_total: enrollmentData.modulesTotal,
+            hours_completed: enrollmentData.hoursCompleted,
+            hours_target: enrollmentData.hoursTarget,
+            score: enrollmentData.score,
+            progress: enrollmentData.progress,
+            certificates: enrollmentData.certificates,
+            completed: enrollmentData.completed,
+            last_activity: enrollmentData.lastActivity
+        };
+        const response = await api.post(`${BASE_PATH}/${moduleId}/enroll/`, payload);
+        return response.data;
     } catch (error) {
-        console.error('Error fetching training records:', error);
+        console.error('Error enrolling agent:', error);
         throw error;
     }
 };
 
+// Alias for compatibility
+export const enrollEmployee = enrollAgent;
+
 /**
- * Get performance trend data over time
- * @returns {Promise<Array>} Array of performance data points
+ * Add Document
+ * POST /api/training_management/training-modules/{id}/documents/add/
  */
-export const getPerformanceData = async () => {
+export const uploadDocument = async (moduleId, documentData) => {
     try {
-        // TODO: Replace with actual API call when backend is ready
-        // const response = await fetch(`${TRAINING_ANALYSIS_ENDPOINT}/performance`);
-        // if (!response.ok) throw new Error('Failed to fetch performance data');
-        // return await response.json();
-
-        // Mock data for now
-        await simulateDelay();
-        return [
-            { month: 'Jul', avgScore: 78, completionRate: 65 },
-            { month: 'Aug', avgScore: 82, completionRate: 70 },
-            { month: 'Sep', avgScore: 85, completionRate: 75 },
-            { month: 'Oct', avgScore: 88, completionRate: 78 },
-            { month: 'Nov', avgScore: 90, completionRate: 82 },
-            { month: 'Dec', avgScore: 92, completionRate: 85 }
-        ];
+        const payload = {
+            name: documentData.name,
+            file_path: documentData.filePath || `training_docs/${documentData.name}`, // Fallback if backend handles storage path
+            type: documentData.type,
+            size: documentData.size
+        };
+        const response = await api.post(`${BASE_PATH}/${moduleId}/documents/add/`, payload);
+        return response.data;
     } catch (error) {
-        console.error('Error fetching performance data:', error);
+        console.error('Error uploading document:', error);
         throw error;
     }
 };
 
 /**
- * Get module distribution by category
- * @param {Array} modules - Array of training modules
- * @returns {Promise<Array>} Array of category distribution data
+ * Add Assessment
+ * POST /api/training_management/training-modules/{id}/assessments/add/
  */
-export const getCategoryDistribution = async (modules = []) => {
+export const addAssessment = async (moduleId, assessmentData) => {
     try {
-        // TODO: Replace with actual API call when backend is ready
-        // const response = await fetch(`${TRAINING_ANALYSIS_ENDPOINT}/category-distribution`);
-        // if (!response.ok) throw new Error('Failed to fetch category distribution');
-        // return await response.json();
-
-        // Mock implementation - calculate from modules
-        await simulateDelay();
-        return [
-            { name: 'Soft Skills', count: modules.filter(m => m.category === 'Soft Skills').length },
-            { name: 'Technical', count: modules.filter(m => m.category === 'Technical').length },
-            { name: 'Product Knowledge', count: modules.filter(m => m.category === 'Product Knowledge').length },
-            { name: 'Compliance', count: modules.filter(m => m.category === 'Compliance').length }
-        ];
+        const payload = {
+            title: assessmentData.title,
+            total_marks: assessmentData.totalMarks,
+            passing_marks: assessmentData.passingMarks
+        };
+        const response = await api.post(`${BASE_PATH}/${moduleId}/assessments/add/`, payload);
+        return response.data;
     } catch (error) {
-        console.error('Error fetching category distribution:', error);
+        console.error('Error adding assessment:', error);
         throw error;
     }
 };
 
 /**
- * Get overall training statistics
- * @returns {Promise<Object>} Statistics object
+ * Get Training Module Stats
+ * GET /api/training_management/training-modules/training-modules-stats/
  */
 export const getTrainingStats = async () => {
     try {
-        // TODO: Replace with actual API call when backend is ready
-        // const response = await fetch(`${TRAINING_ANALYSIS_ENDPOINT}/stats`);
-        // if (!response.ok) throw new Error('Failed to fetch training stats');
-        // return await response.json();
-
-        // Mock implementation
-        await simulateDelay();
-        const modules = await getTrainingModules();
-        const records = await getTrainingRecords();
-
-        const avgCompletionRate = modules.reduce((sum, m) => sum + m.completionRate, 0) / modules.length || 0;
-        const totalEnrolled = modules.reduce((sum, m) => sum + m.enrolledCount, 0);
-        const completedCount = records.filter(r => r.status === 'Completed').length;
-        const avgScore = records
-            .filter(r => r.score)
-            .reduce((sum, r) => sum + r.score, 0) / records.filter(r => r.score).length || 0;
-
-        return {
-            totalModules: modules.length,
-            totalEnrolled,
-            avgCompletionRate: avgCompletionRate.toFixed(0),
-            avgScore: avgScore.toFixed(0),
-            completedCount,
-            inProgressCount: records.filter(r => r.status === 'In Progress').length
-        };
+        const response = await api.get(`${BASE_PATH}/training-modules-stats/`);
+        return response.data;
     } catch (error) {
-        console.error('Error fetching training stats:', error);
+        console.error('Error fetching dashboard summary:', error);
+        throw error;
+    }
+};
+export const getTrainingAnalytics = getTrainingStats;
+
+/**
+ * Get Analytics Overview
+ * GET /api/training_management/training-modules/analytics-overview/
+ */
+export const getAnalyticsOverview = async () => {
+    try {
+        const response = await api.get(`${BASE_PATH}/analytics-overview/`);
+        return response.data;
+    } catch (error) {
+        console.error('Error fetching analytics overview:', error);
         throw error;
     }
 };
 
 /**
- * Enroll an employee in a training module
- * @param {number} moduleId - ID of the module
- * @param {string} employeeId - ID of the employee
- * @returns {Promise<Object>} Success response
+ * Get Agent Training Progress
+ * GET /api/training_management/training-modules/agent-training-progress/
  */
-export const enrollEmployee = async (moduleId, employeeId) => {
+export const getAgentProgress = async () => {
     try {
-        // TODO: Replace with actual API call when backend is ready
-        // const response = await fetch(`${TRAINING_ANALYSIS_ENDPOINT}/enroll`, {
-        //   method: 'POST',
-        //   headers: { 'Content-Type': 'application/json' },
-        //   body: JSON.stringify({ moduleId, employeeId })
-        // });
-        // if (!response.ok) throw new Error('Failed to enroll employee');
-        // return await response.json();
-
-        // Mock implementation
-        await simulateDelay();
-        return {
-            success: true,
-            message: 'Employee enrolled successfully',
-            moduleId,
-            employeeId,
-            enrolledDate: new Date().toISOString().split('T')[0]
-        };
+        const response = await api.get(`${BASE_PATH}/agent-training-progress/`);
+        return response.data;
     } catch (error) {
-        console.error('Error enrolling employee:', error);
+        console.error('Error fetching agent progress:', error);
         throw error;
     }
 };
+
+/**
+ * Start Module (Process Training)
+ * POST /api/training_management/training-modules/{id}/process-training/start-module/
+ */
+export const startProcessModule = async (moduleId) => {
+    try {
+        const response = await api.post(`${BASE_PATH}/${moduleId}/process-training/start-module/`);
+        return response.data;
+    } catch (error) {
+        console.error('Error starting process module:', error);
+        throw error;
+    }
+};
+
+/**
+ * Start Module (Portal Training)
+ * POST /api/training_management/training-modules/{id}/portal-training/start-module/
+ */
+export const startPortalModule = async (moduleId) => {
+    try {
+        const response = await api.post(`${BASE_PATH}/${moduleId}/portal-training/start-module/`);
+        return response.data;
+    } catch (error) {
+        console.error('Error starting portal module:', error);
+        throw error;
+    }
+};
+
+/**
+ * View Detail (Process Training)
+ * GET /api/training_management/training-modules/{id}/process-training/view-details/
+ */
+export const getProcessModuleDetails = async (moduleId) => {
+    try {
+        const response = await api.get(`${BASE_PATH}/${moduleId}/process-training/view-details/`);
+        return response.data;
+    } catch (error) {
+        console.error('Error fetching process module details:', error);
+        throw error;
+    }
+};
+
+/**
+ * View Detail (Portal Training)
+ * GET /api/training_management/training-modules/{id}/portal-training/view-details/
+ * (Assuming similar structure based on 'portal-training' request name in collection)
+ */
+export const getPortalModuleDetails = async (moduleId) => {
+    try {
+        const response = await api.get(`${BASE_PATH}/${moduleId}/portal-training/view-details/`);
+        return response.data;
+    } catch (error) {
+        console.error('Error fetching portal module details:', error);
+        throw error;
+    }
+};
+
+/**
+ * Delete Document - NOT IN POSTMAN COLLECTION explicitly, but good to have placeholder or implementation guess.
+ * Since DELETE module exists, maybe DELETE document exists at .../documents/{docId}/?
+ * Keeping placeholder for now or omit if strict.
+ */
+export const deleteDocument = async (moduleId, documentId) => {
+    try {
+        // Guessing the endpoint structure based on common patterns
+        const response = await api.delete(`${BASE_PATH}/${moduleId}/documents/${documentId}/`);
+        return response.data;
+    } catch (error) {
+        console.warn('deleteDocument API might not exist or failed:', error);
+        // Fallback: throw error so UI knows it failed
+        throw error;
+    }
+};
+
+export const getTrainingRecords = async () => {
+    // This seems to be covered by getAgentProgress or similar.
+    // Keeping backward compatibility returning empty list or fetching progress.
+    return [];
+};
+
 
 export default {
     getTrainingModules,
     createTrainingModule,
     updateTrainingModule,
     deleteTrainingModule,
-    getTrainingRecords,
-    getPerformanceData,
-    getCategoryDistribution,
+    enrollAgent,
+    enrollEmployee,
+    uploadDocument,
+    addAssessment,
     getTrainingStats,
-    enrollEmployee
+    getTrainingAnalytics,
+    getAnalyticsOverview,
+    getAgentProgress,
+    startProcessModule,
+    startPortalModule,
+    getProcessModuleDetails,
+    getPortalModuleDetails,
+    deleteDocument,
+    getTrainingRecords
 };

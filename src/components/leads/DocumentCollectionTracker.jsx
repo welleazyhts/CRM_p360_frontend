@@ -24,7 +24,9 @@ import {
   FormControl,
   InputLabel,
   Tooltip,
-  Badge
+  Badge,
+  Checkbox,
+  OutlinedInput
 } from '@mui/material';
 import {
   CloudUpload as UploadIcon,
@@ -84,6 +86,8 @@ const DocumentCollectionTracker = ({ leadId, initialDocuments = [], onUpdate }) 
 
   // Send request form
   const [requestChannel, setRequestChannel] = useState('email');
+  const [requestedDocs, setRequestedDocs] = useState([]);
+  const [requestNote, setRequestNote] = useState('');
 
   const handleUploadDocument = () => {
     const document = {
@@ -144,8 +148,13 @@ const DocumentCollectionTracker = ({ leadId, initialDocuments = [], onUpdate }) 
   const handleSendRequest = () => {
     // Mock sending document request
     console.log(`Sending document request via ${requestChannel}`);
+    console.log('Requested Documents:', requestedDocs);
+    console.log('Note:', requestNote);
+
     setSendRequestDialog(false);
     setRequestChannel('email');
+    setRequestedDocs([]);
+    setRequestNote('');
   };
 
   const handleViewDocument = (doc) => {
@@ -315,12 +324,31 @@ const DocumentCollectionTracker = ({ leadId, initialDocuments = [], onUpdate }) 
                         <Typography variant="body1" fontWeight="bold">
                           {doc.type}
                         </Typography>
-                        <Chip
-                          icon={getStatusIcon(doc.status)}
-                          label={doc.status}
-                          size="small"
-                          color={getStatusColor(doc.status)}
-                        />
+                        <FormControl size="small" variant="standard" sx={{ minWidth: 100, ml: 1 }}>
+                          <Select
+                            value={doc.status}
+                            onChange={(e) => handleUpdateStatus(doc.id, e.target.value)}
+                            disableUnderline
+                            sx={{
+                              fontSize: '0.8125rem',
+                              color: 'text.primary',
+                              '& .MuiSelect-select': {
+                                py: 0.5,
+                                pl: 1,
+                                pr: 3,
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: 0.5
+                              }
+                            }}
+                          >
+                            <MenuItem value={DOCUMENT_STATUS.PENDING}>{DOCUMENT_STATUS.PENDING}</MenuItem>
+                            <MenuItem value={DOCUMENT_STATUS.RECEIVED}>{DOCUMENT_STATUS.RECEIVED}</MenuItem>
+                            <MenuItem value={DOCUMENT_STATUS.VERIFIED}>{DOCUMENT_STATUS.VERIFIED}</MenuItem>
+                            <MenuItem value={DOCUMENT_STATUS.REJECTED}>{DOCUMENT_STATUS.REJECTED}</MenuItem>
+                            <MenuItem value={DOCUMENT_STATUS.EXPIRED}>{DOCUMENT_STATUS.EXPIRED}</MenuItem>
+                          </Select>
+                        </FormControl>
                       </Box>
                     }
                     secondary={
@@ -497,8 +525,27 @@ const DocumentCollectionTracker = ({ leadId, initialDocuments = [], onUpdate }) 
         <DialogContent>
           <Box sx={{ mt: 2 }}>
             <Typography variant="body2" gutterBottom>
-              Send document collection request via:
+              Configure your document collection request:
             </Typography>
+
+            <FormControl fullWidth sx={{ mt: 2 }}>
+              <InputLabel>Documents to Request</InputLabel>
+              <Select
+                multiple
+                value={requestedDocs}
+                onChange={(e) => setRequestedDocs(typeof e.target.value === 'string' ? e.target.value.split(',') : e.target.value)}
+                input={<OutlinedInput label="Documents to Request" />}
+                renderValue={(selected) => selected.join(', ')}
+              >
+                {Object.values(DOCUMENT_TYPES).map((name) => (
+                  <MenuItem key={name} value={name}>
+                    <Checkbox checked={requestedDocs.indexOf(name) > -1} />
+                    <ListItemText primary={name} />
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+
             <FormControl fullWidth sx={{ mt: 2 }}>
               <InputLabel>Channel</InputLabel>
               <Select
@@ -518,16 +565,36 @@ const DocumentCollectionTracker = ({ leadId, initialDocuments = [], onUpdate }) 
                     WhatsApp
                   </Box>
                 </MenuItem>
-                <MenuItem value="link">
-                  <Box display="flex" alignItems="center" gap={1}>
-                    <LinkIcon fontSize="small" />
-                    Generate Upload Link
-                  </Box>
-                </MenuItem>
               </Select>
             </FormControl>
+
+            <Button
+              fullWidth
+              variant="outlined"
+              startIcon={<LinkIcon />}
+              sx={{ mt: 2 }}
+              onClick={() => {
+                const link = `https://portal.py360.com/upload-docs/${leadId}`;
+                navigator.clipboard.writeText(link);
+                alert(`Upload link copied to clipboard: ${link}`);
+              }}
+            >
+              Generate Link
+            </Button>
+
+            <TextField
+              fullWidth
+              multiline
+              rows={3}
+              label="Note to Customer"
+              placeholder="Please upload these documents at your earliest convenience..."
+              value={requestNote}
+              onChange={(e) => setRequestNote(e.target.value)}
+              sx={{ mt: 2 }}
+            />
+
             <Alert severity="info" sx={{ mt: 2 }}>
-              A document upload request with required documents list will be sent to the customer.
+              A request for leads to upload <strong>{requestedDocs.length > 0 ? requestedDocs.length : 'selected'}</strong> document(s) will be sent via {requestChannel}.
             </Alert>
           </Box>
         </DialogContent>

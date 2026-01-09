@@ -302,16 +302,24 @@ export const leadService = {
   // Get available users for assignment
   getAvailableUsers: async () => {
     try {
-      const response = await api.get('/leads/available-users/');
-      return response.data;
+      // Try common endpoints for users
+      try {
+        const response = await api.get('/leads/available-users/');
+        return response.data;
+      } catch (e) {
+        // Try generic users endpoint
+        try {
+          const response = await api.get('/users/');
+          return response.data;
+        } catch (e2) {
+          // Try auth users endpoint
+          const response = await api.get('/auth/users/');
+          return response.data;
+        }
+      }
     } catch (error) {
-      console.warn('Available users endpoint not found, using mock data:', error.message);
-      // Return mock data as fallback
-      return [
-        { id: 1, name: 'Alice Johnson', email: 'alice@example.com' },
-        { id: 2, name: 'Bob Smith', email: 'bob@example.com' },
-        { id: 3, name: 'Charlie Brown', email: 'charlie@example.com' }
-      ];
+      console.warn('Could not fetch users from any endpoint:', error.message);
+      return []; // Return empty array to avoid invalid ID errors
     }
   },
 

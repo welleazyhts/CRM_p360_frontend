@@ -38,10 +38,45 @@ import { useDedupe } from '../../context/DedupeContext';
 const FailedRecordsViewer = ({ source = null, limit = 10 }) => {
   const theme = useTheme();
   const { t } = useTranslation();
-  const { getUploadHistory, clearUploadHistory } = useDedupe();
+  const { getUploadHistory: getDedupeHistory, clearUploadHistory: clearDedupeHistory } = useDedupe();
   const [expandedUpload, setExpandedUpload] = useState(null);
+  const [apiHistory, setApiHistory] = useState([]);
 
-  const uploadHistory = getUploadHistory(source, limit);
+  // Fetch history from API if source is customers, otherwise use context
+  const [uploadHistory, setUploadHistory] = useState([]);
+
+  React.useEffect(() => {
+    const loadHistory = async () => {
+      if (source === 'customers') {
+        try {
+          // Import dynamically to avoid circular dependencies if any, or just use imported service
+          const { getUploadHistory } = await import('../../services/CustomerService');
+          const history = await getUploadHistory();
+          setUploadHistory(history || []);
+        } catch (error) {
+          console.error('Failed to load customer history', error);
+        }
+      } else {
+        setUploadHistory(getDedupeHistory(source, limit));
+      }
+    };
+    loadHistory();
+  }, [source, limit, getDedupeHistory]);
+
+  const handleClearHistory = async () => {
+    if (source === 'customers') {
+      try {
+        const { clearUploadHistory } = await import('../../services/CustomerService');
+        await clearUploadHistory();
+        setUploadHistory([]);
+      } catch (error) {
+        console.error('Failed to clear customer history', error);
+      }
+    } else {
+      clearDedupeHistory();
+      // Force refresh (context update should handle it, but here we manage local state for api)
+    }
+  };
 
   const handleExpandClick = (uploadId) => {
     setExpandedUpload(expandedUpload === uploadId ? null : uploadId);
@@ -111,7 +146,7 @@ const FailedRecordsViewer = ({ source = null, limit = 10 }) => {
             <IconButton
               size="small"
               onClick={() => {
-                clearUploadHistory();
+                handleClearHistory();
               }}
             >
               <DeleteIcon />

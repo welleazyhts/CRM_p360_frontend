@@ -55,6 +55,9 @@ import {
 import attendanceService from '../services/attendanceService';
 
 
+import { leadService } from '../services/leadService';
+
+
 const AttendanceManagement = () => {
   const theme = useTheme();
   // Destructure refreshAttendance from context
@@ -90,14 +93,34 @@ const AttendanceManagement = () => {
     notes: ''
   });
 
-  // Mock employees - In a real app, fetch from Employee Service
-  const employees = [
-    { id: 'EMP001', name: 'John Smith', department: 'Sales', position: 'Sales Executive' },
-    { id: 'EMP002', name: 'Sarah Johnson', department: 'Marketing', position: 'Marketing Manager' },
-    { id: 'EMP003', name: 'Mike Wilson', department: 'IT', position: 'Software Developer' },
-    { id: 'EMP004', name: 'Emily Davis', department: 'HR', position: 'HR Specialist' },
-    { id: 'EMP005', name: 'David Brown', department: 'Finance', position: 'Accountant' }
-  ];
+  // Users state replaces mock employees
+  const [employees, setEmployees] = useState([]);
+
+  // Fetch real users on mount
+  useEffect(() => {
+    const fetchUsers = async () => {
+      try {
+        // Use the leadService or a dedicated userService to get valid users
+        const users = await leadService.getAvailableUsers();
+        if (Array.isArray(users)) {
+          // Map users to expected format if necessary, or use directly
+          // Assuming user object has id, name, email, etc.
+          // Map to match the component's expectations: id, name, department, position
+          const mappedUsers = users.map(u => ({
+            id: u.id,
+            name: u.first_name ? `${u.first_name} ${u.last_name}` : (u.username || u.email || 'Unknown'),
+            department: u.department || 'General',
+            position: u.role || 'Employee'
+          }));
+          setEmployees(mappedUsers);
+        }
+      } catch (err) {
+        console.error("Failed to fetch users for attendance:", err);
+        setSnackbar({ open: true, message: 'Failed to load employees list', severity: 'error' });
+      }
+    };
+    fetchUsers();
+  }, []);
 
   const departments = ['Sales', 'Marketing', 'IT', 'HR', 'Finance'];
   const statusOptions = ['Present', 'Absent', 'Half Day', 'Late', 'Early Leave', 'Overtime'];
@@ -232,7 +255,7 @@ const AttendanceManagement = () => {
     try {
       // Prepare payload in snake_case
       const payload = {
-        employee_id: formData.employeeId,
+        employee_id: parseInt(formData.employeeId, 10),
         date: formData.date,
         check_in: formData.checkIn,
         check_out: formData.checkOut,

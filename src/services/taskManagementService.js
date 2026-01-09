@@ -426,6 +426,16 @@ export const getTaskStatistics = (tasks = []) => {
   return stats;
 };
 
+// Helper to safely parse JSON
+const safeParse = (data, fallback = []) => {
+  if (Array.isArray(data) || (typeof data === 'object' && data !== null)) return data;
+  try {
+    return JSON.parse(data) || fallback;
+  } catch (e) {
+    return fallback;
+  }
+};
+
 // Helper to convert camelCase to snake_case for API
 const toApiPayload = (data) => {
   const payload = {
@@ -434,23 +444,73 @@ const toApiPayload = (data) => {
     status: data.status,
     priority: data.priority,
     type: data.type,
-    due_date: data.dueDate ? new Date(data.dueDate).toISOString() : null,
+    due_date: (data.dueDate && !isNaN(new Date(data.dueDate).getTime())) ? new Date(data.dueDate).toISOString() : null,
+
+    // Recurrence
     recurring_task: data.recurring,
+    recurrence: (data.recurrence && typeof data.recurrence === 'object') ? JSON.stringify(data.recurrence) : (data.recurrence || '{}'),
+
+    // Reminder
+    reminder: (data.reminder && typeof data.reminder === 'object') ? JSON.stringify(data.reminder) : (data.reminder || '{}'),
     reminder_enabled: data.reminder ? data.reminder.enabled : false,
 
-    // Potential extra fields mapping based on typical patterns
     assigned_to: data.assignedTo,
     estimated_duration: data.estimatedDuration,
-    // Backend expects strings for these JSON fields
+
+    // Data fields
     tags: Array.isArray(data.tags) ? JSON.stringify(data.tags) : '[]',
     checklist: Array.isArray(data.checklist) ? JSON.stringify(data.checklist) : '[]',
-
-    // Flatten recurrence/reminder details if backend expects them flat or map as objects if supported.
-    // Based on limited postman info, we map what we know. 
-    // If backend uses Django DRF default, nesting requires specific serializers.
-    // For now, ensuring basic fields match snake_case.
   };
   return payload;
+};
+
+// Helper to convert snake_case API response to frontend camelCase
+const fromApiPayload = (data) => {
+  if (!data) return null;
+
+  return {
+    id: data.id,
+    title: data.title,
+    description: data.description,
+    status: data.status,
+    priority: data.priority,
+    type: data.type,
+
+    // Date handling
+    dueDate: data.due_date || data.dueDate, // Handle both for safety
+    createdAt: data.created_at || data.createdAt,
+    completedAt: data.completed_at || data.completedAt,
+
+    // Booleans
+    recurring: data.recurring_task ?? data.recurring ?? false,
+
+    // Objects - ensure they are parsed if stringified
+    recurrence: safeParse(data.recurrence, {
+      pattern: RECURRENCE_PATTERN.DAILY,
+      interval: 1,
+      endDate: null
+    }),
+
+    reminder: safeParse(data.reminder, {
+      enabled: false,
+      minutesBefore: 30
+    }),
+
+    assignedTo: data.assigned_to || data.assignedTo,
+    estimatedDuration: data.estimated_duration || data.estimatedDuration || 30,
+
+    // Arrays
+    tags: safeParse(data.tags, []),
+    checklist: safeParse(data.checklist, []).map((item, index) => ({
+      ...item,
+      // Ensure checklist items have IDs
+      id: item.id || `check_${index}_${Date.now()}`
+    })),
+
+    // Metadata
+    dependencies: safeParse(data.dependencies, []),
+    parentTaskId: data.parent_task_id || data.parentTaskId,
+  };
 };
 
 const taskManagementService = {
@@ -461,7 +521,9 @@ const taskManagementService = {
   listTasks: async (params = {}) => {
     try {
       const response = await api.get(`${BASE_PATH}/list/`, { params });
-      return response.data; // e.g. [{...}, {...}] or { results: [...] }
+      const rawData = response.data;
+      const list = Array.isArray(rawData) ? rawData : (rawData.results || []);
+      return list.map(fromApiPayload);
     } catch (error) {
       console.error('Error fetching tasks from API:', error);
       throw error;
@@ -475,7 +537,7 @@ const taskManagementService = {
   getTask: async (taskId) => {
     try {
       const response = await api.get(`${BASE_PATH}/list/${taskId}/`);
-      return response.data;
+      return fromApiPayload(response.data);
     } catch (error) {
       console.error(`Error fetching task ${taskId}:`, error);
       throw error;
@@ -490,7 +552,7 @@ const taskManagementService = {
     try {
       const payload = toApiPayload(taskData);
       const response = await api.post(`${BASE_PATH}/create/`, payload);
-      return response.data;
+      return fromApiPayload(response.data);
     } catch (error) {
       console.error('Error creating task:', error);
       throw error;
@@ -505,7 +567,7 @@ const taskManagementService = {
     try {
       const payload = toApiPayload(updates);
       const response = await api.put(`${BASE_PATH}/update/${taskId}/`, payload);
-      return response.data;
+      return fromApiPayload(response.data);
     } catch (error) {
       console.error(`Error updating task ${taskId}:`, error);
       throw error;

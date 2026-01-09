@@ -1,7 +1,7 @@
 import React, { createContext, useState, useEffect, useContext, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import logger from '../utils/logger';
-import { authService } from '../api/authService';
+import { loginUser, registerUser } from '../services/api';
 
 const AuthContext = createContext();
 
@@ -207,101 +207,94 @@ export const AuthProvider = ({ children }) => {
 
   /* ---------- Login / Register / Logout ---------- */
 
+  /* ---------- Login / Register / Logout ---------- */
+
   const login = async (email, password) => {
     try {
       logger.info('Attempting login for:', email);
+      setLoading(true);
 
-      // Call the real backend API to get a valid token
-      const apiBaseUrl = process.env.REACT_APP_API_BASE_URL || 'http://3.109.128.6:8000/api';
+      // Call API to login
+      const response = await loginUser({ email, password });
+      const data = response.data;
 
-      const response = await fetch(`${apiBaseUrl}/auth/login/`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          email: email,
-          password: password
-        })
-      });
+      // Handle Django SimpleJWT response structure (access, refresh)
+      // or generic token response
+      const accessToken = data.access || data.token || data.access_token || data.accessToken || data.key || (data.data && (data.data.access || data.data.token || data.data.access_token || data.data.accessToken || data.data.key));
+      const refreshToken = data.refresh || data.refresh_token || data.refreshToken || (data.data && (data.data.refresh || data.data.refresh_token || data.data.refreshToken));
 
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        logger.error('Login failed with status:', response.status, errorData);
-        throw new Error(errorData.detail || errorData.message || errorData.error || 'Login failed');
+      if (!accessToken) {
+        logger.error('Login response payload:', data);
+        throw new Error(`Login succeeded but no access token received. Response keys: ${Object.keys(data).join(', ')}`);
       }
 
-      const responseData = await response.json();
-      logger.info('Login response received:', {
-        success: responseData.success,
-        message: responseData.message,
-        hasData: !!responseData.data
-      });
-
-      // Handle nested response structure: { success, message, data: { access, refresh } }
-      const data = responseData.data || responseData;
-
-      // Store the real tokens from backend - handle multiple possible field names
-      const accessToken = data.access || data.token || data.access_token;
-      const refreshToken = data.refresh || data.refresh_token;
-
-      if (accessToken) {
-        localStorage.setItem('authToken', accessToken);
-        localStorage.setItem('access_token', accessToken); // Store both for compatibility
-        logger.info('Access token stored successfully');
-      } else {
-        logger.error('No access token found in response data:', Object.keys(data));
-        logger.error('Full response structure:', Object.keys(responseData));
-        throw new Error('No authentication token received from server');
-      }
-
-      if (refreshToken) {
-        localStorage.setItem('refreshToken', refreshToken);
-      }
+      localStorage.setItem('authToken', accessToken);
+      if (refreshToken) localStorage.setItem('refreshToken', refreshToken);
       localStorage.setItem('userEmail', email);
 
-      // Get mock user data with permissions (for frontend UI)
-      const mockUserData = getUserData(email);
+      // Decode token to get user details if possible (payload usually has user_id)
+      let tokenPayload = {};
+      try {
+        const base64Url = accessToken.split('.')[1];
+        const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+        const jsonPayload = decodeURIComponent(window.atob(base64).split('').map(function (c) {
+          return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+        }).join(''));
+        tokenPayload = JSON.parse(jsonPayload);
+      } catch (e) {
+        // Token might not be a JWT or decode failed
+      }
+
+      // Construct user object
+      // Use data.user if backend returns it, otherwise construct from token/email
+      // Fallback permissions logic:
+      // If valid login, grant access. Ideally backend should send roles/permissions.
+      // We will merge with existing mock permissions structure if email matches, 
+      // primarily to preserve the demo experience where specific emails had specific views.
+      // But authentication is now REAL.
+
+      const mockPerms = getUserData(email); // We still use this ONLY for mapping permissions to emails for the demo UI
 
       const mappedUser = {
-        ...mockUserData,
-        id: mockUserData.id || 'demo-' + Date.now(),
+        id: data.user?.id || tokenPayload.user_id || 'user-' + Date.now(),
         email: email,
-        role: mockUserData.role || 'admin',
-        permissions: mockUserData.permissions || []
+        name: data.user?.first_name ? `${data.user.first_name} ${data.user.last_name || ''}` : (mockPerms?.name || email.split('@')[0]),
+        role: data.user?.role || mockPerms?.role || 'user',
+        portalLanguage: data.user?.portalLanguage || mockPerms?.portalLanguage || 'en',
+        permissions: data.user?.permissions || mockPerms?.permissions || ['dashboard', 'profile'] // Default fallback
       };
 
       setCurrentUser(mappedUser);
       applyUserLanguage(mappedUser);
 
-      logger.info('Login successful with real backend token');
+      logger.info('Login successful');
       return { success: true, user: mappedUser };
     } catch (error) {
       logger.error('Login error:', error);
-      return { success: false, message: error.message || 'Login failed. Please try again.' };
+      return { success: false, message: error.message || 'Login failed. Please check your credentials.' };
+    } finally {
+      setLoading(false);
     }
   };
 
 
   // Function to verify MFA OTP
   const verifyMfaOtp = async (otp) => {
+    // Current backend does not appear to have MFA endpoint. Keeping mock implementation for UI flow.
     return new Promise((resolve) => {
       setTimeout(() => {
-        // In a real app, this would validate the OTP with your backend
-        // Here we just accept any 6-digit code as valid
         if (otp && otp.length === 6 && /^\d+$/.test(otp)) {
-          // OTP is valid, log the user in now
-          // NOTE: We do NOT overwrite the real authToken here
-          // The real token was already set during the login() function
-
-          // Note: userData would come from your backend in a real app
-          // Here we'll get it from the stored email
-          const storedEmail = localStorage.getItem('userEmail') || 'admin@client.com';
-          const userData = getUserData(storedEmail);
-
-          setCurrentUser(userData);
-          applyUserLanguage(userData);
-          resolve({ success: true, user: userData });
+          const storedEmail = localStorage.getItem('userEmail');
+          // Re-affirm current user state
+          if (!currentUser && storedEmail) {
+            // If page refreshed during MFA, try to restore
+            const userData = getUserData(storedEmail);
+            setCurrentUser(userData);
+            applyUserLanguage(userData);
+            resolve({ success: true, user: userData });
+          } else {
+            resolve({ success: true, user: currentUser });
+          }
         } else {
           resolve({ success: false, message: 'Invalid OTP code. Please try again.' });
         }
@@ -311,6 +304,7 @@ export const AuthProvider = ({ children }) => {
 
   const logout = () => {
     localStorage.removeItem('authToken');
+    localStorage.removeItem('refreshToken');
     localStorage.removeItem('userEmail');
     localStorage.removeItem('userLanguagePreference');
     setCurrentUser(null);
@@ -318,16 +312,24 @@ export const AuthProvider = ({ children }) => {
 
   const register = async (userData) => {
     try {
-      // API integration removed as requested. Using mock registration logic.
-      logger.info('Simulating registration for:', userData.email);
+      logger.info('Attempting registration for:', userData.email);
+      setLoading(true);
 
-      // Simulate a small delay for better UX
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await registerUser(userData);
 
-      return { success: true, data: { message: 'Registration successful (mocked)' } };
+      return { success: true, data: { message: 'Registration successful. Please login.' } };
     } catch (error) {
-      logger.error('Registration simulation error:', error);
-      return { success: false, message: 'Registration failed. Please try again.' };
+      logger.error('Registration error:', error);
+      // Format error message from backend
+      let msg = 'Registration failed.';
+      if (error.response?.data) {
+        const errors = error.response.data;
+        // transform object errors to string
+        msg = Object.entries(errors).map(([k, v]) => `${k}: ${v}`).join(', ');
+      }
+      return { success: false, message: msg || error.message };
+    } finally {
+      setLoading(false);
     }
   };
 

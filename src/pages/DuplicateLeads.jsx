@@ -37,7 +37,8 @@ import {
   Link as LinkIcon,
   FileCopy as DuplicateIcon,
   CheckCircle as ResolveIcon,
-  Info as InfoIcon
+  Info as InfoIcon,
+  Radar as RadarIcon
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
@@ -299,6 +300,16 @@ const DuplicateLeads = () => {
             sx={{ mr: 1 }}
           >
             {t('leads.duplicate.exportReport')}
+          </Button>
+          <Button
+            variant="contained"
+            startIcon={<RadarIcon />}
+            onClick={() => {
+              // TODO: Implement scan logic
+              console.log('Scan Now clicked');
+            }}
+          >
+            {t('leads.duplicate.scanNow')}
           </Button>
         </Grid>
       </Grid>

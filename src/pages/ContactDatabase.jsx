@@ -156,10 +156,12 @@ const ContactDatabase = () => {
       setLoading(true);
       await contactDatabaseService.deleteContact(selectedContact.id);
       setSnackbar({ open: true, message: 'Contact deleted successfully!', severity: 'success' });
+
+      // Update local state
+      setContacts(prev => prev.filter(c => c.id !== selectedContact.id));
+
       setDeleteDialogOpen(false);
       setSelectedContact(null);
-      // Refresh contacts list
-      await fetchContactsData();
     } catch (err) {
       console.error('Error deleting contact:', err);
       setSnackbar({ open: true, message: err.message || 'Failed to delete contact', severity: 'error' });
@@ -189,16 +191,28 @@ const ContactDatabase = () => {
       setLoading(true);
       if (selectedContact) {
         // Update existing contact via API
-        await contactDatabaseService.updateContact(selectedContact.id, formData);
+        const updatedContact = await contactDatabaseService.updateContact(selectedContact.id, formData);
         setSnackbar({ open: true, message: 'Contact updated successfully!', severity: 'success' });
+
+        // Update local state safely
+        if (updatedContact && updatedContact.id) {
+          setContacts(prev => prev.map(c => c.id === selectedContact.id ? updatedContact : c));
+        } else {
+          await fetchContactsData();
+        }
       } else {
         // Add new contact via API
-        await contactDatabaseService.addContact(formData);
+        const newContact = await contactDatabaseService.addContact(formData);
         setSnackbar({ open: true, message: 'Contact added successfully!', severity: 'success' });
+
+        // Update local state safely
+        if (newContact && newContact.id) {
+          setContacts(prev => [newContact, ...prev]);
+        } else {
+          await fetchContactsData();
+        }
       }
       setContactDialogOpen(false);
-      // Refresh contacts list
-      await fetchContactsData();
     } catch (err) {
       console.error('Error saving contact:', err);
       setSnackbar({ open: true, message: err.message || 'Failed to save contact', severity: 'error' });

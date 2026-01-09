@@ -2,12 +2,132 @@
  * SLA Management API Service
  *
  * Connects to the backend SLA Management API endpoints
- * Base URL: /api/sla/
+ * Base URL: /api/sla-settings/
  */
 
 import { getApiUrl } from './api';
 
 const API_BASE = '/api/sla';
+const SETTINGS_BASE = '/api/sla-settings';
+
+/**
+ * SLA Settings API
+ */
+export const slaSettingsAPI = {
+  /**
+   * Get global SLA settings
+   */
+  getGlobal: async () => {
+    const url = getApiUrl(`${SETTINGS_BASE}/global/`);
+    const response = await fetch(url, {
+      headers: {
+        'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
+        'Content-Type': 'application/json'
+      }
+    });
+    if (!response.ok) throw new Error('Failed to fetch global settings');
+    return response.json();
+  },
+
+  /**
+   * Enable/Disable SLA tracking (PATCH global?) - guessing implementation based on getGlobal
+   * Using notifications_enable pattern if global supports it, otherwise generic update
+   */
+  updateGlobal: async (data) => {
+    // Note: Postman only showed GET for enable_sla_tracking, but usually toggle needs POST/PATCH
+    // Assuming PATCH /global/ similar to notifications
+    const url = getApiUrl(`${SETTINGS_BASE}/global/`);
+    const response = await fetch(url, {
+      method: 'PATCH',
+      headers: {
+        'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(data)
+    });
+    if (!response.ok) throw new Error('Failed to update global settings');
+    return response.json();
+  },
+
+  /**
+   * Get notification settings
+   */
+  getNotifications: async () => {
+    const url = getApiUrl(`${SETTINGS_BASE}/notifications/`);
+    const response = await fetch(url, {
+      headers: {
+        'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
+        'Content-Type': 'application/json'
+      }
+    });
+    if (!response.ok) throw new Error('Failed to fetch notification settings');
+    return response.json();
+  },
+
+  /**
+   * Update notification settings
+   */
+  updateNotifications: async (data) => {
+    const url = getApiUrl(`${SETTINGS_BASE}/notifications/`);
+    const response = await fetch(url, {
+      method: 'PATCH',
+      headers: {
+        'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(data)
+    });
+    if (!response.ok) throw new Error('Failed to update notification settings');
+    return response.json();
+  },
+
+  /**
+   * Get escalation rules
+   */
+  getEscalationRules: async () => {
+    const url = getApiUrl(`${SETTINGS_BASE}/escalation-rules/`);
+    const response = await fetch(url, {
+      headers: {
+        'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
+        'Content-Type': 'application/json'
+      }
+    });
+    if (!response.ok) throw new Error('Failed to fetch escalation rules');
+    return response.json();
+  },
+
+  /**
+   * Get advanced settings
+   */
+  getAdvanced: async () => {
+    const url = getApiUrl(`${SETTINGS_BASE}/advanced/`);
+    const response = await fetch(url, {
+      headers: {
+        'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
+        'Content-Type': 'application/json'
+      }
+    });
+    if (!response.ok) throw new Error('Failed to fetch advanced settings');
+    return response.json();
+  },
+
+  /**
+   * Execute danger zone action (Reset/Clear)
+   */
+  dangerZone: async (action) => {
+    const url = getApiUrl(`${SETTINGS_BASE}/advanced/danger-zone/`);
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ action })
+    });
+    if (!response.ok) throw new Error('Failed to execute danger zone action');
+    return response.json();
+  }
+};
 
 /**
  * SLA Templates API
@@ -18,7 +138,7 @@ export const slaTemplatesAPI = {
    */
   getAll: async (filters = {}) => {
     const queryParams = new URLSearchParams(filters).toString();
-    const url = getApiUrl(`${API_BASE}/templates/${queryParams ? `?${queryParams}` : ''}`);
+    const url = getApiUrl(`${SETTINGS_BASE}/templates/${queryParams ? `?${queryParams}` : ''}`);
 
     const response = await fetch(url, {
       headers: {
@@ -38,7 +158,7 @@ export const slaTemplatesAPI = {
    * Get single SLA template
    */
   getById: async (id) => {
-    const url = getApiUrl(`${API_BASE}/templates/${id}/`);
+    const url = getApiUrl(`${SETTINGS_BASE}/templates/${id}/`);
 
     const response = await fetch(url, {
       headers: {
@@ -58,7 +178,7 @@ export const slaTemplatesAPI = {
    * Create SLA template
    */
   create: async (data) => {
-    const url = getApiUrl(`${API_BASE}/templates/`);
+    const url = getApiUrl(`${SETTINGS_BASE}/templates/`);
 
     const response = await fetch(url, {
       method: 'POST',
@@ -81,10 +201,10 @@ export const slaTemplatesAPI = {
    * Update SLA template
    */
   update: async (id, data) => {
-    const url = getApiUrl(`${API_BASE}/templates/${id}/`);
+    const url = getApiUrl(`${SETTINGS_BASE}/templates/${id}/`);
 
     const response = await fetch(url, {
-      method: 'PUT',
+      method: 'PATCH', // Postman uses PATCH for edit template
       headers: {
         'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
         'Content-Type': 'application/json'
@@ -104,7 +224,7 @@ export const slaTemplatesAPI = {
    * Delete SLA template
    */
   delete: async (id) => {
-    const url = getApiUrl(`${API_BASE}/templates/${id}/`);
+    const url = getApiUrl(`${SETTINGS_BASE}/templates/${id}/`);
 
     const response = await fetch(url, {
       method: 'DELETE',
@@ -122,10 +242,26 @@ export const slaTemplatesAPI = {
   },
 
   /**
+   * Restore Defaults
+   */
+  restoreDefaults: async () => {
+    const url = getApiUrl(`${SETTINGS_BASE}/templates/restore-defaults/`);
+    const response = await fetch(url, {
+      method: 'GET', // Postman says GET
+      headers: {
+        'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
+        'Content-Type': 'application/json'
+      }
+    });
+    if (!response.ok) throw new Error('Failed to restore default templates');
+    return response.json();
+  },
+
+  /**
    * Bulk toggle templates
    */
   bulkToggle: async (templateIds, isActive) => {
-    const url = getApiUrl(`${API_BASE}/templates/bulk_toggle/`);
+    const url = getApiUrl(`${SETTINGS_BASE}/templates/bulk_toggle/`);
 
     const response = await fetch(url, {
       method: 'POST',
@@ -150,7 +286,7 @@ export const slaTemplatesAPI = {
    * Set template as default
    */
   setAsDefault: async (id) => {
-    const url = getApiUrl(`${API_BASE}/templates/${id}/set_as_default/`);
+    const url = getApiUrl(`${SETTINGS_BASE}/templates/${id}/set_as_default/`);
 
     const response = await fetch(url, {
       method: 'POST',
@@ -171,7 +307,7 @@ export const slaTemplatesAPI = {
    * Get templates by entity type
    */
   getByEntityType: async (entityType) => {
-    const url = getApiUrl(`${API_BASE}/templates/by_entity_type/?entity_type=${entityType}`);
+    const url = getApiUrl(`${SETTINGS_BASE}/templates/by_entity_type/?entity_type=${entityType}`);
 
     const response = await fetch(url, {
       headers: {
@@ -191,7 +327,7 @@ export const slaTemplatesAPI = {
    * Get template statistics
    */
   getStatistics: async () => {
-    const url = getApiUrl(`${API_BASE}/templates/statistics/`);
+    const url = getApiUrl(`${SETTINGS_BASE}/templates/statistics/`);
 
     const response = await fetch(url, {
       headers: {
@@ -211,7 +347,7 @@ export const slaTemplatesAPI = {
    * Duplicate template
    */
   duplicate: async (templateId, newName) => {
-    const url = getApiUrl(`${API_BASE}/templates/duplicate/`);
+    const url = getApiUrl(`${SETTINGS_BASE}/templates/duplicate/`);
 
     const response = await fetch(url, {
       method: 'POST',
@@ -774,7 +910,6 @@ export const slaAnalyticsAPI = {
   getDashboard: async () => {
     const url = getApiUrl(`${API_BASE}/analytics/dashboard/`);
     const token = localStorage.getItem('authToken');
-    console.log('SLA Dashboard Request:', { url, token: token ? 'Present' : 'Missing' });
 
     const response = await fetch(url, {
       headers: {
@@ -793,6 +928,7 @@ export const slaAnalyticsAPI = {
 
 // Export all APIs
 export default {
+  settings: slaSettingsAPI,
   templates: slaTemplatesAPI,
   policies: slaPoliciesAPI,
   violations: slaViolationsAPI,

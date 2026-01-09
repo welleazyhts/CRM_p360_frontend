@@ -103,6 +103,16 @@ const LeadDetails = () => {
   const [paymentLinkDialog, setPaymentLinkDialog] = useState(false);
   const [callNumberDialog, setCallNumberDialog] = useState(false);
   const [postCallDialog, setPostCallDialog] = useState(false);
+  const [addNoteDialog, setAddNoteDialog] = useState(false);
+  const [viewNoteDialog, setViewNoteDialog] = useState(false);
+  const [selectedNote, setSelectedNote] = useState(null);
+
+  const [noteForm, setNoteForm] = useState({
+    date: new Date().toISOString().split('T')[0],
+    user: '', // Will default to current user if empty logic is applied, or user can input
+    content: '',
+    createdAt: new Date().toLocaleString() // Can be auto-set or manual, user asked for input field
+  });
 
   // Payment link form state
   const [paymentLinkData, setPaymentLinkData] = useState({
@@ -592,6 +602,40 @@ const LeadDetails = () => {
     }
   };
 
+  // Handle Note Operations
+  const handleViewNote = (note) => {
+    setSelectedNote(note);
+    setViewNoteDialog(true);
+  };
+
+  const handleDeleteNote = (id) => {
+    if (window.confirm(t('common.confirmDelete', 'Are you sure you want to delete this note?'))) {
+      setNotes(notes.filter(n => n.id !== id));
+    }
+  };
+
+  const handleAddNote = () => {
+    if (!noteForm.content.trim() || !noteForm.user.trim()) {
+      alert("Please enter required fields (Content and User)");
+      return;
+    }
+    const newNote = {
+      id: notes.length + 1,
+      date: noteForm.date,
+      user: noteForm.user,
+      content: noteForm.content,
+      createdAt: noteForm.createdAt || new Date().toLocaleString()
+    };
+    setNotes([newNote, ...notes]);
+    setAddNoteDialog(false);
+    setNoteForm({
+      date: new Date().toISOString().split('T')[0],
+      user: '',
+      content: '',
+      createdAt: new Date().toLocaleString()
+    });
+  };
+
   // Handle add task
   const handleAddTask = () => {
     const newTask = {
@@ -709,6 +753,20 @@ const LeadDetails = () => {
       file.id === id ? { ...file, status: newStatus } : file
     ));
   };
+
+  const handleVehicleDocStatusUpdate = (id, newStatus) => {
+    setVehicleDocuments(vehicleDocuments.map(doc =>
+      doc.id === id ? { ...doc, status: newStatus } : doc
+    ));
+  };
+
+  const handleInsuranceDocStatusUpdate = (id, newStatus) => {
+    setInsuranceDocuments(insuranceDocuments.map(doc =>
+      doc.id === id ? { ...doc, status: newStatus } : doc
+    ));
+  };
+
+
 
   // Handle schedule follow-up
   const handleScheduleFollowUp = () => {
@@ -1557,6 +1615,15 @@ Document Reference: ${doc.id}
               {/* Notes Sub-tab */}
               {activitiesSubTab === 0 && (
                 <Box>
+                  <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 2 }}>
+                    <Button
+                      variant="contained"
+                      startIcon={<AddIcon />}
+                      onClick={() => setAddNoteDialog(true)}
+                    >
+                      {t('leads.details.notes.add', 'Create Note')}
+                    </Button>
+                  </Box>
                   <TableContainer>
                     <Table>
                       <TableHead>
@@ -1565,6 +1632,7 @@ Document Reference: ${doc.id}
                           <TableCell>{t('leads.details.table.user', 'User')}</TableCell>
                           <TableCell>{t('leads.details.table.content', 'Content')}</TableCell>
                           <TableCell>{t('leads.details.table.createdAt', 'Created At')}</TableCell>
+                          <TableCell align="center">{t('leads.details.table.actions', 'Actions')}</TableCell>
                         </TableRow>
                       </TableHead>
                       <TableBody>
@@ -1574,6 +1642,18 @@ Document Reference: ${doc.id}
                             <TableCell>{note.user}</TableCell>
                             <TableCell>{note.content}</TableCell>
                             <TableCell>{note.createdAt}</TableCell>
+                            <TableCell align="center">
+                              <Tooltip title={t('common.view', 'View')}>
+                                <IconButton size="small" onClick={() => handleViewNote(note)}>
+                                  <VisibilityIcon fontSize="small" />
+                                </IconButton>
+                              </Tooltip>
+                              <Tooltip title={t('common.delete', 'Delete')}>
+                                <IconButton size="small" onClick={() => handleDeleteNote(note.id)}>
+                                  <DeleteIcon fontSize="small" />
+                                </IconButton>
+                              </Tooltip>
+                            </TableCell>
                           </TableRow>
                         ))}
                       </TableBody>
@@ -2028,14 +2108,20 @@ Document Reference: ${doc.id}
                         <TableCell>{doc.uploadDate}</TableCell>
                         <TableCell>{doc.size}</TableCell>
                         <TableCell>
-                          <Chip
-                            label={t(`leads.details.values.fileStatuses.${doc.status.toLowerCase()}`, doc.status)}
-                            size="small"
-                            sx={{
-                              backgroundColor: alpha(getStatusColor(doc.status), 0.1),
-                              color: getStatusColor(doc.status)
-                            }}
-                          />
+                          <FormControl size="small" sx={{ minWidth: 120 }}>
+                            <Select
+                              value={doc.status}
+                              onChange={(e) => handleVehicleDocStatusUpdate(doc.id, e.target.value)}
+                              sx={{
+                                backgroundColor: alpha(getStatusColor(doc.status), 0.1),
+                                color: getStatusColor(doc.status)
+                              }}
+                            >
+                              <MenuItem value="Pending">{t('leads.details.values.fileStatuses.pending', 'Pending')}</MenuItem>
+                              <MenuItem value="Verified">{t('leads.details.values.fileStatuses.verified', 'Verified')}</MenuItem>
+                              <MenuItem value="Rejected">{t('leads.details.values.fileStatuses.rejected', 'Rejected')}</MenuItem>
+                            </Select>
+                          </FormControl>
                         </TableCell>
                         <TableCell align="center">
                           <Tooltip title={t('common.view', 'View')}>
@@ -2100,14 +2186,20 @@ Document Reference: ${doc.id}
                         <TableCell>{doc.uploadDate}</TableCell>
                         <TableCell>{doc.size}</TableCell>
                         <TableCell>
-                          <Chip
-                            label={t(`leads.details.values.fileStatuses.${doc.status.toLowerCase()}`, doc.status)}
-                            size="small"
-                            sx={{
-                              backgroundColor: alpha(getStatusColor(doc.status), 0.1),
-                              color: getStatusColor(doc.status)
-                            }}
-                          />
+                          <FormControl size="small" sx={{ minWidth: 120 }}>
+                            <Select
+                              value={doc.status}
+                              onChange={(e) => handleInsuranceDocStatusUpdate(doc.id, e.target.value)}
+                              sx={{
+                                backgroundColor: alpha(getStatusColor(doc.status), 0.1),
+                                color: getStatusColor(doc.status)
+                              }}
+                            >
+                              <MenuItem value="Pending">{t('leads.details.values.fileStatuses.pending', 'Pending')}</MenuItem>
+                              <MenuItem value="Verified">{t('leads.details.values.fileStatuses.verified', 'Verified')}</MenuItem>
+                              <MenuItem value="Rejected">{t('leads.details.values.fileStatuses.rejected', 'Rejected')}</MenuItem>
+                            </Select>
+                          </FormControl>
                         </TableCell>
                         <TableCell align="center">
                           <Tooltip title={t('common.view', 'View')}>
@@ -4096,6 +4188,82 @@ Document Reference: ${doc.id}
             {t('leads.details.dialogs.shareQuote.share', 'Share Quote')}
 
           </Button>
+        </DialogActions>
+      </Dialog>
+      {/* Add Note Dialog */}
+      <Dialog open={addNoteDialog} onClose={() => setAddNoteDialog(false)} maxWidth="sm" fullWidth>
+        <DialogTitle>{t('leads.details.notes.add', 'Create Note')}</DialogTitle>
+        <DialogContent>
+          <Stack spacing={2} sx={{ mt: 1 }}>
+            <TextField
+              label={t('leads.details.table.date', 'Date')}
+              type="date"
+              fullWidth
+              InputLabelProps={{ shrink: true }}
+              value={noteForm.date}
+              onChange={(e) => setNoteForm({ ...noteForm, date: e.target.value })}
+            />
+            <TextField
+              label={t('leads.details.table.user', 'User')}
+              type="text"
+              fullWidth
+              value={noteForm.user}
+              onChange={(e) => setNoteForm({ ...noteForm, user: e.target.value })}
+            />
+            <TextField
+              label={t('leads.details.table.createdAt', 'Created At')}
+              type="text"
+              fullWidth
+              helperText="Format: MM/DD/YYYY, HH:MM:SS AM/PM"
+              value={noteForm.createdAt}
+              onChange={(e) => setNoteForm({ ...noteForm, createdAt: e.target.value })}
+            />
+            <TextField
+              label={t('leads.details.notes.content', 'Note Content')}
+              type="text"
+              fullWidth
+              multiline
+              rows={4}
+              value={noteForm.content}
+              onChange={(e) => setNoteForm({ ...noteForm, content: e.target.value })}
+            />
+          </Stack>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setAddNoteDialog(false)}>{t('common.cancel', 'Cancel')}</Button>
+          <Button onClick={handleAddNote} variant="contained">{t('common.save', 'Save')}</Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* View Note Dialog */}
+      <Dialog open={viewNoteDialog} onClose={() => setViewNoteDialog(false)} maxWidth="sm" fullWidth>
+        <DialogTitle>{t('leads.details.notes.view', 'View Note')}</DialogTitle>
+        <DialogContent dividers>
+          {selectedNote && (
+            <Stack spacing={2}>
+              <Box>
+                <Typography variant="caption" color="text.secondary">{t('leads.details.table.date', 'Date')}</Typography>
+                <Typography variant="body1">{selectedNote.date}</Typography>
+              </Box>
+              <Box>
+                <Typography variant="caption" color="text.secondary">{t('leads.details.table.user', 'User')}</Typography>
+                <Typography variant="body1">{selectedNote.user}</Typography>
+              </Box>
+              <Box>
+                <Typography variant="caption" color="text.secondary">{t('leads.details.table.createdAt', 'Created At')}</Typography>
+                <Typography variant="body1">{selectedNote.createdAt}</Typography>
+              </Box>
+              <Box>
+                <Typography variant="caption" color="text.secondary">{t('leads.details.table.content', 'Content')}</Typography>
+                <Paper variant="outlined" sx={{ p: 2, bgcolor: 'background.default' }}>
+                  <Typography variant="body2">{selectedNote.content}</Typography>
+                </Paper>
+              </Box>
+            </Stack>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setViewNoteDialog(false)}>{t('common.close', 'Close')}</Button>
         </DialogActions>
       </Dialog>
 

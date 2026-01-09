@@ -1,4 +1,4 @@
-import api from './api';
+import api, { getApiUrl } from './api';
 
 /**
  * Contact Database Service
@@ -6,7 +6,6 @@ import api from './api';
  */
 
 // Contact Database API is on a different server
-const CONTACT_DB_API_URL = process.env.REACT_APP_CONTACT_DB_API_URL || 'http://3.109.128.6:8000/api';
 const BASE_PATH = '/contact_database';
 
 /**
@@ -58,7 +57,7 @@ export const addContact = async (contactData) => {
  */
 export const updateContact = async (id, contactData) => {
     try {
-        const response = await api.patch(`${BASE_PATH}/contacts/${id}/`, contactData);
+        const response = await api.put(`${BASE_PATH}/contacts/${id}/`, contactData);
         return response.data;
     } catch (error) {
         console.error('Error updating contact:', error);
@@ -125,8 +124,9 @@ export const bulkUploadContacts = async (file) => {
 
         // Use fetch directly for file upload to handle FormData properly
         const token = localStorage.getItem('authToken') || localStorage.getItem('access_token');
+        const url = getApiUrl(`${BASE_PATH}/bulk-upload/upload/`);
 
-        const response = await fetch(`${CONTACT_DB_API_URL}${BASE_PATH}/bulk-upload/upload/`, {
+        const response = await fetch(url, {
             method: 'POST',
             headers: {
                 'Authorization': `Bearer ${token}`
@@ -182,8 +182,9 @@ export const clearHistory = async () => {
 export const exportFailedRecords = async (uploadId) => {
     try {
         const token = localStorage.getItem('authToken') || localStorage.getItem('access_token');
+        const url = getApiUrl(`${BASE_PATH}/bulk-upload/export-failed/${uploadId}/`);
 
-        const response = await fetch(`${CONTACT_DB_API_URL}${BASE_PATH}/bulk-upload/export-failed/${uploadId}/`, {
+        const response = await fetch(url, {
             method: 'GET',
             headers: {
                 'Authorization': `Bearer ${token}`
@@ -216,6 +217,7 @@ export const refreshContacts = async () => {
         throw error;
     }
 };
+// ... rest of the file
 
 export default {
     fetchContacts,

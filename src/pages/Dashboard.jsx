@@ -61,8 +61,10 @@ import {
   Warning as WarningIcon,
   Share as DistributionIcon
 } from '@mui/icons-material';
+import { useTranslation } from 'react-i18next';
 
 const Dashboard = () => {
+  const { t } = useTranslation();
   const theme = useTheme();
   const [stats, setStats] = useState({
     totalCases: 0,
@@ -131,13 +133,13 @@ const Dashboard = () => {
       { month: 'Jun', retained: 85.2, churned: 14.8 }
     ],
     retentionBreakdown: [
-      { category: 'Retained Customers', value: 85.2, count: 8520, color: theme.palette.success.main },
-      { category: 'Churned Customers', value: 14.8, count: 1480, color: theme.palette.error.main }
+      { category: t('dashboard.data.retention.retained'), value: 85.2, count: 8520, color: theme.palette.success.main },
+      { category: t('dashboard.data.retention.churned'), value: 14.8, count: 1480, color: theme.palette.error.main }
     ],
     segmentRetention: [
-      { segment: 'Premium', retention: 92.3, customers: 2500 },
-      { segment: 'Standard', retention: 87.1, customers: 4200 },
-      { segment: 'Basic', retention: 78.9, customers: 3300 }
+      { segment: t('dashboard.data.retention.premium'), retention: 92.3, customers: 2500 },
+      { segment: t('dashboard.data.retention.standard'), retention: 87.1, customers: 4200 },
+      { segment: t('dashboard.data.retention.basic'), retention: 78.9, customers: 3300 }
     ]
   };
 
@@ -388,23 +390,23 @@ const Dashboard = () => {
     }, 300);
 
     const mockTrendData = [
-      { name: 'Mon', newCases: 65, renewals: 42, successRate: 0.85 },
-      { name: 'Tue', newCases: 59, renewals: 38, successRate: 0.82 },
-      { name: 'Wed', newCases: 80, renewals: 56, successRate: 0.88 },
-      { name: 'Thu', newCases: 81, renewals: 61, successRate: 0.91 },
-      { name: 'Fri', newCases: 56, renewals: 48, successRate: 0.89 },
-      { name: 'Sat', newCases: 25, renewals: 20, successRate: 0.92 },
-      { name: 'Sun', newCases: 15, renewals: 12, successRate: 0.90 },
+      { name: t('common.days.mon'), newCases: 65, renewals: 42, successRate: 0.85 },
+      { name: t('common.days.tue'), newCases: 59, renewals: 38, successRate: 0.82 },
+      { name: t('common.days.wed'), newCases: 80, renewals: 56, successRate: 0.88 },
+      { name: t('common.days.thu'), newCases: 81, renewals: 61, successRate: 0.91 },
+      { name: t('common.days.fri'), newCases: 56, renewals: 48, successRate: 0.89 },
+      { name: t('common.days.sat'), newCases: 25, renewals: 20, successRate: 0.92 },
+      { name: t('common.days.sun'), newCases: 15, renewals: 12, successRate: 0.90 },
     ];
 
     setTrendData(mockTrendData);
 
     // Mock data for new charts
     const mockChannelChartData = [
-      { name: 'Online Portal', value: 45, color: '#A4D7E1' },
-      { name: 'Mobile App', value: 30, color: '#B3EBD5' },
-      { name: 'Branch Office', value: 15, color: '#F2C94C' },
-      { name: 'Agent Visit', value: 10, color: '#6B8E23' }
+      { name: t('dashboard.data.channels.online'), value: 45, color: '#A4D7E1' },
+      { name: t('dashboard.data.channels.mobile'), value: 30, color: '#B3EBD5' },
+      { name: t('dashboard.data.channels.branch'), value: 15, color: '#F2C94C' },
+      { name: t('dashboard.data.channels.agent'), value: 10, color: '#6B8E23' }
     ];
 
     const mockRegionData = [
@@ -425,35 +427,35 @@ const Dashboard = () => {
     ];
 
     const mockCommunicationData = [
-      { mode: 'AI Call', count: 520, success: 78, cost: 2.5 },
-      { mode: 'WhatsApp', count: 380, success: 85, cost: 0.5 },
-      { mode: 'Tele Caller', count: 250, success: 65, cost: 8.0 },
-      { mode: 'SMS', count: 150, success: 45, cost: 0.2 }
+      { mode: t('dashboard.data.communication.ai_call'), count: 520, success: 78, cost: 2.5 },
+      { mode: t('dashboard.data.communication.whatsapp'), count: 380, success: 85, cost: 0.5 },
+      { mode: t('dashboard.data.communication.tele_caller'), count: 250, success: 65, cost: 8.0 },
+      { mode: t('dashboard.data.communication.sms'), count: 150, success: 45, cost: 0.2 }
     ];
 
     const mockPaymentModeData = [
-      { mode: 'UPI/Digital', value: 40, amount: 5520000, color: '#00C49F' },
-      { mode: 'Net Banking', value: 25, amount: 3450000, color: '#0088FE' },
-      { mode: 'Credit Card', value: 20, amount: 2760000, color: '#FFBB28' },
-      { mode: 'Debit Card', value: 10, amount: 1380000, color: '#FF8042' },
-      { mode: 'Cash', value: 5, amount: 690000, color: '#8884D8' }
+      { mode: t('dashboard.data.paymentModes.upi'), value: 40, amount: 5520000, color: '#00C49F' },
+      { mode: t('dashboard.data.paymentModes.net_banking'), value: 25, amount: 3450000, color: '#0088FE' },
+      { mode: t('dashboard.data.paymentModes.credit_card'), value: 20, amount: 2760000, color: '#FFBB28' },
+      { mode: t('dashboard.data.paymentModes.debit_card'), value: 10, amount: 1380000, color: '#FF8042' },
+      { mode: t('dashboard.data.paymentModes.cash'), value: 5, amount: 690000, color: '#8884D8' }
     ];
 
     const mockCostData = [
-      { channel: 'Online Portal', costPerRenewal: 45, volume: 450, totalCost: 20250 },
-      { channel: 'Mobile App', costPerRenewal: 35, volume: 300, totalCost: 10500 },
-      { channel: 'Branch Office', costPerRenewal: 120, volume: 150, totalCost: 18000 },
-      { channel: 'Agent Visit', costPerRenewal: 200, volume: 100, totalCost: 20000 },
-      { channel: 'Phone Call', costPerRenewal: 80, volume: 250, totalCost: 20000 }
+      { channel: t('dashboard.data.channels.online'), costPerRenewal: 45, volume: 450, totalCost: 20250 },
+      { channel: t('dashboard.data.channels.mobile'), costPerRenewal: 35, volume: 300, totalCost: 10500 },
+      { channel: t('dashboard.data.channels.branch'), costPerRenewal: 120, volume: 150, totalCost: 18000 },
+      { channel: t('dashboard.data.channels.agent'), costPerRenewal: 200, volume: 100, totalCost: 20000 },
+      { channel: t('dashboard.data.channels.phone'), costPerRenewal: 80, volume: 250, totalCost: 20000 }
     ];
 
     const mockCostPerChannelData = [
-      { channel: 'Direct Sales', cost: 150000, renewals: 1200, costPerRenewal: 125, efficiency: 85, color: '#8884d8' },
-      { channel: 'Agent Network', cost: 280000, renewals: 1800, costPerRenewal: 156, efficiency: 78, color: '#82ca9d' },
-      { channel: 'Online Platform', cost: 95000, renewals: 950, costPerRenewal: 100, efficiency: 92, color: '#ffc658' },
-      { channel: 'Broker Channel', cost: 320000, renewals: 1600, costPerRenewal: 200, efficiency: 70, color: '#ff7300' },
-      { channel: 'Bank Partnership', cost: 180000, renewals: 1100, costPerRenewal: 164, efficiency: 75, color: '#00C49F' },
-      { channel: 'Telecalling', cost: 120000, renewals: 800, costPerRenewal: 150, efficiency: 68, color: '#FFBB28' }
+      { channel: t('dashboard.data.channels.direct'), cost: 150000, renewals: 1200, costPerRenewal: 125, efficiency: 85, color: '#8884d8' },
+      { channel: t('dashboard.data.channels.agent_network'), cost: 280000, renewals: 1800, costPerRenewal: 156, efficiency: 78, color: '#82ca9d' },
+      { channel: t('dashboard.data.channels.online'), cost: 95000, renewals: 950, costPerRenewal: 100, efficiency: 92, color: '#ffc658' },
+      { channel: t('dashboard.data.channels.broker'), cost: 320000, renewals: 1600, costPerRenewal: 200, efficiency: 70, color: '#ff7300' },
+      { channel: t('dashboard.data.channels.bank'), cost: 180000, renewals: 1100, costPerRenewal: 164, efficiency: 75, color: '#00C49F' },
+      { channel: t('dashboard.data.communication.tele_caller'), cost: 120000, renewals: 800, costPerRenewal: 150, efficiency: 68, color: '#FFBB28' }
     ];
 
     setChannelData(mockChannelChartData);
@@ -466,10 +468,10 @@ const Dashboard = () => {
 
     // Mock data for new payment analysis charts
     const mockPaymentTypeData = [
-      { type: 'Annual Premium', value: 45, amount: 6210000, color: '#8884d8' },
-      { type: 'Quarterly Premium', value: 30, amount: 4140000, color: '#82ca9d' },
-      { type: 'Monthly Premium', value: 15, amount: 2070000, color: '#ffc658' },
-      { type: 'One-time Payment', value: 10, amount: 1380000, color: '#ff7300' }
+      { type: t('dashboard.data.paymentTypes.annual'), value: 45, amount: 6210000, color: '#8884d8' },
+      { type: t('dashboard.data.paymentTypes.quarterly'), value: 30, amount: 4140000, color: '#82ca9d' },
+      { type: t('dashboard.data.paymentTypes.monthly'), value: 15, amount: 2070000, color: '#ffc658' },
+      { type: t('dashboard.data.paymentTypes.one_time'), value: 10, amount: 1380000, color: '#ff7300' }
     ];
 
     const mockPaymentTimelineData = [
@@ -482,32 +484,32 @@ const Dashboard = () => {
     ];
 
     const mockDueDateAnalysisData = [
-      { category: 'Before Due Date', count: 680, percentage: 68, amount: 9380000, color: '#4caf50' },
-      { category: 'On Due Date', count: 180, percentage: 18, amount: 2484000, color: '#ff9800' },
-      { category: 'After Due Date', count: 140, percentage: 14, amount: 1932000, color: '#f44336' }
+      { category: t('dashboard.data.dueDate.before'), count: 680, percentage: 68, amount: 9380000, color: '#4caf50' },
+      { category: t('dashboard.data.dueDate.on'), count: 180, percentage: 18, amount: 2484000, color: '#ff9800' },
+      { category: t('dashboard.data.dueDate.after'), count: 140, percentage: 14, amount: 1932000, color: '#f44336' }
     ];
 
     const mockPolicyRenewalData = [
-      { policyType: 'Auto Insurance', pending: 245, collected: 680, total: 925, collectionRate: 73.5, amount: 8520000 },
-      { policyType: 'Health Insurance', pending: 180, collected: 520, total: 700, collectionRate: 74.3, amount: 7240000 },
-      { policyType: 'Life Insurance', pending: 120, collected: 380, total: 500, collectionRate: 76.0, amount: 5700000 },
-      { policyType: 'Home Insurance', pending: 85, collected: 215, total: 300, collectionRate: 71.7, amount: 3180000 }
+      { policyType: t('common.policies.vehicle'), pending: 245, collected: 680, total: 925, collectionRate: 73.5, amount: 8520000 },
+      { policyType: t('common.policies.health'), pending: 180, collected: 520, total: 700, collectionRate: 74.3, amount: 7240000 },
+      { policyType: t('common.policies.life'), pending: 120, collected: 380, total: 500, collectionRate: 76.0, amount: 5700000 },
+      { policyType: t('common.policies.home'), pending: 85, collected: 215, total: 300, collectionRate: 71.7, amount: 3180000 }
     ];
 
     const mockChannelCollectionData = [
-      { channel: 'Online Portal', collected: 4250000, target: 5000000, percentage: 85, policies: 425 },
-      { channel: 'Mobile App', collected: 3180000, target: 3500000, percentage: 90.9, policies: 318 },
-      { channel: 'Branch Office', collected: 2840000, target: 3200000, percentage: 88.8, policies: 284 },
-      { channel: 'Agent Network', collected: 2460000, target: 3000000, percentage: 82.0, policies: 246 },
-      { channel: 'Call Center', collected: 1870000, target: 2200000, percentage: 85.0, policies: 187 }
+      { channel: t('dashboard.data.channels.online'), collected: 4250000, target: 5000000, percentage: 85, policies: 425 },
+      { channel: t('dashboard.data.channels.mobile'), collected: 3180000, target: 3500000, percentage: 90.9, policies: 318 },
+      { channel: t('dashboard.data.channels.branch'), collected: 2840000, target: 3200000, percentage: 88.8, policies: 284 },
+      { channel: t('dashboard.data.channels.agent_network'), collected: 2460000, target: 3000000, percentage: 82.0, policies: 246 },
+      { channel: t('dashboard.data.channels.call_center'), collected: 1870000, target: 2200000, percentage: 85.0, policies: 187 }
     ];
 
     const mockCollectionModeData = [
-      { mode: 'Credit Card', amount: 3850000, count: 385, percentage: 28, avgAmount: 10000, color: '#2196f3' },
-      { mode: 'UPI/Digital', amount: 3300000, count: 550, percentage: 24, avgAmount: 6000, color: '#4caf50' },
-      { mode: 'Net Banking', amount: 2750000, count: 275, percentage: 20, avgAmount: 10000, color: '#ff9800' },
-      { mode: 'Branch Cash', amount: 2200000, count: 220, percentage: 16, avgAmount: 10000, color: '#9c27b0' },
-      { mode: 'Agent Collection', amount: 1650000, count: 165, percentage: 12, avgAmount: 10000, color: '#f44336' }
+      { mode: t('dashboard.data.paymentModes.credit_card'), amount: 3850000, count: 385, percentage: 28, avgAmount: 10000, color: '#2196f3' },
+      { mode: t('dashboard.data.paymentModes.upi'), amount: 3300000, count: 550, percentage: 24, avgAmount: 6000, color: '#4caf50' },
+      { mode: t('dashboard.data.paymentModes.net_banking'), amount: 2750000, count: 275, percentage: 20, avgAmount: 10000, color: '#ff9800' },
+      { mode: t('dashboard.data.paymentModes.branch_cash'), amount: 2200000, count: 220, percentage: 16, avgAmount: 10000, color: '#9c27b0' },
+      { mode: t('dashboard.data.paymentModes.agent_collection'), amount: 1650000, count: 165, percentage: 12, avgAmount: 10000, color: '#f44336' }
     ];
 
     setPaymentTypeData(mockPaymentTypeData);
@@ -1046,7 +1048,7 @@ const Dashboard = () => {
     return () => {
       clearTimeout(loadedTimer);
     };
-  }, [loadDashboardData]); // Include the memoized function in dependencies
+  }, [loadDashboardData, t]); // Include the memoized function in dependencies
 
   // Channel Management Handlers
   const handleChannelCreate = () => {
@@ -1324,7 +1326,7 @@ const Dashboard = () => {
     <Fade in={true} timeout={800}>
       <Box sx={{ px: 1 }}>
         <Typography variant="h4" gutterBottom sx={{ mb: 3 }}>
-          Dashboard
+          {t('dashboard.title')}
         </Typography>
 
         {/* Filters */}
@@ -1332,10 +1334,10 @@ const Dashboard = () => {
           <CardContent sx={{ p: 2 }}>
             <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2 }}>
               <FormControl sx={{ minWidth: 160 }} size="small">
-                <InputLabel>Date Range</InputLabel>
+                <InputLabel>{t('dashboard.filters.dateRange')}</InputLabel>
                 <Select
                   value={dateRange}
-                  label="Date Range"
+                  label={t('dashboard.filters.dateRange')}
                   onChange={(e) => {
                     setDateRange(e.target.value);
                     // Reset custom date range when switching to preset ranges
@@ -1345,10 +1347,10 @@ const Dashboard = () => {
                     }
                   }}
                 >
-                  <MenuItem value="day">Daily</MenuItem>
-                  <MenuItem value="week">Weekly</MenuItem>
-                  <MenuItem value="month">Monthly</MenuItem>
-                  <MenuItem value="custom">Custom Range</MenuItem>
+                  <MenuItem value="day">{t('dashboard.filters.today')}</MenuItem>
+                  <MenuItem value="week">{t('dashboard.filters.week')}</MenuItem>
+                  <MenuItem value="month">{t('dashboard.filters.month')}</MenuItem>
+                  <MenuItem value="custom">{t('dashboard.filters.custom')}</MenuItem>
                 </Select>
               </FormControl>
 
@@ -1356,7 +1358,7 @@ const Dashboard = () => {
                 <LocalizationProvider dateAdapter={AdapterDateFns}>
                   <Box sx={{ display: 'flex', gap: 2 }}>
                     <DatePicker
-                      label="Start Date"
+                      label={t('common.startDate')}
                       value={startDate}
                       onChange={(newValue) => setStartDate(newValue)}
                       slotProps={{
@@ -1391,7 +1393,7 @@ const Dashboard = () => {
                       }}
                     />
                     <DatePicker
-                      label="End Date"
+                      label={t('common.endDate')}
                       value={endDate}
                       onChange={(newValue) => setEndDate(newValue)}
                       minDate={startDate}
@@ -1431,31 +1433,31 @@ const Dashboard = () => {
               )}
 
               <FormControl sx={{ minWidth: 160 }} size="small">
-                <InputLabel>Policy Type</InputLabel>
+                <InputLabel>{t('dashboard.filters.policyType')}</InputLabel>
                 <Select
                   value={policyType}
-                  label="Policy Type"
+                  label={t('dashboard.filters.policyType')}
                   onChange={(e) => setPolicyType(e.target.value)}
                 >
-                  <MenuItem value="all">All Types</MenuItem>
-                  <MenuItem value="vehicle">Vehicle</MenuItem>
-                  <MenuItem value="health">Health</MenuItem>
-                  <MenuItem value="life">Life</MenuItem>
+                  <MenuItem value="all">{t('dashboard.filters.all')}</MenuItem>
+                  <MenuItem value="vehicle">{t('common.policies.vehicle')}</MenuItem>
+                  <MenuItem value="health">{t('common.policies.health')}</MenuItem>
+                  <MenuItem value="life">{t('common.policies.life')}</MenuItem>
                 </Select>
               </FormControl>
 
               <FormControl sx={{ minWidth: 160 }} size="small">
-                <InputLabel>Case Status</InputLabel>
+                <InputLabel>{t('dashboard.filters.caseStatus')}</InputLabel>
                 <Select
                   value={caseStatus}
-                  label="Case Status"
+                  label={t('dashboard.filters.caseStatus')}
                   onChange={(e) => setCaseStatus(e.target.value)}
                 >
-                  <MenuItem value="all">All Statuses</MenuItem>
-                  <MenuItem value="pending">Pending</MenuItem>
-                  <MenuItem value="inProgress">In Progress</MenuItem>
-                  <MenuItem value="completed">Completed</MenuItem>
-                  <MenuItem value="failed">Failed</MenuItem>
+                  <MenuItem value="all">{t('dashboard.filters.all')}</MenuItem>
+                  <MenuItem value="pending">{t('dashboard.stats.pendingAction')}</MenuItem>
+                  <MenuItem value="inProgress">{t('dashboard.stats.inProgress')}</MenuItem>
+                  <MenuItem value="completed">{t('dashboard.filters.closed')}</MenuItem>
+                  <MenuItem value="failed">{t('common.failed')}</MenuItem>
                 </Select>
               </FormControl>
 
@@ -1463,12 +1465,12 @@ const Dashboard = () => {
                 <InputLabel>
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
                     <TeamIcon fontSize="small" />
-                    Team
+                    {t('dashboard.filters.team')}
                   </Box>
                 </InputLabel>
                 <Select
                   value={selectedTeam}
-                  label="Team"
+                  label={t('dashboard.filters.team')}
                   onChange={(e) => {
                     setSelectedTeam(e.target.value);
                     setSelectedTeamMember('all'); // Reset team member when team changes
@@ -1477,7 +1479,7 @@ const Dashboard = () => {
                   <MenuItem value="all">
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                       <TeamIcon fontSize="small" color="action" />
-                      All Teams
+                      {t('dashboard.filters.all')}
                     </Box>
                   </MenuItem>
                   {teams.map((team) => (
@@ -1501,18 +1503,18 @@ const Dashboard = () => {
                   <InputLabel>
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
                       <MemberIcon fontSize="small" />
-                      Team Member
+                      {t('dashboard.filters.teamMember')}
                     </Box>
                   </InputLabel>
                   <Select
                     value={selectedTeamMember}
-                    label="Team Member"
+                    label={t('dashboard.filters.teamMember')}
                     onChange={(e) => setSelectedTeamMember(e.target.value)}
                   >
                     <MenuItem value="all">
                       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                         <MemberIcon fontSize="small" color="action" />
-                        All Members
+                        {t('dashboard.filters.all')}
                       </Box>
                     </MenuItem>
                     {teamMembers.map((member) => (
@@ -1537,12 +1539,12 @@ const Dashboard = () => {
             {(selectedTeam !== 'all' || selectedTeamMember !== 'all') && (
               <Box sx={{ mt: 2, display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
                 <Typography variant="body2" color="text.secondary">
-                  Active Filters:
+                  {t('dashboard.filters.activeFilters')}:
                 </Typography>
                 {selectedTeam !== 'all' && (
                   <Chip
                     icon={<TeamIcon fontSize="small" />}
-                    label={`Team: ${teams.find(t => t.id === selectedTeam)?.name || 'Unknown'}`}
+                    label={`${t('dashboard.filters.team')}: ${teams.find(t => t.id === selectedTeam)?.name || 'Unknown'}`}
                     variant="outlined"
                     color="primary"
                     size="small"
@@ -1555,7 +1557,7 @@ const Dashboard = () => {
                 {selectedTeamMember !== 'all' && (
                   <Chip
                     icon={<MemberIcon fontSize="small" />}
-                    label={`Member: ${teamMembers.find(m => m.id === selectedTeamMember)?.name || 'Unknown'}`}
+                    label={`${t('dashboard.filters.teamMember')}: ${teamMembers.find(m => m.id === selectedTeamMember)?.name || 'Unknown'}`}
                     variant="outlined"
                     color="secondary"
                     size="small"
@@ -1573,7 +1575,7 @@ const Dashboard = () => {
             <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: exportExpanded ? 2 : 0 }}>
               <Typography variant="h6" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                 <ExportIcon color="primary" />
-                MIS Export
+                {t('dashboard.misExport.title')}
               </Typography>
               <Button
                 variant={exportExpanded ? "contained" : "outlined"}
@@ -1587,7 +1589,7 @@ const Dashboard = () => {
                   fontWeight: 600
                 }}
               >
-                {exportExpanded ? 'Collapse Export' : 'Export Data'}
+                {exportExpanded ? t('dashboard.misExport.collapseExport') : t('dashboard.misExport.exportData')}
               </Button>
             </Box>
 
@@ -1596,10 +1598,10 @@ const Dashboard = () => {
               <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2, mb: 3 }}>
                 {/* Date Range Filter */}
                 <FormControl sx={{ minWidth: 160 }} size="small">
-                  <InputLabel>Export Date Range</InputLabel>
+                  <InputLabel>{t('dashboard.filters.dateRange')}</InputLabel>
                   <Select
                     value={exportDateRange}
-                    label="Export Date Range"
+                    label={t('dashboard.filters.dateRange')}
                     onChange={(e) => {
                       setExportDateRange(e.target.value);
                       // Reset custom dates when switching to preset ranges
@@ -1609,13 +1611,13 @@ const Dashboard = () => {
                       }
                     }}
                   >
-                    <MenuItem value="day">Today</MenuItem>
-                    <MenuItem value="week">This Week</MenuItem>
-                    <MenuItem value="month">This Month</MenuItem>
-                    <MenuItem value="quarter">This Quarter</MenuItem>
-                    <MenuItem value="year">This Year</MenuItem>
-                    <MenuItem value="custom">Custom Range</MenuItem>
-                    <MenuItem value="all">All Time</MenuItem>
+                    <MenuItem value="day">{t('dashboard.filters.today')}</MenuItem>
+                    <MenuItem value="week">{t('dashboard.filters.week')}</MenuItem>
+                    <MenuItem value="month">{t('dashboard.filters.month')}</MenuItem>
+                    <MenuItem value="quarter">{t('dashboard.filters.quarter')}</MenuItem>
+                    <MenuItem value="year">{t('dashboard.filters.year')}</MenuItem>
+                    <MenuItem value="custom">{t('dashboard.filters.custom')}</MenuItem>
+                    <MenuItem value="all">{t('dashboard.filters.all')}</MenuItem>
                   </Select>
                 </FormControl>
 
@@ -1623,7 +1625,7 @@ const Dashboard = () => {
                 {exportDateRange === 'custom' && (
                   <LocalizationProvider dateAdapter={AdapterDateFns}>
                     <DatePicker
-                      label="Export Start Date"
+                      label={t('common.startDate')}
                       value={exportStartDate}
                       onChange={(newValue) => setExportStartDate(newValue)}
                       slotProps={{
@@ -1639,7 +1641,7 @@ const Dashboard = () => {
                       }}
                     />
                     <DatePicker
-                      label="Export End Date"
+                      label={t('common.endDate')}
                       value={exportEndDate}
                       onChange={(newValue) => setExportEndDate(newValue)}
                       minDate={exportStartDate}
@@ -1660,64 +1662,64 @@ const Dashboard = () => {
 
                 {/* Data Type Filter */}
                 <FormControl sx={{ minWidth: 160 }} size="small">
-                  <InputLabel>Data Type</InputLabel>
+                  <InputLabel>{t('dashboard.misExport.dataType')}</InputLabel>
                   <Select
                     value={exportDataType}
-                    label="Data Type"
+                    label={t('dashboard.misExport.dataType')}
                     onChange={(e) => setExportDataType(e.target.value)}
                   >
-                    <MenuItem value="all">All Data</MenuItem>
-                    <MenuItem value="cases">Cases Only</MenuItem>
-                    <MenuItem value="payments">Payments Only</MenuItem>
-                    <MenuItem value="trends">Trends Only</MenuItem>
-                    <MenuItem value="teams">Team Performance</MenuItem>
-                    <MenuItem value="channels">Channel Analytics</MenuItem>
+                    <MenuItem value="all">{t('dashboard.filters.all')}</MenuItem>
+                    <MenuItem value="cases">{t('dashboard.stats.totalCases')}</MenuItem>
+                    <MenuItem value="payments">{t('dashboard.stats.paymentCollected')}</MenuItem>
+                    <MenuItem value="trends">{t('dashboard.charts.trends')}</MenuItem>
+                    <MenuItem value="teams">{t('dashboard.filters.team')}</MenuItem>
+                    <MenuItem value="channels">{t('dashboard.charts.channelPerformance')}</MenuItem>
                   </Select>
                 </FormControl>
 
                 {/* Policy Type Filter */}
                 <FormControl sx={{ minWidth: 160 }} size="small">
-                  <InputLabel>Policy Type</InputLabel>
+                  <InputLabel>{t('dashboard.filters.policyType')}</InputLabel>
                   <Select
                     value={exportPolicyType}
-                    label="Policy Type"
+                    label={t('dashboard.filters.policyType')}
                     onChange={(e) => setExportPolicyType(e.target.value)}
                   >
-                    <MenuItem value="all">All Types</MenuItem>
-                    <MenuItem value="life">Life Insurance</MenuItem>
-                    <MenuItem value="health">Health Insurance</MenuItem>
-                    <MenuItem value="motor">Motor Insurance</MenuItem>
-                    <MenuItem value="home">Home Insurance</MenuItem>
-                    <MenuItem value="travel">Travel Insurance</MenuItem>
-                    <MenuItem value="business">Business Insurance</MenuItem>
+                    <MenuItem value="all">{t('dashboard.filters.all')}</MenuItem>
+                    <MenuItem value="life">{t('common.policies.life')}</MenuItem>
+                    <MenuItem value="health">{t('common.policies.health')}</MenuItem>
+                    <MenuItem value="motor">{t('common.policies.vehicle')}</MenuItem>
+                    <MenuItem value="home">{t('common.policies.home')}</MenuItem>
+                    <MenuItem value="travel">{t('common.policies.travel')}</MenuItem>
+                    <MenuItem value="business">{t('common.policies.business')}</MenuItem>
                   </Select>
                 </FormControl>
 
                 {/* Case Status Filter */}
                 <FormControl sx={{ minWidth: 160 }} size="small">
-                  <InputLabel>Case Status</InputLabel>
+                  <InputLabel>{t('dashboard.filters.caseStatus')}</InputLabel>
                   <Select
                     value={exportCaseStatus}
-                    label="Case Status"
+                    label={t('dashboard.filters.caseStatus')}
                     onChange={(e) => setExportCaseStatus(e.target.value)}
                   >
-                    <MenuItem value="all">All Status</MenuItem>
-                    <MenuItem value="pending">Pending</MenuItem>
-                    <MenuItem value="in_progress">In Progress</MenuItem>
-                    <MenuItem value="renewed">Renewed</MenuItem>
-                    <MenuItem value="lapsed">Lapsed</MenuItem>
-                    <MenuItem value="cancelled">Cancelled</MenuItem>
-                    <MenuItem value="on_hold">On Hold</MenuItem>
-                    <MenuItem value="follow_up">Follow Up Required</MenuItem>
+                    <MenuItem value="all">{t('dashboard.filters.all')}</MenuItem>
+                    <MenuItem value="pending">{t('dashboard.stats.pendingAction')}</MenuItem>
+                    <MenuItem value="in_progress">{t('dashboard.stats.inProgress')}</MenuItem>
+                    <MenuItem value="renewed">{t('dashboard.stats.renewed')}</MenuItem>
+                    <MenuItem value="lapsed">{t('common.caseStatus.lapsed') || 'Lapsed'}</MenuItem>
+                    <MenuItem value="cancelled">{t('common.caseStatus.cancelled') || 'Cancelled'}</MenuItem>
+                    <MenuItem value="on_hold">{t('common.caseStatus.onHold') || 'On Hold'}</MenuItem>
+                    <MenuItem value="follow_up">{t('common.caseStatus.followUp') || 'Follow Up'}</MenuItem>
                   </Select>
                 </FormControl>
 
                 {/* Export Format */}
                 <FormControl sx={{ minWidth: 160 }} size="small">
-                  <InputLabel>Export Format</InputLabel>
+                  <InputLabel>{t('dashboard.misExport.format')}</InputLabel>
                   <Select
                     value={exportFormat}
-                    label="Export Format"
+                    label={t('dashboard.misExport.format')}
                     onChange={(e) => setExportFormat(e.target.value)}
                   >
                     <MenuItem value="excel">Excel (.xlsx)</MenuItem>
@@ -1753,34 +1755,34 @@ const Dashboard = () => {
                     minWidth: 120
                   }}
                 >
-                  {exporting ? 'Exporting...' : 'Generate Export'}
+                  {exporting ? t('dashboard.misExport.exporting') : t('dashboard.misExport.generateExport')}
                 </Button>
               </Box>
 
               {/* Export Info */}
               <Box sx={{ mt: 2, p: 2, bgcolor: alpha(theme.palette.info.main, 0.1), borderRadius: 2 }}>
                 <Typography variant="body2" color="info.main" sx={{ fontWeight: 500, mb: 1 }}>
-                  Export Preview:
+                  {t('dashboard.misExport.preview')}:
                 </Typography>
                 <Typography variant="caption" color="text.secondary">
-                  • Date Range: {
-                    exportDateRange === 'all' ? 'All Time' :
+                  • {t('dashboard.filters.dateRange')}: {
+                    exportDateRange === 'all' ? t('dashboard.filters.all') :
                       exportDateRange === 'custom' ?
                         (exportStartDate && exportEndDate ?
                           `${exportStartDate.toLocaleDateString()} - ${exportEndDate.toLocaleDateString()}` :
                           'Custom Range (Please select dates)') :
-                        exportDateRange.charAt(0).toUpperCase() + exportDateRange.slice(1)
+                        t(`dashboard.filters.${exportDateRange}`)
                   }
                   <br />
-                  • Data Type: {exportDataType === 'all' ? 'Complete Dataset' : exportDataType.charAt(0).toUpperCase() + exportDataType.slice(1)}
+                  • {t('dashboard.misExport.dataType')}: {exportDataType === 'all' ? t('dashboard.filters.all') : exportDataType.charAt(0).toUpperCase() + exportDataType.slice(1)}
                   <br />
-                  • Policy Type: {exportPolicyType === 'all' ? 'All Types' : exportPolicyType.charAt(0).toUpperCase() + exportPolicyType.slice(1).replace('_', ' ')}
+                  • {t('dashboard.filters.policyType')}: {exportPolicyType === 'all' ? t('dashboard.filters.all') : exportPolicyType.charAt(0).toUpperCase() + exportPolicyType.slice(1).replace('_', ' ')}
                   <br />
-                  • Case Status: {exportCaseStatus === 'all' ? 'All Status' : exportCaseStatus.charAt(0).toUpperCase() + exportCaseStatus.slice(1).replace('_', ' ')}
+                  • {t('dashboard.filters.caseStatus')}: {exportCaseStatus === 'all' ? t('dashboard.filters.all') : exportCaseStatus.charAt(0).toUpperCase() + exportCaseStatus.slice(1).replace('_', ' ')}
                   <br />
-                  • Format: {exportFormat.toUpperCase()}
+                  • {t('dashboard.misExport.format')}: {exportFormat.toUpperCase()}
                   <br />
-                  • Estimated Size: {exportDataType === 'all' && exportPolicyType === 'all' && exportCaseStatus === 'all' ? '~2.5MB' : '~500KB - 1.5MB'}
+                  • {t('dashboard.misExport.estimatedSize')}: {exportDataType === 'all' && exportPolicyType === 'all' && exportCaseStatus === 'all' ? '~2.5MB' : '~500KB - 1.5MB'}
                 </Typography>
               </Box>
             </Collapse>
@@ -1793,7 +1795,7 @@ const Dashboard = () => {
             <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
               <Typography variant="h6" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                 <SettingsIcon color="secondary" />
-                Channel & Hierarchy Management
+                {t('dashboard.channelManagement.title')}
               </Typography>
               <Tabs
                 value={activeManagementTab}
@@ -1808,10 +1810,10 @@ const Dashboard = () => {
                   }
                 }}
               >
-                <Tab icon={<ChannelIcon />} label="Communication Channel" />
-                <Tab icon={<DistributionIcon />} label="Distribution Channel" />
-                <Tab icon={<HierarchyIcon />} label="Hierarchy" />
-                <Tab icon={<AnalyticsIcon />} label="Analytics" />
+                <Tab icon={<ChannelIcon />} label={t('dashboard.channelManagement.tabs.communication')} />
+                <Tab icon={<DistributionIcon />} label={t('dashboard.channelManagement.tabs.distribution')} />
+                <Tab icon={<HierarchyIcon />} label={t('dashboard.channelManagement.tabs.hierarchy')} />
+                <Tab icon={<AnalyticsIcon />} label={t('dashboard.channelManagement.tabs.analytics')} />
               </Tabs>
             </Box>
 
@@ -1823,10 +1825,10 @@ const Dashboard = () => {
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
                   <Box>
                     <Typography variant="h6" fontWeight="600">
-                      Communication Channel Management
+                      {t('dashboard.channelManagement.communication.title')}
                     </Typography>
                     <Typography variant="body2" color="text.secondary">
-                      Manage and monitor all customer communication channels (Email, WhatsApp, SMS, etc.)
+                      {t('dashboard.channelManagement.communication.subtitle')}
                     </Typography>
                   </Box>
                   <Button
@@ -1835,7 +1837,7 @@ const Dashboard = () => {
                     onClick={handleChannelCreate}
                     sx={{ borderRadius: 2, fontWeight: 600 }}
                   >
-                    Add Channel
+                    {t('dashboard.channelManagement.communication.addChannel')}
                   </Button>
                 </Box>
 
@@ -1892,7 +1894,7 @@ const Dashboard = () => {
                             </Typography>
 
                             <Box sx={{ mb: 2 }}>
-                              <Typography variant="body2" color="text.secondary">Manager</Typography>
+                              <Typography variant="body2" color="text.secondary">{t('dashboard.charts.managerPerformance').split(' ')[0]}</Typography>
                               <Typography variant="body1" fontWeight="500">{channel.manager}</Typography>
                             </Box>
 
@@ -1903,7 +1905,7 @@ const Dashboard = () => {
                                     {channel.currentCases}
                                   </Typography>
                                   <Typography variant="caption" color="text.secondary">
-                                    Current Cases
+                                    {t('dashboard.channelManagement.communication.currentCases')}
                                   </Typography>
                                 </Box>
                               </Grid>
@@ -1913,7 +1915,7 @@ const Dashboard = () => {
                                     {channel.renewedCases}
                                   </Typography>
                                   <Typography variant="caption" color="text.secondary">
-                                    Renewed
+                                    {t('dashboard.channelManagement.communication.renewed')}
                                   </Typography>
                                 </Box>
                               </Grid>
@@ -1921,7 +1923,7 @@ const Dashboard = () => {
 
                             <Box sx={{ mb: 2 }}>
                               <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
-                                <Typography variant="body2">Conversion Rate</Typography>
+                                <Typography variant="body2">{t('dashboard.channelManagement.communication.conversionRate')}</Typography>
                                 <Typography variant="body2" fontWeight="600">{channel.conversionRate}%</Typography>
                               </Box>
                               <LinearProgress
@@ -1937,19 +1939,19 @@ const Dashboard = () => {
                               <Grid item xs={4}>
                                 <Box sx={{ textAlign: 'center' }}>
                                   <Typography variant="body2" fontWeight="600">₹{channel.costPerLead}</Typography>
-                                  <Typography variant="caption" color="text.secondary">Cost/Lead</Typography>
+                                  <Typography variant="caption" color="text.secondary">{t('dashboard.channelManagement.communication.costPerLead')}</Typography>
                                 </Box>
                               </Grid>
                               <Grid item xs={4}>
                                 <Box sx={{ textAlign: 'center' }}>
                                   <Typography variant="body2" fontWeight="600">{channel.performance?.efficiency || 0}%</Typography>
-                                  <Typography variant="caption" color="text.secondary">Efficiency</Typography>
+                                  <Typography variant="caption" color="text.secondary">{t('dashboard.channelManagement.communication.efficiency')}</Typography>
                                 </Box>
                               </Grid>
                               <Grid item xs={4}>
                                 <Box sx={{ textAlign: 'center' }}>
                                   <Typography variant="body2" fontWeight="600">₹{(channel.revenue / 100000).toFixed(1)}L</Typography>
-                                  <Typography variant="caption" color="text.secondary">Revenue</Typography>
+                                  <Typography variant="caption" color="text.secondary">{t('dashboard.channelManagement.communication.revenue')}</Typography>
                                 </Box>
                               </Grid>
                             </Grid>
@@ -2036,10 +2038,10 @@ const Dashboard = () => {
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
                   <Box>
                     <Typography variant="h6" fontWeight="600">
-                      Distribution Channel Management
+                      {t('dashboard.channelManagement.distribution.title')}
                     </Typography>
                     <Typography variant="body2" color="text.secondary">
-                      Manage distribution partners, agents, and sales channels
+                      {t('dashboard.channelManagement.distribution.subtitle')}
                     </Typography>
                   </Box>
                   <Button
@@ -2048,7 +2050,7 @@ const Dashboard = () => {
                     onClick={handleDistributionChannelCreate}
                     sx={{ borderRadius: 2, fontWeight: 600 }}
                   >
-                    Add Distribution Channel
+                    {t('dashboard.channelManagement.distribution.addChannel')}
                   </Button>
                 </Box>
 
@@ -2112,7 +2114,7 @@ const Dashboard = () => {
                             </Typography>
 
                             <Box sx={{ mb: 2 }}>
-                              <Typography variant="body2" color="text.secondary">Contact Person</Typography>
+                              <Typography variant="body2" color="text.secondary">{t('dashboard.channelManagement.distribution.partnerSince').split(' ')[0]}</Typography>
                               <Typography variant="body1" fontWeight="500">{channel.contactPerson}</Typography>
                               <Typography variant="caption" color="text.secondary">{channel.region}</Typography>
                             </Box>
@@ -2124,7 +2126,7 @@ const Dashboard = () => {
                                     {channel.currentPolicies}
                                   </Typography>
                                   <Typography variant="caption" color="text.secondary">
-                                    Current Policies
+                                    {t('dashboard.channelManagement.distribution.currentPolicies')}
                                   </Typography>
                                 </Box>
                               </Grid>
@@ -2134,7 +2136,7 @@ const Dashboard = () => {
                                     {channel.renewalRate.toFixed(1)}%
                                   </Typography>
                                   <Typography variant="caption" color="text.secondary">
-                                    Renewal Rate
+                                    {t('dashboard.channelManagement.distribution.renewalRate')}
                                   </Typography>
                                 </Box>
                               </Grid>
@@ -2142,17 +2144,17 @@ const Dashboard = () => {
 
                             <Box sx={{ mb: 2 }}>
                               <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
-                                <Typography variant="body2" color="text.secondary">Commission Rate</Typography>
+                                <Typography variant="body2" color="text.secondary">{t('dashboard.channelManagement.distribution.commissionRate')}</Typography>
                                 <Typography variant="body2" fontWeight="600">{channel.commissionRate}%</Typography>
                               </Box>
                               <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
-                                <Typography variant="body2" color="text.secondary">Revenue</Typography>
+                                <Typography variant="body2" color="text.secondary">{t('dashboard.channelManagement.communication.revenue')}</Typography>
                                 <Typography variant="body2" fontWeight="600" color="success.main">
                                   ₹{(channel.actualRevenue / 100000).toFixed(1)}L
                                 </Typography>
                               </Box>
                               <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                <Typography variant="body2" color="text.secondary">Partner Since</Typography>
+                                <Typography variant="body2" color="text.secondary">{t('dashboard.channelManagement.distribution.partnerSince')}</Typography>
                                 <Typography variant="body2" fontWeight="600">
                                   {new Date(channel.partnerSince).getFullYear()}
                                 </Typography>
@@ -2175,7 +2177,7 @@ const Dashboard = () => {
                                     channel.performance.efficiency > 80 ? 'warning.main' : 'error.main'
                                 }} />
                                 <Typography variant="body2" fontWeight="600">
-                                  {channel.performance.efficiency}% Efficiency
+                                  {channel.performance.efficiency}% {t('dashboard.channelManagement.communication.efficiency')}
                                 </Typography>
                               </Box>
                               <Typography variant="body2" color="text.secondary">
@@ -2199,10 +2201,10 @@ const Dashboard = () => {
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
                   <Box>
                     <Typography variant="h6" fontWeight="600">
-                      Organizational Hierarchy
+                      {t('dashboard.channelManagement.hierarchy.title')}
                     </Typography>
                     <Typography variant="body2" color="text.secondary">
-                      Manage organizational structure and reporting hierarchy
+                      {t('dashboard.channelManagement.hierarchy.subtitle')}
                     </Typography>
                   </Box>
                   <Button
@@ -2211,7 +2213,7 @@ const Dashboard = () => {
                     onClick={handleHierarchyCreate}
                     sx={{ borderRadius: 2, fontWeight: 600 }}
                   >
-                    Add Node
+                    {t('dashboard.channelManagement.hierarchy.addNode')}
                   </Button>
                 </Box>
 
@@ -2250,19 +2252,19 @@ const Dashboard = () => {
                                   <Typography variant="h6" fontWeight="600" color="primary.main">
                                     {rootNode.currentCases}
                                   </Typography>
-                                  <Typography variant="caption" color="text.secondary">Cases</Typography>
+                                  <Typography variant="caption" color="text.secondary">{t('dashboard.channelManagement.hierarchy.cases')}</Typography>
                                 </Box>
                                 <Box sx={{ textAlign: 'center' }}>
                                   <Typography variant="h6" fontWeight="600" color="success.main">
                                     {rootNode.performance?.efficiency || 0}%
                                   </Typography>
-                                  <Typography variant="caption" color="text.secondary">Efficiency</Typography>
+                                  <Typography variant="caption" color="text.secondary">{t('dashboard.channelManagement.communication.efficiency')}</Typography>
                                 </Box>
                                 <Box sx={{ textAlign: 'center' }}>
                                   <Typography variant="h6" fontWeight="600" color="info.main">
                                     ₹{(rootNode.revenue / 1000000).toFixed(1)}M
                                   </Typography>
-                                  <Typography variant="caption" color="text.secondary">Revenue</Typography>
+                                  <Typography variant="caption" color="text.secondary">{t('dashboard.channelManagement.communication.revenue')}</Typography>
                                 </Box>
                               </Box>
                               <Box sx={{ display: 'flex', gap: 0.5 }}>
@@ -2322,19 +2324,19 @@ const Dashboard = () => {
                                         <Grid item xs={4}>
                                           <Box sx={{ textAlign: 'center' }}>
                                             <Typography variant="body2" fontWeight="600">{childNode.currentCases}</Typography>
-                                            <Typography variant="caption" color="text.secondary">Cases</Typography>
+                                            <Typography variant="caption" color="text.secondary">{t('dashboard.channelManagement.hierarchy.cases')}</Typography>
                                           </Box>
                                         </Grid>
                                         <Grid item xs={4}>
                                           <Box sx={{ textAlign: 'center' }}>
                                             <Typography variant="body2" fontWeight="600">{childNode.performance?.efficiency || 0}%</Typography>
-                                            <Typography variant="caption" color="text.secondary">Efficiency</Typography>
+                                            <Typography variant="caption" color="text.secondary">{t('dashboard.channelManagement.communication.efficiency')}</Typography>
                                           </Box>
                                         </Grid>
                                         <Grid item xs={4}>
                                           <Box sx={{ textAlign: 'center' }}>
                                             <Typography variant="body2" fontWeight="600">₹{(childNode.revenue / 100000).toFixed(1)}L</Typography>
-                                            <Typography variant="caption" color="text.secondary">Revenue</Typography>
+                                            <Typography variant="caption" color="text.secondary">{t('dashboard.channelManagement.communication.revenue')}</Typography>
                                           </Box>
                                         </Grid>
                                       </Grid>
@@ -2342,7 +2344,7 @@ const Dashboard = () => {
                                       {childNode.teamMembers && (
                                         <Box sx={{ mt: 2, pt: 2, borderTop: `1px solid ${theme.palette.divider}` }}>
                                           <Typography variant="caption" color="text.secondary" sx={{ mb: 1, display: 'block' }}>
-                                            Team Members ({childNode.teamMembers.length})
+                                            {t('dashboard.filters.teamMembers')} ({childNode.teamMembers.length})
                                           </Typography>
                                           <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
                                             {childNode.teamMembers.slice(0, 3).map((member) => (
@@ -2447,7 +2449,7 @@ const Dashboard = () => {
 
                 {/* Analytics Tab */}
                 <Typography variant="h6" fontWeight="600" sx={{ mb: 3 }}>
-                  Channel & Hierarchy Analytics
+                  {t('dashboard.channelManagement.tabs.analytics')}
                 </Typography>
 
                 <Grid container spacing={3}>
@@ -2455,10 +2457,10 @@ const Dashboard = () => {
                   <Grid item xs={12} lg={6}>
                     <Paper sx={{ p: 3, height: 400, boxShadow: '0 8px 32px rgba(0,0,0,0.1)' }}>
                       <Typography variant="h6" gutterBottom fontWeight="600">
-                        Channel Performance Comparison
+                        {t('dashboard.channelManagement.analytics.performanceComparison')}
                       </Typography>
                       <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-                        Efficiency vs Cost analysis across channels
+                        {t('dashboard.channelManagement.analytics.efficiencyVsCost')}
                       </Typography>
                       <ResponsiveContainer width="100%" height="85%">
                         <BarChart data={channelPerformanceData}>
@@ -2474,9 +2476,8 @@ const Dashboard = () => {
                             }}
                           />
                           <Legend iconType="circle" />
->>>>>>> 0f0db02199acd11bdcb8309679f62aa88a7a39ee
-                          <Bar yAxisId="left" dataKey="efficiency" fill={alpha(theme.palette.primary.main, 0.8)} name="Efficiency %" />
-                          <Bar yAxisId="right" dataKey="cost" fill={alpha(theme.palette.error.main, 0.8)} name="Cost per Lead (₹)" />
+                          <Bar yAxisId="left" dataKey="efficiency" fill={alpha(theme.palette.primary.main, 0.8)} name={`${t('dashboard.channelManagement.communication.efficiency')} %`} />
+                          <Bar yAxisId="right" dataKey="cost" fill={alpha(theme.palette.error.main, 0.8)} name={`${t('dashboard.channelManagement.communication.costPerLead')} (₹)`} />
                         </BarChart >
                       </ResponsiveContainer >
                     </Paper >
@@ -2486,10 +2487,10 @@ const Dashboard = () => {
                   < Grid item xs={12} lg={6} >
                     <Paper sx={{ p: 3, height: 400, boxShadow: '0 8px 32px rgba(0,0,0,0.1)' }}>
                       <Typography variant="h6" gutterBottom fontWeight="600">
-                        Regional Performance Overview
+                        {t('dashboard.channelManagement.analytics.regionalPerformance')}
                       </Typography>
                       <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-                        Performance metrics across different regions
+                        {t('dashboard.channelManagement.analytics.performanceMetrics')}
                       </Typography>
                       <ResponsiveContainer width="100%" height="85%">
                         <RadialBarChart data={hierarchyPerformanceData} innerRadius="20%" outerRadius="80%">
@@ -2522,7 +2523,7 @@ const Dashboard = () => {
         < Grid container spacing={3} sx={{ mb: 4 }}>
           <Grid item xs={12} sm={6} md={4} lg={3}>
             <StatCard
-              title="Total Cases"
+              title={t('dashboard.stats.totalCases')}
               value={stats.totalCases}
               color={theme.palette.primary.main}
               icon={<TimelineIcon fontSize="inherit" />}
@@ -2531,7 +2532,7 @@ const Dashboard = () => {
           </Grid>
           <Grid item xs={12} sm={6} md={4} lg={3}>
             <StatCard
-              title="In Progress"
+              title={t('dashboard.stats.inProgress')}
               value={stats.inProgress}
               color={theme.palette.warning.main}
               icon={<PolicyIcon fontSize="inherit" />}
@@ -2540,7 +2541,7 @@ const Dashboard = () => {
           </Grid>
           <Grid item xs={12} sm={6} md={4} lg={3}>
             <StatCard
-              title="Renewed"
+              title={t('dashboard.stats.renewed')}
               value={stats.renewed}
               color={theme.palette.success.main}
               icon={<CompletedIcon fontSize="inherit" />}
@@ -2549,7 +2550,7 @@ const Dashboard = () => {
           </Grid>
           <Grid item xs={12} sm={6} md={4} lg={3}>
             <StatCard
-              title="Pending Action"
+              title={t('dashboard.stats.pendingAction')}
               value={stats.pendingAction}
               color="#9c27b0"
               icon={<PendingIcon fontSize="inherit" />}
@@ -2558,7 +2559,7 @@ const Dashboard = () => {
           </Grid>
           <Grid item xs={12} sm={6} md={4} lg={3}>
             <StatCard
-              title="Failed"
+              title={t('dashboard.stats.errors')}
               value={stats.errors}
               color={theme.palette.error.main}
               icon={<ErrorIcon fontSize="inherit" />}
@@ -2567,7 +2568,7 @@ const Dashboard = () => {
           </Grid>
           <Grid item xs={12} sm={6} md={4} lg={3}>
             <StatCard
-              title="Payments Collected"
+              title={t('dashboard.stats.paymentCollected')}
               value={stats.paymentCollected}
               color="#00897b"
               icon={<PaymentsIcon fontSize="inherit" />}
@@ -2577,7 +2578,7 @@ const Dashboard = () => {
           </Grid>
           <Grid item xs={12} sm={6} md={4} lg={3}>
             <StatCard
-              title="Payments Pending"
+              title={t('dashboard.stats.paymentPending')}
               value={stats.paymentPending}
               color="#ff9800"
               icon={<AccountBalanceIcon fontSize="inherit" />}
@@ -2593,10 +2594,10 @@ const Dashboard = () => {
             <Grow in={loaded} style={{ transformOrigin: '0 0 0' }} timeout={400}>
               <Paper sx={{ p: 3, height: 380, boxShadow: '0 8px 32px rgba(0,0,0,0.1)' }}>
                 <Typography variant="h6" gutterBottom fontWeight="600">
-                  Case Volume
+                  {t('dashboard.charts.caseVolume')}
                 </Typography>
                 <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-                  Comparison of new cases and completed renewals
+                  {t('dashboard.charts.caseVolumeDesc')}
                 </Typography>
                 <ResponsiveContainer width="100%" height="85%">
                   <BarChart data={trendData} barSize={20}>
@@ -2614,13 +2615,13 @@ const Dashboard = () => {
                     <Bar
                       dataKey="newCases"
                       fill={alpha(theme.palette.primary.main, 0.8)}
-                      name="New Cases"
+                      name={t('dashboard.stats.newCases')}
                       radius={[4, 4, 0, 0]}
                     />
                     <Bar
                       dataKey="renewals"
                       fill={alpha(theme.palette.success.main, 0.8)}
-                      name="Completed Renewals"
+                      name={t('dashboard.stats.completedRenewals')}
                       radius={[4, 4, 0, 0]}
                     />
                   </BarChart >
@@ -2633,10 +2634,10 @@ const Dashboard = () => {
             <Grow in={loaded} style={{ transformOrigin: '0 0 0' }} timeout={600}>
               <Paper sx={{ p: 3, height: 380, boxShadow: '0 8px 32px rgba(0,0,0,0.1)' }}>
                 <Typography variant="h6" gutterBottom fontWeight="600">
-                  Success Rate Trend
+                  {t('dashboard.charts.successRate')}
                 </Typography>
                 <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-                  Percentage of successful renewals over time
+                  {t('dashboard.charts.successRateDesc')}
                 </Typography>
                 <ResponsiveContainer width="100%" height="85%">
                   <AreaChart data={trendData}>
@@ -3571,7 +3572,7 @@ const Dashboard = () => {
 
         {/* Renewals Campaign Tracking */}
         < Typography variant="h5" gutterBottom sx={{ mt: 6, mb: 3, fontWeight: 600 }}>
-          Renewals Campaign Tracking
+          {t('dashboard.campaigns.title')}
         </Typography >
 
         <Grid container spacing={3}>
@@ -3582,10 +3583,10 @@ const Dashboard = () => {
                   <Box>
                     <Typography variant="h6" gutterBottom fontWeight="600" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                       <CampaignIcon color="primary" />
-                      Active Renewal Campaigns
+                      {t('dashboard.campaigns.activeCampaigns')}
                     </Typography>
                     <Typography variant="body2" color="text.secondary">
-                      Real-time tracking of all renewal marketing campaigns
+                      {t('dashboard.campaigns.subtitle')}
                     </Typography>
                   </Box>
                 </Box>
@@ -3659,7 +3660,7 @@ const Dashboard = () => {
                               </Box>
                               <Box sx={{ display: 'flex', gap: 0.5 }}>
                                 {campaign.status === 'active' && (
-                                  <Tooltip title="Pause Campaign">
+                                  <Tooltip title={t('dashboard.campaigns.pause')}>
                                     <IconButton
                                       size="small"
                                       sx={{ color: theme.palette.warning.main }}
@@ -3670,7 +3671,7 @@ const Dashboard = () => {
                                   </Tooltip>
                                 )}
                                 {campaign.status === 'paused' && (
-                                  <Tooltip title="Resume Campaign">
+                                  <Tooltip title={t('dashboard.campaigns.resume')}>
                                     <IconButton
                                       size="small"
                                       sx={{ color: theme.palette.success.main }}
@@ -3680,7 +3681,7 @@ const Dashboard = () => {
                                     </IconButton>
                                   </Tooltip>
                                 )}
-                                <Tooltip title="View Details">
+                                <Tooltip title={t('dashboard.campaigns.viewDetails')}>
                                   <IconButton
                                     size="small"
                                     sx={{ color: theme.palette.primary.main }}
@@ -3702,7 +3703,7 @@ const Dashboard = () => {
                               <Grid container spacing={2}>
                                 <Grid item xs={6}>
                                   <Typography variant="body2" color="text.secondary">
-                                    Target
+                                    {t('dashboard.campaigns.target')}
                                   </Typography>
                                   <Typography variant="h6" sx={{ fontWeight: 600, fontSize: '1.1rem' }}>
                                     {campaign.targetCount}
@@ -3710,7 +3711,7 @@ const Dashboard = () => {
                                 </Grid>
                                 <Grid item xs={6}>
                                   <Typography variant="body2" color="primary.main">
-                                    Sent
+                                    {t('dashboard.campaigns.sent')}
                                   </Typography>
                                   <Typography variant="h6" sx={{ fontWeight: 600, color: 'primary.main', fontSize: '1.1rem' }}>
                                     {campaign.sent}
@@ -3721,7 +3722,7 @@ const Dashboard = () => {
                                   <>
                                     <Grid item xs={6}>
                                       <Typography variant="body2" color="success.main">
-                                        Open Rate
+                                        {t('dashboard.campaigns.openRate')}
                                       </Typography>
                                       <Typography variant="h6" sx={{ fontWeight: 600, color: 'success.main', fontSize: '1.1rem' }}>
                                         {campaign.openRate}%
@@ -3729,7 +3730,7 @@ const Dashboard = () => {
                                     </Grid>
                                     <Grid item xs={6}>
                                       <Typography variant="body2" color="warning.main">
-                                        Click Rate
+                                        {t('dashboard.campaigns.clickRate')}
                                       </Typography>
                                       <Typography variant="h6" sx={{ fontWeight: 600, color: 'warning.main', fontSize: '1.1rem' }}>
                                         {campaign.clickRate}%
@@ -3742,7 +3743,7 @@ const Dashboard = () => {
                                   <>
                                     <Grid item xs={6}>
                                       <Typography variant="body2" color="success.main">
-                                        Delivery Rate
+                                        {t('dashboard.campaigns.deliveryRate')}
                                       </Typography>
                                       <Typography variant="h6" sx={{ fontWeight: 600, color: 'success.main', fontSize: '1.1rem' }}>
                                         {campaign.deliveryRate}%
@@ -3750,7 +3751,7 @@ const Dashboard = () => {
                                     </Grid>
                                     <Grid item xs={6}>
                                       <Typography variant="body2" color="info.main">
-                                        Read Rate
+                                        {t('dashboard.campaigns.readRate')}
                                       </Typography>
                                       <Typography variant="h6" sx={{ fontWeight: 600, color: 'info.main', fontSize: '1.1rem' }}>
                                         {campaign.readRate}%
@@ -3763,7 +3764,7 @@ const Dashboard = () => {
                                   <>
                                     <Grid item xs={6}>
                                       <Typography variant="body2" color="success.main">
-                                        Delivery Rate
+                                        {t('dashboard.campaigns.deliveryRate')}
                                       </Typography>
                                       <Typography variant="h6" sx={{ fontWeight: 600, color: 'success.main', fontSize: '1.1rem' }}>
                                         {campaign.deliveryRate}%
@@ -3771,7 +3772,7 @@ const Dashboard = () => {
                                     </Grid>
                                     <Grid item xs={6}>
                                       <Typography variant="body2" color="warning.main">
-                                        Click Rate
+                                        {t('dashboard.campaigns.clickRate')}
                                       </Typography>
                                       <Typography variant="h6" sx={{ fontWeight: 600, color: 'warning.main', fontSize: '1.1rem' }}>
                                         {campaign.clickRate}%
@@ -3790,7 +3791,7 @@ const Dashboard = () => {
                                     borderTop: `1px solid ${theme.palette.divider}`
                                   }}>
                                     <Typography variant="body2" color="text.secondary">
-                                      Conversions
+                                      {t('dashboard.campaigns.conversions')}
                                     </Typography>
                                     <Box sx={{ textAlign: 'right' }}>
                                       <Typography variant="h6" sx={{ fontWeight: 600, color: 'error.main', fontSize: '1.1rem' }}>
@@ -3806,7 +3807,7 @@ const Dashboard = () => {
                             </Box>
 
                             <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 2 }}>
-                              Created: {new Date(campaign.createdAt).toLocaleDateString()}
+                              {t('dashboard.campaigns.created')}: {new Date(campaign.createdAt).toLocaleDateString()}
                             </Typography>
                           </CardContent>
                         </Card>

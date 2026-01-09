@@ -99,7 +99,15 @@ const DispositionConfigurator = () => {
       setDispDialog({
         open: true,
         mode: 'edit',
-        data: { ...disp }
+        data: {
+          ...disp,
+          autoActions: disp.autoActions || {
+            sendEmail: false,
+            sendSMS: false,
+            createTask: false,
+            notifyManager: false
+          }
+        }
       });
     } else {
       setDispDialog({
@@ -145,7 +153,7 @@ const DispositionConfigurator = () => {
     }));
   };
 
-  const handleSaveDisposition = () => {
+  const handleSaveDisposition = async () => {
     const { mode, data } = dispDialog;
 
     if (!data.name) {
@@ -154,13 +162,13 @@ const DispositionConfigurator = () => {
     }
 
     if (mode === 'add') {
-      const result = addDisposition(data);
+      const result = await addDisposition(data);
       if (result.success) {
         showSnackbar('Disposition added successfully');
         handleCloseDispDialog();
       }
     } else {
-      const result = updateDisposition(data.id, data);
+      const result = await updateDisposition(data.id, data);
       if (result.success) {
         showSnackbar('Disposition updated successfully');
         handleCloseDispDialog();
@@ -168,15 +176,15 @@ const DispositionConfigurator = () => {
     }
   };
 
-  const handleDeleteDisposition = (dispId) => {
-    const result = deleteDisposition(dispId);
+  const handleDeleteDisposition = async (dispId) => {
+    const result = await deleteDisposition(dispId);
     if (result.success) {
       showSnackbar('Disposition deleted successfully');
     }
   };
 
-  const handleToggleDisposition = (dispId) => {
-    toggleDisposition(dispId);
+  const handleToggleDisposition = async (dispId) => {
+    await toggleDisposition(dispId);
     showSnackbar('Disposition status updated');
   };
 
@@ -217,7 +225,7 @@ const DispositionConfigurator = () => {
     }));
   };
 
-  const handleSaveSubDisposition = () => {
+  const handleSaveSubDisposition = async () => {
     const { mode, parentId, data } = subDispDialog;
 
     if (!data.name) {
@@ -226,31 +234,31 @@ const DispositionConfigurator = () => {
     }
 
     if (mode === 'add') {
-      const result = addSubDisposition(parentId, data);
+      const result = await addSubDisposition(parentId, data);
       if (result.success) {
         showSnackbar('Sub-disposition added successfully');
         handleCloseSubDispDialog();
       }
-    } else {  
-      const result = updateSubDisposition(parentId, data.id, data);
-      if (result.success) {  
+    } else {
+      const result = await updateSubDisposition(parentId, data.id, data);
+      if (result.success) {
         showSnackbar('Sub-disposition updated successfully');
         handleCloseSubDispDialog();
       }
     }
   };
 
-  const handleDeleteSubDisposition = (dispId, subDispId) => {
+  const handleDeleteSubDisposition = async (dispId, subDispId) => {
     if (window.confirm('Are you sure you want to delete this sub-disposition?')) {
-      const result = deleteSubDisposition(dispId, subDispId);
+      const result = await deleteSubDisposition(dispId, subDispId);
       if (result.success) {
         showSnackbar('Sub-disposition deleted successfully');
       }
     }
   };
 
-  const handleToggleSubDisposition = (dispId, subDispId) => {
-    toggleSubDisposition(dispId, subDispId);
+  const handleToggleSubDisposition = async (dispId, subDispId) => {
+    await toggleSubDisposition(dispId, subDispId);
     showSnackbar('Sub-disposition status updated');
   };
 
@@ -471,16 +479,16 @@ const DispositionConfigurator = () => {
                       Auto Actions
                     </Typography>
                     <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
-                      {disp.autoActions.sendEmail && (
+                      {disp.autoActions?.sendEmail && (
                         <Chip icon={<EmailIcon />} label="Send Email" size="small" color="primary" />
                       )}
-                      {disp.autoActions.sendSMS && (
+                      {disp.autoActions?.sendSMS && (
                         <Chip icon={<SmsIcon />} label="Send SMS" size="small" color="primary" />
                       )}
-                      {disp.autoActions.createTask && (
+                      {disp.autoActions?.createTask && (
                         <Chip icon={<TaskIcon />} label="Create Task" size="small" color="primary" />
                       )}
-                      {disp.autoActions.notifyManager && (
+                      {disp.autoActions?.notifyManager && (
                         <Chip icon={<NotifyIcon />} label="Notify Manager" size="small" color="primary" />
                       )}
                     </Box>

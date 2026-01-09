@@ -27,6 +27,7 @@ import {
   Edit as EditIcon,
   Close as CloseIcon
 } from '@mui/icons-material';
+import caseLogService from '../services/caseLogService';
 
 
 const Logs = () => {
@@ -51,103 +52,25 @@ const Logs = () => {
 
   const handleSearch = useCallback(async () => {
     if (!searchQuery.trim()) return;
-    
+
     setLoading(true);
     setError(null);
     setSearched(true);
-    
+
     try {
-      // In a real app, this would call your API
-      // const logsData = await fetchLogs(searchType, searchQuery);
-      // setLogs(logsData);
-      
-      // Mock data for demonstration
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      if (searchType === 'caseId' && searchQuery === 'CASE-001') {
-        setLogs([
-          {
-            id: 'log-001',
-            timestamp: '2025-04-08T09:15:30',
-            action: 'Case Created',
-            details: 'Case uploaded via bulk upload',
-            user: 'System',
-            level: 'info'
-          },
-          {
-            id: 'log-002',
-            timestamp: '2025-04-08T09:15:35',
-            action: 'Validation',
-            details: 'All required fields present and valid',
-            user: 'System',
-            level: 'info'
-          },
-          {
-            id: 'log-003',
-            timestamp: '2025-04-08T10:30:12',
-            action: 'Assignment',
-            details: 'Case assigned to agent Priya Patel',
-            user: 'System',
-            level: 'info'
-          },
-          {
-            id: 'log-004',
-            timestamp: '2025-04-09T11:45:22',
-            action: 'Contact Update',
-            details: 'Customer phone number updated from 555-123-4567 to 555-123-9876',
-            user: 'Priya Patel',
-            level: 'warning'
-          },
-          {
-            id: 'log-005',
-            timestamp: '2025-04-09T14:20:05',
-            action: 'Processing',
-            details: 'Agent has begun renewal processing',
-            user: 'Priya Patel',
-            level: 'info'
-          },
-          {
-            id: 'log-006',
-            timestamp: '2025-04-10T09:05:18',
-            action: 'Comment Added',
-            details: 'Customer requested additional coverage options. Will follow up tomorrow.',
-            user: 'Priya Patel',
-            level: 'info'
-          }
-        ]);
-      } else if (searchType === 'policyNumber' && searchQuery === 'POL-12345') {
-        setLogs([
-          {
-            id: 'log-001',
-            timestamp: '2025-04-08T09:15:30',
-            action: 'Case Created',
-            details: 'Case uploaded via bulk upload',
-            user: 'System',
-            level: 'info'
-          },
-          {
-            id: 'log-002',
-            timestamp: '2025-04-08T09:15:35',
-            action: 'Validation',
-            details: 'All required fields present and valid',
-            user: 'System',
-            level: 'info'
-          },
-          {
-            id: 'log-003',
-            timestamp: '2025-04-08T10:30:12',
-            action: 'Assignment',
-            details: 'Case assigned to agent Priya Patel',
-            user: 'System',
-            level: 'info'
-          }
-        ]);
-      } else {
-        setLogs([]);
+      let data = [];
+      if (searchType === 'caseId') {
+        const response = await caseLogService.getLogsByCaseNumber(searchQuery);
+        data = Array.isArray(response) ? response : (response.results || response.data || []);
+      } else if (searchType === 'policyNumber') {
+        const response = await caseLogService.getLogsByPolicyNumber(searchQuery);
+        data = Array.isArray(response) ? response : (response.results || response.data || []);
       }
+      setLogs(data);
     } catch (err) {
-      setError('Failed to fetch logs. Please try again.');
+      setError('Failed to fetch logs. Please check your input and try again.');
       console.error(err);
+      setLogs([]);
     } finally {
       setLoading(false);
     }
@@ -215,17 +138,17 @@ const Logs = () => {
   return (
     <Fade in={true} timeout={800}>
       <Box sx={{ px: 1 }}>
-        <Box sx={{ 
-          display: 'flex', 
-          justifyContent: 'space-between', 
-          alignItems: 'center', 
+        <Box sx={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
           mb: 4
         }}>
           <Typography variant="h4" fontWeight="600">
             Case Logs
           </Typography>
         </Box>
-        
+
         <Grow in={loaded} timeout={400}>
           <Card sx={{ mb: 4, boxShadow: '0 8px 24px rgba(0,0,0,0.05)', borderRadius: 3 }}>
             <CardContent sx={{ p: 3 }}>
@@ -235,7 +158,7 @@ const Logs = () => {
               <Typography variant="body2" color="text.secondary" gutterBottom sx={{ mb: 3 }}>
                 Search for detailed logs by Case ID or Policy Number to view the complete activity history.
               </Typography>
-              
+
               <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
                 <FormControl sx={{ width: 150 }}>
                   <InputLabel>Search By</InputLabel>
@@ -250,7 +173,7 @@ const Logs = () => {
                     <MenuItem value="policyNumber">Policy Number</MenuItem>
                   </Select>
                 </FormControl>
-                
+
                 <TextField
                   placeholder={searchType === 'caseId' ? "Enter Case ID (e.g., CASE-001)" : "Enter Policy Number (e.g., POL-12345)"}
                   variant="outlined"
@@ -275,7 +198,7 @@ const Logs = () => {
                     }
                   }}
                 />
-                
+
                 <Button
                   variant="contained"
                   startIcon={<SearchIcon />}
@@ -290,13 +213,13 @@ const Logs = () => {
                   Search
                 </Button>
               </Box>
-              
+
               {loading && (
                 <Box sx={{ display: 'flex', justifyContent: 'center', my: 4 }}>
                   <CircularProgress />
                 </Box>
               )}
-              
+
               {error && (
                 <Grow in={!!error}>
                   <Alert severity="error" sx={{ mt: 2, borderRadius: 2 }}>
@@ -304,7 +227,7 @@ const Logs = () => {
                   </Alert>
                 </Grow>
               )}
-              
+
               {!loading && searched && logs.length === 0 && (
                 <Grow in={true}>
                   <Alert severity="info" sx={{ mt: 2, borderRadius: 2 }}>
@@ -315,7 +238,7 @@ const Logs = () => {
             </CardContent>
           </Card>
         </Grow>
-        
+
         {logs.length > 0 && (
           <Grow in={!loading} timeout={600}>
             <Card sx={{ boxShadow: '0 8px 24px rgba(0,0,0,0.05)', borderRadius: 3 }}>
@@ -324,7 +247,7 @@ const Logs = () => {
                   <Typography variant="h6" fontWeight="600">
                     Activity Log
                   </Typography>
-                  
+
                   <Chip
                     label={searchType === 'caseId' ? `Case ID: ${searchQuery}` : `Policy: ${searchQuery}`}
                     color="primary"
@@ -332,8 +255,8 @@ const Logs = () => {
                     sx={{ fontWeight: 500 }}
                   />
                 </Box>
-                
-                <List sx={{ 
+
+                <List sx={{
                   bgcolor: theme => theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.01)',
                   borderRadius: 2,
                   overflow: 'hidden'
@@ -341,9 +264,9 @@ const Logs = () => {
                   {logs.map((log, index) => (
                     <React.Fragment key={log.id}>
                       {index > 0 && <Divider sx={{ opacity: 0.5 }} />}
-                      <ListItem 
-                        alignItems="flex-start" 
-                        sx={{ 
+                      <ListItem
+                        alignItems="flex-start"
+                        sx={{
                           py: 2,
                           transition: 'background-color 0.2s',
                           '&:hover': {
@@ -358,12 +281,12 @@ const Logs = () => {
                                 <Typography variant="subtitle1" fontWeight="600">
                                   {log.action}
                                 </Typography>
-                                <Chip 
-                                  label={log.level} 
+                                <Chip
+                                  label={log.level}
                                   color={getLogLevelColor(log.level)}
                                   size="small"
                                   icon={getLogLevelIcon(log.level)}
-                                  sx={{ 
+                                  sx={{
                                     fontWeight: 500,
                                     boxShadow: '0 2px 5px rgba(0,0,0,0.08)'
                                   }}
@@ -376,17 +299,17 @@ const Logs = () => {
                           }
                           secondary={
                             <Box sx={{ mt: 1 }}>
-                              <Typography 
-                                variant="body2" 
+                              <Typography
+                                variant="body2"
                                 component="span"
-                                sx={{ 
+                                sx={{
                                   display: 'block',
                                   mb: 0.5
                                 }}
                               >
                                 {log.details}
                               </Typography>
-                              <Typography 
+                              <Typography
                                 variant="caption"
                                 color="text.secondary"
                                 sx={{
@@ -1010,8 +933,8 @@ const Logs = () => {
                         size="small"
                         color={
                           selectedMessage.status === 'Delivered' || selectedMessage.status === 'Read' ? 'success' :
-                          selectedMessage.status === 'Sent' ? 'primary' :
-                          'error'
+                            selectedMessage.status === 'Sent' ? 'primary' :
+                              'error'
                         }
                       />
                     </Box>

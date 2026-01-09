@@ -93,7 +93,8 @@ import {
   Error as ErrorIcon,
   PushPin as PushPinIcon,
   Star as StarIcon,
-  StarBorder as StarBorderIcon
+  StarBorder as StarBorderIcon,
+  Send as SendIcon
 } from '@mui/icons-material';
 import { analyzeEmail } from '../services/emailAI';
 
@@ -647,6 +648,9 @@ const LeadManagement = () => {
   const [loading, setLoading] = useState(false);
   const [anchorEl, setAnchorEl] = useState(null);
   const [selectedLead, setSelectedLead] = useState(null);
+  const [emailDialogOpen, setEmailDialogOpen] = useState(false);
+  const [emailLead, setEmailLead] = useState(null);
+  const [emailDraft, setEmailDraft] = useState({ to: '', subject: '', body: '' });
   const [bulkUploadOpen, setBulkUploadOpen] = useState(false);
   const [showUploadHistory, setShowUploadHistory] = useState(false);
   const [callDialogOpen, setCallDialogOpen] = useState(false);
@@ -979,19 +983,37 @@ const LeadManagement = () => {
   };
 
   const handleSendEmail = (lead) => {
-    (async () => {
-      try {
-        // Best-effort email analysis before send (non-blocking)
-        const sample = { from: 'agent@company.com', subject: `Regarding your interest`, body: `Hi ${lead.firstName},\n\nI wanted to follow up regarding your interest in our services.` };
-        const analysis = await analyzeEmail(sample).catch(() => null);
-        if (analysis) console.debug('Email AI analysis:', analysis);
-      } catch (e) {
-        console.error('Email analysis failed:', e);
-      } finally {
-        // This would integrate with your email system
-        setSnackbar({ open: true, message: `Email sent to ${lead.email}`, severity: 'success' });
-      }
-    })();
+    setEmailLead(lead);
+
+    // Format lead data for email body
+    const excludedKeys = ['id', 'scoreBreakdown', 'updatedAt', 'createdAt'];
+    const formattedData = Object.entries(lead)
+      .filter(([key, value]) => !excludedKeys.includes(key) && value !== null && value !== undefined && value !== '')
+      .map(([key, value]) => {
+        const label = key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase());
+        const displayValue = Array.isArray(value) ? value.join(', ') : (typeof value === 'object' ? JSON.stringify(value) : value.toString());
+        return `- ${label}: ${displayValue}`;
+      })
+      .join('\n');
+
+    setEmailDraft({
+      to: lead.email,
+      subject: `Lead Details: ${lead.firstName} ${lead.lastName}`,
+      body: `Hi,\n\nPlease find the details for this lead below:\n\n${formattedData}\n\nBest regards,\nCRM Team`
+    });
+    setEmailDialogOpen(true);
+  };
+
+  const handleSendEmailSubmit = () => {
+    setLoading(true);
+    // Simulate email sending API call
+    setTimeout(() => {
+      setLoading(false);
+      setEmailDialogOpen(false);
+      setSnackbar({ open: true, message: `Email sent successfully to ${emailDraft.to}`, severity: 'success' });
+      setEmailDraft({ to: '', subject: '', body: '' });
+      setEmailLead(null);
+    }, 1500);
   };
 
   // Auto-assign agent based on language matching with enhanced logic
@@ -2661,7 +2683,7 @@ const LeadManagement = () => {
             <ListItemIcon>
               <EmailIcon fontSize="small" />
             </ListItemIcon>
-            <ListItemText>{t('leads.table.actions.sendEmail')}</ListItemText>
+            <ListItemText>{t('leads.table.actions.sendEmail', 'Send Email')}</ListItemText>
           </MenuItem>
           <Divider />
           <MenuItem onClick={() => {
@@ -2671,7 +2693,7 @@ const LeadManagement = () => {
             <ListItemIcon>
               <ArchiveIcon fontSize="small" />
             </ListItemIcon>
-            <ListItemText>{t('leads.table.actions.archive')}</ListItemText>
+            <ListItemText>{t('leads.table.actions.archive', 'Archive')}</ListItemText>
           </MenuItem>
         </Menu>
 
@@ -3351,8 +3373,147 @@ const LeadManagement = () => {
             </Button>
           </DialogActions>
         </Dialog>
+
+        {/* Email Composition Dialog */}
+        <Dialog open={emailDialogOpen} onClose={() => { setEmailDialogOpen(false); setEmailLead(null); }} maxWidth="lg" fullWidth>
+          <DialogTitle>{t('leads.email.compose', 'Compose Email')}</DialogTitle>
+          <DialogContent dividers>
+            <Grid container spacing={3}>
+              <Grid item xs={12} md={7}>
+                <Box component="form" sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 1 }}>
+                  <TextField
+                    label={t('leads.email.to', 'To')}
+                    value={emailDraft.to}
+                    fullWidth
+                    InputProps={{
+                      readOnly: true,
+                      startAdornment: (
+                        <InputAdornment position="start">
+                          <EmailIcon color="action" />
+                        </InputAdornment>
+                      ),
+                    }}
+                    variant="outlined"
+                  />
+                  <TextField
+                    label={t('leads.email.subject', 'Subject')}
+                    value={emailDraft.subject}
+                    onChange={(e) => setEmailDraft({ ...emailDraft, subject: e.target.value })}
+                    fullWidth
+                    variant="outlined"
+                  />
+                  <TextField
+                    label={t('leads.email.body', 'Message')}
+                    value={emailDraft.body}
+                    onChange={(e) => setEmailDraft({ ...emailDraft, body: e.target.value })}
+                    multiline
+                    rows={12}
+                    fullWidth
+                    variant="outlined"
+                  />
+                </Box>
+              </Grid>
+              <Grid item xs={12} md={5}>
+                <Typography variant="subtitle1" fontWeight="600" gutterBottom>
+                  Lead Details
+                </Typography>
+                {emailLead && (
+                  <Card variant="outlined" sx={{ height: '100%', bgcolor: alpha(theme.palette.background.default, 0.5) }}>
+                    <CardContent sx={{ height: '100%', overflowY: 'auto', maxHeight: '500px' }}>
+                      <Stack spacing={2}>
+                        <Box>
+                          <Typography variant="caption" color="text.secondary">Name</Typography>
+                          <Typography variant="body2" fontWeight="500">{emailLead.firstName} {emailLead.lastName}</Typography>
+                        </Box>
+                        <Box>
+                          <Typography variant="caption" color="text.secondary">Company</Typography>
+                          <Typography variant="body2">{emailLead.company || 'N/A'}</Typography>
+                        </Box>
+                        <Box>
+                          <Typography variant="caption" color="text.secondary">Position</Typography>
+                          <Typography variant="body2">{emailLead.position || 'N/A'}</Typography>
+                        </Box>
+                        <Box>
+                          <Typography variant="caption" color="text.secondary">Phone</Typography>
+                          <Typography variant="body2">{emailLead.phone}</Typography>
+                        </Box>
+                        <Box>
+                          <Typography variant="caption" color="text.secondary">Status</Typography>
+                          <Chip
+                            label={t(`leads.statuses.${emailLead.status}`, emailLead.status)}
+                            size="small"
+                            sx={{
+                              mt: 0.5,
+                              backgroundColor: alpha(getStatusColor(emailLead.status), 0.1),
+                              color: getStatusColor(emailLead.status),
+                              border: `1px solid ${alpha(getStatusColor(emailLead.status), 0.3)}`
+                            }}
+                          />
+                        </Box>
+                        <Box>
+                          <Typography variant="caption" color="text.secondary">Lead Type</Typography>
+                          <Chip
+                            label={t(`leads.types.${emailLead.leadType}`, emailLead.leadType)}
+                            size="small"
+                            sx={{
+                              mt: 0.5,
+                              backgroundColor: alpha(getLeadTypeBadgeColor(emailLead.leadType), 0.2),
+                              color: emailLead.leadType === 'Premium' ? '#B8860B' : theme.palette.primary.main,
+                              border: `1px solid ${getLeadTypeBadgeColor(emailLead.leadType)}`,
+                            }}
+                          />
+                        </Box>
+                        <Box>
+                          <Typography variant="caption" color="text.secondary">Priority</Typography>
+                          <PriorityIndicator priority={normalizePriority(emailLead.priority)} compact={true} />
+                        </Box>
+                        <Box>
+                          <Typography variant="caption" color="text.secondary">Score</Typography>
+                          <Typography variant="body2">{emailLead.score || calculateLeadScore(emailLead)}</Typography>
+                        </Box>
+                        {emailLead.vehicleRegistrationNumber && (
+                          <Box>
+                            <Typography variant="caption" color="text.secondary">Vehicle Reg.</Typography>
+                            <Typography variant="body2">{emailLead.vehicleRegistrationNumber}</Typography>
+                          </Box>
+                        )}
+                        <Box>
+                          <Typography variant="caption" color="text.secondary">Assigned To</Typography>
+                          <Typography variant="body2">{emailLead.assignedTo || 'Unassigned'}</Typography>
+                        </Box>
+                        <Box>
+                          <Typography variant="caption" color="text.secondary">Last Contact</Typography>
+                          <Typography variant="body2">{emailLead.lastContactDate || 'Never'}</Typography>
+                        </Box>
+                      </Stack>
+                    </CardContent>
+                  </Card>
+                )}
+              </Grid>
+            </Grid>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => { setEmailDialogOpen(false); setEmailLead(null); }} disabled={loading}>
+              {t('common.cancel', 'Cancel')}
+            </Button>
+            <Button
+              onClick={handleSendEmailSubmit}
+              variant="contained"
+              endIcon={loading ? <CircularProgress size={20} color="inherit" /> : <SendIcon />}
+              disabled={loading}
+              sx={{
+                background: 'linear-gradient(135deg, #1976d2 0%, #1565c0 100%)',
+                '&:hover': {
+                  background: 'linear-gradient(135deg, #1565c0 0%, #0d47a1 100%)',
+                }
+              }}
+            >
+              {loading ? t('common.sending', 'Sending...') : t('common.send', 'Send')}
+            </Button>
+          </DialogActions>
+        </Dialog>
       </Box>
-    </LocalizationProvider>
+    </LocalizationProvider >
   );
 };
 

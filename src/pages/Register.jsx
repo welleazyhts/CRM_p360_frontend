@@ -4,7 +4,7 @@ import {
   CircularProgress, Alert, Container,
   Card, CardContent, InputAdornment, IconButton,
   alpha, useTheme, Fade, Grow, Stepper, Step, StepLabel,
-  Paper, Grid
+  Paper, Grid, MenuItem
 } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -259,6 +259,7 @@ const Register = () => {
             <Grid container spacing={2}>
               <Grid item xs={12}>
                 <TextField
+                  select
                   label="Department"
                   fullWidth
                   variant="outlined"
@@ -275,7 +276,23 @@ const Register = () => {
                     ),
                   }}
                   sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 } }}
-                />
+                >
+                  {[
+                    { value: 'claims', label: 'Claims Processing' },
+                    { value: 'underwriting', label: 'Underwriting' },
+                    { value: 'customer_service', label: 'Customer Service' },
+                    { value: 'sales', label: 'Sales & Marketing' },
+                    { value: 'it', label: 'Information Technology' },
+                    { value: 'finance', label: 'Finance & Accounting' },
+                    { value: 'legal', label: 'Legal & Compliance' },
+                    { value: 'management', label: 'Management' },
+                    { value: 'other', label: 'Other' }
+                  ].map((option) => (
+                    <MenuItem key={option.value} value={option.value}>
+                      {option.label}
+                    </MenuItem>
+                  ))}
+                </TextField>
               </Grid>
               <Grid item xs={12} sm={6}>
                 <TextField

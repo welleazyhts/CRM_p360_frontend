@@ -32,7 +32,8 @@ import {
   Alert,
   LinearProgress,
   Switch,
-  FormControlLabel
+  FormControlLabel,
+  Snackbar
 } from '@mui/material';
 import {
   Add as AddIcon,
@@ -51,6 +52,8 @@ import {
   EventNote as EventIcon,
   Refresh as RefreshIcon
 } from '@mui/icons-material';
+import { useTranslation } from 'react-i18next';
+import { remainderService } from '../services/remainderService';
 
 // Reminder Types
 const REMINDER_TYPES = {
@@ -80,7 +83,15 @@ const REMINDER_STATUS = {
 };
 
 const ReminderManagement = () => {
+  const { t } = useTranslation();
   const [reminders, setReminders] = useState([]);
+  const [stats, setStats] = useState({
+    total: 0,
+    pending: 0,
+    overdue: 0,
+    completed: 0,
+    today: 0
+  });
   const [loading, setLoading] = useState(false);
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
@@ -89,6 +100,7 @@ const ReminderManagement = () => {
   const [createDialog, setCreateDialog] = useState(false);
   const [editDialog, setEditDialog] = useState(false);
   const [selectedReminder, setSelectedReminder] = useState(null);
+  const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
 
   // New reminder form
   const [newReminder, setNewReminder] = useState({
@@ -111,120 +123,68 @@ const ReminderManagement = () => {
   });
 
   useEffect(() => {
-    loadReminders();
+    loadData();
   }, []);
 
-  const loadReminders = () => {
+  const loadData = async () => {
     setLoading(true);
-    // Mock data
-    const mockReminders = [
-      {
-        id: 'REM-001',
-        title: 'Follow-up call with Rajesh Kumar',
-        description: 'Discuss premium quote and answer queries',
-        type: REMINDER_TYPES.CALL,
-        priority: REMINDER_PRIORITY.HIGH,
-        status: REMINDER_STATUS.OVERDUE,
-        dueDate: '2025-01-17T10:00:00',
-        leadId: 'LEAD-001',
-        leadName: 'Rajesh Kumar',
-        createdBy: 'Agent A',
-        recurring: false,
-        notifyVia: ['email', 'in_app']
-      },
-      {
-        id: 'REM-002',
-        title: 'Send quote to Priya Sharma',
-        description: 'Two-wheeler comprehensive insurance quote',
-        type: REMINDER_TYPES.QUOTE,
-        priority: REMINDER_PRIORITY.MEDIUM,
-        status: REMINDER_STATUS.PENDING,
-        dueDate: '2025-01-19T14:00:00',
-        leadId: 'LEAD-002',
-        leadName: 'Priya Sharma',
-        createdBy: 'Agent B',
-        recurring: false,
-        notifyVia: ['in_app']
-      },
-      {
-        id: 'REM-003',
-        title: 'Collect RC copy from Amit Patel',
-        description: 'Required for policy issuance',
-        type: REMINDER_TYPES.DOCUMENT,
-        priority: REMINDER_PRIORITY.HIGH,
-        status: REMINDER_STATUS.PENDING,
-        dueDate: '2025-01-18T16:30:00',
-        leadId: 'LEAD-003',
-        leadName: 'Amit Patel',
-        createdBy: 'Agent A',
-        recurring: false,
-        notifyVia: ['whatsapp', 'in_app']
-      },
-      {
-        id: 'REM-004',
-        title: 'Payment follow-up - Sneha Reddy',
-        description: 'Policy pending due to payment',
-        type: REMINDER_TYPES.PAYMENT,
-        priority: REMINDER_PRIORITY.HIGH,
-        status: REMINDER_STATUS.SNOOZED,
-        dueDate: '2025-01-20T11:00:00',
-        snoozedUntil: '2025-01-19T09:00:00',
-        leadId: 'LEAD-004',
-        leadName: 'Sneha Reddy',
-        createdBy: 'Agent C',
-        recurring: false,
-        notifyVia: ['sms', 'email', 'in_app']
-      },
-      {
-        id: 'REM-005',
-        title: 'Policy renewal reminder - Vikram Singh',
-        description: 'Policy expiring in 15 days',
-        type: REMINDER_TYPES.RENEWAL,
-        priority: REMINDER_PRIORITY.MEDIUM,
-        status: REMINDER_STATUS.PENDING,
-        dueDate: '2025-01-25T09:00:00',
-        leadId: 'LEAD-005',
-        leadName: 'Vikram Singh',
-        createdBy: 'System',
-        recurring: true,
-        recurringInterval: 'weekly',
-        notifyVia: ['email', 'whatsapp', 'in_app']
-      },
-      {
-        id: 'REM-006',
-        title: 'Follow-up completed - Maria Garcia',
-        description: 'Successfully converted to customer',
-        type: REMINDER_TYPES.FOLLOW_UP,
-        priority: REMINDER_PRIORITY.LOW,
-        status: REMINDER_STATUS.COMPLETED,
-        dueDate: '2025-01-15T14:00:00',
-        completedAt: '2025-01-15T14:30:00',
-        leadId: 'LEAD-006',
-        leadName: 'Maria Garcia',
-        createdBy: 'Agent B',
-        recurring: false,
-        notifyVia: ['in_app']
-      }
-    ];
+    try {
+      const [remindersData, statsData] = await Promise.all([
+        remainderService.list(),
+        remainderService.getDashboardStats()
+      ]);
 
-    setReminders(mockReminders);
-    setLoading(false);
+      setReminders(Array.isArray(remindersData) ? remindersData : []);
+
+      // Calculate stats from the fetched reminders to ensure consistency
+      const items = Array.isArray(remindersData) ? remindersData : [];
+      setStats({
+        total: items.length,
+        pending: items.filter(r => (r.status || 'pending').toLowerCase() === 'pending').length,
+        overdue: items.filter(r => (r.status || '').toLowerCase() === 'overdue').length,
+        completed: items.filter(r => (r.status || '').toLowerCase() === 'completed').length,
+        today: items.filter(r => {
+          if (!r.due_date) return false;
+          return new Date(r.due_date).toDateString() === new Date().toDateString();
+        }).length
+      });
+
+    } catch (error) {
+      console.error('Failed to load reminders:', error);
+      setSnackbar({ open: true, message: 'Failed to load reminders', severity: 'error' });
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleCreateReminder = () => {
-    const reminder = {
-      id: `REM-${Date.now()}`,
-      ...newReminder,
-      status: REMINDER_STATUS.PENDING,
-      dueDate: `${newReminder.dueDate}T${newReminder.dueTime}:00`,
-      createdBy: 'Current User',
-      createdAt: new Date().toISOString(),
-      notifyVia: Object.keys(newReminder.notifyVia).filter(key => newReminder.notifyVia[key])
-    };
+  const handleCreateReminder = async () => {
+    try {
+      const payload = {
+        title: newReminder.title,
+        description: newReminder.description,
+        remainder_type: newReminder.type,
+        priority: newReminder.priority,
+        status: 'pending',
+        lead_id: newReminder.leadId,
+        lead_name: newReminder.leadName,
+        due_date: newReminder.dueDate,
+        due_time: newReminder.dueTime ? (newReminder.dueTime.length === 5 ? newReminder.dueTime + ':00' : newReminder.dueTime) : null,
+        notify_email: newReminder.notifyVia.email,
+        notify_sms: newReminder.notifyVia.sms,
+        notify_whatsapp: newReminder.notifyVia.whatsapp,
+        notify_in_app: newReminder.notifyVia.inApp,
+        is_recurring: newReminder.recurring
+      };
 
-    setReminders([...reminders, reminder]);
-    setCreateDialog(false);
-    resetForm();
+      await remainderService.create(payload);
+      setSnackbar({ open: true, message: 'Reminder created successfully', severity: 'success' });
+      setCreateDialog(false);
+      resetForm();
+      loadData();
+    } catch (error) {
+      console.error('Create failed:', error);
+      setSnackbar({ open: true, message: 'Failed to create reminder', severity: 'error' });
+    }
   };
 
   const resetForm = () => {
@@ -248,26 +208,38 @@ const ReminderManagement = () => {
     });
   };
 
-  const handleCompleteReminder = (id) => {
-    setReminders(reminders.map(r =>
-      r.id === id
-        ? { ...r, status: REMINDER_STATUS.COMPLETED, completedAt: new Date().toISOString() }
-        : r
-    ));
+  const handleCompleteReminder = async (id) => {
+    try {
+      await remainderService.complete(id);
+      setSnackbar({ open: true, message: 'Reminder marked as completed', severity: 'success' });
+      loadData();
+    } catch (error) {
+      console.error('Complete failed', error);
+      setSnackbar({ open: true, message: 'Failed to complete reminder', severity: 'error' });
+    }
   };
 
-  const handleSnoozeReminder = (id, hours = 2) => {
-    const snoozedUntil = new Date(Date.now() + hours * 60 * 60 * 1000).toISOString();
-    setReminders(reminders.map(r =>
-      r.id === id
-        ? { ...r, status: REMINDER_STATUS.SNOOZED, snoozedUntil }
-        : r
-    ));
+  const handleSnoozeReminder = async (id) => {
+    try {
+      await remainderService.snooze(id);
+      setSnackbar({ open: true, message: 'Reminder snoozed', severity: 'success' });
+      loadData();
+    } catch (error) {
+      console.error('Snooze failed', error);
+      setSnackbar({ open: true, message: 'Failed to snooze reminder', severity: 'error' });
+    }
   };
 
-  const handleDeleteReminder = (id) => {
-    if (window.confirm('Are you sure you want to delete this reminder?')) {
-      setReminders(reminders.filter(r => r.id !== id));
+  const handleDeleteReminder = async (id) => {
+    if (window.confirm(t('reminders.dialogs.deleteConfirm'))) {
+      try {
+        await remainderService.delete(id);
+        setSnackbar({ open: true, message: 'Reminder deleted', severity: 'success' });
+        loadData();
+      } catch (error) {
+        console.error('Delete failed', error);
+        setSnackbar({ open: true, message: 'Failed to delete reminder', severity: 'error' });
+      }
     }
   };
 
@@ -305,34 +277,25 @@ const ReminderManagement = () => {
   };
 
   const filteredReminders = reminders.filter(reminder => {
-    const matchesSearch = reminder.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      reminder.leadName.toLowerCase().includes(searchTerm.toLowerCase());
+    const title = reminder.title || '';
+    const leadName = reminder.lead_name || reminder.leadName || '';
+    const matchesSearch = title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      leadName.toLowerCase().includes(searchTerm.toLowerCase());
 
+    const status = (reminder.status || 'pending').toLowerCase();
     let matchesTab = true;
-    if (tabValue === 1) matchesTab = reminder.status === REMINDER_STATUS.PENDING;
-    if (tabValue === 2) matchesTab = reminder.status === REMINDER_STATUS.OVERDUE;
-    if (tabValue === 3) matchesTab = reminder.status === REMINDER_STATUS.COMPLETED;
+    if (tabValue === 1) matchesTab = status === REMINDER_STATUS.PENDING.toLowerCase();
+    if (tabValue === 2) matchesTab = status === REMINDER_STATUS.OVERDUE.toLowerCase();
+    if (tabValue === 3) matchesTab = status === REMINDER_STATUS.COMPLETED.toLowerCase();
 
     return matchesSearch && matchesTab;
   });
-
-  const stats = {
-    total: reminders.length,
-    pending: reminders.filter(r => r.status === REMINDER_STATUS.PENDING).length,
-    overdue: reminders.filter(r => r.status === REMINDER_STATUS.OVERDUE).length,
-    completed: reminders.filter(r => r.status === REMINDER_STATUS.COMPLETED).length,
-    today: reminders.filter(r => {
-      const dueDate = new Date(r.dueDate);
-      const today = new Date();
-      return dueDate.toDateString() === today.toDateString();
-    }).length
-  };
 
   const handleSendNotification = (reminder, channel) => {
     // In a real app, this would call an API
     const message = `Sending ${channel} notification for reminder: ${reminder.title}`;
     console.log(message);
-    alert(message + "\n\n(Notification sent successfully!)");
+    setSnackbar({ open: true, message: t('reminders.dialogs.msgSent'), severity: 'success' });
   };
 
   return (
@@ -341,27 +304,27 @@ const ReminderManagement = () => {
       <Box mb={4} display="flex" justifyContent="space-between" alignItems="center">
         <Box>
           <Typography variant="h4" gutterBottom>
-            Reminder Management
+            {t('reminders.title')}
           </Typography>
           <Typography variant="body1" color="text.secondary">
-            Manage and track all your follow-up reminders
+            {t('reminders.subtitle')}
           </Typography>
         </Box>
         <Box>
           <Button
             variant="outlined"
             startIcon={<RefreshIcon />}
-            onClick={loadReminders}
+            onClick={loadData}
             sx={{ mr: 1 }}
           >
-            Refresh
+            {t('reminders.buttons.refresh')}
           </Button>
           <Button
             variant="contained"
             startIcon={<AddIcon />}
             onClick={() => setCreateDialog(true)}
           >
-            Create Reminder
+            {t('reminders.buttons.create')}
           </Button>
         </Box>
       </Box>
@@ -372,7 +335,7 @@ const ReminderManagement = () => {
           <Card>
             <CardContent>
               <Typography color="text.secondary" variant="body2" gutterBottom>
-                Total Reminders
+                {t('reminders.stats.total')}
               </Typography>
               <Typography variant="h4">{stats.total}</Typography>
             </CardContent>
@@ -382,7 +345,7 @@ const ReminderManagement = () => {
           <Card>
             <CardContent>
               <Typography color="text.secondary" variant="body2" gutterBottom>
-                Pending
+                {t('reminders.stats.pending')}
               </Typography>
               <Typography variant="h4" color="primary">{stats.pending}</Typography>
             </CardContent>
@@ -392,7 +355,7 @@ const ReminderManagement = () => {
           <Card>
             <CardContent>
               <Typography color="text.secondary" variant="body2" gutterBottom>
-                Overdue
+                {t('reminders.stats.overdue')}
               </Typography>
               <Typography variant="h4" color="error">{stats.overdue}</Typography>
             </CardContent>
@@ -402,7 +365,7 @@ const ReminderManagement = () => {
           <Card>
             <CardContent>
               <Typography color="text.secondary" variant="body2" gutterBottom>
-                Due Today
+                {t('reminders.stats.dueToday')}
               </Typography>
               <Typography variant="h4" color="warning.main">{stats.today}</Typography>
             </CardContent>
@@ -416,7 +379,7 @@ const ReminderManagement = () => {
           <TextField
             fullWidth
             size="small"
-            placeholder="Search reminders by title or lead name..."
+            placeholder={t('reminders.filters.searchPlaceholder')}
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             InputProps={{
@@ -433,10 +396,10 @@ const ReminderManagement = () => {
       {/* Reminders Table */}
       <Card>
         <Tabs value={tabValue} onChange={(e, v) => setTabValue(v)} sx={{ borderBottom: 1, borderColor: 'divider' }}>
-          <Tab label={`All (${stats.total})`} />
-          <Tab label={`Pending (${stats.pending})`} />
-          <Tab label={`Overdue (${stats.overdue})`} />
-          <Tab label={`Completed (${stats.completed})`} />
+          <Tab label={`${t('reminders.tabs.all')} (${stats.total})`} />
+          <Tab label={`${t('reminders.tabs.pending')} (${stats.pending})`} />
+          <Tab label={`${t('reminders.tabs.overdue')} (${stats.overdue})`} />
+          <Tab label={`${t('reminders.tabs.completed')} (${stats.completed})`} />
         </Tabs>
 
         <CardContent>
@@ -446,14 +409,14 @@ const ReminderManagement = () => {
             <Table>
               <TableHead>
                 <TableRow>
-                  <TableCell>Type</TableCell>
-                  <TableCell>Title</TableCell>
-                  <TableCell>Lead</TableCell>
-                  <TableCell>Due Date</TableCell>
-                  <TableCell>Priority</TableCell>
-                  <TableCell>Status</TableCell>
-                  <TableCell>Notify Via</TableCell>
-                  <TableCell>Actions</TableCell>
+                  <TableCell>{t('reminders.table.type')}</TableCell>
+                  <TableCell>{t('reminders.table.title')}</TableCell>
+                  <TableCell>{t('reminders.table.lead')}</TableCell>
+                  <TableCell>{t('reminders.table.dueDate')}</TableCell>
+                  <TableCell>{t('reminders.table.priority')}</TableCell>
+                  <TableCell>{t('reminders.table.status')}</TableCell>
+                  <TableCell>{t('reminders.table.notifyVia')}</TableCell>
+                  <TableCell>{t('reminders.table.actions')}</TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
@@ -462,9 +425,9 @@ const ReminderManagement = () => {
                   .map((reminder) => (
                     <TableRow key={reminder.id} hover>
                       <TableCell>
-                        <Tooltip title={reminder.type}>
+                        <Tooltip title={t(`reminders.types.${reminder.remainder_type || reminder.type}`)}>
                           <IconButton size="small">
-                            {getTypeIcon(reminder.type)}
+                            {getTypeIcon(reminder.remainder_type || reminder.type)}
                           </IconButton>
                         </Tooltip>
                       </TableCell>
@@ -477,37 +440,37 @@ const ReminderManagement = () => {
                         </Typography>
                       </TableCell>
                       <TableCell>
-                        <Typography variant="body2">{reminder.leadName}</Typography>
+                        <Typography variant="body2">{reminder.lead_name || reminder.leadName}</Typography>
                         <Typography variant="caption" color="text.secondary">
-                          {reminder.leadId}
+                          {reminder.lead_id || reminder.leadId}
                         </Typography>
                       </TableCell>
                       <TableCell>
                         <Typography variant="body2">
-                          {new Date(reminder.dueDate).toLocaleDateString()}
+                          {reminder.due_date ? new Date(reminder.due_date).toLocaleDateString() : 'N/A'}
                         </Typography>
                         <Typography variant="caption" color="text.secondary">
-                          {new Date(reminder.dueDate).toLocaleTimeString()}
+                          {reminder.due_time || ''}
                         </Typography>
                       </TableCell>
                       <TableCell>
                         <Chip
-                          label={reminder.priority}
+                          label={t(`reminders.priorities.${reminder.priority}`)}
                           size="small"
                           color={getPriorityColor(reminder.priority)}
                         />
                       </TableCell>
                       <TableCell>
                         <Chip
-                          label={reminder.status}
+                          label={t(`reminders.status.${reminder.status}`)}
                           size="small"
                           color={getStatusColor(reminder.status)}
                         />
                       </TableCell>
                       <TableCell>
                         <Box display="flex" gap={0.5}>
-                          {reminder.notifyVia.includes('email') && (
-                            <Tooltip title="Send via Email">
+                          {(reminder.notify_email || (Array.isArray(reminder.notifyVia) && reminder.notifyVia.includes('email'))) && (
+                            <Tooltip title={t('reminders.buttons.sendEmail')}>
                               <IconButton
                                 size="small"
                                 onClick={() => handleSendNotification(reminder, 'Email')}
@@ -516,8 +479,8 @@ const ReminderManagement = () => {
                               </IconButton>
                             </Tooltip>
                           )}
-                          {reminder.notifyVia.includes('sms') && (
-                            <Tooltip title="Send via SMS">
+                          {(reminder.notify_sms || (Array.isArray(reminder.notifyVia) && reminder.notifyVia.includes('sms'))) && (
+                            <Tooltip title={t('reminders.buttons.sendSMS')}>
                               <IconButton
                                 size="small"
                                 onClick={() => handleSendNotification(reminder, 'SMS')}
@@ -526,8 +489,8 @@ const ReminderManagement = () => {
                               </IconButton>
                             </Tooltip>
                           )}
-                          {reminder.notifyVia.includes('whatsapp') && (
-                            <Tooltip title="Send via WhatsApp">
+                          {(reminder.notify_whatsapp || (Array.isArray(reminder.notifyVia) && reminder.notifyVia.includes('whatsapp'))) && (
+                            <Tooltip title={t('reminders.buttons.sendWhatsapp')}>
                               <IconButton
                                 size="small"
                                 onClick={() => handleSendNotification(reminder, 'WhatsApp')}
@@ -542,7 +505,7 @@ const ReminderManagement = () => {
                         <Box display="flex" gap={0.5}>
                           {reminder.status !== REMINDER_STATUS.COMPLETED && (
                             <>
-                              <Tooltip title="Complete">
+                              <Tooltip title={t('reminders.buttons.complete')}>
                                 <IconButton
                                   size="small"
                                   color="success"
@@ -551,18 +514,18 @@ const ReminderManagement = () => {
                                   <CompleteIcon fontSize="small" />
                                 </IconButton>
                               </Tooltip>
-                              <Tooltip title="Snooze 2h">
+                              <Tooltip title={t('reminders.buttons.snooze')}>
                                 <IconButton
                                   size="small"
                                   color="warning"
-                                  onClick={() => handleSnoozeReminder(reminder.id, 2)}
+                                  onClick={() => handleSnoozeReminder(reminder.id)}
                                 >
                                   <SnoozeIcon fontSize="small" />
                                 </IconButton>
                               </Tooltip>
                             </>
                           )}
-                          <Tooltip title="Delete">
+                          <Tooltip title={t('reminders.buttons.delete')}>
                             <IconButton
                               size="small"
                               color="error"
@@ -596,13 +559,13 @@ const ReminderManagement = () => {
 
       {/* Create Reminder Dialog */}
       <Dialog open={createDialog} onClose={() => setCreateDialog(false)} maxWidth="md" fullWidth>
-        <DialogTitle>Create New Reminder</DialogTitle>
+        <DialogTitle>{t('reminders.dialogs.createTitle')}</DialogTitle>
         <DialogContent>
           <Grid container spacing={2} sx={{ mt: 1 }}>
             <Grid item xs={12}>
               <TextField
                 fullWidth
-                label="Title"
+                label={t('reminders.form.title')}
                 value={newReminder.title}
                 onChange={(e) => setNewReminder({ ...newReminder, title: e.target.value })}
                 required
@@ -611,7 +574,7 @@ const ReminderManagement = () => {
             <Grid item xs={12}>
               <TextField
                 fullWidth
-                label="Description"
+                label={t('reminders.form.description')}
                 value={newReminder.description}
                 onChange={(e) => setNewReminder({ ...newReminder, description: e.target.value })}
                 multiline
@@ -620,40 +583,40 @@ const ReminderManagement = () => {
             </Grid>
             <Grid item xs={12} md={6}>
               <FormControl fullWidth>
-                <InputLabel>Type</InputLabel>
+                <InputLabel>{t('reminders.form.type')}</InputLabel>
                 <Select
                   value={newReminder.type}
-                  label="Type"
+                  label={t('reminders.form.type')}
                   onChange={(e) => setNewReminder({ ...newReminder, type: e.target.value })}
                 >
-                  <MenuItem value={REMINDER_TYPES.CALL}>Call</MenuItem>
-                  <MenuItem value={REMINDER_TYPES.FOLLOW_UP}>Follow-up</MenuItem>
-                  <MenuItem value={REMINDER_TYPES.QUOTE}>Quote</MenuItem>
-                  <MenuItem value={REMINDER_TYPES.DOCUMENT}>Document</MenuItem>
-                  <MenuItem value={REMINDER_TYPES.PAYMENT}>Payment</MenuItem>
-                  <MenuItem value={REMINDER_TYPES.RENEWAL}>Renewal</MenuItem>
-                  <MenuItem value={REMINDER_TYPES.CUSTOM}>Custom</MenuItem>
+                  <MenuItem value={REMINDER_TYPES.CALL}>{t('reminders.types.call')}</MenuItem>
+                  <MenuItem value={REMINDER_TYPES.FOLLOW_UP}>{t('reminders.types.follow_up')}</MenuItem>
+                  <MenuItem value={REMINDER_TYPES.QUOTE}>{t('reminders.types.quote')}</MenuItem>
+                  <MenuItem value={REMINDER_TYPES.DOCUMENT}>{t('reminders.types.document')}</MenuItem>
+                  <MenuItem value={REMINDER_TYPES.PAYMENT}>{t('reminders.types.payment')}</MenuItem>
+                  <MenuItem value={REMINDER_TYPES.RENEWAL}>{t('reminders.types.renewal')}</MenuItem>
+                  <MenuItem value={REMINDER_TYPES.CUSTOM}>{t('reminders.types.custom')}</MenuItem>
                 </Select>
               </FormControl>
             </Grid>
             <Grid item xs={12} md={6}>
               <FormControl fullWidth>
-                <InputLabel>Priority</InputLabel>
+                <InputLabel>{t('reminders.form.priority')}</InputLabel>
                 <Select
                   value={newReminder.priority}
-                  label="Priority"
+                  label={t('reminders.form.priority')}
                   onChange={(e) => setNewReminder({ ...newReminder, priority: e.target.value })}
                 >
-                  <MenuItem value={REMINDER_PRIORITY.HIGH}>High</MenuItem>
-                  <MenuItem value={REMINDER_PRIORITY.MEDIUM}>Medium</MenuItem>
-                  <MenuItem value={REMINDER_PRIORITY.LOW}>Low</MenuItem>
+                  <MenuItem value={REMINDER_PRIORITY.HIGH}>{t('reminders.priorities.high')}</MenuItem>
+                  <MenuItem value={REMINDER_PRIORITY.MEDIUM}>{t('reminders.priorities.medium')}</MenuItem>
+                  <MenuItem value={REMINDER_PRIORITY.LOW}>{t('reminders.priorities.low')}</MenuItem>
                 </Select>
               </FormControl>
             </Grid>
             <Grid item xs={12} md={6}>
               <TextField
                 fullWidth
-                label="Lead ID"
+                label={t('reminders.form.leadId')}
                 value={newReminder.leadId}
                 onChange={(e) => setNewReminder({ ...newReminder, leadId: e.target.value })}
               />
@@ -661,7 +624,7 @@ const ReminderManagement = () => {
             <Grid item xs={12} md={6}>
               <TextField
                 fullWidth
-                label="Lead Name"
+                label={t('reminders.form.leadName')}
                 value={newReminder.leadName}
                 onChange={(e) => setNewReminder({ ...newReminder, leadName: e.target.value })}
               />
@@ -669,7 +632,7 @@ const ReminderManagement = () => {
             <Grid item xs={12} md={6}>
               <TextField
                 fullWidth
-                label="Due Date"
+                label={t('reminders.form.dueDate')}
                 type="date"
                 value={newReminder.dueDate}
                 onChange={(e) => setNewReminder({ ...newReminder, dueDate: e.target.value })}
@@ -680,7 +643,7 @@ const ReminderManagement = () => {
             <Grid item xs={12} md={6}>
               <TextField
                 fullWidth
-                label="Due Time"
+                label={t('reminders.form.dueTime')}
                 type="time"
                 value={newReminder.dueTime}
                 onChange={(e) => setNewReminder({ ...newReminder, dueTime: e.target.value })}
@@ -689,7 +652,7 @@ const ReminderManagement = () => {
               />
             </Grid>
             <Grid item xs={12}>
-              <Typography variant="subtitle2" gutterBottom>Notify Via</Typography>
+              <Typography variant="subtitle2" gutterBottom>{t('reminders.dialogs.notifyVia')}</Typography>
               <Box display="flex" gap={2} flexWrap="wrap">
                 <FormControlLabel
                   control={
@@ -701,7 +664,7 @@ const ReminderManagement = () => {
                       })}
                     />
                   }
-                  label="Email"
+                  label={t('reminders.form.channels.email')}
                 />
                 <FormControlLabel
                   control={
@@ -713,7 +676,7 @@ const ReminderManagement = () => {
                       })}
                     />
                   }
-                  label="SMS"
+                  label={t('reminders.form.channels.sms')}
                 />
                 <FormControlLabel
                   control={
@@ -725,7 +688,7 @@ const ReminderManagement = () => {
                       })}
                     />
                   }
-                  label="WhatsApp"
+                  label={t('reminders.form.channels.whatsapp')}
                 />
                 <FormControlLabel
                   control={
@@ -737,7 +700,7 @@ const ReminderManagement = () => {
                       })}
                     />
                   }
-                  label="In-App"
+                  label={t('reminders.form.channels.inApp')}
                 />
               </Box>
             </Grid>
@@ -749,21 +712,21 @@ const ReminderManagement = () => {
                     onChange={(e) => setNewReminder({ ...newReminder, recurring: e.target.checked })}
                   />
                 }
-                label="Recurring Reminder"
+                label={t('reminders.form.recurring')}
               />
             </Grid>
             {newReminder.recurring && (
               <Grid item xs={12}>
                 <FormControl fullWidth>
-                  <InputLabel>Recurring Interval</InputLabel>
+                  <InputLabel>{t('reminders.form.recurringInterval')}</InputLabel>
                   <Select
                     value={newReminder.recurringInterval}
-                    label="Recurring Interval"
+                    label={t('reminders.form.recurringInterval')}
                     onChange={(e) => setNewReminder({ ...newReminder, recurringInterval: e.target.value })}
                   >
-                    <MenuItem value="daily">Daily</MenuItem>
-                    <MenuItem value="weekly">Weekly</MenuItem>
-                    <MenuItem value="monthly">Monthly</MenuItem>
+                    <MenuItem value="daily">{t('reminders.form.intervals.daily')}</MenuItem>
+                    <MenuItem value="weekly">{t('reminders.form.intervals.weekly')}</MenuItem>
+                    <MenuItem value="monthly">{t('reminders.form.intervals.monthly')}</MenuItem>
                   </Select>
                 </FormControl>
               </Grid>
@@ -775,17 +738,26 @@ const ReminderManagement = () => {
             setCreateDialog(false);
             resetForm();
           }}>
-            Cancel
+            {t('reminders.buttons.cancel')}
           </Button>
           <Button
             variant="contained"
             onClick={handleCreateReminder}
             disabled={!newReminder.title || !newReminder.dueDate || !newReminder.dueTime}
           >
-            Create Reminder
+            {t('reminders.buttons.create')}
           </Button>
         </DialogActions>
       </Dialog>
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={6000}
+        onClose={() => setSnackbar({ ...snackbar, open: false })}
+      >
+        <Alert onClose={() => setSnackbar({ ...snackbar, open: false })} severity={snackbar.severity}>
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
     </Box>
   );
 };

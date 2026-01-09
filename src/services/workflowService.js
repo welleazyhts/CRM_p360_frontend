@@ -1,13 +1,10 @@
 /**
  * Workflow Engine Service
  *
- * General-purpose workflow builder and execution engine for:
- * - Approval workflows
- * - Multi-step processes
- * - Automated actions
- * - Conditional logic
- * - Parallel and sequential execution
+ * Integrated with Backend APIs for Workflow Builder
  */
+
+import { api } from './api';
 
 // Workflow status
 export const WORKFLOW_STATUS = {
@@ -63,6 +60,7 @@ export const TRIGGER_TYPE = {
 
 /**
  * Workflow templates for common scenarios
+ * Kept for frontend usage, though backend might handle cloning templates
  */
 export const WORKFLOW_TEMPLATES = {
   leadApproval: {
@@ -271,191 +269,15 @@ export const WORKFLOW_TEMPLATES = {
 };
 
 /**
- * Evaluate condition
- */
-export const evaluateCondition = (condition, data) => {
-  const fieldValue = getNestedValue(data, condition.field);
-  const compareValue = condition.value;
-
-  switch (condition.operator) {
-    case CONDITION_OPERATOR.EQUALS:
-      return fieldValue == compareValue;
-    case CONDITION_OPERATOR.NOT_EQUALS:
-      return fieldValue != compareValue;
-    case CONDITION_OPERATOR.GREATER_THAN:
-      return Number(fieldValue) > Number(compareValue);
-    case CONDITION_OPERATOR.LESS_THAN:
-      return Number(fieldValue) < Number(compareValue);
-    case CONDITION_OPERATOR.CONTAINS:
-      return String(fieldValue).includes(String(compareValue));
-    case CONDITION_OPERATOR.IS_EMPTY:
-      return !fieldValue || fieldValue === '';
-    case CONDITION_OPERATOR.IS_NOT_EMPTY:
-      return fieldValue && fieldValue !== '';
-    default:
-      return false;
-  }
-};
-
-/**
- * Get nested value from object
- */
-const getNestedValue = (obj, path) => {
-  return path.split('.').reduce((curr, prop) => curr?.[prop], obj);
-};
-
-/**
- * Replace template variables
- */
-export const replaceTemplateVariables = (template, data) => {
-  return template.replace(/\{\{([^}]+)\}\}/g, (match, path) => {
-    return getNestedValue(data, path.trim()) || match;
-  });
-};
-
-/**
- * Execute workflow action
- */
-export const executeAction = async (action, data, context = {}) => {
-  const { type, params } = action;
-
-  // Replace template variables in params
-  const processedParams = {};
-  for (const [key, value] of Object.entries(params || {})) {
-    if (typeof value === 'string') {
-      processedParams[key] = replaceTemplateVariables(value, data);
-    } else {
-      processedParams[key] = value;
-    }
-  }
-
-  switch (type) {
-    case ACTION_TYPE.SEND_EMAIL:
-      // In real implementation, call email service
-      console.log('Sending email:', processedParams);
-      return { success: true, action: 'email_sent', params: processedParams };
-
-    case ACTION_TYPE.SEND_SMS:
-      console.log('Sending SMS:', processedParams);
-      return { success: true, action: 'sms_sent', params: processedParams };
-
-    case ACTION_TYPE.SEND_WHATSAPP:
-      console.log('Sending WhatsApp:', processedParams);
-      return { success: true, action: 'whatsapp_sent', params: processedParams };
-
-    case ACTION_TYPE.CREATE_TASK:
-      console.log('Creating task:', processedParams);
-      // In real implementation, call task creation service
-      return { success: true, action: 'task_created', params: processedParams };
-
-    case ACTION_TYPE.UPDATE_FIELD:
-      console.log('Updating field:', processedParams);
-      return { success: true, action: 'field_updated', params: processedParams };
-
-    case ACTION_TYPE.WEBHOOK:
-      console.log('Calling webhook:', processedParams);
-      // In real implementation, make HTTP request
-      return { success: true, action: 'webhook_called', params: processedParams };
-
-    case ACTION_TYPE.ASSIGN_TO:
-      console.log('Assigning to:', processedParams);
-      return { success: true, action: 'assigned', params: processedParams };
-
-    default:
-      return { success: false, error: `Unknown action type: ${type}` };
-  }
-};
-
-/**
- * Execute workflow
- */
-export const executeWorkflow = async (workflow, data, context = {}) => {
-  const { nodes } = workflow;
-  const executionLog = [];
-  let currentNodeId = 'start';
-  let maxSteps = 100; // Prevent infinite loops
-
-  while (currentNodeId && maxSteps > 0) {
-    const node = nodes.find(n => n.id === currentNodeId);
-    if (!node) {
-      executionLog.push({
-        nodeId: currentNodeId,
-        error: 'Node not found',
-        timestamp: new Date().toISOString()
-      });
-      break;
-    }
-
-    const logEntry = {
-      nodeId: currentNodeId,
-      type: node.type,
-      label: node.label,
-      timestamp: new Date().toISOString()
-    };
-
-    try {
-      switch (node.type) {
-        case NODE_TYPE.START:
-          logEntry.result = 'Started';
-          currentNodeId = node.next;
-          break;
-
-        case NODE_TYPE.CONDITION:
-          const conditionResult = evaluateCondition(node.condition, data);
-          logEntry.result = conditionResult ? 'True' : 'False';
-          currentNodeId = conditionResult ? node.trueNext : node.falseNext;
-          break;
-
-        case NODE_TYPE.ACTION:
-        case NODE_TYPE.NOTIFICATION:
-          const actionResult = await executeAction(node.action, data, context);
-          logEntry.result = actionResult;
-          currentNodeId = node.next;
-          break;
-
-        case NODE_TYPE.APPROVAL:
-          // In real implementation, wait for approval
-          logEntry.result = 'Approval pending';
-          logEntry.pending = true;
-          currentNodeId = null; // Stop execution, wait for approval
-          break;
-
-        case NODE_TYPE.DELAY:
-          logEntry.result = `Delayed for ${node.duration}`;
-          currentNodeId = node.next;
-          break;
-
-        case NODE_TYPE.END:
-          logEntry.result = 'Completed';
-          currentNodeId = null;
-          break;
-
-        default:
-          logEntry.error = `Unknown node type: ${node.type}`;
-          currentNodeId = null;
-      }
-    } catch (error) {
-      logEntry.error = error.message;
-      currentNodeId = null; // Stop on error
-    }
-
-    executionLog.push(logEntry);
-    maxSteps--;
-  }
-
-  return {
-    success: maxSteps > 0,
-    executionLog,
-    status: currentNodeId === null ? WORKFLOW_STATUS.COMPLETED : WORKFLOW_STATUS.PAUSED
-  };
-};
-
-/**
- * Validate workflow
+ * Validate workflow locally before sending
  */
 export const validateWorkflow = (workflow) => {
   const errors = [];
   const { nodes } = workflow;
+
+  if (!nodes || nodes.length === 0) {
+    return { valid: true, errors: [] }; // Allow empty for drafts
+  }
 
   // Check for start node
   if (!nodes.find(n => n.type === NODE_TYPE.START)) {
@@ -467,51 +289,96 @@ export const validateWorkflow = (workflow) => {
     errors.push('Workflow must have an END node');
   }
 
-  // Check for orphaned nodes
-  const reachableNodes = new Set(['start']);
-  const queue = ['start'];
-
-  while (queue.length > 0) {
-    const currentId = queue.shift();
-    const node = nodes.find(n => n.id === currentId);
-
-    if (node) {
-      if (node.next) {
-        reachableNodes.add(node.next);
-        queue.push(node.next);
-      }
-      if (node.trueNext) {
-        reachableNodes.add(node.trueNext);
-        queue.push(node.trueNext);
-      }
-      if (node.falseNext) {
-        reachableNodes.add(node.falseNext);
-        queue.push(node.falseNext);
-      }
-    }
-  }
-
-  const orphanedNodes = nodes.filter(n => !reachableNodes.has(n.id));
-  if (orphanedNodes.length > 0) {
-    errors.push(`Orphaned nodes: ${orphanedNodes.map(n => n.id).join(', ')}`);
-  }
-
   return {
     valid: errors.length === 0,
     errors
   };
 };
 
-export default {
-  WORKFLOW_STATUS,
-  NODE_TYPE,
-  ACTION_TYPE,
-  CONDITION_OPERATOR,
-  TRIGGER_TYPE,
-  WORKFLOW_TEMPLATES,
-  evaluateCondition,
-  replaceTemplateVariables,
-  executeAction,
-  executeWorkflow,
+// API Calls
+
+const listWorkflows = async () => {
+  const response = await api.get('/workflow_builder/list/');
+  return response.data;
+};
+
+const createWorkflow = async (workflowData) => {
+  const response = await api.post('/workflow_builder/create/', workflowData);
+  return response.data;
+};
+
+const updateWorkflow = async (id, workflowData) => {
+  const response = await api.put(`/workflow_builder/update/${id}/`, workflowData);
+  return response.data;
+};
+
+const deleteWorkflow = async (id) => {
+  const response = await api.delete(`/workflow_builder/delete/${id}/`);
+  return response.data;
+};
+
+const getWorkflow = async (id) => {
+  const response = await api.get(`/workflow_builder/workflow-details/${id}/`);
+  return response.data;
+};
+
+const getWorkflowExecutions = async (id) => {
+  const response = await api.get(`/workflow_builder/executions/${id}/`);
+  return response.data;
+};
+
+const runWorkflow = async (id, data) => {
+  const response = await api.post(`/workflow_builder/run-workflow/${id}/`, data);
+  return response.data;
+};
+
+const addStep = async (id, stepData) => {
+  const response = await api.post(`/workflow_builder/add-step/${id}/`, stepData);
+  return response.data;
+};
+
+const activateWorkflow = async (id) => {
+  const response = await api.patch(`/workflow_builder/activate/${id}/`);
+  return response.data;
+};
+
+const pauseWorkflow = async (id) => {
+  const response = await api.patch(`/workflow_builder/pause/${id}/`);
+  return response.data;
+};
+
+const getStats = async () => {
+  const response = await api.get('/workflow_builder/stats/');
+  return response.data;
+};
+
+const cloneTemplate = async (templateData) => {
+  const response = await api.post('/workflow_builder/clone-template/', templateData);
+  return response.data;
+};
+
+/**
+ * Legacy support / Client-side Helper
+ * Kept if needed by UI for specialized rendering logic not yet moved to backend,
+ * or removed if fully replaced.
+ * For now, we rely on backend for execution, so executeWorkflow logic is removed or deprecated.
+ * We'll export the API functions.
+ */
+
+export const workflowService = {
+  listWorkflows,
+  createWorkflow,
+  updateWorkflow,
+  deleteWorkflow,
+  getWorkflow,
+  getWorkflowExecutions,
+  runWorkflow,
+  addStep,
+  activateWorkflow,
+  pauseWorkflow,
+  getStats,
+  cloneTemplate,
   validateWorkflow
 };
+
+export default workflowService;
