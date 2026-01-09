@@ -88,6 +88,8 @@ const WorkflowBuilder = () => {
   const {
     workflows,
     executions,
+    loading,
+    error,
     createWorkflow,
     createFromTemplate,
     updateWorkflow,
@@ -95,6 +97,7 @@ const WorkflowBuilder = () => {
     activateWorkflow,
     pauseWorkflow,
     runWorkflow,
+    refreshWorkflows,
     getExecutionStats,
     WORKFLOW_STATUS,
     TRIGGER_TYPE,
@@ -117,22 +120,69 @@ const WorkflowBuilder = () => {
     trigger: TRIGGER_TYPE.MANUAL
   });
   const [runData, setRunData] = useState('{}');
+  const [isEditing, setIsEditing] = useState(false);
+
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   // Get statistics
   const stats = useMemo(() => getExecutionStats(), [executions]);
+
+  // Handle delete click (opens confirmation)
+  const handleDeleteClick = (workflow) => {
+    setSelectedWorkflow(workflow);
+    setDeleteDialogOpen(true);
+    handleMenuClose();
+  };
+
+  // Perform actual delete
+  const handleDeleteConfirm = async () => {
+    if (!selectedWorkflow) return;
+
+    try {
+      await deleteWorkflow(selectedWorkflow.id);
+      setDeleteDialogOpen(false);
+      setDetailsDialogOpen(false); // Close details if open
+      setSelectedWorkflow(null);
+    } catch (error) {
+      alert('Failed to delete workflow: ' + error.message);
+    }
+  };
+
+  // ... (handleSave, handleEdit)
   const activeWorkflows = workflows.filter(wf => wf.status === WORKFLOW_STATUS.ACTIVE);
   const draftWorkflows = workflows.filter(wf => wf.status === WORKFLOW_STATUS.DRAFT);
 
-  // Handle create
-  const handleCreate = () => {
+  // Handle save (create or update)
+  const handleSave = () => {
     if (!formData.name.trim()) {
       alert('Please enter a workflow name');
       return;
     }
 
-    createWorkflow(formData);
+    if (isEditing && selectedWorkflow) {
+      updateWorkflow(selectedWorkflow.id, formData);
+    } else {
+      createWorkflow(formData);
+    }
+
     setCreateDialogOpen(false);
+    setIsEditing(false);
+    setSelectedWorkflow(null);
     setFormData({ name: '', description: '', trigger: TRIGGER_TYPE.MANUAL });
+  };
+
+  // Handle edit
+  const handleEdit = (workflow) => {
+    setFormData({
+      name: workflow.name,
+      description: workflow.description || '',
+      trigger: workflow.trigger
+    });
+    setIsEditing(true);
+    setSelectedWorkflow(workflow);
+    setCreateDialogOpen(true);
+    handleMenuClose();
   };
 
   // Handle create from template
@@ -142,8 +192,17 @@ const WorkflowBuilder = () => {
   };
 
   // Handle activate
-  const handleActivate = (workflowId) => {
-    const result = activateWorkflow(workflowId);
+  const handleActivate = async (workflow) => {
+    // Determine the ID safely
+    const workflowId = workflow?.id || workflow?._id;
+    console.log('Activating workflow:', workflow, 'ID:', workflowId);
+
+    if (!workflowId) {
+      alert('Error: Workflow ID is missing. Cannot activate.');
+      return;
+    }
+
+    const result = await activateWorkflow(workflowId);
     if (!result.success) {
       alert(`Failed to activate: ${result.errors?.join(', ') || result.error}`);
     }
@@ -151,8 +210,8 @@ const WorkflowBuilder = () => {
   };
 
   // Handle pause
-  const handlePause = (workflowId) => {
-    pauseWorkflow(workflowId);
+  const handlePause = async (workflowId) => {
+    await pauseWorkflow(workflowId);
     handleMenuClose();
   };
 
@@ -291,7 +350,15 @@ const WorkflowBuilder = () => {
   // Render workflows tab
   const renderWorkflowsTab = () => (
     <Box>
-      {workflows.length > 0 ? (
+      {loading && workflows.length === 0 ? (
+        <Box sx={{ display: 'flex', justifyContent: 'center', p: 5 }}>
+          <LinearProgress sx={{ width: '50%' }} />
+        </Box>
+      ) : error ? (
+        <Alert severity="error" sx={{ mb: 3 }}>
+          {error}
+        </Alert>
+      ) : workflows.length > 0 ? (
         <Grid container spacing={3}>
           {workflows.map((workflow) => (
             <Grid item xs={12} md={6} lg={4} key={workflow.id}>
@@ -606,6 +673,13 @@ const WorkflowBuilder = () => {
         <Box sx={{ display: 'flex', gap: 1 }}>
           <Button
             variant="outlined"
+            startIcon={<LoopIcon />}
+            onClick={() => refreshWorkflows()}
+          >
+            Refresh
+          </Button>
+          <Button
+            variant="outlined"
             startIcon={<TemplateIcon />}
             onClick={() => setTemplateDialogOpen(true)}
           >
@@ -790,30 +864,40 @@ const WorkflowBuilder = () => {
 
       {/* Context Menu */}
       <Menu anchorEl={menuAnchor} open={Boolean(menuAnchor)} onClose={handleMenuClose}>
-        {selectedWorkflow && selectedWorkflow.status === WORKFLOW_STATUS.DRAFT && (
-          <MenuItem onClick={() => handleActivate(selectedWorkflow.id)}>
-            <ActiveIcon sx={{ mr: 1 }} /> Activate
+        <MenuItem onClick={() => handleEdit(selectedWorkflow)}>
+          <EditIcon sx={{ mr: 1 }} /> Edit
+        </MenuItem>
+        {/* Run Option (Only for Active) */}
+        {selectedWorkflow && selectedWorkflow.status?.toLowerCase() === 'active' && (
+          <MenuItem onClick={() => {
+            handleMenuClose();
+            openRunDialogForWorkflow(selectedWorkflow);
+          }}>
+            <RunIcon sx={{ mr: 1, color: 'success.main' }} /> Run Workflow
           </MenuItem>
         )}
-        {selectedWorkflow && selectedWorkflow.status === WORKFLOW_STATUS.ACTIVE && (
+
+        {/* Activate / Resume */}
+        {selectedWorkflow && (selectedWorkflow.status?.toLowerCase() === 'draft' || selectedWorkflow.status?.toLowerCase() === 'paused') && (
+          <MenuItem onClick={() => handleActivate(selectedWorkflow)}>
+            <ActiveIcon sx={{ mr: 1, color: 'primary.main' }} /> {selectedWorkflow.status?.toLowerCase() === 'paused' ? 'Resume' : 'Activate'}
+          </MenuItem>
+        )}
+
+        {/* Pause Option (Only for Active) */}
+        {selectedWorkflow && selectedWorkflow.status?.toLowerCase() === 'active' && (
           <MenuItem onClick={() => handlePause(selectedWorkflow.id)}>
-            <PauseIcon sx={{ mr: 1 }} /> Pause
+            <PauseIcon sx={{ mr: 1, color: 'warning.main' }} /> Pause
           </MenuItem>
         )}
-        <MenuItem onClick={() => {
-          if (selectedWorkflow && selectedWorkflow.id) {
-            handleDelete(selectedWorkflow.id);
-          } else {
-            console.error('No ID for selected workflow', selectedWorkflow);
-          }
-        }}>
+        <MenuItem onClick={() => handleDeleteClick(selectedWorkflow)}>
           <DeleteIcon sx={{ mr: 1 }} color="error" /> Delete
         </MenuItem>
       </Menu>
 
-      {/* Create Dialog */}
-      <Dialog open={createDialogOpen} onClose={() => setCreateDialogOpen(false)} maxWidth="sm" fullWidth>
-        <DialogTitle>Create New Workflow</DialogTitle>
+      {/* Create/Edit Dialog */}
+      <Dialog open={createDialogOpen} onClose={() => { setCreateDialogOpen(false); setIsEditing(false); }} maxWidth="sm" fullWidth>
+        <DialogTitle>{isEditing ? 'Edit Workflow' : 'Create New Workflow'}</DialogTitle>
         <DialogContent>
           <Grid container spacing={2} sx={{ mt: 1 }}>
             <Grid item xs={12}>
@@ -854,8 +938,8 @@ const WorkflowBuilder = () => {
           </Grid>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setCreateDialogOpen(false)}>Cancel</Button>
-          <Button onClick={handleCreate} variant="contained">Create</Button>
+          <Button onClick={() => { setCreateDialogOpen(false); setIsEditing(false); }}>Cancel</Button>
+          <Button onClick={handleSave} variant="contained">{isEditing ? 'Update' : 'Create'}</Button>
         </DialogActions>
       </Dialog>
 
@@ -1037,6 +1121,15 @@ const WorkflowBuilder = () => {
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setDetailsDialogOpen(false)}>Close</Button>
+          {selectedWorkflow && (
+            <Button
+              startIcon={<DeleteIcon />}
+              color="error"
+              onClick={() => handleDeleteClick(selectedWorkflow)}
+            >
+              Delete
+            </Button>
+          )}
           {selectedWorkflow && selectedWorkflow.status === WORKFLOW_STATUS.ACTIVE && (
             <Button
               variant="contained"
@@ -1049,6 +1142,20 @@ const WorkflowBuilder = () => {
               Run Workflow
             </Button>
           )}
+        </DialogActions>
+      </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={deleteDialogOpen} onClose={() => setDeleteDialogOpen(false)}>
+        <DialogTitle>Confirm Delete</DialogTitle>
+        <DialogContent>
+          Are you sure you want to delete the workflow "{selectedWorkflow?.name}"? This action cannot be undone.
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setDeleteDialogOpen(false)} disabled={isDeleting}>Cancel</Button>
+          <Button onClick={handleDeleteConfirm} color="error" variant="contained" disabled={isDeleting}>
+            {isDeleting ? 'Deleting...' : 'Delete'}
+          </Button>
         </DialogActions>
       </Dialog>
 
@@ -1220,7 +1327,7 @@ const WorkflowBuilder = () => {
           <Button onClick={() => setExecutionDetailsOpen(false)}>Close</Button>
         </DialogActions>
       </Dialog>
-    </Box>
+    </Box >
   );
 };
 

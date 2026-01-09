@@ -336,17 +336,66 @@ const PolicyProposalGeneration = () => {
     }
   };
 
-  const handleSend = (proposal) => {
-    setSnackbar({
-      open: true,
-      message: `Proposal ${proposal.proposalNumber} sent to customer`,
-      severity: 'success'
-    });
 
-    // Update status
-    setProposals(prev => prev.map(p =>
-      p.id === proposal.id ? { ...p, status: 'Sent' } : p
-    ));
+  const [emailDialog, setEmailDialog] = useState(false);
+  const [emailForm, setEmailForm] = useState({
+    to: '',
+    subject: '',
+    body: ''
+  });
+
+  const handleSendClick = (proposal) => {
+    setSelectedProposal(proposal);
+
+    // Construct a detailed message with all proposal row data
+    const messageBody = `Dear ${proposal.customerName},
+
+Please find attached the policy proposal for your review.
+
+Proposal Details:
+----------------
+Proposal Number: ${proposal.proposalNumber}
+Customer Name: ${proposal.customerName}
+Policy Type: ${proposal.policyType}
+Coverage Amount: ₹${proposal.coverageAmount?.toLocaleString() || '0'}
+Premium Amount: ₹${proposal.premium?.toLocaleString() || '0'}
+Status: ${proposal.status}
+Generated Date: ${new Date(proposal.generatedDate).toLocaleDateString()}
+Agent: ${proposal.agentName}
+Tenure: ${proposal.raw?.tenure ? proposal.raw.tenure + ' Years' : 'N/A'}
+Policy Period: ${proposal.raw?.startDate || 'N/A'} to ${proposal.raw?.endDate || 'N/A'}
+
+Regards,
+${proposal.agentName}`;
+
+    setEmailForm({
+      to: proposal.raw?.email || 'customer@example.com',
+      subject: `Policy Proposal - ${proposal.proposalNumber}`,
+      body: messageBody
+    });
+    setEmailDialog(true);
+  };
+
+  const handleSendEmail = () => {
+    setLoading(true);
+    // Simulate API call
+    setTimeout(() => {
+      setSnackbar({
+        open: true,
+        message: `Email sent successfully to ${emailForm.to}`,
+        severity: 'success'
+      });
+
+      // Update status for the selected proposal
+      if (selectedProposal) {
+        setProposals(prev => prev.map(p =>
+          p.id === selectedProposal.id ? { ...p, status: 'Sent' } : p
+        ));
+      }
+
+      setLoading(false);
+      setEmailDialog(false);
+    }, 1000);
   };
 
   const getStatusColor = (status) => {
@@ -515,7 +564,7 @@ const PolicyProposalGeneration = () => {
                       </Tooltip>
                       {proposal.status === 'Generated' && (
                         <Tooltip title="Send to Customer">
-                          <IconButton size="small" onClick={() => handleSend(proposal)}>
+                          <IconButton size="small" onClick={() => handleSendClick(proposal)}>
                             <SendIcon />
                           </IconButton>
                         </Tooltip>
@@ -764,6 +813,47 @@ const PolicyProposalGeneration = () => {
             }}
           >
             Download PDF
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Send Email Dialog */}
+      <Dialog open={emailDialog} onClose={() => setEmailDialog(false)} maxWidth="sm" fullWidth>
+        <DialogTitle>Send via Email</DialogTitle>
+        <DialogContent>
+          <Grid container spacing={2} sx={{ mt: 1 }}>
+            <Grid item xs={12}>
+              <TextField
+                fullWidth
+                label="To"
+                value={emailForm.to}
+                onChange={(e) => setEmailForm({ ...emailForm, to: e.target.value })}
+              />
+            </Grid>
+            <Grid item xs={12}>
+              <TextField
+                fullWidth
+                label="Subject"
+                value={emailForm.subject}
+                onChange={(e) => setEmailForm({ ...emailForm, subject: e.target.value })}
+              />
+            </Grid>
+            <Grid item xs={12}>
+              <TextField
+                fullWidth
+                label="Message"
+                multiline
+                rows={4}
+                value={emailForm.body}
+                onChange={(e) => setEmailForm({ ...emailForm, body: e.target.value })}
+              />
+            </Grid>
+          </Grid>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setEmailDialog(false)}>Cancel</Button>
+          <Button variant="contained" onClick={handleSendEmail} disabled={loading} startIcon={<SendIcon />}>
+            {loading ? 'Sending...' : 'Send'}
           </Button>
         </DialogActions>
       </Dialog>

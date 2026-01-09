@@ -5,7 +5,7 @@ import workflowService, {
   TRIGGER_TYPE,
   WORKFLOW_TEMPLATES,
   validateWorkflow
-} from '../services/workflowService';
+} from '../services/workflowBuilderService';
 
 const WorkflowContext = createContext();
 
@@ -25,55 +25,98 @@ export const WorkflowProvider = ({ children }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  // Fetch initial data
-  useEffect(() => {
-    fetchWorkflows();
-    fetchStats();
-  }, []);
 
-  const fetchWorkflows = async () => {
+
+  const fetchWorkflows = useCallback(async () => {
     setLoading(true);
     try {
-      const data = await workflowService.listWorkflows();
-      // Adjust handling based on exact API response structure (e.g. data.results or plain array)
-      const list = Array.isArray(data) ? data : (data.results || data.items || []);
+      const response = await workflowService.listWorkflows();
+      // Adjust handling based on exact API response structure
+      let list = [];
+
+      console.log('Workflow list raw response:', response);
+
+      if (Array.isArray(response)) {
+        list = response;
+      } else if (response && Array.isArray(response.data)) {
+        list = response.data;
+      } else if (response && Array.isArray(response.workflows)) {
+        list = response.workflows;
+      } else if (response && typeof response === 'object') {
+        if (Array.isArray(response.results)) list = response.results;
+      }
+
       setWorkflows(list);
     } catch (err) {
-      console.error('Failed to fetch workflows', err);
+      console.error('Fetch workflows error', err);
       setError(err.message);
     } finally {
       setLoading(false);
     }
-  };
-
-  const fetchStats = async () => {
-    try {
-      const data = await workflowService.getStats();
-      setStats(data);
-    } catch (err) {
-      console.warn('Failed to fetch stats', err);
-    }
-  };
+  }, []);
 
   /**
-   * Create workflow
+   * Fetch stats (separate to not block main list)
    */
+  const fetchStats = useCallback(async () => {
+    try {
+      await workflowService.getStats();
+    } catch (e) {
+      console.warn('Stats fetch failed', e);
+    }
+  }, []);
+
+  // Fetch initial data
+  useEffect(() => {
+    fetchWorkflows();
+    fetchStats();
+  }, [fetchWorkflows, fetchStats]);
+
   /**
-   * Create workflow
+   * Create new workflow
    */
   const createWorkflow = useCallback(async (workflowData) => {
     setLoading(true);
     try {
-      await workflowService.createWorkflow(workflowData);
-      // Refresh list to ensure we have the correct ID and state from server
+      const response = await workflowService.createWorkflow(workflowData);
+
+      // Handle the API response structure to find the created workflow
+      let newWorkflow = null;
+      console.log('Create workflow raw response:', response);
+
+      if (response) {
+        // Check deeper first
+        if (response.data && (response.data.id || response.data.name)) {
+          newWorkflow = response.data;
+        } else if (response.workflow && (response.workflow.id || response.workflow.name)) {
+          newWorkflow = response.workflow;
+        } else if (response.id || response.name) {
+          // Root object looks like a workflow
+          newWorkflow = response;
+        } else {
+          // Fallback: assume the response itself is the object if it has any keys
+          newWorkflow = response;
+        }
+      }
+
+      // Optimistically update local state if we found a workflow object
+      if (newWorkflow) {
+        setWorkflows(prev => {
+          if (prev.some(w => w.id === newWorkflow.id)) return prev;
+          return [newWorkflow, ...prev];
+        });
+      }
+
+      // Refresh list from server to ensure full consistency
       await fetchWorkflows();
     } catch (err) {
+      console.error('Create workflow error', err);
       setError(err.message);
       throw err;
     } finally {
       setLoading(false);
     }
-  }, []); // Remove dependency on fetchWorkflows to avoid circular warnings, or use a ref/stable function
+  }, [fetchWorkflows]);
 
   /**
    * Create workflow from template
@@ -101,19 +144,22 @@ export const WorkflowProvider = ({ children }) => {
       setLoading(false);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [createWorkflow]);
+  }, [fetchWorkflows]); // Changed dependency from createWorkflow to fetchWorkflows
 
   /**
    * Update workflow
    */
-  const updateWorkflow = useCallback(async (workflowId, updates) => {
+  const updateWorkflow = useCallback(async (id, data) => {
     setLoading(true);
     try {
-      await workflowService.updateWorkflow(workflowId, updates);
-      await fetchWorkflows();
+      await workflowService.updateWorkflow(id, data);
+
+      // Update local state
+      setWorkflows(prev => prev.map(w => w.id === id ? { ...w, ...data } : w));
+
     } catch (err) {
+      console.error('Update workflow error', err);
       setError(err.message);
-      throw err;
     } finally {
       setLoading(false);
     }
@@ -123,22 +169,22 @@ export const WorkflowProvider = ({ children }) => {
    * Delete workflow
    */
   const deleteWorkflow = useCallback(async (workflowId) => {
-    if (!workflowId) {
-      console.error("Attempted to delete workflow without ID");
-      setError("Invalid workflow ID");
-      return;
-    }
+    if (!workflowId) return;
+
     setLoading(true);
     try {
       await workflowService.deleteWorkflow(workflowId);
-      await fetchWorkflows();
+      setWorkflows(prev => prev.filter(w => w.id !== workflowId));
     } catch (err) {
+      console.error('Delete failed', err);
       setError(err.message);
+      // If delete failed, maybe we are out of sync, try to fetch?
+      fetchWorkflows();
       throw err;
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [fetchWorkflows]);
 
   /**
    * Activate workflow
@@ -154,10 +200,13 @@ export const WorkflowProvider = ({ children }) => {
     }
 
     try {
-      const updated = await workflowService.activateWorkflow(workflowId);
-      setWorkflows(prev => prev.map(wf =>
-        wf.id === workflowId ? (updated.id ? updated : { ...wf, status: WORKFLOW_STATUS.ACTIVE }) : wf
+      await workflowService.activateWorkflow(workflowId);
+
+      // Update local status directly
+      setWorkflows(prev => prev.map(w =>
+        w.id === workflowId ? { ...w, status: WORKFLOW_STATUS.ACTIVE } : w
       ));
+
       return { success: true };
     } catch (err) {
       console.error('Activate failed', err);
@@ -170,10 +219,13 @@ export const WorkflowProvider = ({ children }) => {
    */
   const pauseWorkflow = useCallback(async (workflowId) => {
     try {
-      const updated = await workflowService.pauseWorkflow(workflowId);
-      setWorkflows(prev => prev.map(wf =>
-        wf.id === workflowId ? (updated.id ? updated : { ...wf, status: WORKFLOW_STATUS.PAUSED }) : wf
+      await workflowService.pauseWorkflow(workflowId);
+
+      // Update local status directly
+      setWorkflows(prev => prev.map(w =>
+        w.id === workflowId ? { ...w, status: WORKFLOW_STATUS.PAUSED } : w
       ));
+
     } catch (err) {
       console.error('Pause failed', err);
       setError(err.message);

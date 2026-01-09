@@ -1,10 +1,15 @@
 /**
  * Workflow Engine Service
  *
- * Integrated with Backend APIs for Workflow Builder
+ * Local Storage Implementation for Workflow Builder
  */
 
-import { api } from './api';
+// Storage Keys
+const STORAGE_KEYS = {
+  WORKFLOWS: 'workflow_builder_workflows',
+  EXECUTIONS: 'workflow_builder_executions',
+  SETTINGS: 'workflow_builder_settings'
+};
 
 // Workflow status
 export const WORKFLOW_STATUS = {
@@ -60,7 +65,6 @@ export const TRIGGER_TYPE = {
 
 /**
  * Workflow templates for common scenarios
- * Kept for frontend usage, though backend might handle cloning templates
  */
 export const WORKFLOW_TEMPLATES = {
   leadApproval: {
@@ -129,241 +133,205 @@ export const WORKFLOW_TEMPLATES = {
     description: 'Automated renewal reminders before expiry',
     trigger: TRIGGER_TYPE.SCHEDULED,
     nodes: [
-      {
-        id: 'start',
-        type: NODE_TYPE.START,
-        next: 'send_reminder'
-      },
-      {
-        id: 'send_reminder',
-        type: NODE_TYPE.NOTIFICATION,
-        label: 'Send Renewal Reminder',
-        action: {
-          type: ACTION_TYPE.SEND_EMAIL,
-          params: {
-            to: '{{customer.email}}',
-            template: 'renewal_reminder'
-          }
-        },
-        next: 'create_task'
-      },
-      {
-        id: 'create_task',
-        type: NODE_TYPE.ACTION,
-        label: 'Create Follow-up Task',
-        action: {
-          type: ACTION_TYPE.CREATE_TASK,
-          params: {
-            title: 'Follow up on renewal',
-            dueDate: '+7 days',
-            assignTo: '{{policy.agent}}'
-          }
-        },
-        next: 'end'
-      },
-      {
-        id: 'end',
-        type: NODE_TYPE.END
-      }
-    ]
-  },
-  claimProcessing: {
-    name: 'Claim Processing Workflow',
-    description: 'Automated claim verification and approval',
-    trigger: TRIGGER_TYPE.ON_CREATE,
-    nodes: [
-      {
-        id: 'start',
-        type: NODE_TYPE.START,
-        next: 'verify_documents'
-      },
-      {
-        id: 'verify_documents',
-        type: NODE_TYPE.CONDITION,
-        label: 'Verify Documents',
-        condition: {
-          field: 'documentsComplete',
-          operator: CONDITION_OPERATOR.EQUALS,
-          value: true
-        },
-        trueNext: 'check_amount',
-        falseNext: 'request_documents'
-      },
-      {
-        id: 'request_documents',
-        type: NODE_TYPE.NOTIFICATION,
-        label: 'Request Missing Documents',
-        action: {
-          type: ACTION_TYPE.SEND_EMAIL,
-          params: {
-            to: '{{customer.email}}',
-            template: 'documents_required'
-          }
-        },
-        next: 'end'
-      },
-      {
-        id: 'check_amount',
-        type: NODE_TYPE.CONDITION,
-        label: 'Check Claim Amount',
-        condition: {
-          field: 'claimAmount',
-          operator: CONDITION_OPERATOR.GREATER_THAN,
-          value: 50000
-        },
-        trueNext: 'senior_approval',
-        falseNext: 'auto_process'
-      },
-      {
-        id: 'senior_approval',
-        type: NODE_TYPE.APPROVAL,
-        label: 'Senior Manager Approval',
-        approvers: ['senior_manager'],
-        next: 'process_claim'
-      },
-      {
-        id: 'auto_process',
-        type: NODE_TYPE.ACTION,
-        label: 'Auto Process Claim',
-        action: {
-          type: ACTION_TYPE.UPDATE_FIELD,
-          params: {
-            field: 'status',
-            value: 'approved'
-          }
-        },
-        next: 'process_claim'
-      },
-      {
-        id: 'process_claim',
-        type: NODE_TYPE.ACTION,
-        label: 'Process Payment',
-        action: {
-          type: ACTION_TYPE.WEBHOOK,
-          params: {
-            url: '/api/payments/process',
-            method: 'POST'
-          }
-        },
-        next: 'notify_customer'
-      },
-      {
-        id: 'notify_customer',
-        type: NODE_TYPE.NOTIFICATION,
-        label: 'Notify Customer',
-        action: {
-          type: ACTION_TYPE.SEND_EMAIL,
-          params: {
-            to: '{{customer.email}}',
-            template: 'claim_processed'
-          }
-        },
-        next: 'end'
-      },
-      {
-        id: 'end',
-        type: NODE_TYPE.END
-      }
+      { id: '1', type: NODE_TYPE.START, next: '2' },
+      { id: '2', type: NODE_TYPE.ACTION, action: { type: ACTION_TYPE.SEND_EMAIL, params: { template: 'renewal_notice_1' } }, next: '3' },
+      { id: '3', type: NODE_TYPE.DELAY, config: { duration: '7d' }, next: '4' },
+      { id: '4', type: NODE_TYPE.ACTION, action: { type: ACTION_TYPE.SEND_SMS, params: { template: 'renewal_sms' } }, next: '5' },
+      { id: '5', type: NODE_TYPE.END }
     ]
   }
 };
 
-/**
- * Validate workflow locally before sending
- */
+// --- Helper Functions ---
+
+const getStorage = (key) => {
+  try {
+    const item = localStorage.getItem(key);
+    return item ? JSON.parse(item) : [];
+  } catch (e) {
+    console.error(`Error reading ${key} from localStorage`, e);
+    return [];
+  }
+};
+
+const setStorage = (key, data) => {
+  try {
+    localStorage.setItem(key, JSON.stringify(data));
+  } catch (e) {
+    console.error(`Error writing ${key} to localStorage`, e);
+  }
+};
+
+const generateId = () => {
+  return 'wf_' + Math.random().toString(36).substr(2, 9);
+};
+
 export const validateWorkflow = (workflow) => {
   const errors = [];
-  const { nodes } = workflow;
+  if (!workflow.name) errors.push('Name is required');
 
-  if (!nodes || nodes.length === 0) {
-    return { valid: true, errors: [] }; // Allow empty for drafts
+  const nodes = workflow.nodes || [];
+  if (nodes.length === 0) {
+    errors.push('Workflow must have at least one node');
   }
 
-  // Check for start node
-  if (!nodes.find(n => n.type === NODE_TYPE.START)) {
-    errors.push('Workflow must have a START node');
-  }
+  const startNode = nodes.find(n => n.type === NODE_TYPE.START);
+  if (!startNode) errors.push('Start node is missing');
 
-  // Check for end node
-  if (!nodes.find(n => n.type === NODE_TYPE.END)) {
-    errors.push('Workflow must have an END node');
-  }
+  const endNode = nodes.find(n => n.type === NODE_TYPE.END);
+  if (!endNode) errors.push('End node is missing');
 
-  return {
-    valid: errors.length === 0,
-    errors
-  };
+  return { valid: errors.length === 0, errors };
 };
 
-// API Calls
+
+// --- Service Functions (Mocking Async API) ---
 
 const listWorkflows = async () => {
-  const response = await api.get('/workflow_builder/list/');
-  return response.data;
+  // Simulate network delay
+  await new Promise(resolve => setTimeout(resolve, 300));
+  return getStorage(STORAGE_KEYS.WORKFLOWS);
 };
 
 const createWorkflow = async (workflowData) => {
-  const response = await api.post('/workflow_builder/create/', workflowData);
-  return response.data;
+  await new Promise(resolve => setTimeout(resolve, 500));
+
+  const workflows = getStorage(STORAGE_KEYS.WORKFLOWS);
+
+  // Default nodes if none provided
+  const defaultNodes = [
+    { id: 'start', type: NODE_TYPE.START, label: 'Start' },
+    { id: 'end', type: NODE_TYPE.END, label: 'End' }
+  ];
+
+  const newWorkflow = {
+    id: generateId(),
+    ...workflowData,
+    status: WORKFLOW_STATUS.DRAFT,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+    nodes: workflowData.nodes && workflowData.nodes.length > 0 ? workflowData.nodes : defaultNodes,
+    executionCount: 0
+  };
+
+  workflows.unshift(newWorkflow); // Add to beginning
+  setStorage(STORAGE_KEYS.WORKFLOWS, workflows);
+
+  return newWorkflow;
 };
 
 const updateWorkflow = async (id, workflowData) => {
-  const response = await api.put(`/workflow_builder/update/${id}/`, workflowData);
-  return response.data;
+  await new Promise(resolve => setTimeout(resolve, 300));
+
+  const workflows = getStorage(STORAGE_KEYS.WORKFLOWS);
+  const index = workflows.findIndex(w => w.id === id);
+
+  if (index === -1) throw new Error('Workflow not found');
+
+  const updatedWorkflow = {
+    ...workflows[index],
+    ...workflowData,
+    updatedAt: new Date().toISOString()
+  };
+
+  workflows[index] = updatedWorkflow;
+  setStorage(STORAGE_KEYS.WORKFLOWS, workflows);
+
+  return updatedWorkflow;
 };
 
 const deleteWorkflow = async (id) => {
-  const response = await api.delete(`/workflow_builder/delete/${id}/`);
-  return response.data;
+  await new Promise(resolve => setTimeout(resolve, 300));
+
+  let workflows = getStorage(STORAGE_KEYS.WORKFLOWS);
+  workflows = workflows.filter(w => w.id !== id);
+  setStorage(STORAGE_KEYS.WORKFLOWS, workflows);
+
+  return { success: true };
 };
 
 const getWorkflow = async (id) => {
-  const response = await api.get(`/workflow_builder/workflow-details/${id}/`);
-  return response.data;
+  await new Promise(resolve => setTimeout(resolve, 200));
+  const workflows = getStorage(STORAGE_KEYS.WORKFLOWS);
+  return workflows.find(w => w.id === id);
 };
 
 const getWorkflowExecutions = async (id) => {
-  const response = await api.get(`/workflow_builder/executions/${id}/`);
-  return response.data;
+  await new Promise(resolve => setTimeout(resolve, 200));
+  const executions = getStorage(STORAGE_KEYS.EXECUTIONS);
+  return executions.filter(e => e.workflowId === id);
 };
 
 const runWorkflow = async (id, data) => {
-  const response = await api.post(`/workflow_builder/run-workflow/${id}/`, data);
-  return response.data;
+  await new Promise(resolve => setTimeout(resolve, 1000));
+
+  const workflow = await getWorkflow(id);
+  if (!workflow) throw new Error('Workflow not found');
+
+  const execution = {
+    id: 'exec_' + Math.random().toString(36).substr(2, 9),
+    workflowId: id,
+    workflowName: workflow.name,
+    status: 'completed', // Mock success
+    startedAt: new Date().toISOString(),
+    completedAt: new Date().toISOString(),
+    data: data,
+    result: {
+      executionLog: [
+        { step: 'Start', status: 'success', message: 'Workflow started' },
+        { step: 'Process', status: 'success', message: 'Processed data: ' + JSON.stringify(data).substring(0, 50) + '...' },
+        { step: 'End', status: 'success', message: 'Workflow completed successfully' }
+      ]
+    }
+  };
+
+  const executions = getStorage(STORAGE_KEYS.EXECUTIONS);
+  executions.unshift(execution);
+  setStorage(STORAGE_KEYS.EXECUTIONS, executions);
+
+  // Update stats on workflow
+  workflow.executionCount = (workflow.executionCount || 0) + 1;
+  await updateWorkflow(id, { executionCount: workflow.executionCount });
+
+  return { execution };
 };
 
 const addStep = async (id, stepData) => {
-  const response = await api.post(`/workflow_builder/add-step/${id}/`, stepData);
-  return response.data;
+  // Not strictly needed if using updateWorkflow, but keeping signature
+  const workflow = await getWorkflow(id);
+  const nodes = workflow.nodes || [];
+  nodes.push(stepData);
+  return updateWorkflow(id, { nodes });
 };
 
 const activateWorkflow = async (id) => {
-  const response = await api.patch(`/workflow_builder/activate/${id}/`);
-  return response.data;
+  const workflow = await getWorkflow(id);
+  const validation = validateWorkflow(workflow);
+  if (!validation.valid) throw new Error(validation.errors.join(', '));
+
+  return updateWorkflow(id, { status: WORKFLOW_STATUS.ACTIVE });
 };
 
 const pauseWorkflow = async (id) => {
-  const response = await api.patch(`/workflow_builder/pause/${id}/`);
-  return response.data;
+  return updateWorkflow(id, { status: WORKFLOW_STATUS.PAUSED });
 };
 
 const getStats = async () => {
-  const response = await api.get('/workflow_builder/stats/');
-  return response.data;
+  const workflows = getStorage(STORAGE_KEYS.WORKFLOWS);
+  const executions = getStorage(STORAGE_KEYS.EXECUTIONS);
+
+  return {
+    total: executions.length,
+    successful: executions.filter(e => e.status === 'completed').length,
+    failed: executions.filter(e => e.status === 'failed').length,
+    pending: executions.filter(e => e.status === 'running').length,
+    byWorkflow: {} // Simplified mock
+  };
 };
 
 const cloneTemplate = async (templateData) => {
-  const response = await api.post('/workflow_builder/clone-template/', templateData);
-  return response.data;
+  return createWorkflow(templateData);
 };
-
-/**
- * Legacy support / Client-side Helper
- * Kept if needed by UI for specialized rendering logic not yet moved to backend,
- * or removed if fully replaced.
- * For now, we rely on backend for execution, so executeWorkflow logic is removed or deprecated.
- * We'll export the API functions.
- */
 
 export const workflowService = {
   listWorkflows,
